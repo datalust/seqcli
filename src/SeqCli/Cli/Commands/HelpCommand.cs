@@ -10,9 +10,11 @@ namespace SeqCli.Cli.Commands
     class HelpCommand : Command
     {
         readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
+        bool _markdown;
 
         public HelpCommand(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
         {
+            Options.Add("m|markdown", "Generate markdown for use in documentation", _ => _markdown = true);
             _availableCommands = availableCommands.OrderBy(c => c.Metadata.Name).ToList();
         }
 
@@ -32,7 +34,6 @@ namespace SeqCli.Cli.Commands
                     Console.WriteLine();
                     Console.WriteLine(cmd.Metadata.HelpText);
                     Console.WriteLine();
-
                     cmd.Value.Value.PrintUsage();
                     return 0;
                 }
@@ -40,7 +41,63 @@ namespace SeqCli.Cli.Commands
                 base.Run(unrecognised);
             }
 
-            Console.WriteLine($"Usage: {name} <command> [<args>]");
+            if (_markdown)
+            {
+                PrintMarkdownHelp(name);
+            }
+            else
+            {
+                PrintHelp(name);
+            }
+
+            return 0;
+        }
+
+        void PrintMarkdownHelp(string executableName)
+        {
+            Console.WriteLine("## Commands");
+            Console.WriteLine();
+            Console.WriteLine("Usage:");
+            Console.WriteLine();
+            Console.WriteLine("```");
+            Console.WriteLine($"{executableName} <command> [<args>]");
+            Console.WriteLine("```");
+            Console.WriteLine();
+
+            foreach (var cmd in _availableCommands)
+            {
+                Console.WriteLine($"### `{cmd.Metadata.Name}`");
+                Console.WriteLine();
+                Console.WriteLine(cmd.Metadata.HelpText + ".");
+                Console.WriteLine();
+
+                var optionSet = cmd.Value.Value.Options;
+                if (optionSet.Count == 0)
+                    continue;
+
+                Console.WriteLine("| Option | Description |");
+                Console.WriteLine("| ------ | ----------- |");
+
+                foreach (var opt in optionSet)
+                {
+                    if (opt.Hidden)
+                        continue;
+
+                    Console.Write("| ");
+                    var zero = 0;
+                    optionSet.WriteOptionPrototype(Console.Out, opt, ref zero, markdown: true);
+                    Console.Write(" | ");
+                    Console.Write(opt.Description);
+                    Console.WriteLine(" |");
+                }
+
+                Console.WriteLine();
+            }
+        }
+
+        void PrintHelp(string executableName)
+        {
+            Console.WriteLine($"Usage: {executableName} <command> [<args>]");
             Console.WriteLine();
             Console.WriteLine("Available commands are:");
 
@@ -54,9 +111,7 @@ namespace SeqCli.Cli.Commands
             }
 
             Console.WriteLine();
-            Console.WriteLine($"Type `{name} help <command>` for detailed help");
-
-            return 0;
+            Console.WriteLine($"Type `{executableName} help <command>` for detailed help");
         }
     }
 }

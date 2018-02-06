@@ -1219,7 +1219,7 @@ namespace SeqCli.Cli
 			}
 		}
 
-		bool WriteOptionPrototype (TextWriter o, Option p, ref int written)
+		public bool WriteOptionPrototype (TextWriter o, Option p, ref int written, bool markdown = false)
 		{
 			string[] names = p.Names;
 
@@ -1228,17 +1228,26 @@ namespace SeqCli.Cli
 				return false;
 
 			if (names [i].Length == 1) {
-				Write (o, ref written, "  -");
-				Write (o, ref written, names [0]);
+			    if (markdown)
+			        Write(o, ref written, "`-");
+			    else
+			        Write(o, ref written, "  -");
+			    Write(o, ref written, names [0]);
 			}
 			else {
-				Write (o, ref written, "      --");
-				Write (o, ref written, names [0]);
+                if (markdown)
+                    Write(o, ref written, "      `--");
+		        else
+                    Write (o, ref written, "      --");
+				Write (o, ref written, names[0]);
 			}
-
+            
 			for ( i = GetNextOptionIndex (names, i+1); 
 					i < names.Length; i = GetNextOptionIndex (names, i+1)) {
-				Write (o, ref written, ", ");
+			    if (markdown)
+			        Write(o, ref written, "`, `");
+                else
+                    Write(o, ref written, ", ");
 				Write (o, ref written, names [i].Length == 1 ? "-" : "--");
 				Write (o, ref written, names [i]);
 			}
@@ -1259,7 +1268,11 @@ namespace SeqCli.Cli
 					Write (o, ref written, localizer ("]"));
 				}
 			}
-			return true;
+
+            if (markdown)
+                Write(o, ref written, "`");
+
+            return true;
 		}
 
 		static int GetNextOptionIndex (string[] names, int i)

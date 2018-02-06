@@ -13,7 +13,7 @@ namespace SeqCli.Cli
             Options = new OptionSet();
         }
 
-        protected OptionSet Options { get; }
+        public OptionSet Options { get; }
 
         public bool HasArgs => Options.Any();
 

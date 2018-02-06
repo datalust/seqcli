@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace SeqCli.Cli.Commands
 {
-    [Command("--version", "Print the current executable version")]
+    [Command("version", "Print the current executable version")]
     class VersionCommand : Command
     {
         protected override int Run()
