@@ -1,6 +1,7 @@
 using System.Reflection;
 using Autofac;
 using SeqCli.Cli;
+using SeqCli.Connection;
 
 namespace SeqCli
 {
@@ -12,6 +13,7 @@ namespace SeqCli
             builder.RegisterAssemblyTypes(typeof(Program).GetTypeInfo().Assembly)
                 .As<Command>()
                 .WithMetadataFrom<CommandAttribute>();
+            builder.RegisterType<SeqConnectionFactory>();
         }
     }
 }

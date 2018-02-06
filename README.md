@@ -36,6 +36,19 @@ Show information about available commands.
 | ------ | ----------- |
 | `-m`, `--markdown` | Generate markdown for use in documentation |
 
+### `query`
+
+Execute SQL queries to retrieve CSV results.
+
+| Option | Description |
+| ------ | ----------- |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the URL in SeqCli.json will  be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the API key in SeqCli.json will be used |
+| `-q`, `--query=VALUE` | The query to execute, for example `select count(*) from stream` |
+|       `--start=VALUE` | ISO 8601 date/time to query from (default: now - 24h) |
+|       `--end=VALUE` | Date/time to query to (default: now) |
+|       `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
+
 ### `version`
 
 Print the current executable version.

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 
 namespace SeqCli.Cli.Commands
@@ -18,7 +19,7 @@ namespace SeqCli.Cli.Commands
             _availableCommands = availableCommands.OrderBy(c => c.Metadata.Name).ToList();
         }
 
-        protected override int Run(string[] unrecognised)
+        protected override Task<int> Run(string[] unrecognised)
         {
             var ea = Assembly.GetEntryAssembly();
             var name = ea.GetName().Name;
@@ -35,10 +36,10 @@ namespace SeqCli.Cli.Commands
                     Console.WriteLine(cmd.Metadata.HelpText);
                     Console.WriteLine();
                     cmd.Value.Value.PrintUsage();
-                    return 0;
+                    return Task.FromResult(0);
                 }
 
-                base.Run(unrecognised);
+                return base.Run(unrecognised);
             }
 
             if (_markdown)
@@ -50,7 +51,7 @@ namespace SeqCli.Cli.Commands
                 PrintHelp(name);
             }
 
-            return 0;
+            return Task.FromResult(0);
         }
 
         void PrintMarkdownHelp(string executableName)

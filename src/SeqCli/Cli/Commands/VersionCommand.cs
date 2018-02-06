@@ -1,16 +1,17 @@
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SeqCli.Cli.Commands
 {
     [Command("version", "Print the current executable version")]
     class VersionCommand : Command
     {
-        protected override int Run()
+        protected override Task<int> Run()
         {
             var version = GetVersion();
             Console.WriteLine(version);
-            return 0;
+            return Task.FromResult(0);
         }
 
         public static string GetVersion()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 
 namespace SeqCli.Cli
@@ -15,7 +16,7 @@ namespace SeqCli.Cli
             _availableCommands = availableCommands.ToList();
         }
 
-        public int Run(string[] args)
+        public async Task<int> Run(string[] args)
         {
             var ea = Assembly.GetEntryAssembly();
             var name = ea.GetName().Name;
@@ -26,7 +27,7 @@ namespace SeqCli.Cli
                 var cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm);
                 if (cmd != null)
                 {
-                    return cmd.Value.Value.Invoke(args.Skip(1).ToArray());
+                    return await cmd.Value.Value.Invoke(args.Skip(1).ToArray());
                 }
             }
 

@@ -10,6 +10,7 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
     <Platforms>x64</Platforms>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   
   <ItemGroup>
@@ -29,10 +30,7 @@
     <PackageReference Include="Autofac" Version="4.0.0" />
     <PackageReference Include="ILLink.Tasks" Version="0.1.4-preview-981901" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Cli\Features\" />
+    <PackageReference Include="Seq.Api" Version="4.2.2" />
   </ItemGroup>
 
 </Project>

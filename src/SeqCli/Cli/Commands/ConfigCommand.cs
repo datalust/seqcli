@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using SeqCli.Config;
 using Serilog;
 
@@ -34,7 +35,7 @@ namespace SeqCli.Cli.Commands
             Options.Add("c|clear", "Clear the field", _ => _clear = true);
         }
 
-        protected override int Run()
+        protected override Task<int> Run()
         {
             try
             {
@@ -62,14 +63,14 @@ namespace SeqCli.Cli.Commands
                     List(config);
                 }
 
-                return 0;
+                return Task.FromResult(0);
             }
             catch (Exception ex)
             {
                 var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
                 logger.Fatal(ex, "Could not update config");
-                return 1;
+                return Task.FromResult(1);
             }
         }
 

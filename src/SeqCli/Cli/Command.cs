@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SeqCli.Cli
 {
@@ -42,7 +43,7 @@ namespace SeqCli.Cli
             }
         }
 
-        public int Invoke(string[] args)
+        public async Task<int> Invoke(string[] args)
         {
             try
             {
@@ -56,7 +57,7 @@ namespace SeqCli.Cli
                     return -1;
                 }
 
-                return Run(unrecognised);
+                return await Run(unrecognised);
             }
             catch (Exception ex)
             {
@@ -65,7 +66,7 @@ namespace SeqCli.Cli
             }
         }
 
-        protected virtual int Run(string[] unrecognised)
+        protected virtual async Task<int> Run(string[] unrecognised)
         {
             if (unrecognised.Any())
             {
@@ -73,10 +74,10 @@ namespace SeqCli.Cli
                 return -1;
             }
 
-            return Run();
+            return await Run();
         }
 
-        protected virtual int Run() { return 0; }
+        protected virtual Task<int> Run() { return Task.FromResult(0); }
 
         protected virtual void ShowUsageErrors(IEnumerable<string> errors)
         {
