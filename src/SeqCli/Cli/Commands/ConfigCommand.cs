@@ -67,9 +67,7 @@ namespace SeqCli.Cli.Commands
             }
             catch (Exception ex)
             {
-                var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-
-                logger.Fatal(ex, "Could not update config");
+                Log.Fatal(ex, "Could not update config: {ErrorMessage}", ex.Message);
                 return Task.FromResult(1);
             }
         }
@@ -81,7 +79,7 @@ namespace SeqCli.Cli.Commands
 
             var pr = ReadPairs(config).SingleOrDefault(p => p.Key == key);
             if (pr.Key == null)
-                throw new ArgumentException($"Option {key} not found");
+                throw new ArgumentException($"Option {key} not found.");
 
             Console.WriteLine(pr.Value);
         }

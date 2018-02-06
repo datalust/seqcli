@@ -38,7 +38,7 @@ Show information about available commands.
 
 ### `query`
 
-Execute SQL queries to retrieve CSV results.
+Execute an SQL query and receive results in CSV format.
 
 | Option | Description |
 | ------ | ----------- |
@@ -48,6 +48,17 @@ Execute SQL queries to retrieve CSV results.
 |       `--start=VALUE` | ISO 8601 date/time to query from (default: now - 24h) |
 |       `--end=VALUE` | Date/time to query to (default: now) |
 |       `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
+
+### `tail`
+
+Stream log events matching a filter.
+
+| Option | Description |
+| ------ | ----------- |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the URL in SeqCli.json will  be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the API key in SeqCli.json will be used |
+| `-f`, `--filter=VALUE` | An optional filter to apply to the stream, for example `@Level = 'Error'` |
+|       `--json` | Print the streamed events in newline-delimited JSON (the default is plain text) |
 
 ### `version`
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2016-2017 Datalust Pty Ltd
+﻿// Copyright 2018 Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 using System;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
-using SeqCli.Config;
 using SeqCli.Connection;
+using Serilog;
 
 namespace SeqCli.Cli.Commands
 {
-    [Command("query", "Execute SQL queries to retrieve CSV results")]
+    [Command("query", "Execute an SQL query and receive results in CSV format")]
     class QueryCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
@@ -40,12 +40,11 @@ namespace SeqCli.Cli.Commands
         {
             if (string.IsNullOrWhiteSpace(_query))
             {
-                Console.Error.WriteLine("A query must be specified.");
+                Log.Error("A query must be specified");
                 return 1;
             }
 
-            var config = SeqCliConfig.Read();
-            var connection = _connectionFactory.Connect(_connection, config);
+            var connection = _connectionFactory.Connect(_connection);
 
             // The `rangeStartUtc` parameter of `QueryCsvAsync()` should now be optional; we can
             // remove the `.Value` when _Seq.Api_ is updated to reflect this.

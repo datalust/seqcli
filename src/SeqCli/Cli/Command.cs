@@ -45,25 +45,17 @@ namespace SeqCli.Cli
 
         public async Task<int> Invoke(string[] args)
         {
-            try
+            var unrecognised = Options.Parse(args).ToArray();
+
+            var errs = _features.SelectMany(f => f.GetUsageErrors()).ToList();
+
+            if (errs.Any())
             {
-                var unrecognised = Options.Parse(args).ToArray();
-
-                var errs = _features.SelectMany(f => f.GetUsageErrors()).ToList();
-
-                if (errs.Any())
-                {
-                    ShowUsageErrors(errs);
-                    return -1;
-                }
-
-                return await Run(unrecognised);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex.Message);
+                ShowUsageErrors(errs);
                 return -1;
             }
+
+            return await Run(unrecognised);
         }
 
         protected virtual async Task<int> Run(string[] unrecognised)
