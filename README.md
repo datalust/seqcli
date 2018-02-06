@@ -1,10 +1,14 @@
 # `seqcli`
 
-[Seq](https://getseq.net) client command-line app.
+The [Seq](https://getseq.net) client command-line app.
 
 ## Getting started
 
-Install or unzip the application.
+Install or unzip the application. To set a default server URL, run:
+
+```
+seqcli config -k connection.serverUrl -v https://your-seq-server
+```
 
 ## Commands
 
