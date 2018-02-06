@@ -1,0 +1,17 @@
+version: 1.0.{build}
+skip_tags: true
+image: Visual Studio 2017
+build_script:
+- ps: ./Build.ps1
+test: off
+artifacts:
+- path: artifacts/seqcli-*.msi
+- path: artifacts/seqcli-*.tar.gz
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
+  artifact: /seqcli-.*\.(msi|tar\.gz)/
+  tag: v$(appveyor_build_version)
+  on:
+    branch: master

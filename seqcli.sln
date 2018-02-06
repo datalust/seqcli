@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FC0A256C-CC1F-4ECE-AF09-707248D10DC1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{2EA56595-519F-4DD5-9E94-CCC43E3DF624}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
+		Build.ps1 = Build.ps1
+		LICENSE = LICENSE
+		nuget.config = nuget.config
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3587B633-0C03-4235-8903-6226900328F1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "setup", "setup", "{203E8AE7-ADF0-44FA-A341-90723C8595F7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "asset", "asset", "{438A0DA5-F3CF-4FCE-B43A-B6DA2981D4AE}"
+	ProjectSection(SolutionItems) = preProject
+		asset\SeqCli-Icon-128px.ico = asset\SeqCli-Icon-128px.ico
+		asset\SeqCli-Icon-128px.png = asset\SeqCli-Icon-128px.png
+		asset\SeqCli-Icon.svg = asset\SeqCli-Icon.svg
+		asset\SeqCliLicense.rtf = asset\SeqCliLicense.rtf
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli", "src\SeqCli\SeqCli.csproj", "{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.Tests", "test\SeqCli.Tests\SeqCli.Tests.csproj", "{DBC69360-519B-4A9B-829B-2AE1B5412521}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SeqCli.Setup", "setup\SeqCli.Setup\SeqCli.Setup.wixproj", "{5E28D963-3523-49DE-B03B-E76684258415}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687}.Debug|x64.ActiveCfg = Debug|x64
+		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687}.Debug|x64.Build.0 = Debug|x64
+		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687}.Release|x64.ActiveCfg = Release|x64
+		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687}.Release|x64.Build.0 = Release|x64
+		{DBC69360-519B-4A9B-829B-2AE1B5412521}.Debug|x64.ActiveCfg = Debug|x64
+		{DBC69360-519B-4A9B-829B-2AE1B5412521}.Debug|x64.Build.0 = Debug|x64
+		{DBC69360-519B-4A9B-829B-2AE1B5412521}.Release|x64.ActiveCfg = Release|x64
+		{DBC69360-519B-4A9B-829B-2AE1B5412521}.Release|x64.Build.0 = Release|x64
+		{5E28D963-3523-49DE-B03B-E76684258415}.Debug|x64.ActiveCfg = Debug|x64
+		{5E28D963-3523-49DE-B03B-E76684258415}.Debug|x64.Build.0 = Debug|x64
+		{5E28D963-3523-49DE-B03B-E76684258415}.Release|x64.ActiveCfg = Release|x64
+		{5E28D963-3523-49DE-B03B-E76684258415}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687} = {FC0A256C-CC1F-4ECE-AF09-707248D10DC1}
+		{DBC69360-519B-4A9B-829B-2AE1B5412521} = {3587B633-0C03-4235-8903-6226900328F1}
+		{5E28D963-3523-49DE-B03B-E76684258415} = {203E8AE7-ADF0-44FA-A341-90723C8595F7}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6D299713-28D4-4078-9DA7-9033679CD200}
+	EndGlobalSection
+EndGlobal
