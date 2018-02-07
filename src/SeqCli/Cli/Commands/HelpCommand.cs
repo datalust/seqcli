@@ -72,6 +72,16 @@ namespace SeqCli.Cli.Commands
                 Console.WriteLine(cmd.Metadata.HelpText + ".");
                 Console.WriteLine();
 
+                if (cmd.Metadata.Example != null)
+                {
+                    Console.WriteLine("Example:");
+                    Console.WriteLine();
+                    Console.WriteLine("```");
+                    Console.WriteLine(cmd.Metadata.Example);
+                    Console.WriteLine("```");
+                    Console.WriteLine();
+                }
+
                 var optionSet = cmd.Value.Value.Options;
                 if (optionSet.Count == 0)
                     continue;

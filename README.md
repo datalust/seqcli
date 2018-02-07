@@ -36,6 +36,26 @@ Show information about available commands.
 | ------ | ----------- |
 | `-m`, `--markdown` | Generate markdown for use in documentation |
 
+### `log`
+
+Send a structured log event to the server.
+
+Example:
+
+```
+seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-m`, `--message=VALUE` | A message to associate with the event (the default is to send no message); https://messagetemplates.org syntax is supported |
+| `-l`, `--level=VALUE` | The level or severity of the event (the default is `Information`) |
+| `-t`, `--timestamp=VALUE` | The event timestamp as ISO-8601 (the current UTC timestamp will be used by default) |
+| `-x`, `--exception=VALUE` | Additional exception or error information to send, if any |
+| `-p`, `--property=VALUE1=VALUE2` | Specify event properties, e.g. `-p Customer=C123 -p Environment=Production` |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the URL in SeqCli.json will  be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the API key in SeqCli.json will be used |
+
 ### `query`
 
 Execute an SQL query and receive results in CSV format.
