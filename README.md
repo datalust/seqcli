@@ -10,6 +10,8 @@ Install or unzip the application. To set a default server URL, run:
 seqcli config -k connection.serverUrl -v https://your-seq-server
 ```
 
+This will create `SeqConfig.json` in your home directory. A default API key can also be set by providing the `connection.apiKey` setting name.
+
 ## Commands
 
 Usage:

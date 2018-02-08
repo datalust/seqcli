@@ -23,7 +23,7 @@ namespace SeqCli.Cli.Commands
         readonly OutputFormatFeature _output;
         readonly DateRangeFeature _range;
         string _filter;
-        int _count = 30;
+        int _count = 1;
 
         public SearchCommand(SeqConnectionFactory connectionFactory)
         {
@@ -35,7 +35,7 @@ namespace SeqCli.Cli.Commands
                 v => _filter = v);
             Options.Add(
                 "c=|count=",
-                "The maximum number of events to retrieve; the default is 1",
+                $"The maximum number of events to retrieve; the default is {_count}",
                 v => _count = int.Parse(v));
 
             _range = Enable<DateRangeFeature>();
@@ -109,7 +109,7 @@ namespace SeqCli.Cli.Commands
 
             if (mttp.Text != null)
                 return new TextToken(mttp.Text);
-            return new PropertyToken(mttp.PropertyName, mttp.RawText);
+            return new PropertyToken(mttp.PropertyName, mttp.RawText ?? $"{{{mttp.PropertyName}}}");
         }
 
         LogEventProperty CreateProperty(string name, object value)
