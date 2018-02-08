@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog.Formatting.Compact.Reader;
 
@@ -31,7 +32,7 @@ namespace SeqCli.Cli.Commands
         readonly OutputFormatFeature _output;
         string _filter;
 
-        public TailCommand(SeqConnectionFactory connectionFactory)
+        public TailCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -40,7 +41,7 @@ namespace SeqCli.Cli.Commands
                 "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
                 v => _filter = v);
 
-            _output = Enable<OutputFormatFeature>();
+            _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 

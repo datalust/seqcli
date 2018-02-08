@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Shared;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Util;
 using Serilog;
@@ -25,7 +27,7 @@ namespace SeqCli.Cli.Commands
         string _filter;
         int _count = 1;
 
-        public SearchCommand(SeqConnectionFactory connectionFactory)
+        public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -39,7 +41,7 @@ namespace SeqCli.Cli.Commands
                 v => _count = int.Parse(v));
 
             _range = Enable<DateRangeFeature>();
-            _output = Enable<OutputFormatFeature>();
+            _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -103,7 +105,7 @@ namespace SeqCli.Cli.Commands
                 evt.Properties.Select(p => CreateProperty(p.Name, p.Value)));
         }
 
-        MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart mttp)
+        static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart mttp)
         {
             // Also not ideal, we lose renderings, alignment etc. here.
 
@@ -119,33 +121,22 @@ namespace SeqCli.Cli.Commands
 
         LogEventPropertyValue CreatePropertyValue(object value)
         {
-            var d = value as IDictionary<string, object>;
-            if (d != null)
+            switch (value)
             {
-                object tt;
-                d.TryGetValue("$typeTag", out tt);
-                return new StructureValue(
-                    d.Where(kvp => kvp.Key != "$typeTag").Select(kvp => CreateProperty(kvp.Key, kvp.Value)),
-                    tt as string);
-            }
+                case JObject jo:
+                    jo.TryGetValue("$typeTag", out var tt);
+                    return new StructureValue(
+                        jo.Properties()
+                            .Where(kvp => kvp.Name != "$typeTag")
+                            .Select(kvp => CreateProperty(kvp.Name, kvp.Value)),
+                        (tt as JValue)?.Value as string);
 
-            var dd = value as IDictionary;
-            if (dd != null)
-            {
-                return new DictionaryValue(dd.Keys
-                    .Cast<object>()
-                    .Select(k => new KeyValuePair<ScalarValue, LogEventPropertyValue>(
-                        (ScalarValue)CreatePropertyValue(k),
-                        CreatePropertyValue(dd[k]))));
-            }
+                case JArray ja:
+                    return new SequenceValue(ja.Select(CreatePropertyValue));
 
-            if (value == null || value is string || !(value is IEnumerable))
-            {
-                return new ScalarValue(value);
+                default:
+                    return new ScalarValue(value);
             }
-
-            var enumerable = (IEnumerable)value;
-            return new SequenceValue(enumerable.Cast<object>().Select(CreatePropertyValue));
         }
     }
 }

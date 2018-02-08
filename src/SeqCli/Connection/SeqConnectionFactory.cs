@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -20,10 +21,17 @@ namespace SeqCli.Connection
 {
     class SeqConnectionFactory
     {
+        readonly SeqCliConfig _config;
+
+        public SeqConnectionFactory(SeqCliConfig config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
+
         public SeqConnection Connect(ConnectionFeature connection)
         {
-            var config = SeqCliConfig.Read();
-            
+            if (connection == null) throw new ArgumentNullException(nameof(connection));
+
             string url, apiKey;
             if (connection.IsUrlSpecified)
             {
@@ -32,9 +40,10 @@ namespace SeqCli.Connection
             }
             else
             {
-                url = config.Connection.ServerUrl;
-                apiKey = config.Connection.ApiKey;
+                url = _config.Connection.ServerUrl;
+                apiKey = _config.Connection.ApiKey;
             }
+
             return new SeqConnection(url, apiKey);
         }
     }

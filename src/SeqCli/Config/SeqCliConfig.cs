@@ -51,5 +51,6 @@ namespace SeqCli.Config
         }
 
         public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
+        public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
     }
 }

@@ -114,6 +114,7 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 |       `--end=VALUE` | Date/time to query to (default: now) |
 | `-n`, `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 
@@ -125,6 +126,7 @@ Stream log events matching a filter.
 | ------ | ----------- |
 | `-f`, `--filter=VALUE` | An optional server-side filter to apply to the stream, for example `@Level = 'Error'` |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 
