@@ -92,9 +92,8 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 | Option | Description |
 | ------ | ----------- |
 | `-q`, `--query=VALUE` | The query to execute |
-|       `--start=VALUE` | ISO 8601 date/time to query from (default: now - 24h) |
-|       `--end=VALUE` | Date/time to query to (default: now) |
-| `-n`, `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
+|       `--start=VALUE` | ISO 8601 date/time to query from |
+|       `--end=VALUE` | Date/time to query to |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 |       `--timeout=VALUE` | The query execution timeout in milliseconds |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
@@ -114,9 +113,8 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 | ------ | ----------- |
 | `-f`, `--filter=VALUE` | A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'` |
 | `-c`, `--count=VALUE` | The maximum number of events to retrieve; the default is 1 |
-|       `--start=VALUE` | ISO 8601 date/time to query from (default: now - 24h) |
-|       `--end=VALUE` | Date/time to query to (default: now) |
-| `-n`, `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
+|       `--start=VALUE` | ISO 8601 date/time to query from |
+|       `--end=VALUE` | Date/time to query to |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
