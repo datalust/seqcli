@@ -1,6 +1,18 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿// Copyright 2018 Datalust Pty Ltd
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -24,6 +36,7 @@ namespace SeqCli.Cli.Commands
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
         readonly DateRangeFeature _range;
+        readonly SignalExpressionFeature _signal;
         string _filter;
         int _count = 1;
 
@@ -42,6 +55,7 @@ namespace SeqCli.Cli.Commands
 
             _range = Enable<DateRangeFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
+            _signal = Enable<SignalExpressionFeature>();
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -62,6 +76,8 @@ namespace SeqCli.Cli.Commands
                     while (remaining > 0)
                     {
                         var resultSet = await connection.Events.InSignalAsync(
+                            null,
+                            _signal.Signal,
                             filter: filter,
                             count: remaining,
                             fromDateUtc: _range.Start,

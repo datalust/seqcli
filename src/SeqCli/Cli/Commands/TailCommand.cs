@@ -30,6 +30,7 @@ namespace SeqCli.Cli.Commands
         readonly SeqConnectionFactory _connectionFactory;
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
+        readonly SignalExpressionFeature _signal;
         string _filter;
 
         public TailCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -42,6 +43,7 @@ namespace SeqCli.Cli.Commands
                 v => _filter = v);
 
             _output = Enable(new OutputFormatFeature(config.Output));
+            _signal = Enable<SignalExpressionFeature>();
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -60,7 +62,7 @@ namespace SeqCli.Cli.Commands
             }
 
             using (var output = _output.CreateOutputLogger())
-            using (var stream = await connection.Events.StreamAsync<JObject>(filter: strict))
+            using (var stream = await connection.Events.StreamAsync<JObject>(filter: strict, signal: _signal.Signal))
             {
                 var subscription = stream
                     .Select(LogEventReader.ReadFromJObject)

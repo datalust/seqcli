@@ -4,7 +4,9 @@ The [Seq](https://getseq.net) client command-line app.
 
 ## Getting started
 
-Install or unzip the application. To set a default server URL, run:
+Install or unzip the [release for your operating system](https://github.com/datalust/seqcli/releases).
+
+To set a default server URL, run:
 
 ```
 seqcli config -k connection.serverUrl -v https://your-seq-server
@@ -89,12 +91,14 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 
 | Option | Description |
 | ------ | ----------- |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 | `-q`, `--query=VALUE` | The query to execute |
 |       `--start=VALUE` | ISO 8601 date/time to query from (default: now - 24h) |
 |       `--end=VALUE` | Date/time to query to (default: now) |
 | `-n`, `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
+|       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
+|       `--timeout=VALUE` | The query execution timeout in milliseconds |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 
 ### `search`
 
@@ -115,6 +119,7 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 | `-n`, `--no-default-range` | If specified, missing `--start` and `--end` values will not be defaulted |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
+|       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 
@@ -127,6 +132,7 @@ Stream log events matching a filter.
 | `-f`, `--filter=VALUE` | An optional server-side filter to apply to the stream, for example `@Level = 'Error'` |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
+|       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 
