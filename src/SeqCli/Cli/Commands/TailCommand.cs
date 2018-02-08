@@ -19,9 +19,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
-using Serilog;
-using Serilog.Events;
-using Serilog.Formatting.Compact;
 using Serilog.Formatting.Compact.Reader;
 
 namespace SeqCli.Cli.Commands
@@ -31,22 +28,20 @@ namespace SeqCli.Cli.Commands
     {
         readonly SeqConnectionFactory _connectionFactory;
         readonly ConnectionFeature _connection;
+        readonly OutputFormatFeature _output;
         string _filter;
-        bool _json;
 
         public TailCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            _connection = Enable<ConnectionFeature>();
             Options.Add(
                 "f=|filter=",
-                "An optional filter to apply to the stream, for example `@Level = 'Error'`",
+                "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
                 v => _filter = v);
-            Options.Add(
-                "json",
-                "Print the streamed events in newline-delimited JSON (the default is plain text)",
-                v => _json = true);
+
+            _output = Enable<OutputFormatFeature>();
+            _connection = Enable<ConnectionFeature>();
         }
 
         protected override async Task<int> Run()
@@ -63,15 +58,7 @@ namespace SeqCli.Cli.Commands
                 strict = converted.StrictExpression;
             }
 
-            var outputConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Is(LevelAlias.Minimum);
-            
-            if (_json)
-                outputConfiguration.WriteTo.Console(new RenderedCompactJsonFormatter());
-            else
-                outputConfiguration.WriteTo.Console();
-
-            using (var output = outputConfiguration.CreateLogger())
+            using (var output = _output.CreateOutputLogger())
             using (var stream = await connection.Events.StreamAsync<JObject>(filter: strict))
             {
                 var subscription = stream

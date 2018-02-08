@@ -12,7 +12,7 @@ namespace SeqCli.Cli.Features
         {
             options.Add("start=", "ISO 8601 date/time to query from (default: now - 24h)", v => _start = v);
             options.Add("end=", "Date/time to query to (default: now)", v => _end = v);
-            options.Add("no-default-range", "If specified, missing `--start` and `--end` values will not be defaulted",
+            options.Add("n|no-default-range", "If specified, missing `--start` and `--end` values will not be defaulted",
                 _ => _noDefaultRange = true);
         }
 

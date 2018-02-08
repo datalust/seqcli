@@ -31,11 +31,11 @@ namespace SeqCli.Cli.Features
         public override void Enable(OptionSet options)
         {
             options.Add("s=|server=",
-                "The URL of the Seq server; by default the URL in SeqCli.json will  be used",
+                "The URL of the Seq server; by default the `connection.serverUrl` value will be used",
                 v => Url = v.Trim());
 
             options.Add("a=|apikey=",
-                "The API key to use when connecting to the server; by default the API key in SeqCli.json will be used",
+                "The API key to use when connecting to the server; by default `config.apiKey` value will be used",
                 v => ApiKey = v.Trim());
         }
     }

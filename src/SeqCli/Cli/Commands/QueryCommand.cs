@@ -20,7 +20,8 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands
 {
-    [Command("query", "Execute an SQL query and receive results in CSV format")]
+    [Command("query", "Execute an SQL query and receive results in CSV format",
+        Example = "seqcli query -q \"select count(*) from stream group by @Level\" --start=\"2018-02-28T13:00Z\"")]
     class QueryCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
@@ -32,7 +33,7 @@ namespace SeqCli.Cli.Commands
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             _connection = Enable<ConnectionFeature>();
-            Options.Add("q=|query=", "The query to execute, for example `select count(*) from stream`", v => _query = v);
+            Options.Add("q=|query=", "The query to execute", v => _query = v);
             _range = Enable<DateRangeFeature>();
         }
 

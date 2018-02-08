@@ -23,6 +23,7 @@
   <ItemGroup>
     <PackageReference Include="newtonsoft.json" Version="10.0.3" />
     <PackageReference Include="Serilog" Version="2.6.0" />
+    <PackageReference Include="serilog.filters.expressions" Version="1.1.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="1.0.2" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.0.1" />

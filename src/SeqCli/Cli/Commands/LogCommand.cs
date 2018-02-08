@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Seq.Api.Model.Events;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
@@ -84,11 +84,11 @@ namespace SeqCli.Cli.Commands
                 payload.WriteTo(jsonWriter);
                 jsonWriter.Flush();
                 builder.WriteLine();
-                content = new StringContent(builder.ToString(), Encoding.UTF8, "application/vnd.serilog.clef");
+                content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
             }
 
             var connection = _connectionFactory.Connect(_connection);
-            var result = await connection.Client.HttpClient.PostAsync("api/events/raw", content);
+            var result = await connection.Client.HttpClient.PostAsync(ApiConstants.IngestionEndpoint, content);
 
             if (result.IsSuccessStatusCode)
                 return 0;
@@ -103,8 +103,6 @@ namespace SeqCli.Cli.Commands
                     Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
                         result.StatusCode,
                         (string) error.ErrorMessage);
-
-                    return 1;
                 }
                 catch
                 {
