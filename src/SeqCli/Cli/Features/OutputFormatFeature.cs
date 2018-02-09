@@ -48,7 +48,9 @@ namespace SeqCli.Cli.Features
             if (_json)
                 outputConfiguration.WriteTo.Console(new CompactJsonFormatter());
             else
-                outputConfiguration.WriteTo.Console(theme: _noColor ? ConsoleTheme.None : SystemConsoleTheme.Literate);
+                outputConfiguration.WriteTo.Console(
+                    outputTemplate: "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
+                    theme: _noColor ? ConsoleTheme.None : SystemConsoleTheme.Literate);
 
             return outputConfiguration.CreateLogger();
         }

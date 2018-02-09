@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -114,7 +115,7 @@ namespace SeqCli.Cli.Commands
                 level = LogEventLevel.Information;
 
             return new LogEvent(
-                DateTimeOffset.Parse(evt.Timestamp),
+                DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
                 level,
                 string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
                 new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),

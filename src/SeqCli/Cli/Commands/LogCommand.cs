@@ -67,7 +67,7 @@ namespace SeqCli.Cli.Commands
             var payload = new JObject();
 
             payload["@t"] = string.IsNullOrWhiteSpace(_timestamp) ?
-                DateTime.UtcNow.ToString("o") :
+                DateTimeOffset.Now.ToString("o") :
                 _timestamp;
 
             if (_level != null && _level != "Information")
