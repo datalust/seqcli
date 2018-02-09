@@ -1,6 +1,8 @@
-# `seqcli` [![Build status](https://ci.appveyor.com/api/projects/status/sc3iacxwxqqfjgdh?svg=true)](https://ci.appveyor.com/project/datalust/seqcli)
+# `seqcli` [![Build status](https://ci.appveyor.com/api/projects/status/sc3iacxwxqqfjgdh?svg=true)](https://ci.appveyor.com/project/datalust/seqcli) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
 
-The [Seq](https://getseq.net) client command-line app.
+The [Seq](https://getseq.net) client command-line app. Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`).
+
+![SeqCli Screenshot](https://raw.githubusercontent.com/datalust/seqcli/dev/asset/SeqCli.png)
 
 ## Getting started
 
