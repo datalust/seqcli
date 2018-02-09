@@ -57,7 +57,7 @@ namespace SeqCli.Cli.Commands
             // The `rangeStartUtc` parameter of `QueryCsvAsync()` should now be optional; we can
             // remove the `.Value` when _Seq.Api_ is updated to reflect this.
             // ReSharper disable once PossibleInvalidOperationException
-            var result = await QueryCsvAsync(connection, _query, _range.Start.Value, _range.End, _signal.Signal, _timeoutMS);
+            var result = await QueryCsvAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS);
             Console.WriteLine(result);
 
             return 0;
