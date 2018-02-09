@@ -1,4 +1,4 @@
-# `seqcli`
+# `seqcli` [![Build status](https://ci.appveyor.com/api/projects/status/sc3iacxwxqqfjgdh?svg=true)](https://ci.appveyor.com/project/datalust/seqcli)
 
 The [Seq](https://getseq.net) client command-line app.
 
