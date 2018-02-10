@@ -30,6 +30,8 @@ namespace SeqCli.Cli.Features
             _noColor = outputConfig.DisableColor;
         }
 
+        public static ConsoleTheme ConsoleTheme => SystemConsoleTheme.Literate;
+
         public override void Enable(OptionSet options)
         {
             options.Add(
@@ -50,7 +52,7 @@ namespace SeqCli.Cli.Features
             else
                 outputConfiguration.WriteTo.Console(
                     outputTemplate: "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
-                    theme: _noColor ? ConsoleTheme.None : SystemConsoleTheme.Literate);
+                    theme: _noColor ? ConsoleTheme.None : ConsoleTheme);
 
             return outputConfiguration.CreateLogger();
         }
