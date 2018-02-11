@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?ifndef Version?>
+<?define Version = "99.99.99" ?>
+<?endif ?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Product Id="*" Name="SeqCli" Language="1033" Version="$(var.Version).0"
+           Manufacturer="Datalust Pty Ltd" UpgradeCode="90353419-3199-4493-5341-510ffee561ee">
+
+    <Package InstallerVersion="200"
+             Platform="x64"
+             Compressed="yes"
+             InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+
+    <WixVariable Id="WixUIDialogBmp" Value="WixUIDialogBmp.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="WixUIBannerBmp.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="..\..\asset\SeqCliLicense.rtf" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Icon Id="SeqCli.ico" SourceFile="..\..\asset\SeqCli-Icon-128px.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="SeqCli.ico" />
+
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+    </UI>
+
+    <Feature Id="ProductFeature" Title="SeqCli" Level="1">
+      <ComponentGroupRef Id="SeqCli_Project" />
+      <ComponentGroupRef Id="SeqCli_Exe" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="SeqCli" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="SeqCli_Exe">
+      <Component Id="SeqCliPathEntry" Directory="INSTALLFOLDER" Guid="91667E49-C1EF-4DA5-ABD0-4A3413D91667">
+        <CreateFolder/>
+        <RemoveFile Id="InstallState" On="uninstall" Name="SeqCli.InstallState" />
+        <Environment
+          Id="PATH"
+          Name="PATH"
+          Value="[INSTALLFOLDER]"
+          Permanent="yes"
+          Part="last"
+          Action="set"
+          System="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

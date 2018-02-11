@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" InitialTargets="EnsureWixToolsetInstalled" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.9</ProductVersion>
+    <ProjectGuid>5e28d963-3523-49de-b03b-e76684258415</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>seqcli</OutputName>
+    <OutputType>Package</OutputType>
+    <WixToolPath>..\..\build\wix\</WixToolPath>
+    <WixTargetsPath>$(WixToolPath)Wix.targets</WixTargetsPath>
+    <WixTasksPath>$(WixToolPath)wixtasks.dll</WixTasksPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>Debug;Version=$(Version)</DefineConstants>
+    <DefineConstants>Debug</DefineConstants>
+    <SuppressIces>
+    </SuppressIces>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DefineConstants>Version=$(Version)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+    <Compile Include="SeqCli.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="RemovePdbs.xslt" />
+    <Content Include="WixUIBannerBmp.bmp" />
+    <Content Include="WixUIDialogBmp.bmp" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" Condition=" Exists('$(WixTargetsPath)') " />
+  <Target Name="EnsureWixToolsetInstalled" Condition=" !Exists('$(WixTargetsPath)') ">
+    <Error Text="The WiX Toolset v4 build tools must be installed to build this project. To download the WiX Toolset v4, see http://wixtoolset.org/releases/" />
+  </Target>
+  <Target Name="BeforeBuild">
+    <PropertyGroup>
+      <LinkerBaseInputPaths>..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish</LinkerBaseInputPaths>
+      <DefineConstants>BasePath=..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish</DefineConstants>
+    </PropertyGroup>
+    <HeatDirectory OutputFile="SeqCli.wxs" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="SeqCli_Project" SuppressCom="true" Directory="..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath" Transforms="RemovePdbs.xslt" />
+  </Target>
+</Project>
