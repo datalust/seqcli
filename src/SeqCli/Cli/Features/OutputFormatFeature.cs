@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -30,6 +31,8 @@ namespace SeqCli.Cli.Features
             _noColor = outputConfig.DisableColor;
         }
 
+        public static ConsoleTheme ConsoleTheme => SystemConsoleTheme.Literate;
+
         public override void Enable(OptionSet options)
         {
             options.Add(
@@ -43,14 +46,15 @@ namespace SeqCli.Cli.Features
         public Logger CreateOutputLogger()
         {
             var outputConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Is(LevelAlias.Minimum);
+                .MinimumLevel.Is(LevelAlias.Minimum)
+                .Enrich.With<RedundantEventTypeRemovalEnricher>();
 
             if (_json)
                 outputConfiguration.WriteTo.Console(new CompactJsonFormatter());
             else
                 outputConfiguration.WriteTo.Console(
                     outputTemplate: "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
-                    theme: _noColor ? ConsoleTheme.None : SystemConsoleTheme.Literate);
+                    theme: _noColor ? ConsoleTheme.None : ConsoleTheme);
 
             return outputConfiguration.CreateLogger();
         }

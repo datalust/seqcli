@@ -18,7 +18,9 @@ using System.Threading.Tasks;
 using Seq.Api;
 using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Csv;
 using Serilog;
 
 namespace SeqCli.Cli.Commands
@@ -33,14 +35,17 @@ namespace SeqCli.Cli.Commands
         readonly SignalExpressionFeature _signal;
         string _query;
         int? _timeoutMS;
+        bool _noColor;
 
-        public QueryCommand(SeqConnectionFactory connectionFactory)
+        public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             Options.Add("q=|query=", "The query to execute", v => _query = v);
             _range = Enable<DateRangeFeature>();
             _signal = Enable<SignalExpressionFeature>();
             Options.Add("timeout=", "The query execution timeout in milliseconds", v => _timeoutMS = int.Parse(v));
+            Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+            _noColor = config.Output.DisableColor;
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -58,7 +63,14 @@ namespace SeqCli.Cli.Commands
             // remove the `.Value` when _Seq.Api_ is updated to reflect this.
             // ReSharper disable once PossibleInvalidOperationException
             var result = await QueryCsvAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS);
-            Console.WriteLine(result);
+            if (_noColor)
+            {
+                Console.Write(result);
+                return 0;
+            }
+
+            var tokens = new CsvTokenizer().Tokenize(result);
+            CsvWriter.WriteCsv(tokens, OutputFormatFeature.ConsoleTheme, Console.Out, true);
 
             return 0;
         }
