@@ -21,7 +21,7 @@ using Autofac.Features.Metadata;
 
 namespace SeqCli.Cli.Commands
 {
-    [Command("help", "Show information about available commands")]
+    [Command("help", "Show information about available commands", Example = "seqcli help search")]
     class HelpCommand : Command
     {
         readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
