@@ -13,10 +13,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli-Icon-128px.ico" Link="SeqCli-Icon-128px.ico" />
-    <Content Include="Attribution\Serilog License.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Attribution\Autofac License.txt">
+    <Content Include="Attribution\*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -28,7 +25,6 @@
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="1.0.2" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.0.1" />
     <PackageReference Include="Autofac" Version="4.0.0" />
-    <PackageReference Include="ILLink.Tasks" Version="0.1.4-preview-981901" />
     <PackageReference Include="Superpower" Version="1.1.0" />
     <PackageReference Include="System.Reactive" Version="3.1.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.4.0" />
