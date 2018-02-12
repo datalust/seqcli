@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -45,7 +46,8 @@ namespace SeqCli.Cli.Features
         public Logger CreateOutputLogger()
         {
             var outputConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Is(LevelAlias.Minimum);
+                .MinimumLevel.Is(LevelAlias.Minimum)
+                .Enrich.With<RedundantEventTypeRemovalEnricher>();
 
             if (_json)
                 outputConfiguration.WriteTo.Console(new CompactJsonFormatter());

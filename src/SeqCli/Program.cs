@@ -28,7 +28,7 @@ namespace SeqCli
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Error()
                 .WriteTo.Console(
-                    outputTemplate: "{Message:lj}{NewLine}",
+                    outputTemplate: "{Message:lj}{NewLine}{Exception}",
                     standardErrorFromLevel: LevelAlias.Minimum)
                 .CreateLogger();
             
