@@ -38,6 +38,12 @@ View and set fields in the `SeqCli.json` file; run with no arguments to list all
 
 Show information about available commands.
 
+Example:
+
+```
+seqcli help search
+```
+
 | Option | Description |
 | ------ | ----------- |
 | `-m`, `--markdown` | Generate markdown for use in documentation |
@@ -98,6 +104,8 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 |       `--end=VALUE` | Date/time to query to |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 |       `--timeout=VALUE` | The query execution timeout in milliseconds |
+|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
 

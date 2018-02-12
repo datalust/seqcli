@@ -20,7 +20,6 @@ using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
-using SeqCli.Csv;
 using Serilog;
 
 namespace SeqCli.Cli.Commands
@@ -29,23 +28,23 @@ namespace SeqCli.Cli.Commands
         Example = "seqcli query -q \"select count(*) from stream group by @Level\" --start=\"2018-02-28T13:00Z\"")]
     class QueryCommand : Command
     {
+        readonly OutputFormatFeature _output;
         readonly SeqConnectionFactory _connectionFactory;
         readonly ConnectionFeature _connection;
         readonly DateRangeFeature _range;
         readonly SignalExpressionFeature _signal;
         string _query;
         int? _timeoutMS;
-        bool _noColor;
 
         public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
+            if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             Options.Add("q=|query=", "The query to execute", v => _query = v);
             _range = Enable<DateRangeFeature>();
             _signal = Enable<SignalExpressionFeature>();
             Options.Add("timeout=", "The query execution timeout in milliseconds", v => _timeoutMS = int.Parse(v));
-            Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
-            _noColor = config.Output.DisableColor;
+            _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -59,32 +58,41 @@ namespace SeqCli.Cli.Commands
 
             var connection = _connectionFactory.Connect(_connection);
 
-            // The `rangeStartUtc` parameter of `QueryCsvAsync()` should now be optional; we can
+            // The `rangeStartUtc` parameter of `Query[Csv]Async()` should now be optional; we can
             // remove the `.Value` when _Seq.Api_ is updated to reflect this.
             // ReSharper disable once PossibleInvalidOperationException
-            var result = await QueryCsvAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS);
-            if (_noColor)
+            if (_output.Json)
             {
-                Console.Write(result);
-                return 0;
+                var result = await QueryAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS);
+                Console.WriteLine(result);
             }
-
-            var tokens = new CsvTokenizer().Tokenize(result);
-            CsvWriter.WriteCsv(tokens, OutputFormatFeature.ConsoleTheme, Console.Out, true);
+            else
+            {
+                var result = await QueryAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS, "text/csv");
+                _output.WriteCsv(result);
+            }
 
             return 0;
         }
 
-        static async Task<string> QueryCsvAsync(SeqConnection connection, string query, DateTime? rangeStartUtc, DateTime? rangeEndUtc, SignalExpressionPart signalExpression, int? timeoutMS)
+        static async Task<string> QueryAsync(
+            SeqConnection connection, 
+            string query, 
+            DateTime? rangeStartUtc,
+            DateTime? rangeEndUtc,
+            SignalExpressionPart signalExpression,
+            int? timeoutMS,
+            string format = null)
         {
             // From dates should no longer be mandatory for QueryCsvAsync (issue raised)
 
             var parameters = new Dictionary<string, object>
             {
-                ["q"] = query,
-                ["format"] = "text/csv"
+                ["q"] = query
             };
 
+            if (format != null)
+                parameters.Add(nameof(format), format);
             if (rangeStartUtc.HasValue)
                 parameters.Add(nameof(rangeEndUtc), rangeStartUtc.Value);
             if (rangeEndUtc.HasValue)

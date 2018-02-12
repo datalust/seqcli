@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using SeqCli.Config;
+using SeqCli.Csv;
 using SeqCli.Output;
 using Serilog;
 using Serilog.Core;
@@ -31,7 +33,9 @@ namespace SeqCli.Cli.Features
             _noColor = outputConfig.DisableColor;
         }
 
-        public static ConsoleTheme ConsoleTheme => SystemConsoleTheme.Literate;
+        public bool Json => _json;
+
+        ConsoleTheme Theme => _noColor ? ConsoleTheme.None : SystemConsoleTheme.Literate;
 
         public override void Enable(OptionSet options)
         {
@@ -54,9 +58,22 @@ namespace SeqCli.Cli.Features
             else
                 outputConfiguration.WriteTo.Console(
                     outputTemplate: "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
-                    theme: _noColor ? ConsoleTheme.None : ConsoleTheme);
+                    theme: Theme);
 
             return outputConfiguration.CreateLogger();
+        }
+
+        public void WriteCsv(string csv)
+        {
+            if (_noColor)
+            {
+                Console.Write(csv);
+            }
+            else
+            {
+                var tokens = new CsvTokenizer().Tokenize(csv);
+                CsvWriter.WriteCsv(tokens, Theme, Console.Out, true);
+            }
         }
     }
 }
