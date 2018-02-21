@@ -9,6 +9,6 @@ namespace SeqCli.PlainText.Parsers
         public static TextParser<TextSpan> CStyle { get; } =
             SpanEx.MatchedBy(
                 Character.Letter.Or(Character.EqualTo('_'))
-                    .IgnoreThen(Character.LetterOrDigit).Or(Character.EqualTo('_')).Many());
+                    .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many()));
     }
 }

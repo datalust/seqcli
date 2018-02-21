@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SeqCli.PlainText;
 using Superpower.Model;
 using Xunit;
@@ -49,6 +50,53 @@ namespace SeqCli.Tests.PlainText
         public void TheFirstPatternElementIsExposed()
         {
             Assert.Same(BuiltInPatterns.Identifier, ClassMethodPattern.FrameStart);
+        }
+
+        [Fact]
+        public void SingleLineContentMatchesUntilEol()
+        {
+            var pattern = new Pattern(new[]
+            {
+                new PatternElement(BuiltInPatterns.Identifier, "first"),
+                new PatternElement(BuiltInPatterns.LiteralText(" ")),
+                new PatternElement(BuiltInPatterns.SingleLineContent, "content"), 
+                new PatternElement(BuiltInPatterns.LiteralText(" (")),
+                new PatternElement(BuiltInPatterns.Identifier, "last"),
+                new PatternElement(BuiltInPatterns.LiteralText(")"))
+            });
+
+            var frame = "abc def ghi (jkl)";
+            var (properties, remainder) = pattern.Match(frame);
+            Assert.Null(remainder);
+            Assert.Equal("abc", properties["first"].ToString());
+            Assert.Equal("def ghi (jkl)", properties["content"].ToString());
+        }
+        
+        [Fact]
+        public void NonGreedyContentStopsMatchingWhenFollowingTokensMatch()
+        {
+            // It's likely we'll only be able to get one or two tokens into
+            // the "following" list, since they effectively become "mandatory"
+            var following = new[]
+            {
+                new PatternElement(BuiltInPatterns.LiteralText(" (")),
+                new PatternElement(BuiltInPatterns.Identifier, "last"),
+                new PatternElement(BuiltInPatterns.LiteralText(")"))
+            };
+            
+            var pattern = new Pattern(new[]
+            {
+                new PatternElement(BuiltInPatterns.Identifier, "first"),
+                new PatternElement(BuiltInPatterns.LiteralText(" ")),
+                new PatternElement(BuiltInPatterns.NonGreedyContent(following), "content"), 
+            }.Concat(following));
+
+            var frame = "abc def ghi (jkl)";
+            var (properties, remainder) = pattern.Match(frame);
+            Assert.Null(remainder);
+            Assert.Equal("abc", properties["first"].ToString());
+            Assert.Equal("def ghi", properties["content"].ToString());
+            Assert.Equal("jkl", properties["last"].ToString());
         }
     }
 }
