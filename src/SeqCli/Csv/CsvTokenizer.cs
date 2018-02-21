@@ -8,7 +8,7 @@ namespace SeqCli.Csv
 {
     class CsvTokenizer : Tokenizer<CsvToken>
     {
-        static readonly TextParser<TextSpan> Content = Span.While(ch => ch != '"');
+        static readonly TextParser<TextSpan> Content = Span.WithoutAny(ch => ch == '"');
         
         protected override IEnumerable<Result<CsvToken>> Tokenize(TextSpan span)
         {
@@ -26,9 +26,9 @@ namespace SeqCli.Csv
                     if (!next.HasValue) yield break;
 
                     var text = Content(next.Location);
-                    while (text.HasValue)
+                    while (text.HasValue || !text.Remainder.IsAtEnd)
                     {
-                        if (text.Value.Length > 0)
+                        if (text.HasValue)
                         {
                             if (TryMatchSpecialContent(text.Value, out var specialTokenType) &&
                                 !IsEscapedDoubleQuote(text.Remainder))
