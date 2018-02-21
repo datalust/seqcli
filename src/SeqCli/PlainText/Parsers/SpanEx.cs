@@ -1,5 +1,6 @@
 ﻿using Superpower;
 using Superpower.Model;
+using Superpower.Parsers;
 
 namespace SeqCli.PlainText.Parsers
 {
@@ -20,5 +21,8 @@ namespace SeqCli.PlainText.Parsers
                     result.Remainder);
             };
         }
+
+        public static TextParser<TextSpan> NonWhiteSpace { get; } =
+            Span.WithoutAny(char.IsWhiteSpace);
     }
 }

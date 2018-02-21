@@ -11,6 +11,9 @@ namespace SeqCli.PlainText
             IdentifierEx.CStyle
                 .Select(span => (object) span);
             
+        public static TextParser<object> Token { get; } =
+            SpanEx.NonWhiteSpace.Select(span => (object)span);
+            
         public static TextParser<object> MultiLineMessage { get; } =
             SpanEx.MatchedBy(
                     Character.Matching(ch => !char.IsWhiteSpace(ch), "non whitespace character")
