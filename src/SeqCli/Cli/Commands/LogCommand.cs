@@ -102,7 +102,13 @@ namespace SeqCli.Cli.Commands
             }
 
             var connection = _connectionFactory.Connect(_connection);
-            var result = await connection.Client.HttpClient.PostAsync(ApiConstants.IngestionEndpoint, content);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) {Content = content};
+
+            if (_connection.IsApiKeySpecified)
+                request.Headers.Add("X-Seq-ApiKey", _connection.ApiKey);
+            
+            var result = await connection.Client.HttpClient.SendAsync(request);
 
             if (result.IsSuccessStatusCode)
                 return 0;
