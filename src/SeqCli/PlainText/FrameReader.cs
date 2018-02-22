@@ -21,7 +21,7 @@ using Superpower.Model;
 
 namespace SeqCli.PlainText
 {
-    class FrameReader
+    class FrameReader : IDisposable
     {
         readonly TextReader _source;
         readonly TimeSpan _trailingLineArrivalDeadline;
@@ -121,6 +121,11 @@ namespace SeqCli.PlainText
                 var result = _frameStart(new TextSpan(line));
                 return result.HasValue && result.Value.Length > 0;
             }
+        }
+
+        public void Dispose()
+        {
+            _unawaitedNextLine?.Dispose();
         }
     }
 }
