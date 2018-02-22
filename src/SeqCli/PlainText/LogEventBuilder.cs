@@ -89,8 +89,8 @@ namespace SeqCli.PlainText
         {
             var timestamp = properties.TryGetValue(ReifiedProperties.Timestamp, out var t) &&
                             t is TextSpan span &&
-                            DateTimeOffset.TryParseExact(span.ToStringValue(), "o", CultureInfo.InvariantCulture,
-                                DateTimeStyles.None, out var ts)
+                            DateTimeOffset.TryParse(span.ToStringValue(), CultureInfo.InvariantCulture,
+                                DateTimeStyles.AssumeLocal, out var ts)
                 ? ts
                 : DateTimeOffset.Now;
             return timestamp;
