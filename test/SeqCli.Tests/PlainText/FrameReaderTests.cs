@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using SeqCli.PlainText;
+using SeqCli.PlainText.Parsers;
 using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
@@ -12,23 +13,7 @@ using Xunit;
 namespace SeqCli.Tests.PlainText
 {
     public class FrameReaderTests
-    {
-        static TextParser<TextSpan> SpanMatchedBy<T>(TextParser<T> parser)
-        {
-            return i =>
-            {
-                var result = parser(i);
-                
-                if (!result.HasValue)
-                    return Result.CastEmpty<T, TextSpan>(result);
-              
-                return Result.Value(
-                    i.Until(result.Remainder),
-                    i,
-                    result.Remainder);
-            };
-        }
-        
+    {        
         [Fact]
         public async Task SplitsLinesIntoFrames()
         {
@@ -38,7 +23,7 @@ namespace SeqCli.Tests.PlainText
             
             var reader = new FrameReader(
                 new StringReader(source.ToString()),
-                SpanMatchedBy(Character.Letter),
+                SpanEx.MatchedBy(Character.Letter),
                 TimeSpan.FromMilliseconds(1));
             
             var first = await reader.TryReadAsync();
@@ -58,7 +43,7 @@ namespace SeqCli.Tests.PlainText
         {
             var reader = new FrameReader(
                 new StringReader(""),
-                SpanMatchedBy(Character.Letter),
+                SpanEx.MatchedBy(Character.Letter),
                 TimeSpan.FromMilliseconds(1));
             
             var none = await reader.TryReadAsync();
@@ -76,7 +61,7 @@ namespace SeqCli.Tests.PlainText
             source.AppendLine("third");
             source.AppendLine(" and yet more");
 
-            var frames = await ReadAllFrames(source.ToString(), SpanMatchedBy(Character.Letter));
+            var frames = await ReadAllFrames(source.ToString(), SpanEx.MatchedBy(Character.Letter));
             Assert.Equal(3, frames.Length);
             Assert.StartsWith("first", frames[0].Value);
             Assert.EndsWith("and more" + Environment.NewLine, frames[0].Value);
