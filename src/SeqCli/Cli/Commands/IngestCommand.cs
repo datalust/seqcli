@@ -37,7 +37,7 @@ namespace SeqCli.Cli.Commands
         readonly FileInputFeature _fileInputFeature;
         readonly PropertiesFeature _properties;
         readonly ConnectionFeature _connection;
-        string _filter;
+        string _filter, _pattern;
         bool _json;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
@@ -47,6 +47,10 @@ namespace SeqCli.Cli.Commands
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
+            Options.Add("p=|pattern=",
+                "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
+                v => _pattern = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
             Options.Add("json",
                 "Read the events as JSON (the default assumes plain text)",
                 v => _json = true);
@@ -54,7 +58,7 @@ namespace SeqCli.Cli.Commands
             Options.Add("f=|filter=",
                 "Filter expression to select a subset of events",
                 v => _filter = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
-
+            
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -82,7 +86,7 @@ namespace SeqCli.Cli.Commands
                     
                     var reader = _json ?
                         (ILogEventReader)new ClefLogEventReader(input) :
-                        new PlainTextLogEventReader(input);
+                        new PlainTextLogEventReader(input, _pattern);
                     
                     using (reader as IDisposable)
                     {
