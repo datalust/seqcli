@@ -19,12 +19,27 @@ namespace SeqCli.PlainText.Extraction
         
         [Matcher("nat")]
         public static TextParser<object> Natural { get; } =
-            Numerics.Natural
+            Numerics.NaturalUInt64
                 .Select(span => (object) span);
         
         [Matcher("int")]
         public static TextParser<object> Integer { get; } =
-            Numerics.Integer
+            Numerics.IntegerInt64
+                .Select(span => (object) span);
+        
+        [Matcher("dec")]
+        public static TextParser<object> Decimal { get; } =
+            NumericsEx.Decimal
+                .Select(span => (object) span);
+        
+        [Matcher("alpha")]
+        public static TextParser<object> Alphabetical { get; } =
+            Span.WithAll(char.IsLetter)
+                .Select(span => (object) span);
+        
+        [Matcher("alphanum")]
+        public static TextParser<object> Alphanumeric { get; } =
+            Span.WithAll(char.IsLetterOrDigit)
                 .Select(span => (object) span);
         
         [Matcher("token")]
@@ -74,7 +89,8 @@ namespace SeqCli.PlainText.Extraction
         public static TextParser<object> NonGreedyContent(params PatternElement[] following)
         {
             if (following.Length == 0)
-                return SpanEx.MatchedBy(Character.AnyChar.Many()).Select(span => (object) span);
+                return SpanEx.MatchedBy(Character.AnyChar.Many())
+                    .Select(span => span.Length > 0 ? (object) span : null);
 
             var rest = following[0].Parser;
             for (var i = 1; i < following.Length; ++i)
@@ -91,7 +107,7 @@ namespace SeqCli.PlainText.Extraction
                 }
 
                 var span = i.Until(remainder);
-                return Result.Value((object) span, i, remainder);
+                return Result.Value(span.Length > 0 ? (object) span : null, i, remainder);
             };
         }
     }
