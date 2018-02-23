@@ -47,7 +47,7 @@ namespace SeqCli.Cli.Commands
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
-            Options.Add("p=|pattern=",
+            Options.Add("x=|extract=",
                 "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
                 v => _pattern = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
 
