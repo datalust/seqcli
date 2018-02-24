@@ -47,7 +47,7 @@ namespace SeqCli.Cli
                 }
                 else
                 {
-                    cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm);
+                    cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm && c.Metadata.SubCommand == default);
                 }
                 if (cmd != null)
                 {
