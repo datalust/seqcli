@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SeqCli.PlainText.Patterns;
 
 namespace SeqCli.PlainText.Extraction
@@ -16,7 +17,6 @@ namespace SeqCli.PlainText.Extraction
             if (pattern == null) throw new ArgumentNullException(nameof(pattern));
 
             var patternElements = new PatternElement[pattern.Elements.Count];
-            var last = true;
             for (var i = pattern.Elements.Count - 1; i >= 0; --i)
             {
                 var element = pattern.Elements[i];
@@ -25,26 +25,21 @@ namespace SeqCli.PlainText.Extraction
                    case LiteralTextPatternExpression text:
                        patternElements[i] = new PatternElement(Matchers.LiteralText(text.Text));
                        break;
-                   case CapturePatternExpression capture when capture.Type == "*":
-                       if (!last)
-                           patternElements[i] = new PatternElement(
-                               Matchers.NonGreedyContent(patternElements[i + 1]),
-                               capture.Name);
-                       else
-                           patternElements[i] = new PatternElement(
-                               Matchers.NonGreedyContent(), // <- same as MultiLineContent
-                               capture.Name);
-                       break;
-                   case CapturePatternExpression capture:
+                   case CapturePatternExpression capture
+                       when capture.Content is NonGreedyContentExpression ngc:
                        patternElements[i] = new PatternElement(
-                           capture.Type == null ? Matchers.Token : Matchers.GetByType(capture.Type),
+                           Matchers.NonGreedyContent(patternElements.Skip(i + 1).Take(ngc.Lookahead).ToArray()),
+                           capture.Name);
+                       break;
+                   case CapturePatternExpression capture
+                       when capture.Content is MatchTypeContentExpression mtc:
+                       patternElements[i] = new PatternElement(
+                           mtc.Type == null ? Matchers.Token : Matchers.GetByType(mtc.Type),
                            capture.Name);
                        break;
                    default:
                        throw new InvalidOperationException($"Element `{element}` not recognized.");
                 }
-
-                last = false;
             }
             
             return new NameValueExtractor(patternElements);

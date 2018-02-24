@@ -24,7 +24,7 @@ namespace SeqCli.Tests.PlainText
             Assert.Single(pattern.Elements);
             var ct = Assert.IsType<CapturePatternExpression>(pattern.Elements.Single());
             Assert.Equal("abc", ct.Name);
-            Assert.Equal("def", ct.Type);
+            Assert.Equal("def", ((MatchTypeContentExpression)ct.Content).Type);
         }
 
         [Theory]
@@ -34,8 +34,13 @@ namespace SeqCli.Tests.PlainText
         [InlineData("a", true)]
         [InlineData("{a}", true)]
         [InlineData("{@m}", true)]
+        [InlineData("{@@m}", false)]
+        [InlineData("{m@}", false)]
         [InlineData("{@m:n}", true)]
         [InlineData("{@m:*}", true)]
+        [InlineData("{@m:***}", true)]
+        [InlineData("{:*}", true)]
+        [InlineData("{a:}", false)]
         [InlineData("{@m:n}", true)]
         [InlineData("{m_N}", true)]
         [InlineData("{_9}", true)]

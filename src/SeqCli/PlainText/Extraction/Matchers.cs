@@ -68,7 +68,7 @@ namespace SeqCli.PlainText.Extraction
                         .IgnoreThen(Character.AnyChar.Many()))
                 .Select(span => (object)span);
 
-        [Matcher("lines")]
+        // Equivalent to :* at end-of-pattern
         public static TextParser<object> MultiLineContent { get; } =
             Span.WithAll(ch => true)
                 .Select(span => (object)span);
@@ -82,6 +82,11 @@ namespace SeqCli.PlainText.Extraction
         [Matcher("n")]
         public static TextParser<object> NewLine { get; } =
             Span.EqualTo("\r\n").Or(Span.EqualTo("\n"))
+                .Select(span => (object)span);
+
+        [Matcher("t")]
+        public static TextParser<object> Tab { get; } =
+            Span.EqualTo("\t")
                 .Select(span => (object)span);
 
         static readonly Dictionary<string, TextParser<object>> ByType = new Dictionary<string, TextParser<object>>(

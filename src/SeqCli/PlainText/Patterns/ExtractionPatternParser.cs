@@ -20,21 +20,21 @@ namespace SeqCli.PlainText.Patterns
                         .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many()))
                 .Select(s => s.ToStringValue());
 
-        static readonly TextParser<string> CaptureType =
-            SpanEx.MatchedBy(Character.EqualTo('*'))
+        static readonly TextParser<CaptureContentExpression> CaptureContent =
+            Character.EqualTo('*').AtLeastOnce().Select(chs => (CaptureContentExpression)new NonGreedyContentExpression(chs.Length))
                 .Or(SpanEx.MatchedBy(Character.Letter.Or(Character.EqualTo('_'))
-                        .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many())))
-                .Select(s => s.ToStringValue());
+                        .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many()))
+                        .Select(s => (CaptureContentExpression)new MatchTypeContentExpression(s.ToStringValue())));
 
         static readonly TextParser<CapturePatternExpression> Capture =
             from _ in Character.EqualTo('{')
             from name in CaptureName.OptionalOrDefault()
-            from type in Character.EqualTo(':')
-                .IgnoreThen(CaptureType)
+            from content in Character.EqualTo(':')
+                .IgnoreThen(CaptureContent)
                 .OptionalOrDefault()
-            where name != null || type != null
+            where name != null || content != null
             from __ in Character.EqualTo('}')
-            select new CapturePatternExpression(name, type);
+            select new CapturePatternExpression(name, content);
 
         static readonly TextParser<ExtractionPatternExpression> Element =
             LiteralText.Cast<LiteralTextPatternExpression, ExtractionPatternExpression>()

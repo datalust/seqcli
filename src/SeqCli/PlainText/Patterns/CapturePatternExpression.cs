@@ -1,16 +1,14 @@
-﻿using System;
-
-namespace SeqCli.PlainText.Patterns
+﻿namespace SeqCli.PlainText.Patterns
 {
     class CapturePatternExpression : ExtractionPatternExpression
     {
         public string Name { get; }
-        public string Type { get; }
+        public CaptureContentExpression Content { get; }
 
-        public CapturePatternExpression(string name, string type)
+        public CapturePatternExpression(string name, CaptureContentExpression content)
         {
             Name = name;
-            Type = type;
+            Content = content;
         }
     }
 }
