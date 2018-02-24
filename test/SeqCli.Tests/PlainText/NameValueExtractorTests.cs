@@ -7,13 +7,13 @@ using Xunit;
 
 namespace SeqCli.Tests.PlainText
 {
-    public class PatternTests
+    public class NameValueExtractorTests
     {
         [Fact]
         public void TheDefaultPatternMatchesMultilineMessages()
         {
             var frame = $"Hello,{Environment.NewLine} world!";
-            var (properties, remainder) = PatternCompiler.MultilineMessageExtractor.ExtractValues(frame);
+            var (properties, remainder) = ExtractionPatternInterpreter.MultilineMessageExtractor.ExtractValues(frame);
             Assert.Null(remainder);
             Assert.Single(properties, p => p.Key == ReifiedProperties.Message &&
                                            ((TextSpan)p.Value).ToStringValue() == frame);
@@ -23,7 +23,7 @@ namespace SeqCli.Tests.PlainText
         public void TheDefaultPatternDoesNotMatchLinesStartingWithWhitespace()
         {
             var frame = " world";
-            var (properties, remainder) = PatternCompiler.MultilineMessageExtractor.ExtractValues(frame);
+            var (properties, remainder) = ExtractionPatternInterpreter.MultilineMessageExtractor.ExtractValues(frame);
             Assert.Empty(properties);
             Assert.Equal(frame, remainder);
         }

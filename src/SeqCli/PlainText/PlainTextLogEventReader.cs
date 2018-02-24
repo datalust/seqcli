@@ -19,8 +19,8 @@ namespace SeqCli.PlainText
         public PlainTextLogEventReader(TextReader input, string extractionPattern)
         {
             _nameValueExtractor = string.IsNullOrEmpty(extractionPattern) ?
-                PatternCompiler.MultilineMessageExtractor :
-                PatternCompiler.Compile(ExtractionPatternParser.Parse(extractionPattern));
+                ExtractionPatternInterpreter.MultilineMessageExtractor :
+                ExtractionPatternInterpreter.CreateNameValueExtractor(ExtractionPatternParser.Parse(extractionPattern));
             
             _reader = new FrameReader(input, SpanEx.MatchedBy(_nameValueExtractor.StartMarker), TrailingLineArrivalDeadline);
         }

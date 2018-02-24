@@ -4,19 +4,20 @@ using SeqCli.PlainText.Patterns;
 
 namespace SeqCli.PlainText.Extraction
 {
-    static class PatternCompiler
+    static class ExtractionPatternInterpreter
     {
         public static NameValueExtractor MultilineMessageExtractor { get; } = new NameValueExtractor(new[]
         {
             new PatternElement(Matchers.MultiLineMessage, ReifiedProperties.Message)
         });
 
-        public static NameValueExtractor Compile(ExtractionPattern pattern)
+        public static NameValueExtractor CreateNameValueExtractor(ExtractionPattern pattern)
         {
             if (pattern == null) throw new ArgumentNullException(nameof(pattern));
 
             var patternElements = new PatternElement[pattern.Elements.Count];
-            for (var i = 0; i < pattern.Elements.Count; ++i)
+            var last = true;
+            for (var i = pattern.Elements.Count - 1; i >= 0; --i)
             {
                 var element = pattern.Elements[i];
                 switch (element)
@@ -25,7 +26,7 @@ namespace SeqCli.PlainText.Extraction
                        patternElements[i] = new PatternElement(Matchers.LiteralText(text.Text));
                        break;
                    case CapturePatternExpression capture when capture.Type == "*":
-                       if (i < pattern.Elements.Count - 1)
+                       if (!last)
                            patternElements[i] = new PatternElement(
                                Matchers.NonGreedyContent(patternElements[i + 1]),
                                capture.Name);
@@ -42,6 +43,8 @@ namespace SeqCli.PlainText.Extraction
                    default:
                        throw new InvalidOperationException($"Element `{element}` not recognized.");
                 }
+
+                last = false;
             }
             
             return new NameValueExtractor(patternElements);

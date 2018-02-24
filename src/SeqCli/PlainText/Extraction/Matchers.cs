@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using SeqCli.PlainText.Parsers;
@@ -45,6 +46,20 @@ namespace SeqCli.PlainText.Extraction
         [Matcher("token")]
         public static TextParser<object> Token { get; } =
             SpanEx.NonWhiteSpace.Select(span => (object)span);
+
+        [Matcher("iso8601dt")]
+        // A date and time are required by this pattern, though not necessarily by the spec.
+        public static TextParser<object> Iso8601DateTime { get; } =
+            DateTimesEx.Iso8601DateTime
+                .Select(span => (object) span);
+                       
+        public static TextParser<object> SerilogFileTimestamp { get; } =
+            Span.Regex("\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d(\\.\\d+)? ([+-]\\d\\d:\\d\\d)?")
+                .Select(span => (object) DateTimeOffset.ParseExact(span.ToStringValue(), "yyyy-MM-dd HH:mm:ss.fff zzz", CultureInfo.InvariantCulture));
+
+        [Matcher("timestamp")]
+        public static TextParser<object> Timestamp { get; } =
+            Iso8601DateTime.Try().Or(SerilogFileTimestamp);
 
         // Unclear whether we need to name this
         public static TextParser<object> MultiLineMessage { get; } =
@@ -101,9 +116,11 @@ namespace SeqCli.PlainText.Extraction
             return i =>
             {
                 var remainder = i;
-                while (!rest.IsMatch(remainder))
+                var attempt = rest(remainder);
+                while (!attempt.HasValue || attempt.Remainder == remainder) // A zero-length match doesn't tell us anything
                 {
                     remainder = remainder.ConsumeChar().Remainder;
+                    attempt = rest(remainder);
                 }
 
                 var span = i.Until(remainder);
