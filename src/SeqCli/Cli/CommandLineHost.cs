@@ -37,20 +37,12 @@ namespace SeqCli.Cli
 
             if (args.Length > 0)
             {
-                var amountToSkip = 1;
                 var norm = args[0].ToLowerInvariant();
-                Meta<Lazy<Command>, CommandMetadata> cmd; 
-                if (!args[1].Contains("-"))
-                {
-                    amountToSkip = 2;
-                    cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm && c.Metadata.SubCommand == args[1].ToLowerInvariant());
-                }
-                else
-                {
-                    cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm && c.Metadata.SubCommand == default);
-                }
+                var subCommandNorm = args.Length > 1 && !args[1].Contains("-") ? args[1].ToLowerInvariant() : default;
+                var cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm && c.Metadata.SubCommand == subCommandNorm);
                 if (cmd != null)
                 {
+                    var amountToSkip = subCommandNorm == default ? 1 : 2;
                     return await cmd.Value.Value.Invoke(args.Skip(amountToSkip).ToArray());
                 }
             }
