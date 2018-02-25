@@ -87,13 +87,17 @@ namespace SeqCli.PlainText
 
         static DateTimeOffset GetTimestamp(IDictionary<string, object> properties)
         {
-            var timestamp = properties.TryGetValue(ReifiedProperties.Timestamp, out var t) &&
-                            t is TextSpan span &&
-                            DateTimeOffset.TryParse(span.ToStringValue(), CultureInfo.InvariantCulture,
-                                DateTimeStyles.AssumeLocal, out var ts)
-                ? ts
-                : DateTimeOffset.Now;
-            return timestamp;
+            if (properties.TryGetValue(ReifiedProperties.Timestamp, out var t))
+            {
+                if (t is TextSpan span && DateTimeOffset.TryParse(span.ToStringValue(),
+                        CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var ts))
+                    return ts;
+
+                if (t is DateTimeOffset dto)
+                    return dto;
+            }
+            
+            return DateTimeOffset.Now;
         }
                 
         static readonly Dictionary<string, LogEventLevel> LevelsByName = new Dictionary<string, LogEventLevel>(StringComparer.OrdinalIgnoreCase)

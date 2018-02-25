@@ -45,5 +45,13 @@ namespace SeqCli.Tests.PlainText
             Assert.Null(evt.Exception);
             Assert.Empty(evt.Properties);
         }
+
+        [Fact]
+        public void DateTimeOffsetTimestampsAreAccepted()
+        {
+            var then = DateTimeOffset.Now.AddDays(-5);
+            var evt = LogEventBuilder.FromProperties(new Dictionary<string, object>{["@t"] = then}, null);
+            Assert.Equal(then, evt.Timestamp);
+        }
     }
 }

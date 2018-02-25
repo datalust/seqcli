@@ -1,29 +1,28 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
 
-namespace SeqCli.PlainText
+namespace SeqCli.PlainText.Extraction
 {
-    class Pattern
+    class NameValueExtractor
     {
         readonly PatternElement[] _elements;
 
-        public Pattern(IEnumerable<PatternElement> elements)
+        public NameValueExtractor(IEnumerable<PatternElement> elements)
         {
             _elements = elements?.ToArray() ?? throw new ArgumentNullException(nameof(elements));
             if (_elements.Length == 0)
-                throw new ArgumentException("A match pattern must contain at least one element.");            
+                throw new ArgumentException("An extraction pattern must contain at least one element.");            
         }
 
-        public TextParser<object> FrameStart => _elements[0].Parser;
+        public TextParser<object> StartMarker => _elements[0].Parser;
 
-        public (IDictionary<string, object>, string) Match(string frame)
+        public (IDictionary<string, object>, string) ExtractValues(string plainText)
         {
-            var input = new TextSpan(frame);
+            var input = new TextSpan(plainText);
             var result = new Dictionary<string, object>();
             
             var remainder = input;
@@ -42,8 +41,7 @@ namespace SeqCli.PlainText
 
                 if (!element.IsIgnored)
                 {
-                    if (match.Value != null || !element.IsOptional)
-                        result.Add(element.Name, match.Value);                
+                    result.Add(element.Name, match.Value);                
                 }
             }
 
