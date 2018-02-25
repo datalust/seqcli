@@ -18,7 +18,7 @@ namespace SeqCli.PlainText.Extraction
                 throw new ArgumentException("An extraction pattern must contain at least one element.");            
         }
 
-        public TextParser<object> StartMarker => _elements[0].Parser;
+        public TextParser<Unit> StartMarker => _elements[0].Match;
 
         public (IDictionary<string, object>, string) ExtractValues(string plainText)
         {
@@ -28,20 +28,12 @@ namespace SeqCli.PlainText.Extraction
             var remainder = input;
             foreach (var element in _elements)
             {
-                var match = element.Parser(remainder);
-                if (!match.HasValue)
+                if (!element.TryExtract(remainder, result, out remainder))
                 {
                     if (remainder.IsAtEnd || Span.WhiteSpace.IsMatch(remainder))
                         return (result, null);
 
                     return (result, remainder.ToStringValue());
-                }
-
-                remainder = match.Remainder;
-
-                if (!element.IsIgnored)
-                {
-                    result.Add(element.Name, match.Value);                
                 }
             }
 

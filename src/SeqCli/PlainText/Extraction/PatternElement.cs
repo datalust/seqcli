@@ -1,18 +1,31 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Superpower;
+using Superpower.Model;
 
 namespace SeqCli.PlainText.Extraction
 {
-    class PatternElement
+    abstract class PatternElement
     {
-        public PatternElement(TextParser<object> parser, string name = null)
+        readonly string _name;
+        
+        bool IsIgnored => _name == null;
+
+        protected PatternElement(string name)
         {
-            Parser = parser ?? throw new ArgumentNullException(nameof(parser));
-            Name = name;
+            _name = name;
         }
 
-        public TextParser<object> Parser { get; }
-        public string Name { get; }
-        public bool IsIgnored => Name == null;
+        public abstract TextParser<Unit> Match { get; }
+
+        public abstract bool TryExtract(
+            TextSpan input,
+            Dictionary<string, object> result,
+            out TextSpan remainder);
+
+        protected void CollectResult(Dictionary<string, object> result, object value)
+        {
+            if (!IsIgnored)
+                result.Add(_name, value);                
+        }
     }
 }

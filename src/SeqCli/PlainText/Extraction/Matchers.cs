@@ -112,10 +112,10 @@ namespace SeqCli.PlainText.Extraction
                 return SpanEx.MatchedBy(Character.AnyChar.Many())
                     .Select(span => span.Length > 0 ? (object) span : null);
 
-            var rest = following[0].Parser;
+            var rest = following[0].Match;
             for (var i = 1; i < following.Length; ++i)
             {
-                rest = rest.IgnoreThen(following[i].Parser);
+                rest = rest.IgnoreThen(following[i].Match);
             }
 
             return i =>
