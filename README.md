@@ -174,7 +174,7 @@ Extraction patterns have a simple high-level syntax:
  * Text between `{curly braces}` is a _match expression_ that identifies a part of the event to be extracted, and
  * Literal curly braces are escaped by doubling, so `{{` will match the literal text `{`, and `}}` matches `}`.
  
-Match expressions have the syntax:
+Match expressions have the form:
 
 ```
 {name:matcher}
@@ -204,4 +204,17 @@ There are three kinds of matchers:
  * Matchers like `alpha` and `nat` are built-in _named_ matchers. These are built-in.
  * The special matchers `*`, `**` and so-on, are _non-greedy content_ matchers; these will match any text up until the next pattern element matches (`*`), the next two elements match, and so-on. We saw this in action with the `{@m:*}{:n}` elements in the example - the message is all of the text up until the next newline.
  * More complex _compound_ matchers are described using a sub-expression. These are prefixed with an equals sign `=`, like `{Phone:={:nat}-{:nat}-{:nat}}`. This will extract chunks of text like `123-456-7890` into the `Phone` property.
- 
+
+### Processing
+
+Extraction patterns are processed from left to right. When the first non-matching pattern is encountered, extraction stops; any remaining text that couldn't be matched will be attached to the resulting event in an `@unmatched` property.
+
+Multi-line events are handled by looking for lines that start with the first element of the extraction pattern to be used. This works well if the first line of each event begins with something unambiguous like an `iso8601dt` timestamp; if the lines begin with less specific syntax, the first few elements of the extraction pattern might be grouped to identify the start of events more accurately:
+
+```
+{:=[{@t} {@l}]} {@m:*}
+```
+
+Here the literal text `[`, a timestamp token, adjacent space ` `, level and closing `]` are all grouped so that they constitute a single logical pattern element to identify the start of events.
+
+When logs are streamed into `seqcli ingest` in real time, a 10 ms deadline is applied, within which any trailing lines that make up the event must be received.
