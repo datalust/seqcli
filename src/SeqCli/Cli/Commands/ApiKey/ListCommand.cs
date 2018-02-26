@@ -9,7 +9,7 @@ using Serilog;
 namespace SeqCli.Cli.Commands.ApiKey
 {
     [Command("apikey", "list", "Send a structured log event to the server", Example =
-        "seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test")]
+        "seqcli apikey list")]
     class ListCommand : Command
     {
         private readonly SeqConnectionFactory _connectionFactory;
@@ -29,15 +29,17 @@ namespace SeqCli.Cli.Commands.ApiKey
             Log.Debug("Retrieved ApiKeys {@ApiKeys}", apiKeys);
             var data = apiKeys.Select(a => new
             {
+                a.Title,
+                a.Id,
+                a.Token,
+                a.MinimumLevel,
                 a.AppliedProperties,
                 a.CanActAsPrincipal,
                 a.InputFilter,
-                a.Title,
-                a.Token,
                 a.UseServerTimestamps,
-                a.MinimumLevel,
                 a.IsDefault
             });
+
             foreach (var apiKey in data)
             {
                 var apiKeyString = JsonConvert.SerializeObject(apiKey);
