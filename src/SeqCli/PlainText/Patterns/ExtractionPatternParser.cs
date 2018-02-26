@@ -30,12 +30,13 @@ namespace SeqCli.PlainText.Patterns
                 .Select(s => (CaptureContentExpression) new MatchTypeContentExpression(s.ToStringValue()));
 
         static readonly TextParser<CaptureContentExpression> GroupedContent =
-            Superpower.Parse.Ref(() => Elements)
+            Span.EqualTo("=")
+                .IgnoreThen(Superpower.Parse.Ref(() => Elements))
                 .Select(els => (CaptureContentExpression) new GroupedContentExpression(new ExtractionPattern(els)));
 
         static readonly TextParser<CaptureContentExpression> CaptureContent =
             NonGreedyContent
-                .Or(MatchTypeContent).Try()
+                .Or(MatchTypeContent)
                 .Or(GroupedContent);
 
         static readonly TextParser<CapturePatternExpression> Capture =

@@ -55,7 +55,7 @@ Send JSON log events from a file or `STDIN`.
 Example:
 
 ```
-seqcli ingest -i events.clef --filter="@Level <> 'Debug'" -p Environment=Test
+seqcli ingest -i events.clef --json --filter="@Level <> 'Debug'" -p Environment=Test
 ```
 
 | Option | Description |
@@ -63,6 +63,8 @@ seqcli ingest -i events.clef --filter="@Level <> 'Debug'" -p Environment=Test
 | `-i`, `--input=VALUE` | CLEF file to ingest; if not specified, `STDIN` will be used |
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: fail (default) or ignore |
 | `-p`, `--property=VALUE1=VALUE2` | Specify event properties, e.g. `-p Customer=C123 -p Environment=Production` |
+| `-x`, `--extract=VALUE` | An extraction pattern to apply to plain-text logs (ignored when `--json` is specified) |
+|       `--json` | Read the events as JSON (the default assumes plain text) |
 | `-f`, `--filter=VALUE` | Filter expression to select a subset of events |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `config.apiKey` value will be used |
@@ -147,3 +149,59 @@ Stream log events matching a filter.
 ### `version`
 
 Print the current executable version.
+
+## Extraction Patterns
+
+The `seqcli ingest` command can be used for parsing plain text logs into structured log events.
+
+```shell
+seqcli ingest -x "{@t:timestamp} [{@l:ident}] {@m:*}{:n}{@x:*}"
+```
+
+The `-x` argument above is an _extraction pattern_ that will parse events like:
+
+```
+2018-02-21 13:29:00.123 +10:00 [ERR] The operation failed
+System.DivideByZeroException: Attempt to divide by zero
+  at SomeClass.SomeMethod()
+```
+
+### Syntax
+
+Extraction patterns have a simple high-level syntax:
+
+ * Text that appears in the pattern is matched literally - so a pattern like `Hello, world!` will match logging statements that are made up of this greeting only,
+ * Text between `{curly braces}` is a _match expression_ that identifies a part of the event to be extracted, and
+ * Literal curly braces are escaped by doubling, so `{{` will match the literal text `{`, and `}}` matches `}`.
+ 
+Match expressions have the syntax:
+
+```
+{name:matcher}
+```
+
+Both the name and matcher are optional, but either one or the other must be specified. Hence `{@t:timestamp}` specifies a name of `@t` and value `timestamp`, `{IPAddress}` specifies a name only, and `{:n}` a value only (in this case the built-in newline matcher).
+
+The _name_ is the property name to be extracted; there are four built-in property names that get special handling:
+
+ * `@t` - the event's timestamp
+ * `@m` - the textual message associated with the event
+ * `@l` - the event's level
+ * `@x` - the exception or backtrace associated with the event
+ 
+Other property names are attached to the event payload, so `{Elapsed:dec}` will extract a property called `Elapsed`, using the `dec` decimal matcher.
+
+Match expressions with no name are consumed from the input, but are not added to the event payload.
+
+### Matchers
+
+Matchers identify chunks of the input event.
+
+Different matchers are needed so that a piece of text like `200OK` can be separated into separate properties, i.e. `{StatusCode:nat}{Status:alpha}`. Here, the `nat` (natural number) matcher also coerces the result into a numeric value, so that it is attached to the event payload numerically as `200` instead of as the text `"200"`.
+
+There are three kinds of matchers:
+
+ * Matchers like `alpha` and `nat` are built-in _named_ matchers. These are built-in.
+ * The special matchers `*`, `**` and so-on, are _non-greedy content_ matchers; these will match any text up until the next pattern element matches (`*`), the next two elements match, and so-on. We saw this in action with the `{@m:*}{:n}` elements in the example - the message is all of the text up until the next newline.
+ * More complex _compound_ matchers are described using a sub-expression. These are prefixed with an equals sign `=`, like `{Phone:={:nat}-{:nat}-{:nat}}`. This will extract chunks of text like `123-456-7890` into the `Phone` property.
+ 
