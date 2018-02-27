@@ -8,7 +8,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.ApiKey
 {
-    [Command("apikey", "list", "Send a structured log event to the server", Example =
+    [Command("apikey", "list", "List of API Keys", Example =
         "seqcli apikey list")]
     class ListCommand : Command
     {
