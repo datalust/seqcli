@@ -53,6 +53,9 @@ namespace SeqCli.Tests.PlainText
         [InlineData("}", false)]
         [InlineData("{a} b{c} ", true)]
         [InlineData("d {a}b {c}", true)]
+        [InlineData("{:={@m}}", true)]
+        [InlineData("Loaded {SignalId:=signal-{:nat}}", true)]
+        [InlineData("{:={Year:num}-{Month:num}}", true)]
         public void OnlyValidPatternsAreAccepted(string attempt, bool isValid)
         {
             if (isValid)

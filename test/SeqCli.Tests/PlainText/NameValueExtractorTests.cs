@@ -30,9 +30,9 @@ namespace SeqCli.Tests.PlainText
 
         static NameValueExtractor ClassMethodPattern { get; } = new NameValueExtractor(new[]
         {
-            new PatternElement(Matchers.Identifier, "class"),
-            new PatternElement(Matchers.LiteralText(".")),
-            new PatternElement(Matchers.Identifier, "method")
+            new SimplePatternElement(Matchers.Identifier, "class"),
+            new SimplePatternElement(Matchers.LiteralText(".")),
+            new SimplePatternElement(Matchers.Identifier, "method")
         });
 
         [Fact]
@@ -50,7 +50,7 @@ namespace SeqCli.Tests.PlainText
         [Fact]
         public void TheFirstPatternElementIsExposed()
         {
-            Assert.Same(Matchers.Identifier, ClassMethodPattern.StartMarker);
+            Assert.NotNull(ClassMethodPattern.StartMarker);
         }
 
         [Fact]
@@ -58,12 +58,12 @@ namespace SeqCli.Tests.PlainText
         {
             var pattern = new NameValueExtractor(new[]
             {
-                new PatternElement(Matchers.Identifier, "first"),
-                new PatternElement(Matchers.LiteralText(" ")),
-                new PatternElement(Matchers.SingleLineContent, "content"), 
-                new PatternElement(Matchers.LiteralText(" (")),
-                new PatternElement(Matchers.Identifier, "last"),
-                new PatternElement(Matchers.LiteralText(")"))
+                new SimplePatternElement(Matchers.Identifier, "first"),
+                new SimplePatternElement(Matchers.LiteralText(" ")),
+                new SimplePatternElement(Matchers.SingleLineContent, "content"), 
+                new SimplePatternElement(Matchers.LiteralText(" (")),
+                new SimplePatternElement(Matchers.Identifier, "last"),
+                new SimplePatternElement(Matchers.LiteralText(")"))
             });
 
             var frame = "abc def ghi (jkl)";
@@ -80,16 +80,16 @@ namespace SeqCli.Tests.PlainText
             // the "following" list, since they effectively become "mandatory"
             var following = new[]
             {
-                new PatternElement(Matchers.LiteralText(" (")),
-                new PatternElement(Matchers.Identifier, "last"),
-                new PatternElement(Matchers.LiteralText(")"))
+                new SimplePatternElement(Matchers.LiteralText(" (")),
+                new SimplePatternElement(Matchers.Identifier, "last"),
+                new SimplePatternElement(Matchers.LiteralText(")"))
             };
             
             var pattern = new NameValueExtractor(new[]
             {
-                new PatternElement(Matchers.Identifier, "first"),
-                new PatternElement(Matchers.LiteralText(" ")),
-                new PatternElement(Matchers.NonGreedyContent(following), "content"), 
+                new SimplePatternElement(Matchers.Identifier, "first"),
+                new SimplePatternElement(Matchers.LiteralText(" ")),
+                new SimplePatternElement(Matchers.NonGreedyContent(following), "content"), 
             }.Concat(following));
 
             var frame = "abc def ghi (jkl)";

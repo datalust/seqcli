@@ -20,11 +20,24 @@ namespace SeqCli.PlainText.Patterns
                         .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many()))
                 .Select(s => s.ToStringValue());
 
+        static readonly TextParser<CaptureContentExpression> NonGreedyContent =
+            Character.EqualTo('*').AtLeastOnce()
+                .Select(chs => (CaptureContentExpression) new NonGreedyContentExpression(chs.Length));
+
+        static readonly TextParser<CaptureContentExpression> MatchTypeContent =
+            SpanEx.MatchedBy(Character.Letter.Or(Character.EqualTo('_'))
+                    .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many()))
+                .Select(s => (CaptureContentExpression) new MatchTypeContentExpression(s.ToStringValue()));
+
+        static readonly TextParser<CaptureContentExpression> GroupedContent =
+            Span.EqualTo("=")
+                .IgnoreThen(Superpower.Parse.Ref(() => Elements))
+                .Select(els => (CaptureContentExpression) new GroupedContentExpression(new ExtractionPattern(els)));
+
         static readonly TextParser<CaptureContentExpression> CaptureContent =
-            Character.EqualTo('*').AtLeastOnce().Select(chs => (CaptureContentExpression)new NonGreedyContentExpression(chs.Length))
-                .Or(SpanEx.MatchedBy(Character.Letter.Or(Character.EqualTo('_'))
-                        .IgnoreThen(Character.LetterOrDigit.Or(Character.EqualTo('_')).Many()))
-                        .Select(s => (CaptureContentExpression)new MatchTypeContentExpression(s.ToStringValue())));
+            NonGreedyContent
+                .Or(MatchTypeContent)
+                .Or(GroupedContent);
 
         static readonly TextParser<CapturePatternExpression> Capture =
             from _ in Character.EqualTo('{')
@@ -40,8 +53,11 @@ namespace SeqCli.PlainText.Patterns
             LiteralText.Cast<LiteralTextPatternExpression, ExtractionPatternExpression>()
                 .Or(Capture.Cast<CapturePatternExpression, ExtractionPatternExpression>());
 
+        static readonly TextParser<ExtractionPatternExpression[]> Elements =
+            Element.AtLeastOnce();
+
         static readonly TextParser<ExtractionPattern> Pattern =
-            Element.AtLeastOnce().AtEnd().Select(e => new ExtractionPattern(e));
+            Elements.AtEnd().Select(e => new ExtractionPattern(e));
                     
         public static ExtractionPattern Parse(string extractionPattern)
         {

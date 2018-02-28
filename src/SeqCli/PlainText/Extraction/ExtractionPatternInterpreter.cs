@@ -9,10 +9,10 @@ namespace SeqCli.PlainText.Extraction
     {
         public static NameValueExtractor MultilineMessageExtractor { get; } = new NameValueExtractor(new[]
         {
-            new PatternElement(Matchers.MultiLineMessage, ReifiedProperties.Message)
+            new SimplePatternElement(Matchers.MultiLineMessage, ReifiedProperties.Message)
         });
 
-        public static NameValueExtractor CreateNameValueExtractor(ExtractionPattern pattern)
+        static PatternElement[] CreatePatternElements(ExtractionPattern pattern)
         {
             if (pattern == null) throw new ArgumentNullException(nameof(pattern));
 
@@ -22,39 +22,39 @@ namespace SeqCli.PlainText.Extraction
                 var element = pattern.Elements[i];
                 switch (element)
                 {
-                   case LiteralTextPatternExpression text:
-                       patternElements[i] = new PatternElement(Matchers.LiteralText(text.Text));
-                       break;
-                   case CapturePatternExpression capture
-                       when capture.Content is NonGreedyContentExpression ngc:
-                       patternElements[i] = new PatternElement(
-                           Matchers.NonGreedyContent(patternElements.Skip(i + 1).Take(ngc.Lookahead).ToArray()),
-                           capture.Name);
-                       break;
-                   case CapturePatternExpression capture
-                       when capture.Content is MatchTypeContentExpression mtc:
-                       patternElements[i] = new PatternElement(
-                           mtc.Type == null ? Matchers.Token : Matchers.GetByType(mtc.Type),
-                           capture.Name);
-                       break;
-                   default:
-                       throw new InvalidOperationException($"Element `{element}` not recognized.");
+                    case LiteralTextPatternExpression text:
+                        patternElements[i] = new SimplePatternElement(Matchers.LiteralText(text.Text));
+                        break;
+                    case CapturePatternExpression capture
+                    when capture.Content is NonGreedyContentExpression ngc:
+                        patternElements[i] = new SimplePatternElement(
+                            Matchers.NonGreedyContent(patternElements.Skip(i + 1).Take(ngc.Lookahead).ToArray()),
+                            capture.Name);
+                        break;
+                    case CapturePatternExpression capture
+                    when capture.Content is MatchTypeContentExpression mtc:
+                        patternElements[i] = new SimplePatternElement(
+                            mtc.Type == null ? Matchers.Token : Matchers.GetByType(mtc.Type),
+                            capture.Name);
+                        break;
+                    case CapturePatternExpression capture
+                    when capture.Content is GroupedContentExpression gc:
+                        patternElements[i] = new GroupedPatternElement(
+                            CreatePatternElements(gc.ExtractionPattern),
+                            capture.Name);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Element `{element}` not recognized.");
                 }
             }
-            
-            return new NameValueExtractor(patternElements);
+
+            return patternElements;
         }
 
-        // What we need to do here is:
-        //  - for each parsed token
-        //    - if it's literal text, map it an anonymous PatternElement with
-        //       BuiltInPatterns.LiteralText()
-        //    - otherwise, if it specifies no format, it's a named element with
-        //       the BuiltInPatterns.Token parser
-        //    - if it does specify a format, look up the parser based on the name, except
-        //    - if the format is `$` it is BuiltInPatterns.SingleLineContent
-        //    - if the format is `$$` it is BuiltInPatterns.MultiLineContent
-        //    - if it's `*`, it's BuiltInPatterns.NonGreedyContent() passing the
-        //       parser that follows it
+        public static NameValueExtractor CreateNameValueExtractor(ExtractionPattern pattern)
+        {
+            var patternElements = CreatePatternElements(pattern);
+            return new NameValueExtractor(patternElements);
+        }
     }
 }
