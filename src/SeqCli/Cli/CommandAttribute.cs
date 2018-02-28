@@ -20,6 +20,7 @@ namespace SeqCli.Cli
     public class CommandAttribute : Attribute, ICommandMetadata
     {
         public string Name { get; }
+        public string SubCommand { get; }
         public string HelpText { get; }
 
         public string Example { get; set; }
@@ -28,6 +29,11 @@ namespace SeqCli.Cli
         {
             Name = name;
             HelpText = helpText;
+        }
+
+        public CommandAttribute(string name, string subCommand, string helpText) : this(name, helpText)
+        {
+            SubCommand = subCommand;
         }
     }
 }
