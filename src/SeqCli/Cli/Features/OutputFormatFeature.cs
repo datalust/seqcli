@@ -89,24 +89,17 @@ namespace SeqCli.Cli.Features
             if (_json)
             {
                 jo.Remove("Links");
-                if (_noColor)
-                {
-                    Console.WriteLine(JsonConvert.SerializeObject(jo, Formatting.None));
-                }
-                else
-                {
-                    // Proof-of-concept; this is a very inefficient
-                    // way to write colorized JSON ;)
-                    
-                    var writer = new LoggerConfiguration()
-                        .Destructure.JsonNetTypes()
-                        .Enrich.With<StripStructureTypeEnricher>()
-                        .WriteTo.Console(
-                            outputTemplate: "{@Message:j}{NewLine}",
-                            theme: Theme)
-                        .CreateLogger();
-                    writer.Information("{@Entity}", jo);
-                }
+                // Proof-of-concept; this is a very inefficient
+                // way to write colorized JSON ;)
+                
+                var writer = new LoggerConfiguration()
+                    .Destructure.JsonNetTypes()
+                    .Enrich.With<StripStructureTypeEnricher>()
+                    .WriteTo.Console(
+                        outputTemplate: "{@Message:j}{NewLine}",
+                        theme: Theme)
+                    .CreateLogger();
+                writer.Information("{@Entity}", jo);
             }
             else
             {
