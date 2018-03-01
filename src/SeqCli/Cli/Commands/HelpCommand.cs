@@ -37,13 +37,29 @@ namespace SeqCli.Cli.Commands
         {
             var ea = Assembly.GetEntryAssembly();
             var name = ea.GetName().Name;
-
+            
+            if (_markdown)
+            {
+                if (unrecognised.Length != 0)
+                    return base.Run(unrecognised);
+                
+                PrintMarkdownHelp(name);
+                return Task.FromResult(0);
+            }
+            
+            string topLevelCommand = null;
             if (unrecognised.Length > 0)
             {
-                var target = unrecognised[0].ToLowerInvariant();
-                var cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == target);
-                if (cmd != null)
+                topLevelCommand = unrecognised[0].ToLowerInvariant();
+                var subCommand = unrecognised.Length > 1 && !unrecognised[1].Contains("-") ? unrecognised[1] : null;
+                var cmds = _availableCommands.Where(c => c.Metadata.Name == topLevelCommand &&
+                                                         (subCommand == null || subCommand == c.Metadata.SubCommand)).ToArray();
+                if (cmds.Length == 0)
+                    return base.Run(unrecognised);
+
+                if (cmds.Length == 1)
                 {
+                    var cmd = cmds.Single();
                     var argHelp = cmd.Value.Value.HasArgs ? " [<args>]" : "";
                     Console.WriteLine(name + " " + cmd.Metadata.Name + argHelp);
                     Console.WriteLine();
@@ -52,19 +68,13 @@ namespace SeqCli.Cli.Commands
                     cmd.Value.Value.PrintUsage();
                     return Task.FromResult(0);
                 }
-
-                return base.Run(unrecognised);
             }
 
-            if (_markdown)
-            {
-                PrintMarkdownHelp(name);
-            }
+            if (topLevelCommand != null)
+                PrintHelp(name, topLevelCommand);
             else
-            {
                 PrintHelp(name);
-            }
-
+            
             return Task.FromResult(0);
         }
 
@@ -126,17 +136,40 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine();
             Console.WriteLine("Available commands are:");
 
-            foreach (var availableCommand in _availableCommands)
+            var printedGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var avail in _availableCommands)
             {
-                Printing.Define(
-                    "  " + availableCommand.Metadata.Name,
-                    availableCommand.Metadata.HelpText,
-                    13,
-                    Console.Out);
+                if (avail.Metadata.SubCommand != null)
+                {
+                    if (!printedGroups.Contains(avail.Metadata.Name))
+                    {
+                        Printing.Define($"  {avail.Metadata.Name}", "<sub-command>", 13, Console.Out);
+                        printedGroups.Add(avail.Metadata.Name);
+                    }
+                }
+                else
+                {
+                    Printing.Define($"  {avail.Metadata.Name}", avail.Metadata.HelpText, 13, Console.Out);
+                }
             }
 
             Console.WriteLine();
             Console.WriteLine($"Type `{executableName} help <command>` for detailed help");
+        }
+
+        void PrintHelp(string executableName, string topLevelCommand)
+        {
+            Console.WriteLine($"Usage: {executableName} {topLevelCommand} <sub-command> [<args>]");
+            Console.WriteLine();
+            Console.WriteLine("Available sub-commands are:");
+
+            foreach (var avail in _availableCommands.Where(c => c.Metadata.Name == topLevelCommand))
+            {
+                Printing.Define($"  {avail.Metadata.SubCommand}", avail.Metadata.HelpText, 13, Console.Out);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine($"Type `{executableName} help {topLevelCommand} <sub-command>` for detailed help");
         }
     }
 }

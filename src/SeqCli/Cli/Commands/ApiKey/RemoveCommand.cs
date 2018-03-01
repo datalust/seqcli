@@ -9,14 +9,14 @@ using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.ApiKey
 {
-    [Command("apikey", "remove", "Remove API Key from the server", Example =
-        "seqcli apikey remove -t TestApiKey")]
+    [Command("apikey", "remove", "Remove an API key from the server",
+        Example="seqcli apikey remove -t TestApiKey")]
     class RemoveCommand : Command
     {
-        private readonly SeqConnectionFactory _connectionFactory;
-        private readonly ConnectionFeature _connection;
-        private string _title;
-        private string _id;
+        readonly SeqConnectionFactory _connectionFactory;
+        readonly ConnectionFeature _connection;
+        string _title;
+        string _id;
 
         public RemoveCommand(SeqConnectionFactory connectionFactory)
         {

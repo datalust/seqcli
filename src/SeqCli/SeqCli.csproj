@@ -18,6 +18,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Destructurama.JsonNet" Version="1.2.0" />
     <PackageReference Include="newtonsoft.json" Version="10.0.3" />
     <PackageReference Include="Serilog" Version="2.6.0" />
     <PackageReference Include="serilog.filters.expressions" Version="1.1.0" />
