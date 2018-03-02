@@ -1,23 +1,26 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.ApiKey
 {
-    [Command("apikey", "list", "List of API Keys", Example =
-        "seqcli apikey list")]
+    [Command("apikey", "list", "List API keys on the server", Example="seqcli apikey list")]
     class ListCommand : Command
     {
-        private readonly SeqConnectionFactory _connectionFactory;
-        private readonly ConnectionFeature _connection;
+        readonly SeqConnectionFactory _connectionFactory;
+        
+        readonly ConnectionFeature _connection;
+        readonly OutputFormatFeature _output;
 
-        public ListCommand(SeqConnectionFactory connectionFactory)
+        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
-            _connectionFactory = connectionFactory;
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
+            _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -27,25 +30,12 @@ namespace SeqCli.Cli.Commands.ApiKey
 
             var apiKeys = await connection.ApiKeys.ListAsync();
             Log.Debug("Retrieved ApiKeys {@ApiKeys}", apiKeys);
-            var data = apiKeys.Select(a => new
-            {
-                a.Title,
-                a.Id,
-                a.Token,
-                a.MinimumLevel,
-                a.AppliedProperties,
-                a.CanActAsPrincipal,
-                a.InputFilter,
-                a.UseServerTimestamps,
-                a.IsDefault
-            });
 
-            foreach (var apiKey in data)
+            foreach (var apiKey in apiKeys)
             {
-                var apiKeyString = JsonConvert.SerializeObject(apiKey);
-
-                Console.WriteLine(apiKeyString);
+                _output.WriteEntity(apiKey);
             }
+            
             return 0;
         }
     }

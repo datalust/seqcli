@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using SeqCli.Cli;
-using SeqCli.Cli.Commands;
 using Xunit;
 
 namespace SeqCli.Tests.Cli
@@ -21,55 +18,15 @@ namespace SeqCli.Tests.Cli
             {
                 new Meta<Lazy<Command>, CommandMetadata>(
                     new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test"))),
-                    new CommandMetadata() {Name = "test"}),
+                    new CommandMetadata {Name = "test"}),
                 new Meta<Lazy<Command>, CommandMetadata>(
                     new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test2"))),
-                    new CommandMetadata() {Name = "test2"})
+                    new CommandMetadata {Name = "test2"})
             };
             var commandLineHost = new CommandLineHost(availableCommands);
             await commandLineHost.Run(new []{ "test"});
 
             Assert.Equal(commandsRan.First(), "test");
-        }
-
-        [Fact]
-        public async Task WhenCommandAndSubcommandAndTheUserRunsWithoutSubcommandEnsurePickedCorrect()
-        {
-            var commandsRan = new List<string>();
-            var availableCommands =
-                new List<Meta<Lazy<Command>, CommandMetadata>>
-                {
-                    new Meta<Lazy<Command>, CommandMetadata>(
-                        new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test"))),
-                        new CommandMetadata() {Name = "test"}),
-                    new Meta<Lazy<Command>, CommandMetadata>(
-                        new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand"))),
-                        new CommandMetadata() {Name = "test", SubCommand = "subcommand"})
-                };
-            var commandLineHost = new CommandLineHost(availableCommands);
-            await commandLineHost.Run(new[] { "test" });
-
-            Assert.Equal(commandsRan.First(), "test");
-        }
-
-        [Fact]
-        public async Task WhenCommandAndSubcommandAndTheUserRunsWithSubcommandEnsurePickedCorrect()
-        {
-            var commandsRan = new List<string>();
-            var availableCommands =
-                new List<Meta<Lazy<Command>, CommandMetadata>>
-                {
-                    new Meta<Lazy<Command>, CommandMetadata>(
-                        new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test"))),
-                        new CommandMetadata() {Name = "test"}),
-                    new Meta<Lazy<Command>, CommandMetadata>(
-                        new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand"))),
-                        new CommandMetadata() {Name = "test", SubCommand = "subcommand"})
-                };
-            var commandLineHost = new CommandLineHost(availableCommands);
-            await commandLineHost.Run(new[] { "test", "subcommand" });
-
-            Assert.Equal(commandsRan.First(), "test-subcommand");
         }
 
         [Fact]
@@ -81,10 +38,10 @@ namespace SeqCli.Tests.Cli
                 {
                     new Meta<Lazy<Command>, CommandMetadata>(
                         new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand1"))),
-                        new CommandMetadata() {Name = "test", SubCommand = "subcommand1"}),
+                        new CommandMetadata {Name = "test", SubCommand = "subcommand1"}),
                     new Meta<Lazy<Command>, CommandMetadata>(
                         new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand2"))),
-                        new CommandMetadata() {Name = "test", SubCommand = "subcommand2"})
+                        new CommandMetadata {Name = "test", SubCommand = "subcommand2"})
                 };
             var commandLineHost = new CommandLineHost(availableCommands);
             await commandLineHost.Run(new[] { "test", "subcommand2" });

@@ -13,6 +13,10 @@
 // limitations under the License.
 
 using System;
+using Destructurama;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Seq.Api.Model;
 using SeqCli.Config;
 using SeqCli.Csv;
 using SeqCli.Output;
@@ -73,6 +77,34 @@ namespace SeqCli.Cli.Features
             {
                 var tokens = new CsvTokenizer().Tokenize(csv);
                 CsvWriter.WriteCsv(tokens, Theme, Console.Out, true);
+            }
+        }
+
+        public void WriteEntity(Entity entity)
+        {
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+            var jo = JObject.FromObject(entity);
+            
+            if (_json)
+            {
+                jo.Remove("Links");
+                // Proof-of-concept; this is a very inefficient
+                // way to write colorized JSON ;)
+                
+                var writer = new LoggerConfiguration()
+                    .Destructure.JsonNetTypes()
+                    .Enrich.With<StripStructureTypeEnricher>()
+                    .WriteTo.Console(
+                        outputTemplate: "{@Message:j}{NewLine}",
+                        theme: Theme)
+                    .CreateLogger();
+                writer.Information("{@Entity}", jo);
+            }
+            else
+            {
+                var dyn = (dynamic) jo;
+                Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name}");
             }
         }
     }

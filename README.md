@@ -150,7 +150,7 @@ Stream log events matching a filter.
 
 Print the current executable version.
 
-## Extraction Patterns
+## Extraction patterns
 
 The `seqcli ingest` command can be used for parsing plain text logs into structured log events.
 
@@ -201,7 +201,7 @@ Different matchers are needed so that a piece of text like `200OK` can be separa
 
 There are three kinds of matchers:
 
- * Matchers like `alpha` and `nat` are built-in _named_ matchers. These are built-in.
+ * Matchers like `alpha` and `nat` are built-in _named_ matchers.
  * The special matchers `*`, `**` and so-on, are _non-greedy content_ matchers; these will match any text up until the next pattern element matches (`*`), the next two elements match, and so-on. We saw this in action with the `{@m:*}{:n}` elements in the example - the message is all of the text up until the next newline.
  * More complex _compound_ matchers are described using a sub-expression. These are prefixed with an equals sign `=`, like `{Phone:={:nat}-{:nat}-{:nat}}`. This will extract chunks of text like `123-456-7890` into the `Phone` property.
 
