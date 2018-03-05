@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Cli
+namespace SeqCli.PlainText
 {
-    interface ICommandMetadata
+    struct Frame
     {
-        string Name { get; }
-        string SubCommand { get; }
-        string HelpText { get; }
+        public bool HasValue { get; set; }
+        public bool IsOrphan { get; set; }
+        public string Value { get; set; }
     }
 }

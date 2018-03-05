@@ -38,10 +38,15 @@ namespace SeqCli.Cli
             if (args.Length > 0)
             {
                 var norm = args[0].ToLowerInvariant();
-                var cmd = _availableCommands.SingleOrDefault(c => c.Metadata.Name == norm);
+                var subCommandNorm = args.Length > 1 && !args[1].Contains("-") ? args[1].ToLowerInvariant() : null;
+                
+                var cmd = _availableCommands.SingleOrDefault(c =>
+                    c.Metadata.Name == norm && (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
+                
                 if (cmd != null)
                 {
-                    return await cmd.Value.Value.Invoke(args.Skip(1).ToArray());
+                    var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
+                    return await cmd.Value.Value.Invoke(args.Skip(amountToSkip).ToArray());
                 }
             }
 

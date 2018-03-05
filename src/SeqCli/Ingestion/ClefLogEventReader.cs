@@ -13,27 +13,33 @@
 // limitations under the License.
 
 using System;
+using System.IO;
+using System.Threading.Tasks;
+using Serilog.Events;
+using Serilog.Formatting.Compact.Reader;
 
-namespace SeqCli.Cli
+namespace SeqCli.Ingestion
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public class CommandAttribute : Attribute, ICommandMetadata
+    class ClefLogEventReader : ILogEventReader, IDisposable
     {
-        public string Name { get; }
-        public string SubCommand { get; }
-        public string HelpText { get; }
+        readonly LogEventReader _reader;
 
-        public string Example { get; set; }
-
-        public CommandAttribute(string name, string helpText)
+        public ClefLogEventReader(TextReader input)
         {
-            Name = name;
-            HelpText = helpText;
+            _reader = new LogEventReader(input ?? throw new ArgumentNullException(nameof(input)));
         }
 
-        public CommandAttribute(string name, string subCommand, string helpText) : this(name, helpText)
+        public Task<LogEvent> TryReadAsync()
         {
-            SubCommand = subCommand;
+            if (_reader.TryRead(out var evt))
+                return Task.FromResult(evt);
+
+            return Task.FromResult<LogEvent>(null);
+        }
+
+        public void Dispose()
+        {
+            _reader.Dispose();
         }
     }
 }

@@ -12,12 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Cli
+using System;
+
+namespace SeqCli.PlainText
 {
-    interface ICommandMetadata
+    class TextOnlyException : Exception
     {
-        string Name { get; }
-        string SubCommand { get; }
-        string HelpText { get; }
+        readonly string _toStringValue;
+
+        public TextOnlyException(string toStringValue)
+        {
+            _toStringValue = toStringValue ?? throw new ArgumentNullException(nameof(toStringValue));
+        }
+
+        public override string ToString()
+        {
+            return _toStringValue;
+        }
     }
 }

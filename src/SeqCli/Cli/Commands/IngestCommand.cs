@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using SeqCli.Ingestion;
+using SeqCli.PlainText;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -28,7 +29,7 @@ using Serilog.Formatting.Compact.Reader;
 namespace SeqCli.Cli.Commands
 {
     [Command("ingest", "Send JSON log events from a file or `STDIN`",
-        Example = "seqcli ingest -i events.clef --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
+        Example = "seqcli ingest -i events.clef --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
     class IngestCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
@@ -36,7 +37,8 @@ namespace SeqCli.Cli.Commands
         readonly FileInputFeature _fileInputFeature;
         readonly PropertiesFeature _properties;
         readonly ConnectionFeature _connection;
-        string _filter;
+        string _filter, _pattern;
+        bool _json;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
@@ -45,10 +47,18 @@ namespace SeqCli.Cli.Commands
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
+            Options.Add("x=|extract=",
+                "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
+                v => _pattern = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
+            Options.Add("json",
+                "Read the events as JSON (the default assumes plain text)",
+                v => _json = true);
+
             Options.Add("f=|filter=",
                 "Filter expression to select a subset of events",
                 v => _filter = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
-
+            
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -71,14 +81,22 @@ namespace SeqCli.Cli.Commands
                     ? new StreamReader(File.Open(_fileInputFeature.InputFilename, FileMode.Open, FileAccess.Read,
                         FileShare.ReadWrite))
                     : null)
-                using (var reader = new LogEventReader(inputFile ?? Console.In))
                 {
-                    return await LogShipper.ShipEvents(
-                        _connectionFactory.Connect(_connection),
-                        reader,
-                        enrichers,
-                        _invalidDataHandlingFeature.InvalidDataHandling,
-                        filter);
+                    var input = inputFile ?? Console.In;
+                    
+                    var reader = _json ?
+                        (ILogEventReader)new ClefLogEventReader(input) :
+                        new PlainTextLogEventReader(input, _pattern);
+                    
+                    using (reader as IDisposable)
+                    {
+                        return await LogShipper.ShipEvents(
+                            _connectionFactory.Connect(_connection),
+                            reader,
+                            enrichers,
+                            _invalidDataHandlingFeature.InvalidDataHandling,
+                            filter);
+                    }
                 }
             }
             catch (Exception ex)

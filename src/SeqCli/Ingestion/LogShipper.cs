@@ -25,7 +25,6 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
-using Serilog.Formatting.Compact.Reader;
 
 namespace SeqCli.Ingestion
 {
@@ -38,7 +37,7 @@ namespace SeqCli.Ingestion
 
         public static async Task<int> ShipEvents(
             SeqConnection connection,
-            LogEventReader reader,
+            ILogEventReader reader,
             List<ILogEventEnricher> enrichers,
             InvalidDataHandling invalidDataHandling,
             Func<LogEvent, bool> filter = null)
@@ -47,7 +46,7 @@ namespace SeqCli.Ingestion
             if (reader == null) throw new ArgumentNullException(nameof(reader));
             if (enrichers == null) throw new ArgumentNullException(nameof(enrichers));
 
-            var batch = ReadBatch(reader, filter, BatchSize, invalidDataHandling);
+            var batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
             while (batch.Length > 0)
             {
                 StringContent content;
@@ -67,7 +66,7 @@ namespace SeqCli.Ingestion
 
                 if (result.IsSuccessStatusCode)
                 {
-                    batch = ReadBatch(reader, filter, BatchSize, invalidDataHandling);
+                    batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
                     continue;
                 }
 
@@ -80,7 +79,7 @@ namespace SeqCli.Ingestion
 
                         Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
                             result.StatusCode,
-                            (string)error.ErrorMessage);
+                            (string)error.Error);
                     }
                     catch
                     {
@@ -95,16 +94,23 @@ namespace SeqCli.Ingestion
             return 0;
         }
 
-        static LogEvent[] ReadBatch(LogEventReader reader, Func<LogEvent, bool> filter,
-            int count, InvalidDataHandling invalidDataHandling)
+        static async Task<LogEvent[]> ReadBatchAsync(
+            ILogEventReader reader,
+            Func<LogEvent, bool> filter,
+            int count,
+            InvalidDataHandling invalidDataHandling)
         {
             var batch = new List<LogEvent>();
             do
             {
                 try
                 {
-                    while (batch.Count < count && reader.TryRead(out var evt))
+                    while (batch.Count < count)
                     {
+                        var evt = await reader.TryReadAsync();
+                        if (evt == null)
+                            break;
+                        
                         if (filter == null || filter(evt))
                         {
                             batch.Add(evt);
