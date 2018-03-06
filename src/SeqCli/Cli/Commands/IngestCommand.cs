@@ -32,12 +32,14 @@ namespace SeqCli.Cli.Commands
         Example = "seqcli ingest -i events.clef --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
     class IngestCommand : Command
     {
+        const string DefaultPattern = "{@m:line}";
+        
         readonly SeqConnectionFactory _connectionFactory;
         readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
         readonly FileInputFeature _fileInputFeature;
         readonly PropertiesFeature _properties;
         readonly ConnectionFeature _connection;
-        string _filter, _pattern;
+        string _filter, _pattern = DefaultPattern;
         bool _json;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
@@ -49,7 +51,7 @@ namespace SeqCli.Cli.Commands
 
             Options.Add("x=|extract=",
                 "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
-                v => _pattern = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+                v => _pattern = string.IsNullOrWhiteSpace(v) ? DefaultPattern : v.Trim());
 
             Options.Add("json",
                 "Read the events as JSON (the default assumes plain text)",
@@ -88,15 +90,12 @@ namespace SeqCli.Cli.Commands
                         (ILogEventReader)new ClefLogEventReader(input) :
                         new PlainTextLogEventReader(input, _pattern);
                     
-                    using (reader as IDisposable)
-                    {
-                        return await LogShipper.ShipEvents(
-                            _connectionFactory.Connect(_connection),
-                            reader,
-                            enrichers,
-                            _invalidDataHandlingFeature.InvalidDataHandling,
-                            filter);
-                    }
+                    return await LogShipper.ShipEvents(
+                        _connectionFactory.Connect(_connection),
+                        reader,
+                        enrichers,
+                        _invalidDataHandlingFeature.InvalidDataHandling,
+                        filter);
                 }
             }
             catch (Exception ex)

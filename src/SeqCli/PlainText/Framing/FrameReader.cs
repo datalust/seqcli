@@ -19,9 +19,9 @@ using System.Threading.Tasks;
 using Superpower;
 using Superpower.Model;
 
-namespace SeqCli.PlainText
+namespace SeqCli.PlainText.Framing
 {
-    class FrameReader : IDisposable
+    class FrameReader
     {
         readonly TextReader _source;
         readonly TimeSpan _trailingLineArrivalDeadline;
@@ -50,10 +50,14 @@ namespace SeqCli.PlainText
             }
             else if (_unawaitedNextLine != null)
             {
+                var index = Task.WaitAny(new Task[] {_unawaitedNextLine}, _trailingLineArrivalDeadline);
+                if (index == -1)
+                    return new Frame();
+                
                 var line = await _unawaitedNextLine;
                 _unawaitedNextLine = null;
                 if (line == null)
-                    return new Frame();
+                    return new Frame {IsAtEnd = true};
 
                 valueBuilder.AppendLine(line);
                 hasValue = true;
@@ -67,7 +71,7 @@ namespace SeqCli.PlainText
             {
                 readLine = readLine ?? Task.Run(_source.ReadLineAsync);                
                 var index = Task.WaitAny(new Task[] {readLine}, _trailingLineArrivalDeadline);
-                if (index == -1) // Timeout
+                if (index == -1)
                 {
                     if (hasValue)
                     {
@@ -85,10 +89,10 @@ namespace SeqCli.PlainText
                     {
                         if (hasValue)
                         {
-                            return new Frame {HasValue = true, Value = valueBuilder.ToString()};
+                            return new Frame {HasValue = true, Value = valueBuilder.ToString(), IsAtEnd = true};
                         }
 
-                        return new Frame();
+                        return new Frame {IsAtEnd = true};
                     }
 
                     if (IsFrameStart(line))
@@ -121,11 +125,6 @@ namespace SeqCli.PlainText
                 var result = _frameStart(new TextSpan(line));
                 return result.HasValue && result.Value.Length > 0;
             }
-        }
-
-        public void Dispose()
-        {
-            _unawaitedNextLine?.Dispose();
         }
     }
 }

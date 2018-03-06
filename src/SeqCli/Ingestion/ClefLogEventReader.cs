@@ -15,31 +15,38 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Serilog.Events;
+using SeqCli.PlainText.Framing;
 using Serilog.Formatting.Compact.Reader;
+using Superpower;
+using Superpower.Model;
 
 namespace SeqCli.Ingestion
 {
-    class ClefLogEventReader : ILogEventReader, IDisposable
+    class ClefLogEventReader : ILogEventReader
     {
-        readonly LogEventReader _reader;
+        static readonly TimeSpan TrailingLineArrivalDeadline = TimeSpan.FromMilliseconds(10);
+        
+        readonly FrameReader _reader;
 
         public ClefLogEventReader(TextReader input)
         {
-            _reader = new LogEventReader(input ?? throw new ArgumentNullException(nameof(input)));
+            _reader = new FrameReader(
+                input ?? throw new ArgumentNullException(nameof(input)),
+                Parse.Return(TextSpan.None),
+                TrailingLineArrivalDeadline);
         }
 
-        public Task<LogEvent> TryReadAsync()
+        public async Task<ReadResult> TryReadAsync()
         {
-            if (_reader.TryRead(out var evt))
-                return Task.FromResult(evt);
+            var frame = await _reader.TryReadAsync();
+            if (!frame.HasValue)
+                return new ReadResult(null, frame.IsAtEnd);
 
-            return Task.FromResult<LogEvent>(null);
-        }
+            if (frame.IsOrphan)
+                throw new InvalidDataException($"A line arrived late or could not be parsed: `{frame.Value.Trim()}`.");
 
-        public void Dispose()
-        {
-            _reader.Dispose();
+            var evt = LogEventReader.ReadFromString(frame.Value);
+            return new ReadResult(evt, frame.IsAtEnd);
         }
     }
 }

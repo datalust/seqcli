@@ -7,11 +7,6 @@ namespace SeqCli.PlainText.Extraction
 {
     static class ExtractionPatternInterpreter
     {
-        public static NameValueExtractor MultilineMessageExtractor { get; } = new NameValueExtractor(new[]
-        {
-            new SimplePatternElement(Matchers.MultiLineMessage, ReifiedProperties.Message)
-        });
-
         static PatternElement[] CreatePatternElements(ExtractionPattern pattern)
         {
             if (pattern == null) throw new ArgumentNullException(nameof(pattern));
