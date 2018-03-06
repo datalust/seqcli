@@ -73,7 +73,7 @@ namespace SeqCli.Tests.PlainText
             var reader = new FrameReader(
                 new StringReader(source),
                 frameStart,
-                TimeSpan.FromMilliseconds(1));
+                TimeSpan.FromMilliseconds(10));
 
             var result = new List<Frame>();
             

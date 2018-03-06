@@ -29,13 +29,19 @@ namespace SeqCli.PlainText.Extraction
                     case CapturePatternExpression capture
                     when capture.Content is MatchTypeContentExpression mtc:
                         patternElements[i] = new SimplePatternElement(
-                            mtc.Type == null ? Matchers.Token : Matchers.GetByType(mtc.Type),
+                            Matchers.GetByType(mtc.Type),
                             capture.Name);
                         break;
                     case CapturePatternExpression capture
                     when capture.Content is GroupedContentExpression gc:
                         patternElements[i] = new GroupedPatternElement(
                             CreatePatternElements(gc.ExtractionPattern),
+                            capture.Name);
+                        break;
+                    case CapturePatternExpression capture
+                    when capture.Content == null:
+                        patternElements[i] = new SimplePatternElement(
+                            Matchers.Token,
                             capture.Name);
                         break;
                     default:

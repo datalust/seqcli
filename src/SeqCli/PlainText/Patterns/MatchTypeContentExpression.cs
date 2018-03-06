@@ -1,4 +1,6 @@
-﻿namespace SeqCli.PlainText.Patterns
+﻿using System;
+
+namespace SeqCli.PlainText.Patterns
 {
     class MatchTypeContentExpression : CaptureContentExpression
     {
@@ -6,7 +8,7 @@
 
         public MatchTypeContentExpression(string type)
         {
-            Type = type;
+            Type = type ?? throw new ArgumentNullException(nameof(type));
         }
     }
 }
