@@ -5,6 +5,6 @@ namespace SeqCli.Ingestion
 {
     interface ILogEventReader
     {
-        Task<LogEvent> TryReadAsync();
+        Task<ReadResult> TryReadAsync();
     }
 }

@@ -47,67 +47,37 @@ namespace SeqCli.Ingestion
             if (enrichers == null) throw new ArgumentNullException(nameof(enrichers));
 
             var batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
-            while (batch.Length > 0)
+            while (true)
             {
-                StringContent content;
-                using (var builder = new StringWriter())
-                {
-                    foreach (var evt in batch)
-                    {
-                        foreach (var enricher in enrichers)
-                            enricher.Enrich(evt, null);
-                        Formatter.Format(evt, builder);
-                    }
+                if (!await SendBatchAsync(connection, batch.LogEvents, enrichers))
+                    return 1;
 
-                    content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
-                }
-
-                var result = await connection.Client.HttpClient.PostAsync(ApiConstants.IngestionEndpoint, content);
-
-                if (result.IsSuccessStatusCode)
-                {
-                    batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
-                    continue;
-                }
-
-                var resultJson = await result.Content.ReadAsStringAsync();
-                if (!string.IsNullOrWhiteSpace(resultJson))
-                {
-                    try
-                    {
-                        var error = JsonConvert.DeserializeObject<dynamic>(resultJson);
-
-                        Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
-                            result.StatusCode,
-                            (string)error.Error);
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-
-                Log.Error("Failed with status code {StatusCode} ({ReasonPhrase})", result.StatusCode, result.ReasonPhrase);
-                return 1;
+                if (batch.IsLast)
+                    break;
+                
+                batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
             }
 
             return 0;
         }
 
-        static async Task<LogEvent[]> ReadBatchAsync(
+        static async Task<BatchResult> ReadBatchAsync(
             ILogEventReader reader,
             Func<LogEvent, bool> filter,
             int count,
             InvalidDataHandling invalidDataHandling)
         {
             var batch = new List<LogEvent>();
+            var isLast = false;
             do
             {
                 try
                 {
                     while (batch.Count < count)
                     {
-                        var evt = await reader.TryReadAsync();
+                        var rr = await reader.TryReadAsync();
+                        isLast = rr.IsAtEnd;
+                        var evt = rr.LogEvent;
                         if (evt == null)
                             break;
                         
@@ -128,8 +98,55 @@ namespace SeqCli.Ingestion
                     throw;
                 }
 
-                return batch.ToArray();
+                return new BatchResult(batch.ToArray(), isLast);
             } while (true);
+        }
+
+        static async Task<bool> SendBatchAsync(
+            SeqConnection connection,
+            IReadOnlyCollection<LogEvent> batch,
+            IReadOnlyCollection<ILogEventEnricher> enrichers)
+        {
+            if (batch.Count == 0)
+                return true;
+
+            StringContent content;
+            using (var builder = new StringWriter())
+            {
+                foreach (var evt in batch)
+                {
+                    foreach (var enricher in enrichers)
+                        enricher.Enrich(evt, null);
+                    Formatter.Format(evt, builder);
+                }
+
+                content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
+            }
+
+            var result = await connection.Client.HttpClient.PostAsync(ApiConstants.IngestionEndpoint, content);
+
+            if (result.IsSuccessStatusCode)
+                return true;
+
+            var resultJson = await result.Content.ReadAsStringAsync();
+            if (!string.IsNullOrWhiteSpace(resultJson))
+            {
+                try
+                {
+                    var error = JsonConvert.DeserializeObject<dynamic>(resultJson);
+
+                    Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
+                        result.StatusCode,
+                        (string)error.Error);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+
+            Log.Error("Failed with status code {StatusCode} ({ReasonPhrase})", result.StatusCode, result.ReasonPhrase);
+            return false;
         }
     }
 }

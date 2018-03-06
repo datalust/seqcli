@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using SeqCli.PlainText;
+using SeqCli.PlainText.Framing;
 using SeqCli.PlainText.Parsers;
 using Superpower;
 using Superpower.Model;

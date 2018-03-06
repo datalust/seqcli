@@ -61,7 +61,7 @@ namespace SeqCli.PlainText.Extraction
         public static TextParser<object> Timestamp { get; } =
             Iso8601DateTime.Try().Or(SerilogFileTimestamp);
 
-        // Unclear whether we need to name this
+        [Matcher("trailingindent")]
         public static TextParser<object> MultiLineMessage { get; } =
             SpanEx.MatchedBy(
                     Character.Matching(ch => !char.IsWhiteSpace(ch), "non whitespace character")
