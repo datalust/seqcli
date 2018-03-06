@@ -31,7 +31,7 @@ namespace SeqCli.Ingestion
     static class LogShipper
     {
         // Keep things simple with a fixed batch size.
-        const int BatchSize = 500;
+        const int BatchSize = 100;
 
         static readonly CompactJsonFormatter Formatter = new CompactJsonFormatter();
 
