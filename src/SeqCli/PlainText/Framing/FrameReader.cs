@@ -92,7 +92,7 @@ namespace SeqCli.PlainText.Framing
                             return new Frame {HasValue = true, Value = valueBuilder.ToString(), IsAtEnd = true};
                         }
 
-                        return new Frame();
+                        return new Frame {IsAtEnd = true};
                     }
 
                     if (IsFrameStart(line))
