@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using SeqCli.PlainText;
+using SeqCli.PlainText.Framing;
 using SeqCli.PlainText.Parsers;
 using Superpower;
 using Superpower.Model;
@@ -72,7 +73,7 @@ namespace SeqCli.Tests.PlainText
             var reader = new FrameReader(
                 new StringReader(source),
                 frameStart,
-                TimeSpan.FromMilliseconds(1));
+                TimeSpan.FromMilliseconds(10));
 
             var result = new List<Frame>();
             

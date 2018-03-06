@@ -7,11 +7,6 @@ namespace SeqCli.PlainText.Extraction
 {
     static class ExtractionPatternInterpreter
     {
-        public static NameValueExtractor MultilineMessageExtractor { get; } = new NameValueExtractor(new[]
-        {
-            new SimplePatternElement(Matchers.MultiLineMessage, ReifiedProperties.Message)
-        });
-
         static PatternElement[] CreatePatternElements(ExtractionPattern pattern)
         {
             if (pattern == null) throw new ArgumentNullException(nameof(pattern));
@@ -34,13 +29,19 @@ namespace SeqCli.PlainText.Extraction
                     case CapturePatternExpression capture
                     when capture.Content is MatchTypeContentExpression mtc:
                         patternElements[i] = new SimplePatternElement(
-                            mtc.Type == null ? Matchers.Token : Matchers.GetByType(mtc.Type),
+                            Matchers.GetByType(mtc.Type),
                             capture.Name);
                         break;
                     case CapturePatternExpression capture
                     when capture.Content is GroupedContentExpression gc:
                         patternElements[i] = new GroupedPatternElement(
                             CreatePatternElements(gc.ExtractionPattern),
+                            capture.Name);
+                        break;
+                    case CapturePatternExpression capture
+                    when capture.Content == null:
+                        patternElements[i] = new SimplePatternElement(
+                            Matchers.Token,
                             capture.Name);
                         break;
                     default:

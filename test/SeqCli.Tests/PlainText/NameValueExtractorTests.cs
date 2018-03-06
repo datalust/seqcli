@@ -2,6 +2,7 @@
 using System.Linq;
 using SeqCli.PlainText;
 using SeqCli.PlainText.Extraction;
+using SeqCli.PlainText.Patterns;
 using Superpower.Model;
 using Xunit;
 
@@ -10,20 +11,26 @@ namespace SeqCli.Tests.PlainText
     public class NameValueExtractorTests
     {
         [Fact]
-        public void TheDefaultPatternMatchesMultilineMessages()
+        public void TheTrailingIndentPatternMatchesMultilineMessages()
         {
+            var multilineMessageExtractor =
+                ExtractionPatternInterpreter.CreateNameValueExtractor(
+                    ExtractionPatternParser.Parse("{@m:trailingindent}"));
             var frame = $"Hello,{Environment.NewLine} world!";
-            var (properties, remainder) = ExtractionPatternInterpreter.MultilineMessageExtractor.ExtractValues(frame);
+            var (properties, remainder) = multilineMessageExtractor.ExtractValues(frame);
             Assert.Null(remainder);
             Assert.Single(properties, p => p.Key == ReifiedProperties.Message &&
                                            ((TextSpan)p.Value).ToStringValue() == frame);
         }
 
         [Fact]
-        public void TheDefaultPatternDoesNotMatchLinesStartingWithWhitespace()
+        public void TheTrailingIndentPatternDoesNotMatchLinesStartingWithWhitespace()
         {
+            var multilineMessageExtractor =
+                ExtractionPatternInterpreter.CreateNameValueExtractor(
+                    ExtractionPatternParser.Parse("{@m:trailingindent}"));
             var frame = " world";
-            var (properties, remainder) = ExtractionPatternInterpreter.MultilineMessageExtractor.ExtractValues(frame);
+            var (properties, remainder) = multilineMessageExtractor.ExtractValues(frame);
             Assert.Empty(properties);
             Assert.Equal(frame, remainder);
         }
