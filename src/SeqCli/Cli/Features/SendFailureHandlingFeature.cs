@@ -17,15 +17,15 @@ using SeqCli.Ingestion;
 
 namespace SeqCli.Cli.Features
 {
-    class InvalidDataHandlingFeature : CommandFeature
+    class SendFailureHandlingFeature : CommandFeature
     {
-        public InvalidDataHandling InvalidDataHandling { get; private set; }
+        public SendFailureHandling SendFailureHandling { get; private set; }
 
         public override void Enable(OptionSet options)
         {
-            options.Add("invalid-data=",
-                "Specify how invalid data is handled: `fail` (default) or `ignore`",
-                v => InvalidDataHandling = (InvalidDataHandling)Enum.Parse(typeof(InvalidDataHandling), v, ignoreCase: true));
+            options.Add("send-failure=",
+                "Specify how connection failures are handled: `fail` (default), `continue`, or `ignore`",
+                v => SendFailureHandling = (SendFailureHandling)Enum.Parse(typeof(SendFailureHandling), v, ignoreCase: true));
         }
     }
 

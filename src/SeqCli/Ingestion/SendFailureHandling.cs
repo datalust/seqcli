@@ -12,21 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using SeqCli.Ingestion;
-
-namespace SeqCli.Cli.Features
+namespace SeqCli.Ingestion
 {
-    class InvalidDataHandlingFeature : CommandFeature
+    /// <summary>
+    /// Controls how connection failures during ingestion are handled.
+    /// </summary>
+    /// <remarks>A 'retry' option will appear here at some future point.</remarks>
+    enum SendFailureHandling
     {
-        public InvalidDataHandling InvalidDataHandling { get; private set; }
-
-        public override void Enable(OptionSet options)
-        {
-            options.Add("invalid-data=",
-                "Specify how invalid data is handled: `fail` (default) or `ignore`",
-                v => InvalidDataHandling = (InvalidDataHandling)Enum.Parse(typeof(InvalidDataHandling), v, ignoreCase: true));
-        }
+        /// <summary>
+        /// Log error information and exit.
+        /// </summary>
+        Fail,
+        
+        /// <summary>
+        /// Log error information, drop the failed batch, and continue.
+        /// </summary>
+        Continue,
+        
+        /// <summary>
+        /// Silently ignore failures.
+        /// </summary>
+        Ignore
     }
-
 }
