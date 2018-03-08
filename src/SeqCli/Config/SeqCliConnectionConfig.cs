@@ -39,7 +39,7 @@ namespace SeqCli.Config
                 if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
                     return EncodedApiKey;
 
-                return MachineScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
+                return UserScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
             }
             set
             {
@@ -49,7 +49,7 @@ namespace SeqCli.Config
                     return;
                 }
 
-                EncodedApiKey = $"{ProtectedDataPrefix}{MachineScopeDataProtection.Protect(value)}";
+                EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
             }
 #else
             get { return EncodedApiKey; }
