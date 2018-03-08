@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Newtonsoft.Json;
 using SeqCli.Util;
 
@@ -29,6 +30,7 @@ namespace SeqCli.Config
         [JsonIgnore]
         public string ApiKey
         {
+#if WINDOWS
             get
             {
                 if (string.IsNullOrWhiteSpace(EncodedApiKey))
@@ -37,7 +39,7 @@ namespace SeqCli.Config
                 if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
                     return EncodedApiKey;
 
-                return MachineScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
+                return UserScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
             }
             set
             {
@@ -47,9 +49,12 @@ namespace SeqCli.Config
                     return;
                 }
 
-                EncodedApiKey = $"{ProtectedDataPrefix}{MachineScopeDataProtection.Protect(value)}";
+                EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
             }
+#else
+            get { return EncodedApiKey; }
+            set { EncodedApiKey = value; }
+#endif
         }
-
     }
 }
