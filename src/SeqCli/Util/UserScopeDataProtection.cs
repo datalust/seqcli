@@ -32,7 +32,7 @@ using System.Text;
 
 namespace SeqCli.Util
 {
-    static class MachineScopeDataProtection
+    static class UserScopeDataProtection
     {
         public static string Unprotect(string @protected)
         {
@@ -42,7 +42,7 @@ namespace SeqCli.Util
 
             var bytes = Convert.FromBase64String(parts[0]);
             var salt = Convert.FromBase64String(parts[1]);
-            var decoded = ProtectedData.Unprotect(bytes, salt, DataProtectionScope.LocalMachine);
+            var decoded = ProtectedData.Unprotect(bytes, salt, DataProtectionScope.CurrentUser);
             return Encoding.UTF8.GetString(decoded);
         }
 
@@ -52,7 +52,7 @@ namespace SeqCli.Util
             using (var cp = new RNGCryptoServiceProvider())
                 cp.GetBytes(salt);
 
-            var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), salt, DataProtectionScope.LocalMachine);
+            var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), salt, DataProtectionScope.CurrentUser);
             return $"{Convert.ToBase64String(bytes)}${Convert.ToBase64String(salt)}";
         }
     }
