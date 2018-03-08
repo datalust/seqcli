@@ -14,7 +14,7 @@ To set a default server URL, run:
 seqcli config -k connection.serverUrl -v https://your-seq-server
 ```
 
-The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text.
+The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
 
 ## Commands
 
