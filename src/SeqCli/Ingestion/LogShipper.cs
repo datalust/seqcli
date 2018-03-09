@@ -40,6 +40,7 @@ namespace SeqCli.Ingestion
             ILogEventReader reader,
             List<ILogEventEnricher> enrichers,
             InvalidDataHandling invalidDataHandling,
+            SendFailureHandling sendFailureHandling,
             Func<LogEvent, bool> filter = null)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
@@ -49,7 +50,22 @@ namespace SeqCli.Ingestion
             var batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
             while (true)
             {
-                if (!await SendBatchAsync(connection, batch.LogEvents, enrichers))
+                var sendSucceeded = false;
+                try
+                {
+                    sendSucceeded = await SendBatchAsync(
+                        connection,
+                        batch.LogEvents,
+                        enrichers,
+                        sendFailureHandling != SendFailureHandling.Ignore);
+                }
+                catch (Exception ex)
+                {
+                    if (sendFailureHandling != SendFailureHandling.Ignore)
+                        Log.Error(ex, "Failed to send an event batch");
+                }
+                
+                if (!sendSucceeded && sendFailureHandling == SendFailureHandling.Fail)
                     return 1;
 
                 if (batch.IsLast)
@@ -105,7 +121,8 @@ namespace SeqCli.Ingestion
         static async Task<bool> SendBatchAsync(
             SeqConnection connection,
             IReadOnlyCollection<LogEvent> batch,
-            IReadOnlyCollection<ILogEventEnricher> enrichers)
+            IReadOnlyCollection<ILogEventEnricher> enrichers,
+            bool logSendFailures)
         {
             if (batch.Count == 0)
                 return true;
@@ -128,6 +145,9 @@ namespace SeqCli.Ingestion
             if (result.IsSuccessStatusCode)
                 return true;
 
+            if (!logSendFailures)
+                return false;
+
             var resultJson = await result.Content.ReadAsStringAsync();
             if (!string.IsNullOrWhiteSpace(resultJson))
             {
@@ -138,6 +158,8 @@ namespace SeqCli.Ingestion
                     Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
                         result.StatusCode,
                         (string)error.Error);
+
+                    return false;
                 }
                 catch
                 {

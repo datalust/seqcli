@@ -38,6 +38,7 @@ namespace SeqCli.Cli.Commands
         readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
         readonly FileInputFeature _fileInputFeature;
         readonly PropertiesFeature _properties;
+        readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
         readonly ConnectionFeature _connection;
         string _filter, _pattern = DefaultPattern;
         bool _json;
@@ -60,7 +61,8 @@ namespace SeqCli.Cli.Commands
             Options.Add("f=|filter=",
                 "Filter expression to select a subset of events",
                 v => _filter = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
-            
+
+            _sendFailureHandlingFeature = Enable<SendFailureHandlingFeature>();            
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -95,6 +97,7 @@ namespace SeqCli.Cli.Commands
                         reader,
                         enrichers,
                         _invalidDataHandlingFeature.InvalidDataHandling,
+                        _sendFailureHandlingFeature.SendFailureHandling,
                         filter);
                 }
             }
