@@ -29,7 +29,7 @@ namespace SeqCli.EndToEnd.Support
         {
             if (storagePath == null) throw new ArgumentNullException(nameof(storagePath));
 
-            var commandWithArgs = $"run --listen=\"{ServerListenUrl}\"--storage=\"{storagePath}\"";
+            var commandWithArgs = $"run --listen=\"{ServerListenUrl}\" --storage=\"{storagePath}\"";
             
             return new CaptiveProcess("seq", commandWithArgs);
         }

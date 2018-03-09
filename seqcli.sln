@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FC0A256C-CC1F-4ECE-AF09-707248D10DC1}"
 EndProject
@@ -32,7 +32,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.Tests", "test\SeqCli
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SeqCli.Setup", "setup\SeqCli.Setup\SeqCli.Setup.wixproj", "{5E28D963-3523-49DE-B03B-E76684258415}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeqCli.EndToEnd", "test\SeqCli.EndToEnd\SeqCli.EndToEnd.csproj", "{B86DEF3C-C461-4126-AD49-986EBB19B487}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.EndToEnd", "test\SeqCli.EndToEnd\SeqCli.EndToEnd.csproj", "{B86DEF3C-C461-4126-AD49-986EBB19B487}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
