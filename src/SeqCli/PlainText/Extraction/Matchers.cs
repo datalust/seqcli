@@ -62,7 +62,7 @@ namespace SeqCli.PlainText.Extraction
                         DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeLocal);
                     if (dt > DateTime.Now.AddDays(7)) // Tailing a late December log in early January :-)
                         dt = dt.AddYears(-1);
-                    return (object) new DateTimeOffset(dt);
+                    return (object) new DateTimeOffset(dt, TimeZoneInfo.Local.GetUtcOffset(dt));
                 });            
 
         public static TextParser<object> SerilogFileTimestamp { get; } =
