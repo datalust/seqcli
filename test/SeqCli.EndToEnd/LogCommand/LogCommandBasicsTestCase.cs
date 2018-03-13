@@ -14,7 +14,7 @@ namespace SeqCli.EndToEnd.LogCommand
             ILogger logger,
             CliCommandRunner runner)
         {
-            var exit = runner.Exec("log", "-m 'Hello, {Name}!' -p Name=world");
+            var exit = runner.Exec("log", "-m \"Hello, {Name}!\" -p Name=world");
             Assert.Equal(0, exit);
 
             var events = await connection.Events.ListAsync(render: true, filter: "Name = 'world'");
