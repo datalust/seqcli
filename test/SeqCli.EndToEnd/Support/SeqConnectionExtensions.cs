@@ -13,7 +13,7 @@ namespace SeqCli.EndToEnd.Support
 
             var started = DateTime.UtcNow;
             var wait = TimeSpan.FromMilliseconds(100);
-            var waitLimit = TimeSpan.FromSeconds(100);
+            var waitLimit = TimeSpan.FromSeconds(30);
             var deadline = started.Add(waitLimit);
             while (!await ConnectAsync(connection, DateTime.UtcNow > deadline))
             {
@@ -23,9 +23,11 @@ namespace SeqCli.EndToEnd.Support
 
         static async Task<bool> ConnectAsync(SeqConnection connection, bool throwOnFailure)
         {
+            HttpStatusCode statusCode;
+
             try
             {
-                return (await connection.Client.HttpClient.GetAsync("/api")).StatusCode == HttpStatusCode.OK;
+                statusCode = (await connection.Client.HttpClient.GetAsync("/api")).StatusCode;
             }
             catch
             {
@@ -34,7 +36,14 @@ namespace SeqCli.EndToEnd.Support
                 
                 return false;
             }
-        }
 
+            if (statusCode == HttpStatusCode.OK)
+                return true;
+
+            if (!throwOnFailure)
+                return false;
+
+            throw new Exception($"Could not connect to the Seq API endpoint: {statusCode}.");
+        }
     }
 }

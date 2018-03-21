@@ -6,7 +6,7 @@ namespace SeqCli.EndToEnd.Support
 {
     public class TestConfiguration
     {
-        public string ServerListenUrl { get; } = "http://127.0.0.1:9989";
+        public string ServerListenUrl { get; } = "http://localhost:9989";
 
         string EquivalentBaseDirectory { get; } = AppDomain.CurrentDomain.BaseDirectory
             .Replace(Path.Combine("test", "SeqCli.EndToEnd"), Path.Combine("src", "SeqCli"));
