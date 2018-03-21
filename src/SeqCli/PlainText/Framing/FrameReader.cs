@@ -123,7 +123,7 @@ namespace SeqCli.PlainText.Framing
             {
                 if (line == null) throw new ArgumentNullException(nameof(line));
                 var result = _frameStart(new TextSpan(line));
-                return result.HasValue && result.Value.Length > 0;
+                return result.HasValue;
             }
         }
     }

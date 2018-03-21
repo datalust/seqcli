@@ -40,7 +40,7 @@ namespace SeqCli
                         new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
                 TaskScheduler.UnobservedTaskException += 
-                    (s,e) => Log.Error(e.Exception, "Unobserved task exception: {UnobservedExceptionMessage}");
+                    (s,e) => Log.Error(e.Exception, "Unobserved task exception");
                 
                 var builder = new ContainerBuilder();
                 builder.RegisterModule<SeqCliModule>();

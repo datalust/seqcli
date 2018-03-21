@@ -20,7 +20,7 @@ namespace SeqCli.Tests.PlainText
             Assert.Equal(hour, dto.Hour);
             Assert.Equal(minute, dto.Minute);
             Assert.Equal(second, dto.Second);
-            Assert.Equal(DateTimeOffset.Now.Offset, dto.Offset);
+            Assert.Equal(TimeZoneInfo.Local.GetUtcOffset(dto), dto.Offset);
         }
     }
 }

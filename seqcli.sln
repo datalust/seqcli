@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FC0A256C-CC1F-4ECE-AF09-707248D10DC1}"
 EndProject
@@ -32,6 +32,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.Tests", "test\SeqCli
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SeqCli.Setup", "setup\SeqCli.Setup\SeqCli.Setup.wixproj", "{5E28D963-3523-49DE-B03B-E76684258415}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.EndToEnd", "test\SeqCli.EndToEnd\SeqCli.EndToEnd.csproj", "{B86DEF3C-C461-4126-AD49-986EBB19B487}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -49,6 +51,10 @@ Global
 		{5E28D963-3523-49DE-B03B-E76684258415}.Debug|x64.ActiveCfg = Debug|x64
 		{5E28D963-3523-49DE-B03B-E76684258415}.Release|x64.ActiveCfg = Release|x64
 		{5E28D963-3523-49DE-B03B-E76684258415}.Release|x64.Build.0 = Release|x64
+		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Debug|x64.ActiveCfg = Debug|x64
+		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Debug|x64.Build.0 = Debug|x64
+		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Release|x64.ActiveCfg = Release|x64
+		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -57,6 +63,7 @@ Global
 		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687} = {FC0A256C-CC1F-4ECE-AF09-707248D10DC1}
 		{DBC69360-519B-4A9B-829B-2AE1B5412521} = {3587B633-0C03-4235-8903-6226900328F1}
 		{5E28D963-3523-49DE-B03B-E76684258415} = {203E8AE7-ADF0-44FA-A341-90723C8595F7}
+		{B86DEF3C-C461-4126-AD49-986EBB19B487} = {3587B633-0C03-4235-8903-6226900328F1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D299713-28D4-4078-9DA7-9033679CD200}

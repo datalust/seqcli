@@ -58,11 +58,11 @@ namespace SeqCli.PlainText.Extraction
             Span.Regex("\\w{3} ( )?\\d{1,2} \\d{2}:\\d{2}:\\d{2}")
                 .Select(span =>
                 {
-                    var dt = DateTime.ParseExact(span.ToStringValue(), "MMM d HH:mm:ss", CultureInfo.InvariantCulture,
+                    var dt = DateTimeOffset.ParseExact(span.ToStringValue(), "MMM d HH:mm:ss", CultureInfo.InvariantCulture,
                         DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeLocal);
                     if (dt > DateTime.Now.AddDays(7)) // Tailing a late December log in early January :-)
                         dt = dt.AddYears(-1);
-                    return (object) new DateTimeOffset(dt);
+                    return (object) dt;
                 });            
 
         public static TextParser<object> SerilogFileTimestamp { get; } =
