@@ -24,7 +24,6 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Filters.Expressions;
-using Serilog.Formatting.Compact.Reader;
 
 namespace SeqCli.Cli.Commands
 {
@@ -89,7 +88,7 @@ namespace SeqCli.Cli.Commands
                     var input = inputFile ?? Console.In;
                     
                     var reader = _json ?
-                        (ILogEventReader)new ClefLogEventReader(input) :
+                        (ILogEventReader)new JsonLogEventReader(input) :
                         new PlainTextLogEventReader(input, _pattern);
                     
                     return await LogShipper.ShipEvents(

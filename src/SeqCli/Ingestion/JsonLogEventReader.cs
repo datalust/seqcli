@@ -13,8 +13,11 @@
 // limitations under the License.
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SeqCli.PlainText.Framing;
 using Serilog.Formatting.Compact.Reader;
 using Superpower;
@@ -22,13 +25,18 @@ using Superpower.Model;
 
 namespace SeqCli.Ingestion
 {
-    class ClefLogEventReader : ILogEventReader
+    class JsonLogEventReader : ILogEventReader
     {
         static readonly TimeSpan TrailingLineArrivalDeadline = TimeSpan.FromMilliseconds(10);
         
         readonly FrameReader _reader;
+        readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
+        {
+            DateParseHandling = DateParseHandling.None,
+            Culture = CultureInfo.InvariantCulture
+        });
 
-        public ClefLogEventReader(TextReader input)
+        public JsonLogEventReader(TextReader input)
         {
             _reader = new FrameReader(
                 input ?? throw new ArgumentNullException(nameof(input)),
@@ -45,7 +53,16 @@ namespace SeqCli.Ingestion
             if (frame.IsOrphan)
                 throw new InvalidDataException($"A line arrived late or could not be parsed: `{frame.Value.Trim()}`.");
 
-            var evt = LogEventReader.ReadFromString(frame.Value);
+            var jobject = _serializer.Deserialize<JObject>(new JsonTextReader(new StringReader(frame.Value)));
+
+            if (!jobject.TryGetValue("@t", out _))
+                jobject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
+
+            // Serilog.Formatting.Compact.Reader issue #13
+            if (!jobject.TryGetValue("@m", out _) && !jobject.TryGetValue("@mt", out _))
+                jobject.Add("@mt", new JValue(""));
+
+            var evt = LogEventReader.ReadFromJObject(jobject);
             return new ReadResult(evt, frame.IsAtEnd);
         }
     }

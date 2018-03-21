@@ -46,7 +46,6 @@ namespace SeqCli.EndToEnd.Support
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("PASS");
                         Console.ResetColor();
-                        break; // tries
                     }
                     catch (Exception ex)
                     {
