@@ -218,3 +218,19 @@ Multi-line events are handled by looking for lines that start with the first ele
 Here the literal text `[`, a timestamp token, adjacent space ` `, level and closing `]` are all grouped so that they constitute a single logical pattern element to identify the start of events.
 
 When logs are streamed into `seqcli ingest` in real time, a 10 ms deadline is applied, within which any trailing lines that make up the event must be received.
+
+### Examples
+
+**Tail systemd logs:**
+
+```shell
+journalctl -f -n 0 |
+  seqcli ingest -x "{@t:syslogdt} {host} {ident:*}: {@m:*}{:n}" --invalid-data=ignore
+```
+
+**Tail `/var/log/syslog`**
+
+```shell
+tail -c 0 -F /var/log/syslog |
+  seqcli ingest -x "{@t:syslogdt} {host} {ident:*}: {@m:*}{:n}"
+```
