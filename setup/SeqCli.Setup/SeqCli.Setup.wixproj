@@ -13,15 +13,14 @@
     <WixTasksPath>$(WixToolPath)wixtasks.dll</WixTasksPath>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <SeqCliVersion Condition=" '$(SeqCliVersion)' == '' ">99.99.99</SeqCliVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>Debug;Version=$(Version)</DefineConstants>
-    <DefineConstants>Debug</DefineConstants>
-    <SuppressIces>
-    </SuppressIces>
+    <DefineConstants>Debug;SeqCliVersion=$(SeqCliVersion)</DefineConstants>
+    <SuppressIces></SuppressIces>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DefineConstants>Version=$(Version)</DefineConstants>
+    <DefineConstants>SeqCliVersion=$(SeqCliVersion)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <WixExtension Include="WixUtilExtension">
@@ -49,7 +48,7 @@
   <Target Name="BeforeBuild">
     <PropertyGroup>
       <LinkerBaseInputPaths>..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish</LinkerBaseInputPaths>
-      <DefineConstants>BasePath=..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish</DefineConstants>
+      <DefineConstants>BasePath=..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <HeatDirectory OutputFile="SeqCli.wxs" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="SeqCli_Project" SuppressCom="true" Directory="..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath" Transforms="RemovePdbs.xslt" />
   </Target>
