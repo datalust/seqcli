@@ -49,7 +49,7 @@ function Publish-Msi($version)
 	& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f netcoreapp2.0 -r win-x64 /p:VersionPrefix=$version /p:ShowLinkerSizeComparison=true
 	if($LASTEXITCODE -ne 0) { exit 7 }
 
-	& msbuild ./setup/SeqCli.Setup/SeqCli.Setup.wixproj /t:Build /p:Configuration=Release /p:Platform=x64 /p:ProductVersion=$version /p:BuildProjectReferences=false
+	& msbuild ./setup/SeqCli.Setup/SeqCli.Setup.wixproj /t:Build /p:Configuration=Release /p:Platform=x64 /p:SeqCliVersion=$version /p:BuildProjectReferences=false
 	if($LASTEXITCODE -ne 0) { exit 8 }
 
 	mv ./setup/SeqCli.Setup/bin/Release/seqcli.msi ./artifacts/seqcli-$version.msi
