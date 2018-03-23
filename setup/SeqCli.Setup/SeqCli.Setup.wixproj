@@ -13,15 +13,11 @@
     <WixTasksPath>$(WixToolPath)wixtasks.dll</WixTasksPath>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>ProductVersion=$(ProductVersion)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>Debug;Version=$(Version)</DefineConstants>
     <DefineConstants>Debug</DefineConstants>
-    <SuppressIces>
-    </SuppressIces>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DefineConstants>Version=$(Version)</DefineConstants>
+    <SuppressIces></SuppressIces>
   </PropertyGroup>
   <ItemGroup>
     <WixExtension Include="WixUtilExtension">

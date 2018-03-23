@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<?ifndef Version?>
-<?define Version = "99.99.99" ?>
+<?ifndef ProductVersion ?>
+<?define ProductVersion = "99.99.99" ?>
 <?endif ?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <Product Id="*" Name="SeqCli" Language="1033" Version="$(var.Version).0"
+  <Product Id="*" Name="SeqCli" Language="1033" Version="$(var.ProductVersion).0"
            Manufacturer="Datalust Pty Ltd" UpgradeCode="90353419-3199-4493-5341-510ffee561ee">
 
     <Package InstallerVersion="200"
