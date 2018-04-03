@@ -53,7 +53,9 @@ namespace SeqCli.Ingestion
             if (frame.IsOrphan)
                 throw new InvalidDataException($"A line arrived late or could not be parsed: `{frame.Value.Trim()}`.");
 
-            var jobject = _serializer.Deserialize<JObject>(new JsonTextReader(new StringReader(frame.Value)));
+            var frameValue = new JsonTextReader(new StringReader(frame.Value));
+            if (!(_serializer.Deserialize<JToken>(frameValue) is JObject jobject))
+                throw new InvalidDataException($"The line is not a JSON object: `{frame.Value.Trim()}`.");
 
             if (!jobject.TryGetValue("@t", out _))
                 jobject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
