@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using SeqCli.Ingestion;
 using SeqCli.PlainText.Extraction;
 using SeqCli.PlainText.Framing;
+using SeqCli.PlainText.LogEvents;
 using SeqCli.PlainText.Parsers;
 using SeqCli.PlainText.Patterns;
 using Serilog.Events;

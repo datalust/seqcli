@@ -21,10 +21,10 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api;
 using SeqCli.Api;
+using SeqCli.Levels;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
 
 namespace SeqCli.Ingestion
 {
@@ -33,7 +33,7 @@ namespace SeqCli.Ingestion
         // Keep things simple with a fixed batch size.
         const int BatchSize = 100;
 
-        static readonly CompactJsonFormatter Formatter = new CompactJsonFormatter();
+        static readonly SurrogateLevelAwareCompactJsonFormatter Formatter = new SurrogateLevelAwareCompactJsonFormatter();
 
         public static async Task<int> ShipEvents(
             SeqConnection connection,

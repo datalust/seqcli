@@ -16,11 +16,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using SeqCli.Levels;
 using Serilog.Events;
 using Serilog.Parsing;
 using Superpower.Model;
 
-namespace SeqCli.PlainText
+namespace SeqCli.PlainText.LogEvents
 {
     static class LogEventBuilder
     {
@@ -30,11 +31,11 @@ namespace SeqCli.PlainText
             var level = GetLevel(properties);          
             var exception = TryGetException(properties);          
             var messageTemplate = GetMessageTemplate(properties);          
-            var props = GetLogEventProperties(properties, remainder);
+            var props = GetLogEventProperties(properties, remainder, level);
 
             return new LogEvent(
                 timestamp,
-                level,
+                LogEventLevel.Information,
                 exception,
                 messageTemplate,
                 props);
@@ -54,13 +55,12 @@ namespace SeqCli.PlainText
             return NoMessage;
         }
 
-        static LogEventLevel GetLevel(IDictionary<string, object> properties)
+        static string GetLevel(IDictionary<string, object> properties)
         {
             if (properties.TryGetValue(ReifiedProperties.Level, out var l) &&
-                l is TextSpan ts &&
-                LevelsByName.TryGetValue(ts.ToStringValue(), out var level))
-                return level;
-            return LogEventLevel.Information;
+                l is TextSpan ts)
+                return ts.ToStringValue();
+            return LogEventLevel.Information.ToString();
         }
 
         static Exception TryGetException(IDictionary<string, object> properties)
@@ -71,10 +71,11 @@ namespace SeqCli.PlainText
             return null;
         }
 
-        static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object> properties, string remainder)
+        static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object> properties, string remainder, string level)
         {
             var payload = properties
                 .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
+                .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object)level) })
                 .Select(p => new LogEventProperty(p.Key, new ScalarValue(p.Value)));
 
             if (remainder != null)
@@ -99,56 +100,5 @@ namespace SeqCli.PlainText
             
             return DateTimeOffset.Now;
         }
-                
-        static readonly Dictionary<string, LogEventLevel> LevelsByName = new Dictionary<string, LogEventLevel>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["t"] = LogEventLevel.Verbose,
-            ["tr"] = LogEventLevel.Verbose,
-            ["trc"] = LogEventLevel.Verbose,
-            ["trce"] = LogEventLevel.Verbose,
-            ["trace"] = LogEventLevel.Verbose,
-            ["v"] = LogEventLevel.Verbose,
-            ["ver"] = LogEventLevel.Verbose,
-            ["vrb"] = LogEventLevel.Verbose,
-            ["verb"] = LogEventLevel.Verbose,
-            ["verbose"] = LogEventLevel.Verbose,
-            ["d"] = LogEventLevel.Debug,
-            ["de"] = LogEventLevel.Debug,
-            ["dbg"] = LogEventLevel.Debug,
-            ["deb"] = LogEventLevel.Debug,
-            ["dbug"] = LogEventLevel.Debug,
-            ["debu"] = LogEventLevel.Debug,
-            ["debub"] = LogEventLevel.Debug,
-            ["i"] = LogEventLevel.Information,
-            ["in"] = LogEventLevel.Information,
-            ["inf"] = LogEventLevel.Information,
-            ["info"] = LogEventLevel.Information,
-            ["information"] = LogEventLevel.Information,
-            ["w"] = LogEventLevel.Warning,
-            ["wa"] = LogEventLevel.Warning,
-            ["war"] = LogEventLevel.Warning,
-            ["wrn"] = LogEventLevel.Warning,
-            ["warn"] = LogEventLevel.Warning,
-            ["warning"] = LogEventLevel.Warning,
-            ["e"] = LogEventLevel.Error,
-            ["er"] = LogEventLevel.Error,
-            ["err"] = LogEventLevel.Error,
-            ["erro"] = LogEventLevel.Error,
-            ["eror"] = LogEventLevel.Error,
-            ["error"] = LogEventLevel.Error,
-            ["f"] = LogEventLevel.Fatal,
-            ["fa"] = LogEventLevel.Fatal,
-            ["ftl"] = LogEventLevel.Fatal,
-            ["fat"] = LogEventLevel.Fatal,
-            ["fatl"] = LogEventLevel.Fatal,
-            ["fatal"] = LogEventLevel.Fatal,
-            ["c"] = LogEventLevel.Fatal,
-            ["cr"] = LogEventLevel.Fatal,
-            ["crt"] = LogEventLevel.Fatal,
-            ["cri"] = LogEventLevel.Fatal,
-            ["crit"] = LogEventLevel.Fatal,
-            ["critical"] = LogEventLevel.Fatal
-        };
-
     }
 }

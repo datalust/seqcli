@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using SeqCli.Ingestion;
+using SeqCli.Levels;
 using SeqCli.PlainText;
 using Serilog;
 using Serilog.Core;
@@ -76,7 +77,8 @@ namespace SeqCli.Cli.Commands
                 Func<LogEvent, bool> filter = null;
                 if (_filter != null)
                 {
-                    var eval = FilterLanguage.CreateFilter(_filter);
+                    var expr = _filter.Replace("@Level", SurrogateLevelProperty.PropertyName);
+                    var eval = FilterLanguage.CreateFilter(expr);
                     filter = evt => true.Equals(eval(evt));
                 }
 

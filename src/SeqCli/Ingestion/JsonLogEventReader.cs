@@ -18,6 +18,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SeqCli.Levels;
 using SeqCli.PlainText.Framing;
 using Serilog.Formatting.Compact.Reader;
 using Superpower;
@@ -60,9 +61,11 @@ namespace SeqCli.Ingestion
             if (!jobject.TryGetValue("@t", out _))
                 jobject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
 
-            // Serilog.Formatting.Compact.Reader issue #13
-            if (!jobject.TryGetValue("@m", out _) && !jobject.TryGetValue("@mt", out _))
-                jobject.Add("@mt", new JValue(""));
+            if (jobject.TryGetValue("@l", out var levelToken))
+            {
+                jobject.Remove("@l");
+                jobject.Add(SurrogateLevelProperty.PropertyName, levelToken);
+            }
 
             var evt = LogEventReader.ReadFromJObject(jobject);
             return new ReadResult(evt, frame.IsAtEnd);
