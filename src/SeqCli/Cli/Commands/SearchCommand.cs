@@ -22,6 +22,7 @@ using Seq.Api.Model.Shared;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Levels;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Events;
@@ -109,14 +110,9 @@ namespace SeqCli.Cli.Commands
 
         LogEvent ToSerilogEvent(EventEntity evt)
         {
-            // Not ideal; we use Serilog types throughout, currently, but this doesn't allow
-            // for non-Serilog level names.
-            if (!Enum.TryParse(evt.Level, true, out LogEventLevel level))
-                level = LogEventLevel.Information;
-
             return new LogEvent(
                 DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
-                level,
+                LevelMapping.ToSerilogLevel(evt.Level),
                 string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
                 new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
                 evt.Properties.Select(p => CreateProperty(p.Name, p.Value)));
@@ -124,7 +120,7 @@ namespace SeqCli.Cli.Commands
 
         static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart mttp)
         {
-            // Also not ideal, we lose renderings, alignment etc. here.
+            // Not ideal, we lose renderings, alignment etc. here.
 
             if (mttp.Text != null)
                 return new TextToken(mttp.Text);

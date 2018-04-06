@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using SeqCli.PlainText;
+using System.Linq;
+using SeqCli.Levels;
+using SeqCli.PlainText.LogEvents;
 using Serilog.Events;
 using Superpower.Model;
 using Xunit;
@@ -27,7 +29,8 @@ namespace SeqCli.Tests.PlainText
 
             Assert.Equal("2018-02-01T13:00:00.1230000+00:00", evt.Timestamp.ToString("o"));
             Assert.Equal("Hello, world", evt.RenderMessage());
-            Assert.Equal(LogEventLevel.Warning, evt.Level);
+            Assert.Equal(LogEventLevel.Information, evt.Level);
+            Assert.Equal("WRN", ((ScalarValue)evt.Properties[SurrogateLevelProperty.PropertyName]).Value);
             Assert.Equal("EverythingFailedException", evt.Exception.ToString());
             Assert.Equal(42, ((ScalarValue)evt.Properties["Count"]).Value);
             Assert.Equal("TP", ((ScalarValue)evt.Properties["MachineName"]).Value.ToString());
@@ -43,7 +46,7 @@ namespace SeqCli.Tests.PlainText
             Assert.Equal("", evt.RenderMessage());
             Assert.Equal(LogEventLevel.Information, evt.Level);
             Assert.Null(evt.Exception);
-            Assert.Empty(evt.Properties);
+            Assert.Equal(SurrogateLevelProperty.PropertyName, evt.Properties.Single().Key);
         }
 
         [Fact]
