@@ -13,8 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -65,6 +67,10 @@ namespace SeqCli.Ingestion
             {
                 jobject.Remove("@l");
                 jobject.Add(SurrogateLevelProperty.PropertyName, levelToken);
+            }
+            else
+            {
+                jobject.Add(SurrogateLevelProperty.PropertyName, new JValue("Information"));
             }
 
             var evt = LogEventReader.ReadFromJObject(jobject);

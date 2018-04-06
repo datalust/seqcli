@@ -1,0 +1,5 @@
+﻿2018-07-06 09:02:17.148 +10:00 [INF] HTTP GET / responded 200 in 3 ms
+2018-07-06 09:02:18.259 +10:00 [ERR] HTTP GET / responded 500 in 12345 ms
+System.InvalidOperationException: this is a test
+   at MyClass.MyFlakyMethod() in SomeFile.cs:line 200
+2018-07-06 09:02:19.360 +10:00 [INF] HTTP GET / responded 200 in 4 ms

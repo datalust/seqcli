@@ -90,7 +90,7 @@ namespace SeqCli.Levels
             if (level != "Information")
             {
                 output.Write(",\"@l\":\"");
-                output.Write(logEvent.Level);
+                output.Write(level);
                 output.Write('\"');
             }
 
