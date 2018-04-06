@@ -12,22 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace SeqCli.PlainText.LogEvents
+namespace SeqCli.Levels
 {
-    class TextOnlyException : Exception
+    static class SurrogateLevelProperty
     {
-        readonly string _toStringValue;
-
-        public TextOnlyException(string toStringValue)
-        {
-            _toStringValue = toStringValue ?? throw new ArgumentNullException(nameof(toStringValue));
-        }
-
-        public override string ToString()
-        {
-            return _toStringValue;
-        }
+        public const string PropertyName = "@seqlevel";
     }
 }

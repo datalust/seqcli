@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using SeqCli.Levels;
 using SeqCli.PlainText.Parsers;
 using Superpower;
 using Superpower.Model;
@@ -100,6 +101,14 @@ namespace SeqCli.PlainText.Extraction
         public static TextParser<object> Tab { get; } =
             Span.EqualTo("\t")
                 .Select(span => (object)span);
+
+        // Any chunk of text can be considered the level; this matcher does
+        // translation of common abbreviations into full level names.
+        [Matcher("level")]
+        public static TextParser<object> Level { get; } =
+            Alphabetical
+                .Select(span => (object)new TextSpan(
+                    LevelMapping.ToFullLevelName(((TextSpan)span).ToStringValue())));
 
         static readonly Dictionary<string, TextParser<object>> ByType = new Dictionary<string, TextParser<object>>(
             from pi in typeof(Matchers).GetTypeInfo().DeclaredProperties
