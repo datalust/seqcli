@@ -13,10 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Seq.Api;
-using Seq.Api.Model.Signals;
+using Newtonsoft.Json;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -57,55 +55,21 @@ namespace SeqCli.Cli.Commands
             }
 
             var connection = _connectionFactory.Connect(_connection);
-
-            // The `rangeStartUtc` parameter of `Query[Csv]Async()` should now be optional; we can
-            // remove the `.Value` when _Seq.Api_ is updated to reflect this.
-            // ReSharper disable once PossibleInvalidOperationException
+            var timeout = _timeoutMS.HasValue ? TimeSpan.FromMilliseconds(_timeoutMS.Value) : (TimeSpan?)null;
             if (_output.Json)
             {
-                var result = await QueryAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS);
-                Console.WriteLine(result);
+                var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
+
+                // Some friendlier JSON output is definitely possible here
+                Console.WriteLine(JsonConvert.SerializeObject(result));
             }
             else
             {
-                var result = await QueryAsync(connection, _query, _range.Start, _range.End, _signal.Signal, _timeoutMS, "text/csv");
+                var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
                 _output.WriteCsv(result);
             }
 
             return 0;
-        }
-
-        static async Task<string> QueryAsync(
-            SeqConnection connection, 
-            string query, 
-            DateTime? rangeStartUtc,
-            DateTime? rangeEndUtc,
-            SignalExpressionPart signalExpression,
-            int? timeoutMS,
-            string format = null)
-        {
-            // From dates should no longer be mandatory for QueryCsvAsync (issue raised)
-
-            var parameters = new Dictionary<string, object>
-            {
-                ["q"] = query
-            };
-
-            if (format != null)
-                parameters.Add(nameof(format), format);
-            if (rangeStartUtc.HasValue)
-                parameters.Add(nameof(rangeEndUtc), rangeStartUtc.Value);
-            if (rangeEndUtc.HasValue)
-                parameters.Add(nameof(rangeEndUtc), rangeEndUtc.Value);
-            if (signalExpression != null)
-                parameters.Add("signal", signalExpression.ToString());
-            if (timeoutMS.HasValue)
-                parameters.Add("timeoutMS", timeoutMS.Value.ToString("0"));
-            var body = new SignalEntity();
-
-            var drg = await connection.LoadResourceGroupAsync("Data");
-
-            return await connection.Client.PostReadStringAsync(drg, "Query", body, parameters);
         }
     }
 }
