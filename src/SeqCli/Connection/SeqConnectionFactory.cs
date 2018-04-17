@@ -41,7 +41,7 @@ namespace SeqCli.Connection
             else
             {
                 url = _config.Connection.ServerUrl;
-                apiKey = _config.Connection.ApiKey;
+                apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.ApiKey;
             }
 
             return new SeqConnection(url, apiKey);
