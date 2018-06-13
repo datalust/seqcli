@@ -46,7 +46,7 @@ namespace SeqCli.Cli.Commands
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
-            _fileInputFeature = Enable<FileInputFeature>();
+            _fileInputFeature = Enable(new FileInputFeature("CLEF file to ingest"));
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
@@ -82,13 +82,8 @@ namespace SeqCli.Cli.Commands
                     filter = evt => true.Equals(eval(evt));
                 }
 
-                using (var inputFile = _fileInputFeature.InputFilename != null
-                    ? new StreamReader(File.Open(_fileInputFeature.InputFilename, FileMode.Open, FileAccess.Read,
-                        FileShare.ReadWrite))
-                    : null)
+                using (var input = _fileInputFeature.OpenInput())
                 {
-                    var input = inputFile ?? Console.In;
-                    
                     var reader = _json ?
                         (ILogEventReader)new JsonLogEventReader(input) :
                         new PlainTextLogEventReader(input, _pattern);

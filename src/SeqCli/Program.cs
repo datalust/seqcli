@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using SeqCli.Cli;
+using SeqCli.Util;
 using Serilog;
 using Serilog.Events;
 
@@ -54,7 +55,8 @@ namespace SeqCli
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "The command failed: {UnhandledExceptionMessage}", ex.Message);
+                Log.Debug(ex, "Unhandled command exception");
+                Log.Fatal("The command failed: {UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
                 return -1;
             }
             finally

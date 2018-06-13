@@ -12,17 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.IO;
+
 namespace SeqCli.Cli.Features
 {
     class FileInputFeature : CommandFeature
     {
+        readonly string _description;
+
+        public FileInputFeature(string description)
+        {
+            _description = description;
+        }
+
         public string InputFilename { get; private set; }
 
         public override void Enable(OptionSet options)
         {
             options.Add("i=|input=",
-                "CLEF file to ingest; if not specified, `STDIN` will be used",
+                $"{_description}; if not specified, `STDIN` will be used",
                 v => InputFilename = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+        }
+
+        public TextReader OpenInput()
+        {
+            return InputFilename != null ? 
+                new StreamReader(File.Open(InputFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) : 
+                Console.In;
         }
     }
 }
