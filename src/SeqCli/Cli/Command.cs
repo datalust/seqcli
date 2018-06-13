@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace SeqCli.Cli
 {
@@ -87,11 +88,11 @@ namespace SeqCli.Cli
 
         protected virtual void ShowUsageErrors(IEnumerable<string> errors)
         {
-            var header = "Error:";
             foreach (var error in errors)
             {
-                Printing.Define(header, error, 7, Console.Out);
-                header = new string(' ', header.Length);
+#pragma warning disable Serilog004 // Constant MessageTemplate verifier
+                Log.Error(error);
+#pragma warning restore Serilog004 // Constant MessageTemplate verifier
             }
         }
 

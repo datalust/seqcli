@@ -47,9 +47,9 @@
   </Target>
   <Target Name="BeforeBuild">
     <PropertyGroup>
-      <LinkerBaseInputPaths>..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish</LinkerBaseInputPaths>
-      <DefineConstants>BasePath=..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish;$(DefineConstants)</DefineConstants>
+      <LinkerBaseInputPaths>..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.1\win-x64\publish</LinkerBaseInputPaths>
+      <DefineConstants>BasePath=..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.1\win-x64\publish;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
-    <HeatDirectory OutputFile="SeqCli.wxs" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="SeqCli_Project" SuppressCom="true" Directory="..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.0\win-x64\publish" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath" Transforms="RemovePdbs.xslt" />
+    <HeatDirectory OutputFile="SeqCli.wxs" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="SeqCli_Project" SuppressCom="true" Directory="..\..\src\SeqCli\bin\$(Configuration)\netcoreapp2.1\win-x64\publish" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath" Transforms="RemovePdbs.xslt" />
   </Target>
 </Project>

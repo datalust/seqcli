@@ -16,7 +16,7 @@ namespace SeqCli.PlainText.Extraction
     {
         [Matcher("ident")]
         public static TextParser<object> Identifier { get; } =
-            IdentifierEx.CStyle
+            Superpower.Parsers.Identifier.CStyle
                 .Select(span => (object) span);
         
         [Matcher("nat")]
@@ -31,7 +31,7 @@ namespace SeqCli.PlainText.Extraction
         
         [Matcher("dec")]
         public static TextParser<object> Decimal { get; } =
-            NumericsEx.Decimal
+            Numerics.Decimal
                 .Select(span => (object) span);
         
         [Matcher("alpha")]
@@ -51,7 +51,7 @@ namespace SeqCli.PlainText.Extraction
         [Matcher("iso8601dt")]
         // A date and time are required by this pattern, though not necessarily by the spec.
         public static TextParser<object> Iso8601DateTime { get; } =
-            DateTimesEx.Iso8601DateTime
+            Instant.Iso8601DateTime
                 .Select(span => (object) span);
 
         [Matcher("syslogdt")]
