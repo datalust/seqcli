@@ -50,17 +50,17 @@ seqcli help search
 
 ### `ingest`
 
-Send JSON log events from a file or `STDIN`.
+Send log events from a file or `STDIN`.
 
 Example:
 
 ```
-seqcli ingest -i events.clef --json --filter="@Level <> 'Debug'" -p Environment=Test
+seqcli ingest -i events.txt --json --filter="@Level <> 'Debug'" -p Environment=Test
 ```
 
 | Option | Description |
 | ------ | ----------- |
-| `-i`, `--input=VALUE` | CLEF file to ingest; if not specified, `STDIN` will be used |
+| `-i`, `--input=VALUE` | File to ingest; if not specified, `STDIN` will be used |
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: fail (default) or ignore |
 | `-p`, `--property=VALUE1=VALUE2` | Specify event properties, e.g. `-p Customer=C123 -p Environment=Production` |
 | `-x`, `--extract=VALUE` | An extraction pattern to apply to plain-text logs (ignored when `--json` is specified) |
