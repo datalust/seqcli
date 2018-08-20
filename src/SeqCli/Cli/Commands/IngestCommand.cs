@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
@@ -28,8 +27,8 @@ using Serilog.Filters.Expressions;
 
 namespace SeqCli.Cli.Commands
 {
-    [Command("ingest", "Send JSON log events from a file or `STDIN`",
-        Example = "seqcli ingest -i events.clef --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
+    [Command("ingest", "Send log events from a file or `STDIN`",
+        Example = "seqcli ingest -i events.txt --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
     class IngestCommand : Command
     {
         const string DefaultPattern = "{@m:line}";
@@ -46,7 +45,7 @@ namespace SeqCli.Cli.Commands
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
-            _fileInputFeature = Enable(new FileInputFeature("CLEF file to ingest"));
+            _fileInputFeature = Enable(new FileInputFeature("File to ingest"));
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
