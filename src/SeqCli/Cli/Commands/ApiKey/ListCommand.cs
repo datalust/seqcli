@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
-using Serilog;
 
 namespace SeqCli.Cli.Commands.ApiKey
 {
@@ -43,18 +42,12 @@ namespace SeqCli.Cli.Commands.ApiKey
 
         protected override async Task<int> Run()
         {
-            if (_entityIdentity.Title != null && _entityIdentity.Id != null)
-            {
-                Log.Error("Only one of either `title` or `id` can be specified");
-                return -1;
-            }
-
             var connection = _connectionFactory.Connect(_connection);
 
             var list = _entityIdentity.Id != null ?
                 new[] { await connection.ApiKeys.FindAsync(_entityIdentity.Id) } :
                 (await connection.ApiKeys.ListAsync())
-                    .Where(ak => _entityIdentity.Title != null || _entityIdentity.Title == ak.Title)
+                    .Where(ak => _entityIdentity.Title == null || _entityIdentity.Title == ak.Title)
                     .ToArray();
 
             foreach (var apiKey in list)

@@ -43,7 +43,7 @@ namespace SeqCli.Cli.Commands.ApiKey
             if (_entityIdentity.Title == null && _entityIdentity.Id == null)
             {
                 Log.Error("A `title` or `id` must be specified");
-                return -1;
+                return 1;
             }
 
             var connection = _connectionFactory.Connect(_connection);
@@ -57,7 +57,7 @@ namespace SeqCli.Cli.Commands.ApiKey
             if (!toRemove.Any())
             {
                 Log.Error("No matching API key was found");
-                return -1;
+                return 1;
             }
 
             foreach (var apiKeyEntity in toRemove)
