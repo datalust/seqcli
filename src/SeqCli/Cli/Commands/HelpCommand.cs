@@ -89,6 +89,26 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine("```");
             Console.WriteLine();
 
+            Console.WriteLine("Available commands:");
+            Console.WriteLine();
+
+            foreach (var cmd in _availableCommands.GroupBy(cmd => cmd.Metadata.Name))
+            {
+                if (cmd.Count() == 1)
+                {
+                    Console.WriteLine($" - [`{cmd.Key}`](#{cmd.Key}) &mdash; {cmd.Single().Metadata.HelpText}.");
+                }
+                else
+                {
+                    Console.WriteLine($" - `{cmd.Key}`");
+                    foreach (var sub in cmd)
+                    {
+                        Console.WriteLine($"   - [`{cmd.Key} {sub.Metadata.SubCommand}`](#{cmd.Key}-{sub.Metadata.SubCommand}) &mdash; {sub.Metadata.HelpText}.");
+                    }
+                }
+            }
+            Console.WriteLine();
+
             foreach (var cmd in _availableCommands)
             {
                 if (cmd.Metadata.SubCommand != null)
