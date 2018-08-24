@@ -91,7 +91,10 @@ namespace SeqCli.Cli.Commands
 
             foreach (var cmd in _availableCommands)
             {
-                Console.WriteLine($"### `{cmd.Metadata.Name}`");
+                if (cmd.Metadata.SubCommand != null)
+                    Console.WriteLine($"### `{cmd.Metadata.Name} {cmd.Metadata.SubCommand}`");
+                else
+                    Console.WriteLine($"### `{cmd.Metadata.Name}`");
                 Console.WriteLine();
                 Console.WriteLine(cmd.Metadata.HelpText + ".");
                 Console.WriteLine();

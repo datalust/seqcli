@@ -104,7 +104,7 @@ namespace SeqCli.Cli.Features
             else
             {
                 var dyn = (dynamic) jo;
-                Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name}");
+                Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name ?? dyn.Username}");
             }
         }
     }

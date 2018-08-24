@@ -18,10 +18,11 @@ using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal
+namespace SeqCli.Cli.Commands.Dashboard
 {
-    [Command("signal", "list", "List available signals", Example="seqcli signal list")]
+    [Command("dashboard", "list", "List dashboards", Example="seqcli dashboard list")]
     class ListCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
@@ -30,31 +31,47 @@ namespace SeqCli.Cli.Commands.Signal
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
+        string _ownerId;
+
         public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            _entityIdentity = Enable(new EntityIdentityFeature("signal", "list"));
+            _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "list"));
+
+            Options.Add(
+                "o=|owner=",
+                "The id of the user to list dashboards for; by default, shared dashboards are listed",
+                o => _ownerId = o);
+
             _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 
         protected override async Task<int> Run()
         {
+            var ownerId = string.IsNullOrWhiteSpace(_ownerId) ? null : _ownerId.Trim();
+
+            if (ownerId != null && _entityIdentity.Id != null)
+            {
+                Log.Error("Only one of either `owner` or `id` can be specified");
+                return -1;
+            }
+
             var connection = _connectionFactory.Connect(_connection);
 
             var list = _entityIdentity.Id != null ?
-                new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync())
-                    .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title)
+                new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
+                (await connection.Dashboards.ListAsync(ownerId: ownerId, shared: ownerId == null))
+                    .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title)
                     .ToArray();
 
-            foreach (var signal in list)
+            foreach (var dashboardEntity in list)
             {
-                _output.WriteEntity(signal);
+                _output.WriteEntity(dashboardEntity);
             }
-
+            
             return 0;
         }
     }

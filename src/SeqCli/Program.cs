@@ -57,7 +57,7 @@ namespace SeqCli
             {
                 Log.Debug(ex, "Unhandled command exception");
                 Log.Fatal("The command failed: {UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
-                return -1;
+                return 1;
             }
             finally
             {

@@ -19,49 +19,49 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal
+namespace SeqCli.Cli.Commands.User
 {
-    [Command("signal", "remove", "Remove a signal from the server",
-        Example = "seqcli signal remove -t 'Test Signal'")]
+    [Command("user", "remove", "Remove a user from the server",
+        Example="seqcli user remove -n alice")]
     class RemoveCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
 
-        readonly EntityIdentityFeature _entityIdentity;
+        readonly UserIdentityFeature _userIdentity;
         readonly ConnectionFeature _connection;
 
         public RemoveCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
+            _userIdentity = Enable(new UserIdentityFeature("remove"));
             _connection = Enable<ConnectionFeature>();
         }
 
         protected override async Task<int> Run()
         {
-            if (_entityIdentity.Title == null && _entityIdentity.Id == null)
+            if (_userIdentity.Name == null && _userIdentity.Id == null)
             {
-                Log.Error("A `title` or `id` must be specified");
+                Log.Error("A `name` or `id` must be specified");
                 return 1;
             }
 
             var connection = _connectionFactory.Connect(_connection);
 
-            var toRemove = _entityIdentity.Id != null ?
-                new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync())
-                    .Where(signal => _entityIdentity.Title == signal.Title)
+            var toRemove = _userIdentity.Id != null ?
+                new[] {await connection.Users.FindAsync(_userIdentity.Id)} :
+                (await connection.Users.ListAsync())
+                    .Where(u => _userIdentity.Name == u.Username) 
                     .ToArray();
 
             if (!toRemove.Any())
             {
-                Log.Error("No matching signal was found");
+                Log.Error("No matching user was found");
                 return 1;
             }
 
-            foreach (var signal in toRemove)
-                await connection.Signals.RemoveAsync(signal);
+            foreach (var userEntity in toRemove)
+                await connection.Users.RemoveAsync(userEntity);
 
             return 0;
         }
