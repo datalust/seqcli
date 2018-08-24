@@ -24,6 +24,29 @@ Usage:
 seqcli <command> [<args>]
 ```
 
+ - `apikey`
+   - [`apikey remove`](#apikey-remove)
+   - [`apikey list`](#apikey-list)
+ - [`config`](#config)
+ - `dashboard`
+   - [`dashboard render`](#dashboard-render)
+   - [`dashboard remove`](#dashboard-remove)
+   - [`dashboard list`](#dashboard-list)
+ - [`help`](#help)
+ - [`ingest`](#ingest)
+ - [`log`](#log)
+ - [`query`](#query)
+ - [`search`](#search)
+ - `signal`
+   - [`signal remove`](#signal-remove)
+   - [`signal list`](#signal-list)
+   - [`signal import`](#signal-import)
+ - [`tail`](#tail)
+ - `user`
+   - [`user remove`](#user-remove)
+   - [`user list`](#user-list)
+ - [`version`](#version)
+
 ### `apikey remove`
 
 Remove an API key from the server.
