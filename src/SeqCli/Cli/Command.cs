@@ -67,7 +67,7 @@ namespace SeqCli.Cli
             if (errs.Any())
             {
                 ShowUsageErrors(errs);
-                return -1;
+                return 1;
             }
 
             return await Run(unrecognised);
@@ -78,7 +78,7 @@ namespace SeqCli.Cli
             if (unrecognised.Any())
             {
                 ShowUsageErrors(new [] { "Unrecognized options: " + string.Join(", ", unrecognised) });
-                return -1;
+                return 1;
             }
 
             return await Run();
@@ -94,16 +94,6 @@ namespace SeqCli.Cli
                 Log.Error(error);
 #pragma warning restore Serilog004 // Constant MessageTemplate verifier
             }
-        }
-
-        protected bool Require(string value, string name)
-        {
-            if (!Requirement.IsNonEmpty(value))
-            {
-                ShowUsageErrors(new [] { Requirement.NonEmptyDescription(name) });
-                return false;
-            }
-            return true;
         }
     }
 }

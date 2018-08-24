@@ -16,53 +16,45 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
-using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal
+namespace SeqCli.Cli.Commands.User
 {
-    [Command("signal", "remove", "Remove a signal from the server",
-        Example = "seqcli signal remove -t 'Test Signal'")]
-    class RemoveCommand : Command
+    [Command("user", "list", "List users", Example="seqcli user list")]
+    class ListCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
 
-        readonly EntityIdentityFeature _entityIdentity;
+        readonly UserIdentityFeature _userIdentity;
         readonly ConnectionFeature _connection;
+        readonly OutputFormatFeature _output;
 
-        public RemoveCommand(SeqConnectionFactory connectionFactory)
+        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
+            if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
+            _userIdentity = Enable(new UserIdentityFeature("list"));
+            _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 
         protected override async Task<int> Run()
         {
-            if (_entityIdentity.Title == null && _entityIdentity.Id == null)
-            {
-                Log.Error("A `title` or `id` must be specified");
-                return 1;
-            }
-
             var connection = _connectionFactory.Connect(_connection);
 
-            var toRemove = _entityIdentity.Id != null ?
-                new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync())
-                    .Where(signal => _entityIdentity.Title == signal.Title)
+            var list = _userIdentity.Id != null ?
+                new[] { await connection.Users.FindAsync(_userIdentity.Id) } :
+                (await connection.Users.ListAsync())
+                    .Where(u => _userIdentity.Name == null || _userIdentity.Name == u.Username)
                     .ToArray();
 
-            if (!toRemove.Any())
+            foreach (var user in list)
             {
-                Log.Error("No matching signal was found");
-                return 1;
+                _output.WriteEntity(user);
             }
-
-            foreach (var signal in toRemove)
-                await connection.Signals.RemoveAsync(signal);
-
+            
             return 0;
         }
     }

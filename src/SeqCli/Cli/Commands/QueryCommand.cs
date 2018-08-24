@@ -41,7 +41,7 @@ namespace SeqCli.Cli.Commands
             Options.Add("q=|query=", "The query to execute", v => _query = v);
             _range = Enable<DateRangeFeature>();
             _signal = Enable<SignalExpressionFeature>();
-            Options.Add("timeout=", "The query execution timeout in milliseconds", v => _timeoutMS = int.Parse(v));
+            Options.Add("timeout=", "The query execution timeout in milliseconds", v => _timeoutMS = int.Parse(v?.Trim() ?? "0"));
             _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
