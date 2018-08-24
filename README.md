@@ -24,30 +24,30 @@ Usage:
 seqcli <command> [<args>]
 ```
 
-Available commands
+Available commands:
 
  - `apikey`
-   - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server
-   - [`apikey list`](#apikey-list) &mdash; List available API keys
- - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields
+   - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
+   - [`apikey list`](#apikey-list) &mdash; List available API keys.
+ - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
  - `dashboard`
-   - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart
-   - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server
-   - [`dashboard list`](#dashboard-list) &mdash; List dashboards
- - [`help`](#help) &mdash; Show information about available commands
- - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`
- - [`log`](#log) &mdash; Send a structured log event to the server
- - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format
- - [`search`](#search) &mdash; Retrieve log events that match a given filter
+   - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
+   - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
+   - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
+ - [`help`](#help) &mdash; Show information about available commands.
+ - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
+ - [`log`](#log) &mdash; Send a structured log event to the server.
+ - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
+ - [`search`](#search) &mdash; Retrieve log events that match a given filter.
  - `signal`
-   - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server
-   - [`signal list`](#signal-list) &mdash; List available signals
-   - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format
- - [`tail`](#tail) &mdash; Stream log events matching a filter
+   - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
+   - [`signal list`](#signal-list) &mdash; List available signals.
+   - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
+ - [`tail`](#tail) &mdash; Stream log events matching a filter.
  - `user`
-   - [`user remove`](#user-remove) &mdash; Remove a user from the server
-   - [`user list`](#user-list) &mdash; List users
- - [`version`](#version) &mdash; Print the current executable version
+   - [`user remove`](#user-remove) &mdash; Remove a user from the server.
+   - [`user list`](#user-list) &mdash; List users.
+ - [`version`](#version) &mdash; Print the current executable version.
 
 ### `apikey remove`
 
