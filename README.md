@@ -366,7 +366,7 @@ Print the current executable version.
 The `seqcli ingest` command can be used for parsing plain text logs into structured log events.
 
 ```shell
-seqcli ingest -x "{@t:timestamp} [{@l:ident}] {@m:*}{:n}{@x:*}"
+seqcli ingest -x "{@t:timestamp} [{@l:level}] {@m:*}{:n}{@x:*}"
 ```
 
 The `-x` argument above is an _extraction pattern_ that will parse events like:
