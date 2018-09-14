@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
     <AssemblyName>seqcli</AssemblyName>
-    <ApplicationIcon>..\..\asset\SeqCli-Icon-128px.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     <GenerateAssemblyInformationalVersionAttribute>True</GenerateAssemblyInformationalVersionAttribute>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
@@ -12,8 +12,8 @@
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="..\..\asset\SeqCli-Icon-128px.ico" Link="SeqCli-Icon-128px.ico" />
-    <Content Include="Attribution\*.txt">
+    <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
+    <Content Include="Attribution\*.txt;..\..\LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
