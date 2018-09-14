@@ -5,7 +5,7 @@ build_script:
 - ps: ./Build.ps1
 test: off
 artifacts:
-- path: artifacts/seqcli-*.msi
+- path: artifacts/seqcli-*.zip
 - path: artifacts/seqcli-*.tar.gz
 deploy:
 - provider: GitHub
