@@ -11,7 +11,7 @@ deploy:
 - provider: GitHub
   auth_token:
     secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
-  artifact: /seqcli-.*\.(msi|tar\.gz)/
+  artifact: /seqcli-.*\.(zip|tar\.gz)/
   tag: v$(appveyor_build_version)
   on:
     branch: master
