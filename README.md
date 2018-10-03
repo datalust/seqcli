@@ -29,6 +29,7 @@ Available commands:
  - `apikey`
    - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
    - [`apikey list`](#apikey-list) &mdash; List available API keys.
+   - [`apikey create`](#apikey-create) &mdash; Create an API key for ingestion.
  - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
  - `dashboard`
    - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
@@ -43,6 +44,7 @@ Available commands:
    - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
    - [`signal list`](#signal-list) &mdash; List available signals.
    - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
+   - [`signal create`](#signal-create) &mdash; Create a signal.
  - [`tail`](#tail) &mdash; Stream log events matching a filter.
  - `user`
    - [`user remove`](#user-remove) &mdash; Remove a user from the server.
@@ -84,6 +86,29 @@ seqcli apikey list
 |       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+
+### `apikey create`
+
+Create an API key for ingestion.
+
+Example:
+
+```
+seqcli apikey create -t 'Test API Key' -p Environment=Test
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | A title for the API key |
+|       `--token=VALUE` | A pre-allocated API key token; by default, a new token will be generated and written to `STDOUT` |
+| `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
+|       `--filter=VALUE` | A filter to apply to incoming events |
+|       `--minimum-level=VALUE` | The minimum event level/severity to accept; the default is to accept all events |
+|       `--use-server-timestamps` | Discard client-supplied timestamps and use server clock values |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 
 ### `config`
 
@@ -184,7 +209,7 @@ seqcli ingest -i events.txt --json --filter="@Level <> 'Debug'" -p Environment=T
 | ------ | ----------- |
 | `-i`, `--input=VALUE` | File to ingest; if not specified, `STDIN` will be used |
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: `fail` (default) or `ignore` |
-| `-p`, `--property=VALUE1=VALUE2` | Specify event properties, e.g. `-p Customer=C123 -p Environment=Production` |
+| `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
 | `-x`, `--extract=VALUE` | An extraction pattern to apply to plain-text logs (ignored when `--json` is specified) |
 |       `--json` | Read the events as JSON (the default assumes plain text) |
 | `-f`, `--filter=VALUE` | Filter expression to select a subset of events |
@@ -208,7 +233,7 @@ seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test
 | `-l`, `--level=VALUE` | The level or severity of the event (the default is `Information`) |
 | `-t`, `--timestamp=VALUE` | The event timestamp as ISO-8601 (the current UTC timestamp will be used by default) |
 | `-x`, `--exception=VALUE` | Additional exception or error information to send, if any |
-| `-p`, `--property=VALUE1=VALUE2` | Specify event properties, e.g. `-p Customer=C123 -p Environment=Production` |
+| `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
@@ -307,6 +332,29 @@ seqcli signal import -i ./Exceptions.json
 | `-i`, `--input=VALUE` | File to import; if not specified, `STDIN` will be used |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+
+### `signal create`
+
+Create a signal.
+
+Example:
+
+```
+seqcli signal create -t 'Exceptions' -f "@Exception is not null"
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | A title for the signal |
+|       `--description=VALUE` | A description for the signal |
+| `-f`, `--filter=VALUE` | Filter to associate with the signal |
+|       `--group=VALUE` | An explicit group name to associate with the signal; the default is to infer the group from the filter |
+|       `--no-group` | Specify that no group should be inferred; the default is to infer the group from the filter |
+|       `--protected` | Specify that the signal is editable only by administrators |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 
 ### `tail`
 
