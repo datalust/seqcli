@@ -14,16 +14,15 @@
 
 using System;
 using Destructurama;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
 using SeqCli.Config;
 using SeqCli.Csv;
+using SeqCli.Levels;
 using SeqCli.Output;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
 using Serilog.Sinks.SystemConsole.Themes;
 
 namespace SeqCli.Cli.Features
@@ -58,11 +57,16 @@ namespace SeqCli.Cli.Features
                 .Enrich.With<RedundantEventTypeRemovalEnricher>();
 
             if (_json)
-                outputConfiguration.WriteTo.Console(new CompactJsonFormatter());
+            {
+                outputConfiguration.WriteTo.Console(new SurrogateLevelAwareCompactJsonFormatter());
+            }
             else
+            {
+                outputConfiguration.Enrich.With<SurrogateLevelRemovalEnricher>();
                 outputConfiguration.WriteTo.Console(
                     outputTemplate: "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
                     theme: Theme);
+            }
 
             return outputConfiguration.CreateLogger();
         }
