@@ -20,7 +20,8 @@ namespace SeqCli.Levels
 {
     public static class LevelMapping
     {
-        static readonly Dictionary<string, (string, LogEventLevel)> LevelsByName = new Dictionary<string, (string, LogEventLevel)>(StringComparer.OrdinalIgnoreCase)
+        static readonly Dictionary<string, (string, LogEventLevel)> LevelsByName =
+            new Dictionary<string, (string, LogEventLevel)>(StringComparer.OrdinalIgnoreCase)
         {
             ["t"] = ("Trace", LogEventLevel.Verbose),
             ["tr"] = ("Trace", LogEventLevel.Verbose),
