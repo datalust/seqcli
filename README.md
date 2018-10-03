@@ -213,7 +213,7 @@ seqcli ingest -i events.txt --json --filter="@Level <> 'Debug'" -p Environment=T
 | `-x`, `--extract=VALUE` | An extraction pattern to apply to plain-text logs (ignored when `--json` is specified) |
 |       `--json` | Read the events as JSON (the default assumes plain text) |
 | `-f`, `--filter=VALUE` | Filter expression to select a subset of events |
-|       `--send-failure=VALUE` | Specify how connection failures are handled: `fail` (default), `continue`, or `ignore` |
+|       `--send-failure=VALUE` | Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
