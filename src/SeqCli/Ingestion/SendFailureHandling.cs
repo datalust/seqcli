@@ -33,6 +33,11 @@ namespace SeqCli.Ingestion
         /// <summary>
         /// Silently ignore failures.
         /// </summary>
-        Ignore
+        Ignore,
+
+        /// <summary>
+        /// Log error information, wait for up to a minute, then retry.
+        /// </summary>
+        Retry
     }
 }

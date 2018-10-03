@@ -24,7 +24,7 @@ namespace SeqCli.Cli.Features
         public override void Enable(OptionSet options)
         {
             options.Add("send-failure=",
-                "Specify how connection failures are handled: `fail` (default), `continue`, or `ignore`",
+                "Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore`",
                 v => SendFailureHandling = (SendFailureHandling)Enum.Parse(typeof(SendFailureHandling), v, ignoreCase: true));
         }
     }

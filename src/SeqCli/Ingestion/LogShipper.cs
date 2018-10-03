@@ -48,6 +48,7 @@ namespace SeqCli.Ingestion
             if (enrichers == null) throw new ArgumentNullException(nameof(enrichers));
 
             var batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
+            var retries = 0;
             while (true)
             {
                 var sendSucceeded = false;
@@ -64,9 +65,22 @@ namespace SeqCli.Ingestion
                     if (sendFailureHandling != SendFailureHandling.Ignore)
                         Log.Error(ex, "Failed to send an event batch");
                 }
-                
-                if (!sendSucceeded && sendFailureHandling == SendFailureHandling.Fail)
-                    return 1;
+
+                if (!sendSucceeded)
+                {
+                    if (sendFailureHandling == SendFailureHandling.Fail)
+                        return 1;
+
+                    if (sendFailureHandling == SendFailureHandling.Retry)
+                    {
+                        var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
+                        await Task.Delay(millisecondsDelay);
+                        retries += 1;
+                        continue;
+                    }
+                }
+
+                retries = 0;
 
                 if (batch.IsLast)
                     break;
