@@ -20,7 +20,7 @@ using Newtonsoft.Json.Linq;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
-using Serilog.Formatting.Compact.Reader;
+using SeqCli.Ingestion;
 
 namespace SeqCli.Cli.Commands
 {
@@ -57,15 +57,15 @@ namespace SeqCli.Cli.Commands
             string strict = null;
             if (!string.IsNullOrWhiteSpace(_filter))
             {
-                var converted = await connection.Expressions.ToStrictAsync(_filter);
+                var converted = await connection.Expressions.ToStrictAsync(_filter, cancel.Token);
                 strict = converted.StrictExpression;
             }
 
             using (var output = _output.CreateOutputLogger())
-            using (var stream = await connection.Events.StreamAsync<JObject>(filter: strict, signal: _signal.Signal))
+            using (var stream = await connection.Events.StreamAsync<JObject>(filter: strict, signal: _signal.Signal, token: cancel.Token))
             {
                 var subscription = stream
-                    .Select(LogEventReader.ReadFromJObject)
+                    .Select(JsonLogEventReader.ReadFromJObject)
                     .Subscribe(evt => output.Write(evt), () => cancel.Cancel());
 
                 cancel.Token.WaitHandle.WaitOne();
