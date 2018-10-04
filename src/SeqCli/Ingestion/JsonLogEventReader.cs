@@ -13,15 +13,14 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Levels;
 using SeqCli.PlainText.Framing;
+using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
 using Superpower;
 using Superpower.Model;
@@ -60,21 +59,31 @@ namespace SeqCli.Ingestion
             if (!(_serializer.Deserialize<JToken>(frameValue) is JObject jobject))
                 throw new InvalidDataException($"The line is not a JSON object: `{frame.Value.Trim()}`.");
 
-            if (!jobject.TryGetValue("@t", out _))
-                jobject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
+            var evt = ReadFromJObject(jobject);
+            return new ReadResult(evt, frame.IsAtEnd);
+        }
 
-            if (jobject.TryGetValue("@l", out var levelToken))
+        public static LogEvent ReadFromJObject(JObject jObject)
+        {
+            if (!jObject.TryGetValue("@t", out _))
+                jObject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
+
+            if (jObject.TryGetValue("@l", out var levelToken))
             {
-                jobject.Remove("@l");
-                jobject.Add(SurrogateLevelProperty.PropertyName, levelToken);
+                jObject.Remove("@l");
+
+                var serilogLevel = LevelMapping.ToSerilogLevel(levelToken.Value<string>());
+                if (serilogLevel != LogEventLevel.Information)
+                    jObject.Add("@l", new JValue(serilogLevel.ToString()));
+
+                jObject.Add(SurrogateLevelProperty.PropertyName, levelToken);
             }
             else
             {
-                jobject.Add(SurrogateLevelProperty.PropertyName, new JValue("Information"));
+                jObject.Add(SurrogateLevelProperty.PropertyName, new JValue("Information"));
             }
 
-            var evt = LogEventReader.ReadFromJObject(jobject);
-            return new ReadResult(evt, frame.IsAtEnd);
+            return LogEventReader.ReadFromJObject(jObject);
         }
     }
 }

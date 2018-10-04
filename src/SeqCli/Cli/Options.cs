@@ -1292,7 +1292,7 @@ namespace SeqCli.Cli
 		private static string GetArgumentName (int index, int maxIndex, string description)
 		{
 			if (description == null)
-				return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
+				return maxIndex == 1 ? "VALUE" : index == 0 ? "NAME" : "VALUE";
 			string[] nameStart;
 			if (maxIndex == 1)
 				nameStart = new string[]{"{0:", "{"};
@@ -1310,7 +1310,7 @@ namespace SeqCli.Cli
 					continue;
 				return description.Substring (start + nameStart [i].Length, end - start - nameStart [i].Length);
 			}
-			return maxIndex == 1 ? "VALUE" : "VALUE" + (index + 1);
+			return maxIndex == 1 ? "VALUE" : index == 0 ? "NAME" : "VALUE";
 		}
 
 		private static string GetDescription (string description)

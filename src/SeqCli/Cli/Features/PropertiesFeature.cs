@@ -26,7 +26,7 @@ namespace SeqCli.Cli.Features
         {
             options.Add(
                 "p={=}|property={=}",
-                "Specify event properties, e.g. `-p Customer=C123 -p Environment=Production`",
+                "Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production`",
                 (n, v) =>
                 {
                     var name = n.Trim();

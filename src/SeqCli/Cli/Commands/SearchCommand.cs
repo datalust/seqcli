@@ -115,7 +115,9 @@ namespace SeqCli.Cli.Commands
                 LevelMapping.ToSerilogLevel(evt.Level),
                 string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
                 new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
-                evt.Properties.Select(p => CreateProperty(p.Name, p.Value)));
+                evt.Properties
+                    .Select(p => CreateProperty(p.Name, p.Value))
+                    .Concat(new[] { new LogEventProperty(SurrogateLevelProperty.PropertyName, new ScalarValue(evt.Level)) }));
         }
 
         static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart mttp)

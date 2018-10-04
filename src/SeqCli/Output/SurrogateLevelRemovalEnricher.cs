@@ -12,21 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using SeqCli.Ingestion;
+using SeqCli.Levels;
+using Serilog.Core;
+using Serilog.Events;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Output
 {
-    class SendFailureHandlingFeature : CommandFeature
+    public class SurrogateLevelRemovalEnricher : ILogEventEnricher
     {
-        public SendFailureHandling SendFailureHandling { get; private set; }
-
-        public override void Enable(OptionSet options)
+        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            options.Add("send-failure=",
-                "Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore`",
-                v => SendFailureHandling = (SendFailureHandling)Enum.Parse(typeof(SendFailureHandling), v, ignoreCase: true));
+            logEvent.RemovePropertyIfPresent(SurrogateLevelProperty.PropertyName);
         }
     }
-
 }
