@@ -62,7 +62,10 @@ namespace SeqCli.Cli.Commands
             }
 
             using (var output = _output.CreateOutputLogger())
-            using (var stream = await connection.Events.StreamAsync<JObject>(filter: strict, signal: _signal.Signal, token: cancel.Token))
+            using (var stream = await connection.Events.StreamAsync<JObject>(
+                filter: strict, 
+                signal: _signal.Signal,
+                cancellationToken: cancel.Token))
             {
                 var subscription = stream
                     .Select(JsonLogEventReader.ReadFromJObject)

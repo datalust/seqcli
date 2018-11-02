@@ -30,6 +30,7 @@ namespace SeqCli.Cli.Commands.Signal
     {
         readonly SeqConnectionFactory _connectionFactory;
         readonly FileInputFeature _fileInputFeature;
+        readonly EntityOwnerFeature _entityOwner;
         readonly ConnectionFeature _connection;
         
         readonly JsonSerializer _serializer = JsonSerializer.Create(
@@ -42,6 +43,7 @@ namespace SeqCli.Cli.Commands.Signal
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             _fileInputFeature = Enable(new FileInputFeature("File to import"));
+            _entityOwner = Enable(new EntityOwnerFeature("signal", "import"));
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -68,6 +70,7 @@ namespace SeqCli.Cli.Commands.Signal
                         dest.IsProtected = src.IsProtected;
                         dest.Filters = src.Filters;
                         dest.TaggedProperties = src.TaggedProperties;
+                        dest.OwnerId = _entityOwner.OwnerId;
                         await connection.Signals.AddAsync(dest);
                     }
 
