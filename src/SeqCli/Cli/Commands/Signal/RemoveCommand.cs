@@ -29,12 +29,14 @@ namespace SeqCli.Cli.Commands.Signal
 
         readonly EntityIdentityFeature _entityIdentity;
         readonly ConnectionFeature _connection;
+        readonly EntityOwnerFeature _entityOwner;
 
         public RemoveCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
             _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
+            _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", _entityIdentity));
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -50,7 +52,7 @@ namespace SeqCli.Cli.Commands.Signal
 
             var toRemove = _entityIdentity.Id != null ?
                 new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync())
+                (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
                     .Where(signal => _entityIdentity.Title == signal.Title)
                     .ToArray();
 

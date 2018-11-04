@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
-using Serilog;
 
 namespace SeqCli.Cli.Commands.Dashboard
 {
@@ -28,10 +27,9 @@ namespace SeqCli.Cli.Commands.Dashboard
         readonly SeqConnectionFactory _connectionFactory;
 
         readonly EntityIdentityFeature _entityIdentity;
+        readonly EntityOwnerFeature _entityOwner;
         readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
-
-        string _ownerId;
+        readonly OutputFormatFeature _output;        
 
         public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -39,31 +37,18 @@ namespace SeqCli.Cli.Commands.Dashboard
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
             _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "list"));
-
-            Options.Add(
-                "o=|owner=",
-                "The id of the user to list dashboards for; by default, shared dashboards are listed",
-                o => _ownerId = o);
-
+            _entityOwner = Enable(new EntityOwnerFeature("dashboard", "list", _entityIdentity));
             _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
 
         protected override async Task<int> Run()
         {
-            var ownerId = string.IsNullOrWhiteSpace(_ownerId) ? null : _ownerId.Trim();
-
-            if (ownerId != null && _entityIdentity.Id != null)
-            {
-                Log.Error("Only one of either `owner` or `id` can be specified");
-                return -1;
-            }
-
             var connection = _connectionFactory.Connect(_connection);
 
             var list = _entityIdentity.Id != null ?
                 new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
-                (await connection.Dashboards.ListAsync(ownerId: ownerId, shared: ownerId == null))
+                (await connection.Dashboards.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
                     .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title)
                     .ToArray();
 
