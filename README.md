@@ -157,7 +157,9 @@ seqcli dashboard remove -i dashboard-159
 
 | Option | Description |
 | ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the dashboard(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single dashboard to remove |
+| `-o`, `--owner=VALUE` | The id of the user to remove dashboards for; by default, shared dashboards are listed |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
@@ -295,6 +297,7 @@ seqcli signal remove -t 'Test Signal'
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the signal(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single signal to remove |
+| `-o`, `--owner=VALUE` | The id of the user to remove signals for; by default, shared signals are listed |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
@@ -312,6 +315,7 @@ seqcli signal list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the signal(s) to list |
 | `-i`, `--id=VALUE` | The id of a single signal to list |
+| `-o`, `--owner=VALUE` | The id of the user to list signals for; by default, shared signals are listed |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
@@ -330,6 +334,7 @@ seqcli signal import -i ./Exceptions.json
 | Option | Description |
 | ------ | ----------- |
 | `-i`, `--input=VALUE` | File to import; if not specified, `STDIN` will be used |
+| `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are listed |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
