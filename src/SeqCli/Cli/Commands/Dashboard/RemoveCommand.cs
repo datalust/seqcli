@@ -27,34 +27,43 @@ namespace SeqCli.Cli.Commands.Dashboard
     {
         readonly SeqConnectionFactory _connectionFactory;
 
+        readonly EntityIdentityFeature _entityIdentity;
+        readonly EntityOwnerFeature _entityOwner;
         readonly ConnectionFeature _connection;
-
-        string _id;
 
         public RemoveCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            Options.Add(
-                "i=|id=",
-                "The id of a single dashboard to remove",
-                t => _id = t);
-
+            _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "remove"));
+            _entityOwner = Enable(new EntityOwnerFeature("dashboard", "remove", _entityIdentity));
             _connection = Enable<ConnectionFeature>();
         }
 
         protected override async Task<int> Run()
         {
-            if (_id == null)
+            if (_entityIdentity.Title == null && _entityIdentity.Id == null)
             {
-                Log.Error("An `id` must be specified");
+                Log.Error("A `title` or `id` must be specified");
                 return 1;
             }
 
             var connection = _connectionFactory.Connect(_connection);
 
-            var toRemove = await connection.Dashboards.FindAsync(_id);
-            await connection.Dashboards.RemoveAsync(toRemove);
+            var toRemove = _entityIdentity.Id != null ?
+                new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
+                (await connection.Dashboards.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
+                .Where(dashboard => _entityIdentity.Title == dashboard.Title)
+                .ToArray();
+
+            if (!toRemove.Any())
+            {
+                Log.Error("No matching dashboard was found");
+                return 1;
+            }
+
+            foreach (var dashboard in toRemove)
+                await connection.Dashboards.RemoveAsync(dashboard);
 
             return 0;
         }

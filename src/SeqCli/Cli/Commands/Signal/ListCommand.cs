@@ -29,6 +29,7 @@ namespace SeqCli.Cli.Commands.Signal
         readonly EntityIdentityFeature _entityIdentity;
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
+        readonly EntityOwnerFeature _entityOwner;
 
         public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -36,6 +37,7 @@ namespace SeqCli.Cli.Commands.Signal
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
             _entityIdentity = Enable(new EntityIdentityFeature("signal", "list"));
+            _entityOwner = Enable(new EntityOwnerFeature("signal", "list", _entityIdentity));
             _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
@@ -46,7 +48,7 @@ namespace SeqCli.Cli.Commands.Signal
 
             var list = _entityIdentity.Id != null ?
                 new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync())
+                (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
                     .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title)
                     .ToArray();
 
@@ -59,3 +61,4 @@ namespace SeqCli.Cli.Commands.Signal
         }
     }
 }
+

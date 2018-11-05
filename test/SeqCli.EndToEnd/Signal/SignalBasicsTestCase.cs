@@ -25,8 +25,11 @@ namespace SeqCli.EndToEnd.Signal
             exit = runner.Exec("signal remove", "-t Warnings");
             Assert.Equal(0, exit);
 
-            exit = runner.Exec("signal list", "-t Warnings");
+            exit = runner.Exec("signal list", "-i signal-m33302");
             Assert.Equal(1, exit);
+
+            exit = runner.Exec("signal list", "-t Warnings");
+            Assert.Equal(0, exit);
 
             return Task.CompletedTask;
         }
