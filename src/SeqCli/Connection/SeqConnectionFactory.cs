@@ -46,5 +46,15 @@ namespace SeqCli.Connection
 
             return new SeqConnection(url, apiKey);
         }
+
+        public bool TryGetApiKey(ConnectionFeature connection, out string apiKey)
+        {
+            apiKey = connection.IsUrlSpecified ?
+                                connection.ApiKey :
+                                connection.IsApiKeySpecified ? 
+                                    connection.ApiKey :
+                                    _config.Connection.ApiKey;
+            return apiKey != null;
+        }
     }
 }

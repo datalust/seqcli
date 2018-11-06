@@ -86,9 +86,11 @@ namespace SeqCli.Cli.Commands
                     var reader = _json ?
                         (ILogEventReader)new JsonLogEventReader(input) :
                         new PlainTextLogEventReader(input, _pattern);
-                    
+
+                    _connectionFactory.TryGetApiKey(_connection, out var apiKey);
                     return await LogShipper.ShipEvents(
                         _connectionFactory.Connect(_connection),
+                        apiKey,
                         reader,
                         enrichers,
                         _invalidDataHandlingFeature.InvalidDataHandling,
