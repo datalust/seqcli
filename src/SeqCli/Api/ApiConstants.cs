@@ -18,5 +18,6 @@ namespace SeqCli.Api
     {
         public const string ClefMediatType = "application/vnd.serilog.clef";
         public const string IngestionEndpoint = "api/events/raw";
+        public const string ApiKeyHeaderName = "X-Seq-ApiKey";
     }
 }
