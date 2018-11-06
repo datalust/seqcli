@@ -37,6 +37,7 @@ namespace SeqCli.Ingestion
 
         public static async Task<int> ShipEvents(
             SeqConnection connection,
+            string apiKey,
             ILogEventReader reader,
             List<ILogEventEnricher> enrichers,
             InvalidDataHandling invalidDataHandling,
@@ -56,6 +57,7 @@ namespace SeqCli.Ingestion
                 {
                     sendSucceeded = await SendBatchAsync(
                         connection,
+                        apiKey,
                         batch.LogEvents,
                         enrichers,
                         sendFailureHandling != SendFailureHandling.Ignore);
@@ -134,6 +136,7 @@ namespace SeqCli.Ingestion
 
         static async Task<bool> SendBatchAsync(
             SeqConnection connection,
+            string apiKey,
             IReadOnlyCollection<LogEvent> batch,
             IReadOnlyCollection<ILogEventEnricher> enrichers,
             bool logSendFailures)
@@ -154,7 +157,11 @@ namespace SeqCli.Ingestion
                 content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
             }
 
-            var result = await connection.Client.HttpClient.PostAsync(ApiConstants.IngestionEndpoint, content);
+            var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) { Content = content };
+            if (apiKey != null)
+                request.Headers.Add(ApiConstants.ApiKeyHeaderName, apiKey);
+
+            var result = await connection.Client.HttpClient.SendAsync(request);
 
             if (result.IsSuccessStatusCode)
                 return true;
