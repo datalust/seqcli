@@ -16,6 +16,14 @@ seqcli config -k connection.serverUrl -v https://your-seq-server
 
 This will create `SeqConfig.json` in your home directory. A default API key can also be set by providing the `connection.apiKey` setting name.
 
+`seqcli` is also available as a Docker container under [`datalust/seqcli`](https://store.docker.com/community/images/datalust/seqcli):
+
+```
+docker run --rm datalust/seqcli:latest <command> [<args>]
+```
+
+Use Docker networks and volumes to make local files and other containers accessible to `seqcli` within its container.
+
 ## Commands
 
 Usage:
