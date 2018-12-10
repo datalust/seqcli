@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using SeqCli.Cli;
+using SeqCli.Config;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Events;
@@ -28,7 +29,7 @@ namespace SeqCli
         static async Task<int> Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Error()
+                .MinimumLevel.ControlledBy(LogConfig.SharedLevelSwitch)
                 .WriteTo.Console(
                     outputTemplate: "{Message:lj}{NewLine}{Exception}",
                     standardErrorFromLevel: LevelAlias.Minimum)

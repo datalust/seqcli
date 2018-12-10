@@ -16,7 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Config;
 using Serilog;
+using Serilog.Events;
 
 namespace SeqCli.Cli
 {
@@ -27,6 +29,10 @@ namespace SeqCli.Cli
         protected Command()
         {
             Options = new OptionSet();
+            
+            Options.Add("verbose",
+                "Output more detailed diagnostic information",
+                v => { LogConfig.SharedLevelSwitch.MinimumLevel = LogEventLevel.Debug; });
         }
 
         public OptionSet Options { get; }
