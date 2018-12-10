@@ -28,6 +28,12 @@ namespace SeqCli
     {
         static async Task<int> Main(string[] args)
         {
+#if WINDOWS
+            // This reverts to using the WinHTTP stack instead of managed sockets, so that
+            // Windows proxy settings are respected 
+            AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+#endif
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(LogConfig.SharedLevelSwitch)
                 .WriteTo.Console(
