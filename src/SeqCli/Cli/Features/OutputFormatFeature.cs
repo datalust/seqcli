@@ -14,6 +14,8 @@
 
 using System;
 using Destructurama;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
 using SeqCli.Config;
@@ -88,7 +90,13 @@ namespace SeqCli.Cli.Features
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var jo = JObject.FromObject(entity);
+            var jo = JObject.FromObject(
+                entity,
+                JsonSerializer.CreateDefault(new JsonSerializerSettings {
+                    Converters = {
+                        new StringEnumConverter()
+                    }
+                }));
             
             if (_json)
             {
