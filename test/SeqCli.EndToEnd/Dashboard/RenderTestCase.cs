@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Dashboard
 {
-    public class RenderTestcase : ICliTestCase
+    public class RenderTestCase : ICliTestCase
     {
         public Task ExecuteAsync(
             SeqConnection connection,
