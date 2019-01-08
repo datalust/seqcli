@@ -93,6 +93,7 @@ namespace SeqCli.Cli.Features
             var jo = JObject.FromObject(
                 entity,
                 JsonSerializer.CreateDefault(new JsonSerializerSettings {
+                    DateParseHandling = DateParseHandling.None,
                     Converters = {
                         new StringEnumConverter()
                     }
