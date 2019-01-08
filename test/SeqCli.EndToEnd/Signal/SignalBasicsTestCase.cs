@@ -6,7 +6,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Signal
 {
-    public class SignalBasicsTestcase : ICliTestCase
+    public class SignalBasicsTestCase : ICliTestCase
     {
         public Task ExecuteAsync(
             SeqConnection connection,

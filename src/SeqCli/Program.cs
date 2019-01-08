@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright 2018-2019 Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,12 @@ namespace SeqCli
     {
         static async Task<int> Main(string[] args)
         {
+#if WINDOWS
+            // This reverts to using the WinHTTP stack instead of managed sockets, so that
+            // Windows proxy settings are respected 
+            AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+#endif
+            
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Error()
                 .WriteTo.Console(
