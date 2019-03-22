@@ -61,7 +61,7 @@ namespace SeqCli.EndToEnd.Support
                 }
             }
 
-            (var color, var failMsg) = failed.Count != 0 ? (ConsoleColor.Red, "Failures:") : (ConsoleColor.Green, "");
+            var (color, failMsg) = failed.Count != 0 ? (ConsoleColor.Red, "Failures:") : (ConsoleColor.Green, "");
             Console.ForegroundColor = color;
             Console.WriteLine($"Done; {count} total, {passed.Count} pass, {failed.Count} fail. {failMsg}");
 
