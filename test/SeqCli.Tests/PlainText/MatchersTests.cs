@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using SeqCli.PlainText.Extraction;
 using Superpower;
 using Xunit;
@@ -21,6 +22,22 @@ namespace SeqCli.Tests.PlainText
             Assert.Equal(minute, dto.Minute);
             Assert.Equal(second, dto.Second);
             Assert.Equal(TimeZoneInfo.Local.GetUtcOffset(dto), dto.Offset);
+        }
+
+        [Fact]
+        public void TimestampMatcherCorrectlyExcludesTrailingWhitespace()
+        {
+            var timestamp = "2019-03-26 21:48:26 xxx";
+            var result = Matchers.Timestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2019-03-26 21:48:26", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal), result);
+        }
+
+        [Fact]
+        public void W3CMatcherProducesUtcTimestamps()
+        {
+            var timestamp = "2019-03-26 21:48:26 xxx";
+            var result = Matchers.W3CTimestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2019-03-26 21:48:26 Z"), result);
         }
     }
 }
