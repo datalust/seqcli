@@ -493,16 +493,35 @@ When logs are streamed into `seqcli ingest` in real time, a 10 ms deadline is ap
 
 ### Examples
 
-**Tail systemd logs:**
+#### Tail systemd logs
 
 ```shell
 journalctl -f -n 0 |
   seqcli ingest -x "{@t:syslogdt} {host} {ident:*}: {@m:*}{:n}" --invalid-data=ignore
 ```
 
-**Tail `/var/log/syslog`**
+#### Tail `/var/log/syslog`
 
 ```shell
 tail -c 0 -F /var/log/syslog |
   seqcli ingest -x "{@t:syslogdt} {host} {ident:*}: {@m:*}{:n}"
 ```
+
+#### Ingest an IIS/W3C web server log
+
+This example ingests log files in the format:
+
+```shell
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) 
+cs(Referer) sc-status sc-substatus sc-win32-status sc-bytes cs-bytes time-taken
+```
+
+The extraction pattern is wrapped in the example for display purposes, and must appear all in one string argument when invoked.
+
+```shell
+seqcli ingest -i http.log --invalid-data=ignore -x "{@t:w3cdt} {ServerIP} {@m:={Method} {RequestPath} 
+{Query}} {Port:nat} {Username} {ClientIP} {UserAgent} {Referer} {StatusCode:nat} {Substatus:nat} 
+{Win32Status:nat} {ResponseBytes:nat} {RequestBytes:nat} {Elapsed}{:n}"
+```
+
+A nested `{@m:=` pattern is used to collect a substring of the event for display as the event's message.
