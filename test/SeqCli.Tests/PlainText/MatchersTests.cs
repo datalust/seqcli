@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using SeqCli.PlainText.Extraction;
 using Superpower;
 using Xunit;
@@ -28,7 +29,7 @@ namespace SeqCli.Tests.PlainText
         {
             var timestamp = "2019-03-26 21:48:26 xxx";
             var result = Matchers.Timestamp.Parse(timestamp);
-            Assert.Equal(DateTimeOffset.Parse("2019-03-26 21:48:26 +10:00"), result);
+            Assert.Equal(DateTimeOffset.Parse("2019-03-26 21:48:26", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal), result);
         }
 
         [Fact]
