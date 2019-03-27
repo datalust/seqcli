@@ -64,15 +64,29 @@ namespace SeqCli.PlainText.Extraction
                     if (dt > DateTime.Now.AddDays(7)) // Tailing a late December log in early January :-)
                         dt = dt.AddYears(-1);
                     return (object) dt;
-                });            
+                });
 
+        [Matcher("w3cdt")]
+        // "yyyy-MM-dd HH:mm:ss"
+        public static TextParser<object> W3CTimestamp { get; } =
+            Span.Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")
+                .Select(span => (object)DateTimeOffset.ParseExact(
+                    span.ToStringValue(),
+                    "yyyy-MM-dd HH:mm:ss",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal));
+
+        [Matcher("serilogdt")]
+        // "yyyy-MM-dd HH:mm:ss.fff zzz"
         public static TextParser<object> SerilogFileTimestamp { get; } =
-            Span.Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d+)? ([+-]\\d{2}:\\d{2})?")
-                .Select(span => (object) DateTimeOffset.ParseExact(span.ToStringValue(), "yyyy-MM-dd HH:mm:ss.fff zzz", CultureInfo.InvariantCulture));
+            Span.Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d+)?( [+-]\\d{2}:\\d{2})?")
+                .Select(span => (object)DateTimeOffset.Parse(span.ToStringValue(), CultureInfo.InvariantCulture));
 
         [Matcher("timestamp")]
         public static TextParser<object> Timestamp { get; } =
-            Iso8601DateTime.Try().Or(SerilogFileTimestamp).Try().Or(SyslogDefaultTimestamp);
+            Iso8601DateTime.Try()     
+                .Or(SerilogFileTimestamp).Try()
+                .Or(SyslogDefaultTimestamp);
 
         [Matcher("trailingindent")]
         public static TextParser<object> MultiLineMessage { get; } =
