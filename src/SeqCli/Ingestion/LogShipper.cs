@@ -23,7 +23,6 @@ using Seq.Api;
 using SeqCli.Api;
 using SeqCli.Levels;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 
 namespace SeqCli.Ingestion
@@ -39,14 +38,12 @@ namespace SeqCli.Ingestion
             SeqConnection connection,
             string apiKey,
             ILogEventReader reader,
-            List<ILogEventEnricher> enrichers,
             InvalidDataHandling invalidDataHandling,
             SendFailureHandling sendFailureHandling,
             Func<LogEvent, bool> filter = null)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (reader == null) throw new ArgumentNullException(nameof(reader));
-            if (enrichers == null) throw new ArgumentNullException(nameof(enrichers));
 
             var batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
             var retries = 0;
@@ -59,7 +56,6 @@ namespace SeqCli.Ingestion
                         connection,
                         apiKey,
                         batch.LogEvents,
-                        enrichers,
                         sendFailureHandling != SendFailureHandling.Ignore);
                 }
                 catch (Exception ex)
@@ -138,7 +134,6 @@ namespace SeqCli.Ingestion
             SeqConnection connection,
             string apiKey,
             IReadOnlyCollection<LogEvent> batch,
-            IReadOnlyCollection<ILogEventEnricher> enrichers,
             bool logSendFailures)
         {
             if (batch.Count == 0)
@@ -148,11 +143,7 @@ namespace SeqCli.Ingestion
             using (var builder = new StringWriter())
             {
                 foreach (var evt in batch)
-                {
-                    foreach (var enricher in enrichers)
-                        enricher.Enrich(evt, null);
                     Formatter.Format(evt, builder);
-                }
 
                 content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
             }
