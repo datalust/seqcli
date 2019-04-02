@@ -39,7 +39,7 @@ namespace SeqCli.Cli.Commands
         readonly PropertiesFeature _properties;
         readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
         readonly ConnectionFeature _connection;
-        string _filter, _pattern = DefaultPattern;
+        string _filter, _pattern = DefaultPattern, _level, _message;
         bool _json;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
@@ -61,6 +61,16 @@ namespace SeqCli.Cli.Commands
                 "Filter expression to select a subset of events",
                 v => _filter = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
 
+            Options.Add(
+                "m=|message=",
+                "A message to associate with the ingested events; https://messagetemplates.org syntax is supported",
+                v => _message = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
+            Options.Add("l=|level=",
+                "The level or severity to associate with the ingested events; this will override any " +
+                "level information present in the events themselves",
+                v => _level = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
             _sendFailureHandlingFeature = Enable<SendFailureHandlingFeature>();            
             _connection = Enable<ConnectionFeature>();
         }
@@ -72,6 +82,9 @@ namespace SeqCli.Cli.Commands
                 var enrichers = new List<ILogEventEnricher>();
                 foreach (var property in _properties.Properties)
                     enrichers.Add(new ScalarPropertyEnricher(property.Key, property.Value));
+
+                if (_level != null)
+                    enrichers.Add(new ScalarPropertyEnricher(SurrogateLevelProperty.PropertyName, _level));
 
                 Func<LogEvent, bool> filter = null;
                 if (_filter != null)
@@ -87,12 +100,16 @@ namespace SeqCli.Cli.Commands
                         (ILogEventReader)new JsonLogEventReader(input) :
                         new PlainTextLogEventReader(input, _pattern);
 
+                    reader = new EnrichingReader(reader, enrichers);
+
+                    if (_message != null)
+                        reader = new StaticMessageTemplateReader(reader, _message);
+
                     _connectionFactory.TryGetApiKey(_connection, out var apiKey);
                     return await LogShipper.ShipEvents(
                         _connectionFactory.Connect(_connection),
                         apiKey,
                         reader,
-                        enrichers,
                         _invalidDataHandlingFeature.InvalidDataHandling,
                         _sendFailureHandlingFeature.SendFailureHandling,
                         filter);

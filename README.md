@@ -519,9 +519,9 @@ cs(Referer) sc-status sc-substatus sc-win32-status sc-bytes cs-bytes time-taken
 The extraction pattern is wrapped in the example for display purposes, and must appear all in one string argument when invoked.
 
 ```shell
-seqcli ingest -i http.log --invalid-data=ignore -x "{@t:w3cdt} {ServerIP} {@m:={Method} {RequestPath} 
-{Query}} {Port:nat} {Username} {ClientIP} {UserAgent} {Referer} {StatusCode:nat} {Substatus:nat} 
+seqcli ingest -i http.log --invalid-data=ignore -x "{@t:w3cdt} {ServerIP} {@m:={Method} {RequestPath}} 
+{Query} {Port:nat} {Username} {ClientIP} {UserAgent} {Referer} {StatusCode:nat} {Substatus:nat} 
 {Win32Status:nat} {ResponseBytes:nat} {RequestBytes:nat} {Elapsed}{:n}"
 ```
 
-A nested `{@m:=` pattern is used to collect a substring of the event for display as the event's message.
+A nested `{@m:=` pattern is used to collect a substring of the log line for display as the event's message.
