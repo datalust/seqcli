@@ -13,6 +13,9 @@
     <PackageReference Include="Seq.Api" Version="5.1.0" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Data\log-2.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\levelled-events.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -25,7 +28,7 @@
     <None Update="Data\events.ndjson">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\events.txt">
+    <None Update="Data\log-1.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
