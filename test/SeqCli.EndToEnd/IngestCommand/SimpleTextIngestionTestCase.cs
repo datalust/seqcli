@@ -14,14 +14,13 @@ namespace SeqCli.EndToEnd.IngestCommand
             ILogger logger,
             CliCommandRunner runner)
         {
-            var inputFile = Path.Combine("Data", "events.txt");
-            Assert.True(File.Exists(inputFile));
+            var inputFiles = Path.Combine("Data", "log-*.txt");
 
-            var exit = runner.Exec("ingest", $"-i {inputFile}");
+            var exit = runner.Exec("ingest", $"-i {inputFiles}");
             Assert.Equal(0, exit);
 
             var events = await connection.Events.ListAsync();
-            Assert.Equal(3, events.Count);
+            Assert.Equal(4, events.Count);
         }
     }
 }
