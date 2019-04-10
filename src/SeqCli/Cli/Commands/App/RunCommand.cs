@@ -22,7 +22,7 @@ using SeqCli.Util;
 namespace SeqCli.Cli.Commands.App
 {
     [Command("app", "run", "Host a .NET [SeqApp] plug-in",
-        Example = "seqcli tail | seqcli app run -d \"./bin/Debug/netcoreapp2.2\" -p ToAddress=example@example.com")]
+        Example = "seqcli tail --json | seqcli app run -d \"./bin/Debug/netcoreapp2.2\" -p ToAddress=example@example.com")]
     class RunCommand : Command
     {
         string _dir = Environment.CurrentDirectory, _type, _serverUrl, _storage = Environment.CurrentDirectory;
