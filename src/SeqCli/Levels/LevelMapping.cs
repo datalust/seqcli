@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright 2019 Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ namespace SeqCli.Levels
             ["inf"] = ("Information", LogEventLevel.Information),
             ["info"] = ("Information", LogEventLevel.Information),
             ["information"] = ("Information", LogEventLevel.Information),
+            ["notice"] = ("Notice", LogEventLevel.Information),
             ["w"] = ("Warning", LogEventLevel.Warning),
             ["wa"] = ("Warning", LogEventLevel.Warning),
             ["war"] = ("Warning", LogEventLevel.Warning),
@@ -68,7 +69,9 @@ namespace SeqCli.Levels
             ["crt"] = ("Critical", LogEventLevel.Fatal),
             ["cri"] = ("Critical", LogEventLevel.Fatal),
             ["crit"] = ("Critical", LogEventLevel.Fatal),
-            ["critical"] = ("Critical", LogEventLevel.Fatal)
+            ["critical"] = ("Critical", LogEventLevel.Fatal),
+            ["emerg"] = ("Emergency", LogEventLevel.Fatal),
+            ["panic"] = ("Panic", LogEventLevel.Fatal)
         };
 
         public static LogEventLevel ToSerilogLevel(string level)

@@ -16,5 +16,15 @@ namespace SeqCli.Tests.Support
                 new MessageTemplateParser().Parse("Test"),
                 Enumerable.Empty<LogEventProperty>());
         }
+
+        public static string String()
+        {
+            return Guid.NewGuid().ToString("n");
+        }
+
+        public static string UriString()
+        {
+            return "http://example.com";
+        }
     }
 }
