@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using SeqCli.Util;
+
 namespace SeqCli.Cli.Features
 {
     class ConnectionFeature : CommandFeature
@@ -32,11 +34,11 @@ namespace SeqCli.Cli.Features
         {
             options.Add("s=|server=",
                 "The URL of the Seq server; by default the `connection.serverUrl` value will be used",
-                v => Url = v.Trim());
+                v => Url = ArgumentString.Normalize(v));
 
             options.Add("a=|apikey=",
                 "The API key to use when connecting to the server; by default `connection.apiKey` value will be used",
-                v => ApiKey = v.Trim());
+                v => ApiKey = ArgumentString.Normalize(v));
         }
     }
 }

@@ -34,7 +34,7 @@ namespace SeqCli.Cli.Features
         {
             options.Add(
                 "o=|owner=",
-                $"The id of the user to {_verb} {_entityName}s for; by default, shared {_entityName}s are listed",
+                $"The id of the user to {_verb} {_entityName}s for; by default, shared {_entityName}s are {_verb.TrimEnd('e')}d",
                 o =>
                 {
                     OwnerId = StringNormalizationExtensions.Normalize(o);
