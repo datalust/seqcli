@@ -28,7 +28,7 @@ using Serilog.Filters.Expressions;
 namespace SeqCli.Cli.Commands
 {
     [Command("ingest", "Send log events from a file or `STDIN`",
-        Example = "seqcli ingest -i events.txt --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
+        Example = "seqcli ingest -i log-*.txt --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
     class IngestCommand : Command
     {
         const string DefaultPattern = "{@m:line}";
@@ -45,7 +45,7 @@ namespace SeqCli.Cli.Commands
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
-            _fileInputFeature = Enable(new FileInputFeature("File to ingest"));
+            _fileInputFeature = Enable(new FileInputFeature("File to ingest", supportsWildcard: true));
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
@@ -94,26 +94,36 @@ namespace SeqCli.Cli.Commands
                     filter = evt => true.Equals(eval(evt));
                 }
 
-                using (var input = _fileInputFeature.OpenInput())
+                var connection = _connectionFactory.Connect(_connection);
+
+                foreach (var input in _fileInputFeature.OpenInputs())
                 {
-                    var reader = _json ?
-                        (ILogEventReader)new JsonLogEventReader(input) :
-                        new PlainTextLogEventReader(input, _pattern);
+                    using (input)
+                    {
+                        var reader = _json
+                            ? (ILogEventReader) new JsonLogEventReader(input)
+                            : new PlainTextLogEventReader(input, _pattern);
 
-                    reader = new EnrichingReader(reader, enrichers);
+                        reader = new EnrichingReader(reader, enrichers);
 
-                    if (_message != null)
-                        reader = new StaticMessageTemplateReader(reader, _message);
+                        if (_message != null)
+                            reader = new StaticMessageTemplateReader(reader, _message);
 
-                    _connectionFactory.TryGetApiKey(_connection, out var apiKey);
-                    return await LogShipper.ShipEvents(
-                        _connectionFactory.Connect(_connection),
-                        apiKey,
-                        reader,
-                        _invalidDataHandlingFeature.InvalidDataHandling,
-                        _sendFailureHandlingFeature.SendFailureHandling,
-                        filter);
+                        _connectionFactory.TryGetApiKey(_connection, out var apiKey);
+                        var exit = await LogShipper.ShipEvents(
+                            connection,
+                            apiKey,
+                            reader,
+                            _invalidDataHandlingFeature.InvalidDataHandling,
+                            _sendFailureHandlingFeature.SendFailureHandling,
+                            filter);
+
+                        if (exit != 0)
+                            return exit;
+                    }
                 }
+
+                return 0;
             }
             catch (Exception ex)
             {
