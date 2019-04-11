@@ -31,6 +31,11 @@ namespace SeqCli.Cli.Features
 {
     class OutputFormatFeature : CommandFeature
     {
+        public const string DefaultOutputTemplate =
+            "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
+
+        public static readonly ConsoleTheme DefaultTheme = SystemConsoleTheme.Literate;
+
         bool _json, _noColor;
 
         public OutputFormatFeature(SeqCliOutputConfig outputConfig)
@@ -40,7 +45,7 @@ namespace SeqCli.Cli.Features
 
         public bool Json => _json;
 
-        ConsoleTheme Theme => _noColor ? ConsoleTheme.None : SystemConsoleTheme.Literate;
+        ConsoleTheme Theme => _noColor ? ConsoleTheme.None : DefaultTheme;
 
         public override void Enable(OptionSet options)
         {
@@ -66,7 +71,7 @@ namespace SeqCli.Cli.Features
             {
                 outputConfiguration.Enrich.With<SurrogateLevelRemovalEnricher>();
                 outputConfiguration.WriteTo.Console(
-                    outputTemplate: "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
+                    outputTemplate: DefaultOutputTemplate,
                     theme: Theme);
             }
 

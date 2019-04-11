@@ -32,7 +32,7 @@ namespace SeqCli
             // Windows proxy settings are respected 
             AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
 #endif
-            
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Error()
                 .WriteTo.Console(
@@ -42,9 +42,8 @@ namespace SeqCli
             
             try
             {
-                Console.InputEncoding =
-                    Console.OutputEncoding =
-                        new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                Console.InputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
                 TaskScheduler.UnobservedTaskException += 
                     (s,e) => Log.Error(e.Exception, "Unobserved task exception");

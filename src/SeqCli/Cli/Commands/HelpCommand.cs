@@ -61,7 +61,8 @@ namespace SeqCli.Cli.Commands
                 {
                     var cmd = cmds.Single();
                     var argHelp = cmd.Value.Value.HasArgs ? " [<args>]" : "";
-                    Console.WriteLine(name + " " + cmd.Metadata.Name + argHelp);
+                    var subcommandHelp = subCommand == null ? "" : " " + subCommand;
+                    Console.WriteLine(name + " " + cmd.Metadata.Name + subcommandHelp + argHelp);
                     Console.WriteLine();
                     Console.WriteLine(cmd.Metadata.HelpText);
                     Console.WriteLine();

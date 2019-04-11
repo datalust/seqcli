@@ -38,6 +38,7 @@ Available commands:
    - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
    - [`apikey list`](#apikey-list) &mdash; List available API keys.
    - [`apikey create`](#apikey-create) &mdash; Create an API key for ingestion.
+ - [`app run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
  - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
  - `dashboard`
    - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
@@ -46,6 +47,7 @@ Available commands:
  - [`help`](#help) &mdash; Show information about available commands.
  - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
  - [`log`](#log) &mdash; Send a structured log event to the server.
+ - [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
  - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
  - [`search`](#search) &mdash; Retrieve log events that match a given filter.
  - `signal`
@@ -118,6 +120,24 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 
+### `app run`
+
+Host a .NET `[SeqApp]` plug-in.
+
+Example:
+
+```
+seqcli tail --json | seqcli app run -d "./bin/Debug/netstandard2.2" -p ToAddress=example@example.com
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-d`, `--directory=VALUE` | The directory containing .NET Standard assemblies; defaults to the current directory |
+| `-t`, `--type=VALUE` | The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute |
+| `-p`, `--property=NAME=VALUE` | Specify name/value settings for the app, e.g. `-p ToAddress=example@example.com -p Subject="Alert!"` |
+| `-s`, `--server=VALUE` | The URL of the Seq server, used only for app configuration (no connection is made to the server); by default the `connection.serverUrl` value will be used |
+|       `--storage=VALUE` | A directory in which app-specific data can be stored; defaults to the current directory |
+
 ### `config`
 
 View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
@@ -167,7 +187,7 @@ seqcli dashboard remove -i dashboard-159
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the dashboard(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single dashboard to remove |
-| `-o`, `--owner=VALUE` | The id of the user to remove dashboards for; by default, shared dashboards are listed |
+| `-o`, `--owner=VALUE` | The id of the user to remove dashboards for; by default, shared dashboards are removd |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
@@ -185,7 +205,7 @@ seqcli dashboard list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the dashboard(s) to list |
 | `-i`, `--id=VALUE` | The id of a single dashboard to list |
-| `-o`, `--owner=VALUE` | The id of the user to list dashboards for; by default, shared dashboards are listed |
+| `-o`, `--owner=VALUE` | The id of the user to list dashboards for; by default, shared dashboards are listd |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
@@ -212,17 +232,19 @@ Send log events from a file or `STDIN`.
 Example:
 
 ```
-seqcli ingest -i events.txt --json --filter="@Level <> 'Debug'" -p Environment=Test
+seqcli ingest -i log-*.txt --json --filter="@Level <> 'Debug'" -p Environment=Test
 ```
 
 | Option | Description |
 | ------ | ----------- |
-| `-i`, `--input=VALUE` | File to ingest; if not specified, `STDIN` will be used |
+| `-i`, `--input=VALUE` | File to ingest, including the `*` wildcard; if not specified, `STDIN` will be used |
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: `fail` (default) or `ignore` |
 | `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
 | `-x`, `--extract=VALUE` | An extraction pattern to apply to plain-text logs (ignored when `--json` is specified) |
 |       `--json` | Read the events as JSON (the default assumes plain text) |
 | `-f`, `--filter=VALUE` | Filter expression to select a subset of events |
+| `-m`, `--message=VALUE` | A message to associate with the ingested events; https://messagetemplates.org syntax is supported |
+| `-l`, `--level=VALUE` | The level or severity to associate with the ingested events; this will override any level information present in the events themselves |
 |       `--send-failure=VALUE` | Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
@@ -246,6 +268,24 @@ seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test
 | `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+
+### `print`
+
+Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
+
+Example:
+
+```
+seqcli print -i log-20201028.clef
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-i`, `--input=VALUE` | CLEF file to read, including the `*` wildcard; if not specified, `STDIN` will be used |
+| `-f`, `--filter=VALUE` | Filter expression to select a subset of events |
+|       `--template=VALUE` | Specify an output template to control plain text formatting |
+|       `--invalid-data=VALUE` | Specify how invalid data is handled: `fail` (default) or `ignore` |
+|       `--no-color` | Don't colorize text output |
 
 ### `query`
 
@@ -305,7 +345,7 @@ seqcli signal remove -t 'Test Signal'
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the signal(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single signal to remove |
-| `-o`, `--owner=VALUE` | The id of the user to remove signals for; by default, shared signals are listed |
+| `-o`, `--owner=VALUE` | The id of the user to remove signals for; by default, shared signals are removd |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
@@ -323,7 +363,7 @@ seqcli signal list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the signal(s) to list |
 | `-i`, `--id=VALUE` | The id of a single signal to list |
-| `-o`, `--owner=VALUE` | The id of the user to list signals for; by default, shared signals are listed |
+| `-o`, `--owner=VALUE` | The id of the user to list signals for; by default, shared signals are listd |
 |       `--json` | Print events in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
@@ -342,7 +382,7 @@ seqcli signal import -i ./Exceptions.json
 | Option | Description |
 | ------ | ----------- |
 | `-i`, `--input=VALUE` | File to import; if not specified, `STDIN` will be used |
-| `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are listed |
+| `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are importd |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
 
