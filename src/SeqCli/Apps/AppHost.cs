@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Seq.Apps;
 using Serilog;
@@ -37,8 +36,7 @@ namespace SeqCli.Apps
             if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
             if (storagePath == null) throw new ArgumentNullException(nameof(storagePath));
             if (seqBaseUri == null) throw new ArgumentNullException(nameof(seqBaseUri));
-            Console.InputEncoding = new UTF8Encoding(false);
-            Console.OutputEncoding = new UTF8Encoding(false);
+
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
             using (var log = new LoggerConfiguration()

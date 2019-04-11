@@ -30,6 +30,8 @@ namespace SeqCli
                 .WithMetadataFrom<CommandAttribute>();
             builder.RegisterType<SeqConnectionFactory>();
             builder.Register(c => SeqCliConfig.Read()).SingleInstance();
+            builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
+            builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
         }
     }
 }
