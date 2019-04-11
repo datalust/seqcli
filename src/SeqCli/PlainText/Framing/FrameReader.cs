@@ -35,6 +35,14 @@ namespace SeqCli.PlainText.Framing
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _frameStart = frameStart ?? throw new ArgumentNullException(nameof(frameStart));
             _trailingLineArrivalDeadline = trailingLineArrivalDeadline;
+
+#if WINDOWS
+            // Somehow, PowerShell manages to send a UTF-8 BOM when piping a command's output to us
+            // via STDIN, regardless of how we set Console.InputEncoding. This hackily skips the BOM,
+            // while we all live in hope of some brighter future.
+            if (_source.Peek() == 65279)
+                _source.Read();
+#endif
         }
 
         public async Task<Frame> TryReadAsync()
@@ -55,6 +63,9 @@ namespace SeqCli.PlainText.Framing
                     return new Frame();
                 
                 var line = await _unawaitedNextLine;
+                if (line[0] == 65279)
+                    line = line.Substring(1);
+
                 _unawaitedNextLine = null;
                 if (line == null)
                     return new Frame {IsAtEnd = true};

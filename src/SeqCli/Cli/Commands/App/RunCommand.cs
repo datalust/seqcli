@@ -21,7 +21,7 @@ using SeqCli.Util;
 
 namespace SeqCli.Cli.Commands.App
 {
-    [Command("app", "run", "Host a .NET [SeqApp] plug-in",
+    [Command("app", "run", "Host a .NET `[SeqApp]` plug-in",
         Example = "seqcli tail --json | seqcli app run -d \"./bin/Debug/netstandard2.2\" -p ToAddress=example@example.com")]
     class RunCommand : Command
     {
