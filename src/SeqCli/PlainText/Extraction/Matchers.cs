@@ -50,7 +50,7 @@ namespace SeqCli.PlainText.Extraction
 
         [Matcher("s")]
         public static TextParser<object> WhiteSpace { get; } =
-            Span.WhiteSpace
+            Span.WithAll(ch => ch == ' ' || ch == '\t')
                 .Cast<TextSpan, object>();
 
         [Matcher("iso8601dt")]

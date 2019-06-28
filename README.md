@@ -517,6 +517,28 @@ There are three kinds of matchers:
  * The special matchers `*`, `**` and so-on, are _non-greedy content_ matchers; these will match any text up until the next pattern element matches (`*`), the next two elements match, and so-on. We saw this in action with the `{@m:*}{:n}` elements in the example - the message is all of the text up until the next newline.
  * More complex _compound_ matchers are described using a sub-expression. These are prefixed with an equals sign `=`, like `{Phone:={:nat}-{:nat}-{:nat}}`. This will extract chunks of text like `123-456-7890` into the `Phone` property.
 
+| Matcher | Description | Example |
+|---|---|---|
+| `*`, `**`, ... | Non-greedy content | |
+| `alpha` | One or more letters | `Abc` |
+| `alphanum` | One or more letters or numbers | `a1b2` |
+| `dec` | A decimal number | `12.345` |
+| `ident` | A C-style identifier  | `countOfMatches` |
+| `int` | An integer | `-123` |
+| `iso8601dt` | An ISO-8601 date-time | `2020-01-28T13:50:01.123` |
+| `level` | A logging level name | `INF` |
+| `line` | Any single-line content | `one line!` |
+| `n` | A newline character or sequence | |
+| `nat` | A nonzero number | `123` |
+| `s` | One or more space or tab characters | ` ` |
+| `serilogdt` | A datetime in the default Serilog file logging format | `2020-01-28 13:50:01.123 +10:00` |
+| `syslogdt` | A datetime in syslog format | `Dec  8 09:12:13` |
+| `t` | A single tab character | `	` |
+| `timestamp` | A datetime in any recognized format | `` |
+| `token` | Any sequence of non-whitespace characters | `1+x$3` |
+| `trailingident` | Multiline content with indented trailing lines | |
+| `w3cdt` | A W3C log format date/time pair | `2019-04-02 05:18:01` |
+
 ### Processing
 
 Extraction patterns are processed from left to right. When the first non-matching pattern is encountered, extraction stops; any remaining text that couldn't be matched will be attached to the resulting event in an `@unmatched` property.
