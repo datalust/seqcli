@@ -17,42 +17,47 @@ namespace SeqCli.PlainText.Extraction
         [Matcher("ident")]
         public static TextParser<object> Identifier { get; } =
             Superpower.Parsers.Identifier.CStyle
-                .Select(span => (object) span);
+                .Cast<TextSpan, object>();
         
         [Matcher("nat")]
         public static TextParser<object> Natural { get; } =
             Numerics.NaturalUInt64
-                .Select(span => (object) span);
+                .Cast<ulong, object>();
         
         [Matcher("int")]
         public static TextParser<object> Integer { get; } =
             Numerics.IntegerInt64
-                .Select(span => (object) span);
+                .Cast<long, object>();
         
         [Matcher("dec")]
         public static TextParser<object> Decimal { get; } =
             Numerics.Decimal
-                .Select(span => (object) span);
+                .Cast<TextSpan, object>();
         
         [Matcher("alpha")]
         public static TextParser<object> Alphabetical { get; } =
             Span.WithAll(char.IsLetter)
-                .Select(span => (object) span);
+                .Cast<TextSpan, object>();
         
         [Matcher("alphanum")]
         public static TextParser<object> Alphanumeric { get; } =
             Span.WithAll(char.IsLetterOrDigit)
-                .Select(span => (object) span);
+                .Cast<TextSpan, object>();
         
         [Matcher("token")]
         public static TextParser<object> Token { get; } =
-            SpanEx.NonWhiteSpace.Select(span => (object)span);
+            SpanEx.NonWhiteSpace.Cast<TextSpan, object>();
+
+        [Matcher("s")]
+        public static TextParser<object> WhiteSpace { get; } =
+            Span.WhiteSpace
+                .Cast<TextSpan, object>();
 
         [Matcher("iso8601dt")]
         // A date and time are required by this pattern, though not necessarily by the spec.
         public static TextParser<object> Iso8601DateTime { get; } =
             Instant.Iso8601DateTime
-                .Select(span => (object) span);
+                .Cast<TextSpan, object>();
 
         [Matcher("syslogdt")]
         public static TextParser<object> SyslogDefaultTimestamp { get; } =
@@ -138,7 +143,7 @@ namespace SeqCli.PlainText.Extraction
 
         public static TextParser<object> LiteralText(string literalText)
         {
-            return Span.EqualTo(literalText).Select(span => (object) span);
+            return Span.EqualTo(literalText).Cast<TextSpan, object>();
         }
 
         public static TextParser<object> NonGreedyContent(params PatternElement[] following)

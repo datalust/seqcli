@@ -2,6 +2,7 @@
 using System.Globalization;
 using SeqCli.PlainText.Extraction;
 using Superpower;
+using Superpower.Model;
 using Xunit;
 
 namespace SeqCli.Tests.PlainText
@@ -38,6 +39,28 @@ namespace SeqCli.Tests.PlainText
             var timestamp = "2019-03-26 21:48:26 xxx";
             var result = Matchers.W3CTimestamp.Parse(timestamp);
             Assert.Equal(DateTimeOffset.Parse("2019-03-26 21:48:26 Z"), result);
+        }
+
+        [Theory]
+        [InlineData(" ")]
+        [InlineData("  ")]
+        [InlineData("       ")]
+        public void WhiteSpaceMatcherEatsOneOrMoreSpaces(string space)
+        {
+            var input = new TextSpan(space + "x");
+            var s = Matchers.WhiteSpace(input);
+            Assert.Equal(space, ((TextSpan)s.Value).ToStringValue());
+            Assert.Equal('x', s.Remainder.ConsumeChar().Value);
+        }
+
+        // Zero-length whitespace is not supported as it's then incompatible
+        // with `*`.
+        [Fact]
+        public void WhiteSpaceMatcherDoesNotSucceedOnZeroLength()
+        {
+            var input = new TextSpan("x");
+            var s = Matchers.WhiteSpace(input);
+            Assert.False(s.HasValue);
         }
     }
 }
