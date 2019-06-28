@@ -534,7 +534,7 @@ There are three kinds of matchers:
 | `serilogdt` | A datetime in the default Serilog file logging format | `2020-01-28 13:50:01.123 +10:00` |
 | `syslogdt` | A datetime in syslog format | `Dec  8 09:12:13` |
 | `t` | A single tab character | `	` |
-| `timestamp` | A datetime in any recognized format | `` |
+| `timestamp` | A datetime in any recognized format | |
 | `token` | Any sequence of non-whitespace characters | `1+x$3` |
 | `trailingident` | Multiline content with indented trailing lines | |
 | `w3cdt` | A W3C log format date/time pair | `2019-04-02 05:18:01` |
