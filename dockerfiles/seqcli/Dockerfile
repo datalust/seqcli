@@ -16,9 +16,8 @@ RUN apt-get update \
         zlib1g \
 && rm -rf /var/lib/apt/lists/*
 
-COPY run.sh /run.sh
-ADD seqcli.tar.gz /tmp/
-RUN mv /tmp/seqcli-* /bin/seqcli
+COPY dockerfiles/seqcli/run.sh /run.sh
+COPY src/SeqCli/bin/Release/netcoreapp2.2/linux-x64/publish /bin/seqcli
 
 ENTRYPOINT ["/run.sh"]
 

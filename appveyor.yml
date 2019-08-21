@@ -1,17 +1,42 @@
 version: 5.1.{build}
 skip_tags: true
-image: Visual Studio 2017
-build_script:
-- ps: ./Build.ps1
+image:
+- Visual Studio 2017
+- Ubuntu1804
+environment:
+  DOCKER_TOKEN:
+   secure: QKr2YEuliXdFKe3jN7w97w==
+  DOCKER_USER:
+    'datalustbuild'
 test: off
 artifacts:
 - path: artifacts/seqcli-*.zip
 - path: artifacts/seqcli-*.tar.gz
-deploy:
-- provider: GitHub
-  auth_token:
-    secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
-  artifact: /seqcli-.*\.(zip|tar\.gz)/
-  tag: v$(appveyor_build_version)
-  on:
-    branch: master
+
+for:
+-
+  matrix:
+    only:
+      - image: Visual Studio 2017
+
+  build_script:
+  - ps: ./Build.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
+
+  deploy:
+  - provider: GitHub
+    auth_token:
+      secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
+    artifact: /seqcli-.*\.(zip|tar\.gz)/
+    tag: v$(appveyor_build_version)
+    on:
+      branch: master
+-
+  matrix:
+    only:
+      - image: Ubuntu1804
+
+  install:
+  - ./setup.sh
+
+  build_script:
+  - ps: $env:PATH = "$env:HOME/.dotnetcli:$env:PATH"; ./Build.Docker.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
