@@ -28,8 +28,8 @@ function Publish-Archives($version)
 	$rids = @("linux-x64", "osx-x64", "win-x64")
 	foreach ($rid in $rids) {
 		& dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid /p:ShowLinkerSizeComparison=true
-	    if($LASTEXITCODE -ne 0) { exit 4 }
-	
+		if($LASTEXITCODE -ne 0) { exit 4 }
+
 		# Make sure the archive contains a reasonable root filename
 		mv ./src/SeqCli/bin/Release/$framework/$rid/publish/ ./src/SeqCli/bin/Release/$framework/$rid/seqcli-$version-$rid/
 
