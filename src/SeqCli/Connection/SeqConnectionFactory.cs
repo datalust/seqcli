@@ -38,6 +38,14 @@ namespace SeqCli.Connection
                 url = connection.Url;
                 apiKey = connection.ApiKey;
             }
+            else if (connection.IsProfileNameSpecified)
+            {
+                if (!_config.Profiles.TryGetValue(connection.ProfileName, out var profile))
+                    throw new ArgumentException($"A profile named `{connection.ProfileName}` was not found; see `seqcli profile list` for available profiles.");
+                
+                url = profile.ServerUrl;
+                apiKey = profile.ApiKey;
+            }
             else
             {
                 url = _config.Connection.ServerUrl;

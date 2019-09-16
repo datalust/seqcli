@@ -18,27 +18,27 @@ namespace SeqCli.Cli.Features
 {
     class ConnectionFeature : CommandFeature
     {
-        public ConnectionFeature()
-        {
-            Url = "";
-            ApiKey = "";
-        }
-
-        public bool IsUrlSpecified => !string.IsNullOrEmpty(Url);
-        public bool IsApiKeySpecified => !string.IsNullOrEmpty(ApiKey);
+        public bool IsUrlSpecified => Url != null;
+        public bool IsApiKeySpecified => ApiKey != null;
+        public bool IsProfileNameSpecified => ProfileName != null;
 
         public string Url { get; set; }
         public string ApiKey { get; set; }
+        public string ProfileName { get; set; }
 
         public override void Enable(OptionSet options)
         {
             options.Add("s=|server=",
-                "The URL of the Seq server; by default the `connection.serverUrl` value will be used",
+                "The URL of the Seq server; by default the `connection.serverUrl` config value will be used",
                 v => Url = ArgumentString.Normalize(v));
 
             options.Add("a=|apikey=",
-                "The API key to use when connecting to the server; by default `connection.apiKey` value will be used",
+                "The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used",
                 v => ApiKey = ArgumentString.Normalize(v));
+
+            options.Add("profile=",
+                "A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used",
+                v => ProfileName = ArgumentString.Normalize(v));
         }
     }
 }

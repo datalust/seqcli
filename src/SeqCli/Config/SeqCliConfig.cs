@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -25,7 +26,7 @@ namespace SeqCli.Config
         static readonly string DefaultConfigFilename =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
 
-        public static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
+        static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
             Converters =
@@ -52,5 +53,7 @@ namespace SeqCli.Config
 
         public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
         public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
+        public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } =
+            new Dictionary<string, SeqCliConnectionConfig>(StringComparer.OrdinalIgnoreCase);
     }
 }
