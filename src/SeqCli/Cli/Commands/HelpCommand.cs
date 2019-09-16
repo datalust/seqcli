@@ -36,6 +36,7 @@ namespace SeqCli.Cli.Commands
         protected override Task<int> Run(string[] unrecognised)
         {
             var ea = Assembly.GetEntryAssembly();
+            // ReSharper disable once PossibleNullReferenceException
             var name = ea.GetName().Name;
             
             if (_markdown)
@@ -61,8 +62,8 @@ namespace SeqCli.Cli.Commands
                 {
                     var cmd = cmds.Single();
                     var argHelp = cmd.Value.Value.HasArgs ? " [<args>]" : "";
-                    var subcommandHelp = subCommand == null ? "" : " " + subCommand;
-                    Console.WriteLine(name + " " + cmd.Metadata.Name + subcommandHelp + argHelp);
+                    var subCommandHelp = subCommand == null ? "" : " " + subCommand;
+                    Console.WriteLine(name + " " + cmd.Metadata.Name + subCommandHelp + argHelp);
                     Console.WriteLine();
                     Console.WriteLine(cmd.Metadata.HelpText);
                     Console.WriteLine();
@@ -93,7 +94,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine("Available commands:");
             Console.WriteLine();
 
-            foreach (var cmd in _availableCommands.GroupBy(cmd => cmd.Metadata.Name))
+            foreach (var cmd in _availableCommands.GroupBy(cmd => cmd.Metadata.Name).OrderBy(c => c.Key))
             {
                 if (cmd.Count() == 1)
                 {
@@ -102,7 +103,7 @@ namespace SeqCli.Cli.Commands
                 else
                 {
                     Console.WriteLine($" - `{cmd.Key}`");
-                    foreach (var sub in cmd)
+                    foreach (var sub in cmd.OrderBy(s => s.Metadata.SubCommand))
                     {
                         Console.WriteLine($"   - [`{cmd.Key} {sub.Metadata.SubCommand}`](#{cmd.Key}-{sub.Metadata.SubCommand}) &mdash; {sub.Metadata.HelpText}.");
                     }
@@ -161,7 +162,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine("Available commands are:");
 
             var printedGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var avail in _availableCommands)
+            foreach (var avail in _availableCommands.OrderBy(c => c.Metadata.Name))
             {
                 if (avail.Metadata.SubCommand != null)
                 {
@@ -187,7 +188,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine();
             Console.WriteLine("Available sub-commands are:");
 
-            foreach (var avail in _availableCommands.Where(c => c.Metadata.Name == topLevelCommand))
+            foreach (var avail in _availableCommands.Where(c => c.Metadata.Name == topLevelCommand).OrderBy(c => c.Metadata.SubCommand))
             {
                 Printing.Define($"  {avail.Metadata.SubCommand}", avail.Metadata.HelpText, 13, Console.Out);
             }

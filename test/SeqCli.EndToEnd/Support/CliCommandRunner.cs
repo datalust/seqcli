@@ -14,9 +14,9 @@ namespace SeqCli.EndToEnd.Support
             _configuration = configuration;
         }
 
-        public int Exec(string command, string args = null)
+        public int Exec(string command, string args = null, bool disconnected = false)
         {
-            using (var process = _configuration.SpawnCliProcess(command, args))
+            using (var process = _configuration.SpawnCliProcess(command, args, skipServerArg: disconnected))
             {
                 LastRunProcess = process;
                 return process.WaitForExit(DefaultExecTimeout);
