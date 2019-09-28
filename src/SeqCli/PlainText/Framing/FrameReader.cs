@@ -63,7 +63,7 @@ namespace SeqCli.PlainText.Framing
                     return new Frame();
                 
                 var line = await _unawaitedNextLine;
-                if (line[0] == 65279)
+                if (line?.Length > 0 && line[0] == 65279)
                     line = line.Substring(1);
 
                 _unawaitedNextLine = null;

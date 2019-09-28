@@ -55,7 +55,15 @@ namespace SeqCli.Cli.Commands
             }
 
             var connection = _connectionFactory.Connect(_connection);
+            
             var timeout = _timeoutMS.HasValue ? TimeSpan.FromMilliseconds(_timeoutMS.Value) : (TimeSpan?)null;
+            if (timeout != null)
+            {
+                // The timeout is applied server-side; allowing an extra 10 seconds here means that the
+                // user experience will be consistent - the error message will be the server's message, etc.
+                connection.Client.HttpClient.Timeout = timeout.Value.Add(TimeSpan.FromSeconds(10));
+            }
+
             if (_output.Json)
             {
                 var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);

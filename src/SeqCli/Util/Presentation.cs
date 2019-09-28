@@ -40,7 +40,7 @@ namespace SeqCli.Util
                 while (inner != null)
                 {
                     message.Append(inner.Message);
-                    inner = inner.InnerException.GetBaseException();
+                    inner = inner.InnerException?.GetBaseException();
                     if (inner != null)
                         message.Append(" ");
                 }
