@@ -33,7 +33,7 @@ namespace SeqCli.Cli.Commands
             _availableCommands = availableCommands.OrderBy(c => c.Metadata.Name).ToList();
         }
 
-        protected override Task<int> Run(string[] unrecognised)
+        protected override Task<int> Run(string[] unrecognized)
         {
             var ea = Assembly.GetEntryAssembly();
             // ReSharper disable once PossibleNullReferenceException
@@ -41,24 +41,22 @@ namespace SeqCli.Cli.Commands
             
             if (_markdown)
             {
-                if (unrecognised.Length != 0)
-                    return base.Run(unrecognised);
+                if (unrecognized.Length != 0)
+                    return base.Run(unrecognized);
                 
                 PrintMarkdownHelp(name);
                 return Task.FromResult(0);
             }
             
             string topLevelCommand = null;
-            if (unrecognised.Length > 0)
+            if (unrecognized.Length > 0)
             {
-                topLevelCommand = unrecognised[0].ToLowerInvariant();
-                var subCommand = unrecognised.Length > 1 && !unrecognised[1].Contains("-") ? unrecognised[1] : null;
+                topLevelCommand = unrecognized[0].ToLowerInvariant();
+                var subCommand = unrecognized.Length > 1 && !unrecognized[1].Contains("-") ? unrecognized[1] : null;
                 var cmds = _availableCommands.Where(c => c.Metadata.Name == topLevelCommand &&
                                                          (subCommand == null || subCommand == c.Metadata.SubCommand)).ToArray();
-                if (cmds.Length == 0)
-                    return base.Run(unrecognised);
 
-                if (cmds.Length == 1)
+                if (cmds.Length == 1 && cmds[0].Metadata.SubCommand == subCommand)
                 {
                     var cmd = cmds.Single();
                     var argHelp = cmd.Value.Value.HasArgs ? " [<args>]" : "";
@@ -72,7 +70,7 @@ namespace SeqCli.Cli.Commands
                 }
             }
 
-            if (topLevelCommand != null)
+            if (topLevelCommand != null && _availableCommands.Any(a => a.Metadata.Name == topLevelCommand))
                 PrintHelp(name, topLevelCommand);
             else
                 PrintHelp(name);

@@ -22,6 +22,7 @@ namespace SeqCli.EndToEnd
             // with `Ingest` in their names.
             var testCases = _args.TestCases();
             builder.RegisterAssemblyTypes(ThisAssembly)
+                // ReSharper disable once AssignNullToNotNullAttribute
                 .Where(t => testCases == null || testCases.Length == 0 || testCases.Any(c => c.IsMatch(t.FullName)))
                 .As<ICliTestCase>();
 
