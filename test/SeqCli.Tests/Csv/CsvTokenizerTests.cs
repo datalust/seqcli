@@ -18,7 +18,7 @@ namespace SeqCli.Tests.Csv
         public void TokenizesATextCell()
         {
             var tokens = Tokenize("\"abc\"");
-            Assert.Equal(tokens.Count(), 3);
+            Assert.Equal(3, tokens.Count());
             Assert.Equal(tokens.Select(t => t.Kind), new[]{CsvToken.DoubleQuote, CsvToken.Text, CsvToken.DoubleQuote});
         }
 
@@ -26,7 +26,7 @@ namespace SeqCli.Tests.Csv
         public void TokenizesARow()
         {
             var tokens = Tokenize("\"abc\",\"def\"\r\n");
-            Assert.Equal(tokens.Count(), 8);
+            Assert.Equal(8, tokens.Count());
         }
 
         [Theory]

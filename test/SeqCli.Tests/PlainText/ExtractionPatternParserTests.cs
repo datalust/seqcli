@@ -41,7 +41,6 @@ namespace SeqCli.Tests.PlainText
         [InlineData("{@m:***}", true)]
         [InlineData("{:*}", true)]
         [InlineData("{a:}", false)]
-        [InlineData("{@m:n}", true)]
         [InlineData("{m_N}", true)]
         [InlineData("{_9}", true)]
         [InlineData("{:n}", true)]

@@ -56,9 +56,7 @@ System.DivideByZeroException: Attempt to divide by zero
             Assert.Null(remainder);
         }
         
-        // Work-in-progress...
-
-        // [Fact]
+        [Fact(Skip = "Work in progress")]
         public void TheMatchingPatternCanExtractDefaultSerilogConsoleOutput()
         {
             // This is the default format: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
@@ -79,7 +77,7 @@ System.DivideByZeroException: Attempt to divide by zero
 #pragma warning restore 219
         }
         
-        // [Fact]
+        [Fact(Skip = "Work in progress")]
         public void OptionalSourceContextCanBeExtracted()
         {
             // The {?: optional grouping is just an anonymous optional property, e.g. if the formatting was
