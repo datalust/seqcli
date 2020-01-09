@@ -26,7 +26,7 @@ namespace SeqCli.Tests.Cli
             var commandLineHost = new CommandLineHost(availableCommands);
             await commandLineHost.Run(new []{ "test"});
 
-            Assert.Equal(commandsRan.First(), "test");
+            Assert.Equal("test", commandsRan.First());
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace SeqCli.Tests.Cli
             var commandLineHost = new CommandLineHost(availableCommands);
             await commandLineHost.Run(new[] { "test", "subcommand2" });
 
-            Assert.Equal(commandsRan.First(), "test-subcommand2");
+            Assert.Equal("test-subcommand2", commandsRan.First());
         }
 
         class ActionCommand : Command

@@ -5,7 +5,7 @@ using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
 
-namespace SeqCli.EndToEnd.IngestCommand
+namespace SeqCli.EndToEnd.Ingest
 {
     public class SimpleTextIngestionTestCase : ICliTestCase
     {

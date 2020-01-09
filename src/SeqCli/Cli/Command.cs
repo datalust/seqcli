@@ -73,11 +73,11 @@ namespace SeqCli.Cli
             return await Run(unrecognised);
         }
 
-        protected virtual async Task<int> Run(string[] unrecognised)
+        protected virtual async Task<int> Run(string[] unrecognized)
         {
-            if (unrecognised.Any())
+            if (unrecognized.Any())
             {
-                ShowUsageErrors(new [] { "Unrecognized options: " + string.Join(", ", unrecognised) });
+                ShowUsageErrors(new [] { "Unrecognized options: " + string.Join(", ", unrecognized) });
                 return 1;
             }
 

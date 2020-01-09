@@ -51,7 +51,7 @@ namespace SeqCli.Cli.Features
         {
             options.Add(
                 "json",
-                "Print events in newline-delimited JSON (the default is plain text)",
+                "Print output in newline-delimited JSON (the default is plain text)",
                 v => _json = true);
 
             options.Add("no-color", "Don't colorize text output", v => _noColor = true);
