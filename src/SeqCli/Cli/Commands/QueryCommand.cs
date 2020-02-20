@@ -20,6 +20,8 @@ using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
+// ReSharper disable UnusedType.Global
+
 namespace SeqCli.Cli.Commands
 {
     [Command("query", "Execute an SQL query and receive results in CSV format",
@@ -31,8 +33,8 @@ namespace SeqCli.Cli.Commands
         readonly ConnectionFeature _connection;
         readonly DateRangeFeature _range;
         readonly SignalExpressionFeature _signal;
+        readonly TimeoutFeature _timeout;
         string _query;
-        int? _timeoutMS;
 
         public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -41,7 +43,7 @@ namespace SeqCli.Cli.Commands
             Options.Add("q=|query=", "The query to execute", v => _query = v);
             _range = Enable<DateRangeFeature>();
             _signal = Enable<SignalExpressionFeature>();
-            Options.Add("timeout=", "The query execution timeout in milliseconds", v => _timeoutMS = int.Parse(v?.Trim() ?? "0"));
+            _timeout = Enable<TimeoutFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
@@ -55,15 +57,9 @@ namespace SeqCli.Cli.Commands
             }
 
             var connection = _connectionFactory.Connect(_connection);
-            
-            var timeout = _timeoutMS.HasValue ? TimeSpan.FromMilliseconds(_timeoutMS.Value) : (TimeSpan?)null;
-            if (timeout != null)
-            {
-                // The timeout is applied server-side; allowing an extra 10 seconds here means that the
-                // user experience will be consistent - the error message will be the server's message, etc.
-                connection.Client.HttpClient.Timeout = timeout.Value.Add(TimeSpan.FromSeconds(10));
-            }
 
+            var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
+            
             if (_output.Json)
             {
                 var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
