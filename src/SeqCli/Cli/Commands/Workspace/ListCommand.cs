@@ -35,12 +35,12 @@ namespace SeqCli.Cli.Commands.Workspace
             var list = _entityIdentity.Id != null ?
                 new[] { await connection.Workspaces.FindAsync(_entityIdentity.Id) } :
                 (await connection.Workspaces.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-                    .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title)
+                    .Where(workspace => _entityIdentity.Title == null || _entityIdentity.Title == workspace.Title)
                     .ToArray();
 
-            foreach (var signal in list)
+            foreach (var workspace in list)
             {
-                _output.WriteEntity(signal);
+                _output.WriteEntity(workspace);
             }
 
             return 0;
