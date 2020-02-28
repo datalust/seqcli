@@ -96,7 +96,11 @@ namespace SeqCli.Cli.Commands
             {
                 if (cmd.Count() == 1)
                 {
-                    Console.WriteLine($" - [`{cmd.Key}`](#{cmd.Key}) &mdash; {cmd.Single().Metadata.HelpText}.");
+                    var single = cmd.Single();
+                    if (single.Metadata.SubCommand == null)
+                        Console.WriteLine($" - [`{cmd.Key}`](#{cmd.Key}) &mdash; {single.Metadata.HelpText}.");
+                    else
+                        Console.WriteLine($" - [`{cmd.Key} {single.Metadata.SubCommand}`](#{cmd.Key}-{single.Metadata.SubCommand}) &mdash; {single.Metadata.HelpText}.");
                 }
                 else
                 {
