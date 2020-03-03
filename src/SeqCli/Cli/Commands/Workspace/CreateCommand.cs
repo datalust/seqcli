@@ -19,7 +19,7 @@ namespace SeqCli.Cli.Commands.Workspace
 
         string _title, _description, _dashboard;
         bool _isProtected;
-        List<string> _signals;
+        List<string> _signals = new List<string>();
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
