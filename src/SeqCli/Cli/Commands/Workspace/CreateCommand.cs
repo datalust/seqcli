@@ -16,7 +16,7 @@ namespace SeqCli.Cli.Commands.Workspace
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _title, _description;
+        string _title, _description, _dashboard;
         bool _isProtected;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -32,6 +32,11 @@ namespace SeqCli.Cli.Commands.Workspace
                 "description=",
                 "A description for the workspace",
                 d => _description = ArgumentString.Normalize(d));
+
+            Options.Add(
+                "dashboard=",
+                "The ID of a dashboard to connect the workspace to",
+                d => _dashboard = ArgumentString.Normalize(d));
 
             Options.Add(
                 "protected",
@@ -51,6 +56,11 @@ namespace SeqCli.Cli.Commands.Workspace
             workspace.Title = _title;
             workspace.Description = _description;
             workspace.IsProtected = _isProtected;
+
+            if (_dashboard != null)
+            {
+                workspace.Content.DashboardIds.Add(_dashboard);
+            }
 
             workspace = await connection.Workspaces.AddAsync(workspace);
 
