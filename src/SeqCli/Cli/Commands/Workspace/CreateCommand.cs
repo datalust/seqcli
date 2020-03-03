@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -18,6 +19,7 @@ namespace SeqCli.Cli.Commands.Workspace
 
         string _title, _description, _dashboard;
         bool _isProtected;
+        List<string> _signals;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -37,6 +39,11 @@ namespace SeqCli.Cli.Commands.Workspace
                 "dashboard=",
                 "The ID of a dashboard to connect the workspace to",
                 d => _dashboard = ArgumentString.Normalize(d));
+
+            Options.Add(
+                "signal=",
+                "The ID of a signal to connect to the workspace",
+                s => _signals.Add(ArgumentString.Normalize(s)));
 
             Options.Add(
                 "protected",
@@ -60,6 +67,14 @@ namespace SeqCli.Cli.Commands.Workspace
             if (_dashboard != null)
             {
                 workspace.Content.DashboardIds.Add(_dashboard);
+            }
+
+            if (_signals != null)
+            {
+                foreach (var signal in _signals)
+                {
+                    workspace.Content.SignalIds.Add(signal);
+                }
             }
 
             workspace = await connection.Workspaces.AddAsync(workspace);
