@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.2</TargetFrameworks>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>seqcli</AssemblyName>
     <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
@@ -9,7 +9,7 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
     <Platforms>x64</Platforms>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <Import Project="..\..\SeqCli.Runtime.targets" />
   <ItemGroup>
@@ -30,7 +30,7 @@
     <PackageReference Include="Superpower" Version="2.3.0" />
     <PackageReference Include="System.Reactive" Version="4.3.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
-    <PackageReference Include="Seq.Api" Version="5.1.2-*" />
+    <PackageReference Include="Seq.Api" Version="2020.1.0-*" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
 </Project>

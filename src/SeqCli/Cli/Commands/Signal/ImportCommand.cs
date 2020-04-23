@@ -69,7 +69,7 @@ namespace SeqCli.Cli.Commands.Signal
                         dest.Grouping = src.Grouping;
                         dest.IsProtected = src.IsProtected;
                         dest.Filters = src.Filters;
-                        dest.TaggedProperties = src.TaggedProperties;
+                        dest.Columns = src.Columns;
                         dest.OwnerId = _entityOwner.OwnerId;
                         await connection.Signals.AddAsync(dest);
                     }
