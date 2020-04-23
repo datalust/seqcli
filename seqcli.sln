@@ -35,6 +35,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.Tests", "test\SeqCli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli.EndToEnd", "test\SeqCli.EndToEnd\SeqCli.EndToEnd.csproj", "{B86DEF3C-C461-4126-AD49-986EBB19B487}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dockerfiles", "dockerfiles", "{0779824B-502D-450B-BB43-036949C911C4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "seqcli", "seqcli", "{7F7CAC3A-1046-4D2B-BF9F-F14525918295}"
+ProjectSection(SolutionItems) = preProject
+	dockerfiles\seqcli\.gitignore = dockerfiles\seqcli\.gitignore
+	dockerfiles\seqcli\Dockerfile = dockerfiles\seqcli\Dockerfile
+	dockerfiles\seqcli\run.sh = dockerfiles\seqcli\run.sh
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,6 +70,7 @@ Global
 		{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687} = {FC0A256C-CC1F-4ECE-AF09-707248D10DC1}
 		{DBC69360-519B-4A9B-829B-2AE1B5412521} = {3587B633-0C03-4235-8903-6226900328F1}
 		{B86DEF3C-C461-4126-AD49-986EBB19B487} = {3587B633-0C03-4235-8903-6226900328F1}
+		{7F7CAC3A-1046-4D2B-BF9F-F14525918295} = {0779824B-502D-450B-BB43-036949C911C4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D299713-28D4-4078-9DA7-9033679CD200}
