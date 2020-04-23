@@ -2,7 +2,7 @@ $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "master" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
 $version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
-$framework = "netcoreapp2.2"
+$framework = "netcoreapp3.1"
 $rid = "linux-x64"
 $tag = "datalust/seqcli-ci:$version"
 
