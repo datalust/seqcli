@@ -5,7 +5,7 @@ set -e
 set -o pipefail
 
 sudo apt-get update || true
-sudo apt-get install -y --no-install-recommends jq zlib
+sudo apt-get install -y --no-install-recommends jq zlib1g
 
 RequiredDotnetVersion=$(jq -r '.sdk.version' global.json)
 
