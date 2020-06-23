@@ -39,9 +39,9 @@ namespace SeqCli.Cli.Commands.Dashboard
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
         readonly SignalExpressionFeature _signal;
+        readonly TimeoutFeature _timeout;
 
         string _id, _lastDuration, _intervalDuration, _chartTitle;
-        int? _timeoutMS;
 
         public RenderCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -62,7 +62,7 @@ namespace SeqCli.Cli.Commands.Dashboard
                 v => _intervalDuration = ArgumentString.Normalize(v));
             _range = Enable<DateRangeFeature>();
             _signal = Enable<SignalExpressionFeature>();
-            Options.Add("timeout=", "The query execution timeout in milliseconds", v => _timeoutMS = int.Parse(v?.Trim() ?? "0"));
+            _timeout = Enable<TimeoutFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
             _connection = Enable<ConnectionFeature>();
         }
@@ -158,7 +158,8 @@ namespace SeqCli.Cli.Commands.Dashboard
 
             var q = BuildSqlQuery(query, rangeStart, rangeEnd, timeGrouping);
 
-            var timeout = _timeoutMS.HasValue ? TimeSpan.FromMilliseconds(_timeoutMS.Value) : (TimeSpan?)null;
+            var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
+            
             if (_output.Json)
             {
                 var result = await connection.Data.QueryAsync(q, signal: signal, timeout: timeout);

@@ -17,7 +17,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Inputs;
 using Seq.Api.Model.LogEvents;
-using Seq.Api.Model.Signals;
+using Seq.Api.Model.Shared;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -82,17 +82,17 @@ namespace SeqCli.Cli.Commands.ApiKey
             var apiKey = await connection.ApiKeys.TemplateAsync();
 
             apiKey.Title = _title;
-            apiKey.AppliedProperties = _properties.Properties
+            apiKey.InputSettings.AppliedProperties = _properties.Properties
                 .Select(kvp => new InputAppliedPropertyPart {Name = kvp.Key, Value = kvp.Value})
                 .ToList();
-            apiKey.UseServerTimestamps = _useServerTimestamps;
+            apiKey.InputSettings.UseServerTimestamps = _useServerTimestamps;
 
             // If _token is null, a value will be returned when the key is created
             apiKey.Token = _token;
 
             if (_filter != null)
             {
-                apiKey.InputFilter = new SignalFilterPart
+                apiKey.InputSettings.Filter = new DescriptiveFilterPart
                 {
                     Filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression,
                     FilterNonStrict = _filter
@@ -101,7 +101,7 @@ namespace SeqCli.Cli.Commands.ApiKey
 
             if (_level != null)
             {
-                apiKey.MinimumLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_level));
+                apiKey.InputSettings.MinimumLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_level));
             }
 
             apiKey = await connection.ApiKeys.AddAsync(apiKey);

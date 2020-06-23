@@ -15,6 +15,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Seq.Api.Model.Shared;
 using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -101,7 +102,7 @@ namespace SeqCli.Cli.Commands.Signal
             {
                 signal.Filters = new[]
                 {
-                    new SignalFilterPart
+                    new DescriptiveFilterPart
                     {
                         Filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression,
                         FilterNonStrict = _filter

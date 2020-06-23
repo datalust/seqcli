@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
-using System.Text;
 using SeqCli.Cli;
 using Xunit;
 
@@ -20,7 +17,7 @@ namespace SeqCli.Tests.Cli
                 .GroupBy(t => new {t.Attribute.Name, t.Attribute.SubCommand})
                 .Any(t => t.Count() > 1);
 
-            Assert.Equal(anyDuplicates, false);
+            Assert.False(anyDuplicates);
         }
     }
 }

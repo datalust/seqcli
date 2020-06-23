@@ -1,6 +1,6 @@
 # `seqcli` [![Build status](https://ci.appveyor.com/api/projects/status/sc3iacxwxqqfjgdh/branch/dev?svg=true)](https://ci.appveyor.com/project/datalust/seqcli/branch/dev) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
 
-The [Seq](https://getseq.net) client command-line app. Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`).
+The [Seq](https://datalust.co/seq) client command-line app. Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`).
 
 ![SeqCli Screenshot](https://raw.githubusercontent.com/datalust/seqcli/dev/asset/SeqCli.png)
 
@@ -35,30 +35,35 @@ seqcli <command> [<args>]
 Available commands:
 
  - `apikey`
-   - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
-   - [`apikey list`](#apikey-list) &mdash; List available API keys.
    - [`apikey create`](#apikey-create) &mdash; Create an API key for ingestion.
- - [`app run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
+   - [`apikey list`](#apikey-list) &mdash; List available API keys.
+   - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
+ - [`app-run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
  - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
  - `dashboard`
-   - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
-   - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
    - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
+   - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
+   - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
  - [`help`](#help) &mdash; Show information about available commands.
  - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
  - [`log`](#log) &mdash; Send a structured log event to the server.
  - [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
+ - `profile`
+   - [`profile create`](#profile-create) &mdash; Create or replace a connection profile.
+   - [`profile list`](#profile-list) &mdash; List connection profiles.
+   - [`profile remove`](#profile-remove) &mdash; Remove a connection profile.
  - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
  - [`search`](#search) &mdash; Retrieve log events that match a given filter.
  - `signal`
-   - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
-   - [`signal list`](#signal-list) &mdash; List available signals.
-   - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
    - [`signal create`](#signal-create) &mdash; Create a signal.
+   - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
+   - [`signal list`](#signal-list) &mdash; List available signals.
+   - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
  - [`tail`](#tail) &mdash; Stream log events matching a filter.
  - `user`
-   - [`user remove`](#user-remove) &mdash; Remove a user from the server.
+   - [`user create`](#user-create) &mdash; Create a user.
    - [`user list`](#user-list) &mdash; List users.
+   - [`user remove`](#user-remove) &mdash; Remove a user from the server.
  - [`version`](#version) &mdash; Print the current executable version.
 
 ### `apikey remove`
@@ -75,8 +80,9 @@ seqcli apikey remove -t 'Test API Key'
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the API key(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single API key to remove |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `apikey list`
 
@@ -92,10 +98,11 @@ seqcli apikey list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the API key(s) to list |
 | `-i`, `--id=VALUE` | The id of a single API key to list |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `apikey create`
 
@@ -115,9 +122,10 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--filter=VALUE` | A filter to apply to incoming events |
 |       `--minimum-level=VALUE` | The minimum event level/severity to accept; the default is to accept all events |
 |       `--use-server-timestamps` | Discard client-supplied timestamps and use server clock values |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 
 ### `app run`
@@ -168,10 +176,11 @@ seqcli dashboard render -i dashboard-159 -c 'Response Time (ms)' --last 7d --by 
 |       `--end=VALUE` | Date/time to query to |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 |       `--timeout=VALUE` | The query execution timeout in milliseconds |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `dashboard remove`
 
@@ -188,8 +197,9 @@ seqcli dashboard remove -i dashboard-159
 | `-t`, `--title=VALUE` | The title of the dashboard(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single dashboard to remove |
 | `-o`, `--owner=VALUE` | The id of the user to remove dashboards for; by default, shared dashboards are removd |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `dashboard list`
 
@@ -206,10 +216,11 @@ seqcli dashboard list
 | `-t`, `--title=VALUE` | The title of the dashboard(s) to list |
 | `-i`, `--id=VALUE` | The id of a single dashboard to list |
 | `-o`, `--owner=VALUE` | The id of the user to list dashboards for; by default, shared dashboards are listd |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `help`
 
@@ -246,8 +257,9 @@ seqcli ingest -i log-*.txt --json --filter="@Level <> 'Debug'" -p Environment=Te
 | `-m`, `--message=VALUE` | A message to associate with the ingested events; https://messagetemplates.org syntax is supported |
 | `-l`, `--level=VALUE` | The level or severity to associate with the ingested events; this will override any level information present in the events themselves |
 |       `--send-failure=VALUE` | Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore` |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `log`
 
@@ -266,8 +278,9 @@ seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test
 | `-t`, `--timestamp=VALUE` | The event timestamp as ISO-8601 (the current UTC timestamp will be used by default) |
 | `-x`, `--exception=VALUE` | Additional exception or error information to send, if any |
 | `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `print`
 
@@ -287,6 +300,46 @@ seqcli print -i log-20201028.clef
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: `fail` (default) or `ignore` |
 |       `--no-color` | Don't colorize text output |
 
+### `profile remove`
+
+Remove a connection profile.
+
+Example:
+
+```
+seqcli profile remove -n Production
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | The name of the connection profile to remove |
+
+### `profile list`
+
+List connection profiles.
+
+Example:
+
+```
+seqcli profile list
+```
+
+### `profile create`
+
+Create or replace a connection profile.
+
+Example:
+
+```
+seqcli profile create -n Production -s https://seq.example.com -a th15ISanAPIk3y
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | The name of the connection profile |
+| `-s`, `--server=VALUE` | The URL of the Seq server |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server, if required |
+
 ### `query`
 
 Execute an SQL query and receive results in CSV format.
@@ -304,10 +357,11 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 |       `--end=VALUE` | Date/time to query to |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 |       `--timeout=VALUE` | The query execution timeout in milliseconds |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `search`
 
@@ -325,11 +379,12 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 | `-c`, `--count=VALUE` | The maximum number of events to retrieve; the default is 1 |
 |       `--start=VALUE` | ISO 8601 date/time to query from |
 |       `--end=VALUE` | Date/time to query to |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `signal remove`
 
@@ -346,8 +401,9 @@ seqcli signal remove -t 'Test Signal'
 | `-t`, `--title=VALUE` | The title of the signal(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single signal to remove |
 | `-o`, `--owner=VALUE` | The id of the user to remove signals for; by default, shared signals are removd |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `signal list`
 
@@ -364,10 +420,11 @@ seqcli signal list
 | `-t`, `--title=VALUE` | The title of the signal(s) to list |
 | `-i`, `--id=VALUE` | The id of a single signal to list |
 | `-o`, `--owner=VALUE` | The id of the user to list signals for; by default, shared signals are listd |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `signal import`
 
@@ -383,8 +440,9 @@ seqcli signal import -i ./Exceptions.json
 | ------ | ----------- |
 | `-i`, `--input=VALUE` | File to import; if not specified, `STDIN` will be used |
 | `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are importd |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `signal create`
 
@@ -404,9 +462,10 @@ seqcli signal create -t 'Exceptions' -f "@Exception is not null"
 |       `--group=VALUE` | An explicit group name to associate with the signal; the default is to infer the group from the filter |
 |       `--no-group` | Specify that no group should be inferred; the default is to infer the group from the filter |
 |       `--protected` | Specify that the signal is editable only by administrators |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 
 ### `tail`
@@ -416,11 +475,12 @@ Stream log events matching a filter.
 | Option | Description |
 | ------ | ----------- |
 | `-f`, `--filter=VALUE` | An optional server-side filter to apply to the stream, for example `@Level = 'Error'` |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `user remove`
 
@@ -436,8 +496,9 @@ seqcli user remove -n alice
 | ------ | ----------- |
 | `-n`, `--name=VALUE` | The username of the user(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single user to remove |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `user list`
 
@@ -453,10 +514,36 @@ seqcli user list
 | ------ | ----------- |
 | `-n`, `--name=VALUE` | The username of the user(s) to list |
 | `-i`, `--id=VALUE` | The id of a single user to list |
-|       `--json` | Print events in newline-delimited JSON (the default is plain text) |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default `connection.apiKey` value will be used |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `user create`
+
+Create a user.
+
+Example:
+
+```
+seqcli user create -n alice -d 'Alice Example' -r 'User (read/write)' --password-stdin
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | A unique username for the user |
+| `-d`, `--display-name=VALUE` | A long-form name to aid in identifying the user |
+| `-f`, `--filter=VALUE` | A view filter that limits the events visible to the user |
+| `-r`, `--role=VALUE` | The title of a role that grants the user permissions on the server; if not specified, the default new user role will be assigned |
+| `-e`, `--email=VALUE` | The user's email address (enables a Gravatar image for the user) |
+| `-p`, `--password=VALUE` | An initial password for the user, if username/password authentication is in use; note that `--password-stdin` is more secure |
+|       `--password-stdin` | Read the initial password for the user from `STDIN`, if username/password authentication is in use |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 
 ### `version`
 
