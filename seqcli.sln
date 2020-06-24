@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{2EA56595-519
 		setup.sh = setup.sh
 		Build.Docker.ps1 = Build.Docker.ps1
 		docker-publish.ps1 = docker-publish.ps1
+		Setup.ps1 = Setup.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3587B633-0C03-4235-8903-6226900328F1}"
