@@ -616,7 +616,7 @@ There are three kinds of matchers:
 | `level` | A logging level name | `INF` |
 | `line` | Any single-line content | `one line!` |
 | `n` | A newline character or sequence | |
-| `nat` | A nonzero number | `123` |
+| `nat` | A nonnegative number | `123` |
 | `s` | One or more space or tab characters | ` ` |
 | `serilogdt` | A datetime in the default Serilog file logging format | `2020-01-28 13:50:01.123 +10:00` |
 | `syslogdt` | A datetime in syslog format | `Dec  8 09:12:13` |
