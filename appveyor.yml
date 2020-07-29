@@ -1,4 +1,4 @@
-version: 2020.1.{build}
+version: 2020.2.{build}
 skip_tags: true
 image:
 - Visual Studio 2019
@@ -32,7 +32,7 @@ for:
     artifact: /seqcli-.*\.(zip|tar\.gz)/
     tag: v$(appveyor_build_version)
     on:
-      branch: master
+      branch: main
 -
   matrix:
     only:
