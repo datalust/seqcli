@@ -69,7 +69,7 @@ namespace SeqCli.Apps
                 }
             }
 
-            if (seqAppType == null)
+            if (seqAppType == null && seqAppTypeName != null)
                 seqAppType = Type.GetType(seqAppTypeName);
 
             return seqAppType != null;
@@ -84,13 +84,13 @@ namespace SeqCli.Apps
                 var fn = Path.GetFileNameWithoutExtension(assemblyFile);
 
                 if (_contracts
-                    .Any(hosted => hosted.GetName().Name.Equals(fn, StringComparison.OrdinalIgnoreCase)))
+                    .Any(hosted => hosted.GetName().Name!.Equals(fn, StringComparison.OrdinalIgnoreCase)))
                     continue;
 
                 try
                 {
                     var assembly = Assembly.LoadFrom(assemblyFile);
-                    loaded.Add(assembly.FullName, assembly);
+                    loaded.Add(assembly.FullName!, assembly);
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -103,11 +103,13 @@ namespace SeqCli.Apps
 
         Assembly OnAssemblyResolve(object _, ResolveEventArgs e)
         {
+            if (e.Name == null) return null;
+            
             var target = new AssemblyName(e.Name);
 
             foreach (var contract in _contracts)
             {
-                if (contract.GetName().Name.Equals(target.Name))
+                if (contract.GetName().Name!.Equals(target.Name))
                     return contract;
             }
 
