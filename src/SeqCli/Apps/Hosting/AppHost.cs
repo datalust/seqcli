@@ -21,9 +21,9 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 
-namespace SeqCli.Apps
+namespace SeqCli.Apps.Hosting
 {
-    class AppHost
+    static class AppHost
     {
         public static async Task<int> Run(
             string packageBinaryPath,
@@ -39,36 +39,34 @@ namespace SeqCli.Apps
 
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
-            using (var log = new LoggerConfiguration()
+            using var log = new LoggerConfiguration()
                 .MinimumLevel.Is(LevelAlias.Minimum)
                 .WriteTo.Console(new CompactJsonFormatter(), standardErrorFromLevel: LevelAlias.Minimum)
-                .CreateLogger())
+                .CreateLogger();
+            
+            try
             {
-                try
+                // Todo - accept values for the app id and title.
+                var app = new App("appinstance-0", "Test Instance", appSettings, storagePath);
+                var host = new Host(seqBaseUri, null);
+
+                using var appContainer = new AppContainer(log, packageBinaryPath, app, host, mainAppTypeName);
+                appContainer.StartPublishing(Console.Out);
+
+                string line;
+                while ((line = Console.ReadLine()) != null)
                 {
-                    var app = new App("appinstance-0", "Test Instance", appSettings, storagePath);
-                    var host = new Host(seqBaseUri, null);
-
-                    using (var appContainer = new AppContainer(log, packageBinaryPath, app, host, mainAppTypeName))
-                    {
-                        appContainer.StartPublishing(Console.Out);
-
-                        string line;
-                        while ((line = Console.ReadLine()) != null)
-                        {
-                            await appContainer.SendAsync(line);
-                        }
-
-                        appContainer.StopPublishing();
-                    }
-
-                    return 0;
+                    await appContainer.SendAsync(line);
                 }
-                catch (Exception ex)
-                {
-                    log.Fatal(ex, "App host failed unexpectedly");
-                    return 1;
-                }
+
+                appContainer.StopPublishing();
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                log.Fatal(ex, "App host failed unexpectedly");
+                return 1;
             }
         }
     }

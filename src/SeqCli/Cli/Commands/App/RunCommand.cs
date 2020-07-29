@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SeqCli.Apps;
+using SeqCli.Apps.Hosting;
 using SeqCli.Config;
 using SeqCli.Util;
 
@@ -65,6 +66,7 @@ namespace SeqCli.Cli.Commands.App
 
         protected override async Task<int> Run()
         {
+            // Todo - accept settings from the environment.
             return await AppHost.Run(_dir, _settings, _storage, _serverUrl, _type);
         }
     }

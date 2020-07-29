@@ -22,7 +22,6 @@ using Serilog;
 
 namespace SeqCli.Apps
 {
-
     class AppLoader : IDisposable
     {
         readonly string _packageBinaryPath;

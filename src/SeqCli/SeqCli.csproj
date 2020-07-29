@@ -33,4 +33,7 @@
     <PackageReference Include="Seq.Api" Version="2020.1.0" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Apps\Definitions" />
+  </ItemGroup>
 </Project>

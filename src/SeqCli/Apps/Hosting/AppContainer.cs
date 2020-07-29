@@ -29,7 +29,7 @@ using Serilog.Formatting.Compact.Reader;
 
 // ReSharper disable SuspiciousTypeConversion.Global
 
-namespace SeqCli.Apps
+namespace SeqCli.Apps.Hosting
 {
     class AppContainer : IAppHost, IDisposable
     {
