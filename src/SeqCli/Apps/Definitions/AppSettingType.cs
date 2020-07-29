@@ -14,6 +14,7 @@
 
 namespace SeqCli.Apps.Definitions
 {
+    // Matches https://github.com/datalust/seq-apps-runtime/blob/dev/src/Seq.Apps/Apps/SettingInputType.cs
     public enum AppSettingType
     {
         Text,
@@ -23,7 +24,7 @@ namespace SeqCli.Apps.Definitions
         Decimal,
         Password,
 
-        // Unused
+        // Unused; required for (very early) legacy app support.
         Number = 1000
     }
 }
