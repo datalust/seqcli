@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -13,13 +14,16 @@ namespace SeqCli.Cli.Commands.Workspace
     class CreateCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
-
+        
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _title, _description, _dashboard;
+        string _title, _description;
         bool _isProtected;
-        List<string> _signals = new List<string>();
+        readonly List<string>
+            _signals = new List<string>(),
+            _dashboards = new List<string>(),
+            _queries = new List<string>();
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -37,12 +41,17 @@ namespace SeqCli.Cli.Commands.Workspace
 
             Options.Add(
                 "dashboard=",
-                "The ID of a dashboard to connect the workspace to",
-                d => _dashboard = ArgumentString.Normalize(d));
+                "The id of a dashboard to include in the workspace",
+                d => _dashboards.Add(ArgumentString.Normalize(d)));
+
+            Options.Add(
+                "query=",
+                "The id of a saved query to include in the workspace",
+                s => _queries.Add(ArgumentString.Normalize(s)));
 
             Options.Add(
                 "signal=",
-                "The ID of a signal to connect to the workspace",
+                "The id of a signal to include in the workspace",
                 s => _signals.Add(ArgumentString.Normalize(s)));
 
             Options.Add(
@@ -59,23 +68,15 @@ namespace SeqCli.Cli.Commands.Workspace
             var connection = _connectionFactory.Connect(_connection);
 
             var workspace = await connection.Workspaces.TemplateAsync();
+            workspace.OwnerId = null;
 
             workspace.Title = _title;
             workspace.Description = _description;
             workspace.IsProtected = _isProtected;
 
-            if (_dashboard != null)
-            {
-                workspace.Content.DashboardIds.Add(_dashboard);
-            }
-
-            if (_signals != null)
-            {
-                foreach (var signal in _signals)
-                {
-                    workspace.Content.SignalIds.Add(signal);
-                }
-            }
+            workspace.Content.DashboardIds.AddRange(_dashboards.Where(s => s != null));
+            workspace.Content.QueryIds.AddRange(_queries.Where(s => s != null));
+            workspace.Content.SignalIds.AddRange(_signals.Where(s => s != null));
 
             workspace = await connection.Workspaces.AddAsync(workspace);
 
