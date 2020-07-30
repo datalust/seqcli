@@ -30,12 +30,17 @@ namespace SeqCli.Apps.Hosting
             IReadOnlyDictionary<string, string> appSettings,
             string storagePath,
             string seqBaseUri,
+            string appInstanceId,
+            string appInstanceTitle,
+            string seqInstanceName = null,
             string mainAppTypeName = null)
         {
             if (packageBinaryPath == null) throw new ArgumentNullException(nameof(packageBinaryPath));
             if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));
             if (storagePath == null) throw new ArgumentNullException(nameof(storagePath));
             if (seqBaseUri == null) throw new ArgumentNullException(nameof(seqBaseUri));
+            if (appInstanceId == null) throw new ArgumentNullException(nameof(appInstanceId));
+            if (appInstanceTitle == null) throw new ArgumentNullException(nameof(appInstanceTitle));
 
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
@@ -46,9 +51,8 @@ namespace SeqCli.Apps.Hosting
             
             try
             {
-                // Todo - accept values for the app id and title.
-                var app = new App("appinstance-0", "Test Instance", appSettings, storagePath);
-                var host = new Host(seqBaseUri, null);
+                var app = new App(appInstanceId, appInstanceTitle, appSettings, storagePath);
+                var host = new Host(seqBaseUri, seqInstanceName);
 
                 using var appContainer = new AppContainer(log, packageBinaryPath, app, host, mainAppTypeName);
                 appContainer.StartPublishing(Console.Out);
