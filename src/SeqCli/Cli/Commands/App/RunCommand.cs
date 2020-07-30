@@ -25,6 +25,7 @@ namespace SeqCli.Cli.Commands.App
         Example = "seqcli tail --json | seqcli app run -d \"./bin/Debug/netstandard2.2\" -p ToAddress=example@example.com")]
     class RunCommand : Command
     {
+        bool _readEnv;
         string _dir = Environment.CurrentDirectory,
             _type,
             _serverUrl,
@@ -83,12 +84,23 @@ namespace SeqCli.Cli.Commands.App
                 "id=",
                 "The app instance id, used only for app configuration; defaults to a placeholder id.",
                 v => _appInstanceId = ArgumentString.Normalize(v));
+
+            Options.Add(
+                "read-env",
+                "Read app configuration and settings from environment variables, as specified in " +
+                "https://docs.datalust.co/docs/seq-apps-in-other-languages; ignores all options " +
+                "except --directory and --type",
+                _ => _readEnv = true);
         }
 
         protected override async Task<int> Run()
         {
-            // Todo - accept settings from the environment.
-            return await AppHost.Run(_dir, _settings, _storage, _serverUrl, _appInstanceId, _appInstanceTitle, _seqInstanceName, _type);
+            if (!_readEnv)
+                return await AppHost.Run(_dir, _settings, _storage, _serverUrl, _appInstanceId, _appInstanceTitle, _seqInstanceName, _type);
+            
+            var fromEnv = AppEnvironment.ReadStandardEnvironment();
+            return await AppHost.Run(_dir, fromEnv.Settings, fromEnv.StoragePath, fromEnv.ServerUrl, 
+                fromEnv.AppInstanceId, fromEnv.AppInstanceTitle, fromEnv.SeqInstanceName, _type);
         }
     }
 }
