@@ -20,24 +20,30 @@ using Seq.Apps;
 
 namespace SeqCli.Apps.Definitions
 {
-    class AppMetadataReader
+    static class AppMetadataReader
     {
-        public static AppDefinition ReadFromReactorType(Type mainReactorType)
+        public static AppDefinition ReadFromSeqAppType(Type seqAppType)
         {
-            if (mainReactorType == null) throw new ArgumentNullException(nameof(mainReactorType));
+            if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
 
-            var declared = mainReactorType.GetCustomAttribute<SeqAppAttribute>();
+            var declared = seqAppType.GetCustomAttribute<SeqAppAttribute>();
             if (declared == null)
-                throw new ArgumentException($"The provided type '{mainReactorType}' is not marked with [SeqApp].");
+                throw new ArgumentException($"The provided type '{seqAppType}' is not marked with [SeqApp].");
 
             var app = new AppDefinition
             {
                 Name = declared.Name,
-                __MainReactorTypeName = mainReactorType.FullName,
                 Description = declared.Description,
                 AllowReprocessing = declared.AllowReprocessing,
-                Settings = GetAvailableSettings(mainReactorType),
-                Capabilities = GetCapabilities(mainReactorType)
+                Settings = GetAvailableSettings(seqAppType),
+                Capabilities = GetCapabilities(seqAppType),
+                Platform = new Dictionary<string, AppPlatformDefinition>
+                {
+                    ["hosted-dotnet"] = new AppPlatformDefinition
+                    {
+                        SeqAppTypeName = seqAppType.FullName
+                    }
+                }
             };
 
             return app;

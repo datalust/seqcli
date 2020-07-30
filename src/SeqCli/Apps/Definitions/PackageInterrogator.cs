@@ -22,26 +22,27 @@ namespace SeqCli.Apps.Definitions
 {
     static class PackageInterrogator
     {
-        static readonly JsonSerializer Serializer = JsonSerializer.Create(
-            new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver
-                {
-                    NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
-                },
-                Converters =
-                {
-                    new StringEnumConverter(new CamelCaseNamingStrategy())
-                }
-            });
-
-        public static string FindAppConfiguration(string path, string mainAppTypeName)
+        public static string FindAppConfiguration(string path, string mainAppTypeName, bool formatIndented)
         {
             using var appLoader = new AppLoader(path);
             if (appLoader.TryLoadSeqAppType(mainAppTypeName, out var reactorType))
             {
                 var json = new StringWriter();
-                Serializer.Serialize(json, AppMetadataReader.ReadFromReactorType(reactorType));
+                var serializer = JsonSerializer.Create(
+                    new JsonSerializerSettings
+                    {
+                        Formatting = formatIndented ? Formatting.Indented : Formatting.None,
+                        ContractResolver = new CamelCasePropertyNamesContractResolver
+                        {
+                            NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
+                        },
+                        Converters =
+                        {
+                            new StringEnumConverter(new CamelCaseNamingStrategy())
+                        }
+                    });
+                
+                serializer.Serialize(json, AppMetadataReader.ReadFromSeqAppType(reactorType));
                 return json.ToString();
             }
             return null;

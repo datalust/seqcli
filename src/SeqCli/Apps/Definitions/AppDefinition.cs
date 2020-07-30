@@ -16,6 +16,7 @@ using System.Collections.Generic;
 
 namespace SeqCli.Apps.Definitions
 {
+    // ReSharper disable all
     class AppDefinition
     {
         public string Name { get; set; }
@@ -26,9 +27,5 @@ namespace SeqCli.Apps.Definitions
         public List<string> Capabilities { get; set; } = new List<string>();
         public Dictionary<string, AppPlatformDefinition> Platform { get; set; }
         public Dictionary<string, AppSettingDefinition> Settings { get; set; }
-
-        // The interrogator for assembly-based apps uses this.
-        // ReSharper disable once InconsistentNaming
-        public string __MainReactorTypeName { get; set; }
     }
 }

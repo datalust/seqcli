@@ -12,11 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
+
 namespace SeqCli.Apps.Definitions
 {
+    // ReSharper disable all
     class AppPlatformDefinition
     {
         public string Executable { get; set; }
         public string Arguments { get; set; }
+        
+        // The generic host for assembly-based apps uses this.
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string SeqAppTypeName { get; set; }
     }
 }

@@ -13,11 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using SeqCli.Apps;
 using SeqCli.Apps.Definitions;
-using SeqCli.Apps.Hosting;
 using SeqCli.Config;
 using SeqCli.Util;
 
@@ -28,6 +25,7 @@ namespace SeqCli.Cli.Commands.App
     class DefineCommand : Command
     {
         string _dir = Environment.CurrentDirectory, _type;
+        bool _indented;
 
         public DefineCommand(SeqCliConfig config)
         {
@@ -39,14 +37,19 @@ namespace SeqCli.Cli.Commands.App
                 d => _dir = ArgumentString.Normalize(d) ?? _dir);
 
             Options.Add(
-                "t|type=",
+                "type=",
                 "The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute",
                 t => _type = ArgumentString.Normalize(t));
+
+            Options.Add(
+                "indented",
+                "Format the definition over multiple lines with indentation",
+                _ => _indented = true);
         }
 
         protected override Task<int> Run()
         {
-            var configuration = PackageInterrogator.FindAppConfiguration(_dir, _type);
+            var configuration = PackageInterrogator.FindAppConfiguration(_dir, _type, _indented);
 
             if (configuration == null)
             {

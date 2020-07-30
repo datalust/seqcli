@@ -14,6 +14,7 @@
 
 namespace SeqCli.Apps.Definitions
 {
+    // ReSharper disable all
     class AppSettingDefinition
     {
         public string DisplayName { get; set; }
