@@ -13,7 +13,7 @@ namespace SeqCli.Tests.Apps
             var appBinaries = "Apps/FirstOfTypeBinaries";
             Assert.True(Directory.Exists(appBinaries));
 
-            var configuration = PackageInterrogator.FindAppConfiguration(appBinaries, null);
+            var configuration = PackageInterrogator.FindAppConfiguration(appBinaries, null, false);
             Assert.NotNull(configuration);
 
             var definition = JsonConvert.DeserializeObject<AppDefinition>(configuration);
