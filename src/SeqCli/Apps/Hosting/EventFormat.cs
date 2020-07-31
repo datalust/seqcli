@@ -20,7 +20,7 @@ using Seq.Apps.LogEvents;
 using Serilog.Events;
 using LogEventLevel = Seq.Apps.LogEvents.LogEventLevel;
 
-namespace SeqCli.Apps
+namespace SeqCli.Apps.Hosting
 {
     static class EventFormat
     {
