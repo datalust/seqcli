@@ -62,7 +62,18 @@ namespace SeqCli.Cli.Commands.Signal
                         // entity types it'll ensure we notice places that "referential integrity" has to be
                         // maintained.
                         var src = _serializer.Deserialize<SignalEntity>(new JsonTextReader(new StringReader(line)));
-                        var dest = await connection.Signals.TemplateAsync();
+
+                        SignalEntity dest;
+                        var existing = false;
+                        try
+                        {
+                            dest = await connection.Signals.FindAsync(src.Id);
+                            existing = true;
+                        }
+                        catch (Exception)
+                        {
+                            dest = await connection.Signals.TemplateAsync();
+                        }
                         dest.Title = src.Title;
                         dest.Description = src.Description;
                         dest.ExplicitGroupName = src.ExplicitGroupName;
@@ -71,7 +82,15 @@ namespace SeqCli.Cli.Commands.Signal
                         dest.Filters = src.Filters;
                         dest.Columns = src.Columns;
                         dest.OwnerId = _entityOwner.OwnerId;
-                        await connection.Signals.AddAsync(dest);
+
+                        if (existing)
+                        {
+                            await connection.Signals.UpdateAsync(dest);
+                        }
+                        else
+                        {
+                            await connection.Signals.AddAsync(dest);
+                        }
                     }
 
                     line = input.ReadLine();
