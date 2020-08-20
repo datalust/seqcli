@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SeqCli.Apps;
+using SeqCli.Apps.Hosting;
 using SeqCli.Config;
 using SeqCli.Util;
 
@@ -25,7 +25,15 @@ namespace SeqCli.Cli.Commands.App
         Example = "seqcli tail --json | seqcli app run -d \"./bin/Debug/netstandard2.2\" -p ToAddress=example@example.com")]
     class RunCommand : Command
     {
-        string _dir = Environment.CurrentDirectory, _type, _serverUrl, _storage = Environment.CurrentDirectory;
+        bool _readEnv;
+        string _dir = Environment.CurrentDirectory,
+            _type,
+            _serverUrl,
+            _storage = Environment.CurrentDirectory,
+            _appInstanceId = "appinstance-0",
+            _appInstanceTitle = "Test Instance",
+            _seqInstanceName;
+        
         readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
 
         public RunCommand(SeqCliConfig config)
@@ -39,7 +47,7 @@ namespace SeqCli.Cli.Commands.App
                 d => _dir = ArgumentString.Normalize(d) ?? _dir);
 
             Options.Add(
-                "t|type=",
+                "type=",
                 "The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute",
                 t => _type = ArgumentString.Normalize(t));
 
@@ -52,20 +60,47 @@ namespace SeqCli.Cli.Commands.App
                     var valueText = v?.Trim();
                     _settings.Add(name, valueText ?? "");
                 });
-
+            
+            Options.Add(
+                "storage=",
+                "A directory in which app-specific data can be stored; defaults to the current directory",
+                d => _storage = ArgumentString.Normalize(d) ?? _storage);
+            
             Options.Add("s=|server=",
                 "The URL of the Seq server, used only for app configuration (no connection is made to the server); by default the `connection.serverUrl` value will be used",
                 v => _serverUrl = ArgumentString.Normalize(v) ?? _serverUrl);
 
             Options.Add(
-                "storage=",
-                "A directory in which app-specific data can be stored; defaults to the current directory",
-                d => _storage = ArgumentString.Normalize(d) ?? _storage);
+                "server-instance=",
+                "The instance name of the Seq server, used only for app configuration; defaults to no instance name",
+                v => _seqInstanceName = ArgumentString.Normalize(v));
+
+            Options.Add(
+                "t=|title=",
+                "The app instance title, used only for app configuration; defaults to a placeholder title.",
+                v => _appInstanceTitle = ArgumentString.Normalize(v));
+
+            Options.Add(
+                "id=",
+                "The app instance id, used only for app configuration; defaults to a placeholder id.",
+                v => _appInstanceId = ArgumentString.Normalize(v));
+
+            Options.Add(
+                "read-env",
+                "Read app configuration and settings from environment variables, as specified in " +
+                "https://docs.datalust.co/docs/seq-apps-in-other-languages; ignores all options " +
+                "except --directory and --type",
+                _ => _readEnv = true);
         }
 
         protected override async Task<int> Run()
         {
-            return await AppHost.Run(_dir, _settings, _storage, _serverUrl, _type);
+            if (!_readEnv)
+                return await AppHost.Run(_dir, _settings, _storage, _serverUrl, _appInstanceId, _appInstanceTitle, _seqInstanceName, _type);
+            
+            var fromEnv = AppEnvironment.ReadStandardEnvironment();
+            return await AppHost.Run(_dir, fromEnv.Settings, fromEnv.StoragePath, fromEnv.ServerUrl, 
+                fromEnv.AppInstanceId, fromEnv.AppInstanceTitle, fromEnv.SeqInstanceName, _type);
         }
     }
 }

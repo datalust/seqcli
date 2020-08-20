@@ -79,6 +79,7 @@ namespace SeqCli.Cli.Commands.Signal
             var connection = _connectionFactory.Connect(_connection);
 
             var signal = await connection.Signals.TemplateAsync();
+            signal.OwnerId = null;
 
             signal.Title = _title;
             signal.Description = _description;

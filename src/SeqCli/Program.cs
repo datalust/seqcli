@@ -51,12 +51,10 @@ namespace SeqCli
                 var builder = new ContainerBuilder();
                 builder.RegisterModule<SeqCliModule>();
 
-                using (var container = builder.Build())
-                {
-                    var clh = container.Resolve<CommandLineHost>();
-                    var exit = await clh.Run(args);
-                    return exit;
-                }
+                using var container = builder.Build();
+                var clh = container.Resolve<CommandLineHost>();
+                var exit = await clh.Run(args);
+                return exit;
             }
             catch (Exception ex)
             {

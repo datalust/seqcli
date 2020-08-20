@@ -52,8 +52,8 @@ namespace SeqCli.Cli.Features
             }
         }
 
-        public string OwnerId { get; set; }
+        public string OwnerId { get; private set; }
 
-        public bool IncludeShared { get; set; } = true;
+        public bool IncludeShared { get; private set; } = true;
     }
 }

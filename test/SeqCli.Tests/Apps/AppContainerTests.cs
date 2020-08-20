@@ -2,6 +2,7 @@
 using System.IO;
 using Seq.Apps;
 using SeqCli.Apps;
+using SeqCli.Apps.Hosting;
 using SeqCli.Tests.Support;
 using Serilog.Core;
 using Xunit;
