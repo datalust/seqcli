@@ -32,7 +32,9 @@ namespace SeqCli.Cli.Commands.Signal
         readonly FileInputFeature _fileInputFeature;
         readonly EntityOwnerFeature _entityOwner;
         readonly ConnectionFeature _connection;
-        
+
+        bool _merge;
+
         readonly JsonSerializer _serializer = JsonSerializer.Create(
             new JsonSerializerSettings{
                 Converters = { new StringEnumConverter() }
@@ -42,6 +44,12 @@ namespace SeqCli.Cli.Commands.Signal
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
+            Options.Add(
+                "merge",
+                "Allows to merge the existing signals matching by their ids",
+                _ => _merge = true);
+
             _fileInputFeature = Enable(new FileInputFeature("File to import"));
             _entityOwner = Enable(new EntityOwnerFeature("signal", "import"));
             _connection = Enable<ConnectionFeature>();
@@ -65,12 +73,19 @@ namespace SeqCli.Cli.Commands.Signal
 
                         SignalEntity dest;
                         var existing = false;
-                        try
+                        if (_merge)
                         {
-                            dest = await connection.Signals.FindAsync(src.Id);
-                            existing = true;
+                            try
+                            {
+                                dest = await connection.Signals.FindAsync(src.Id);
+                                existing = true;
+                            }
+                            catch (Exception)
+                            {
+                                dest = await connection.Signals.TemplateAsync();
+                            }
                         }
-                        catch (Exception)
+                        else
                         {
                             dest = await connection.Signals.TemplateAsync();
                         }
@@ -83,7 +98,7 @@ namespace SeqCli.Cli.Commands.Signal
                         dest.Columns = src.Columns;
                         dest.OwnerId = _entityOwner.OwnerId;
 
-                        if (existing)
+                        if (_merge && existing)
                         {
                             await connection.Signals.UpdateAsync(dest);
                         }
