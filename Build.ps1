@@ -25,7 +25,7 @@ function Create-ArtifactDir
 
 function Publish-Archives($version)
 {
-	$rids = @("linux-x64", "osx-x64", "win-x64")
+	$rids = @("linux-x64", "linux-musl-x64", "osx-x64", "win-x64")
 	foreach ($rid in $rids) {
 		& dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid /p:ShowLinkerSizeComparison=true
 		if($LASTEXITCODE -ne 0) { exit 4 }
