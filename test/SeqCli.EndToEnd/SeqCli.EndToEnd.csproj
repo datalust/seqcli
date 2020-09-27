@@ -10,11 +10,13 @@
     <PackageReference Include="Autofac" Version="4.9.4" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="4.0.0" />
-    <PackageReference Include="Seq.Api" Version="5.1.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Data\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SeqCli\SeqCli.csproj" />
   </ItemGroup>
 </Project>

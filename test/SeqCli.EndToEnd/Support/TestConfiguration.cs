@@ -6,7 +6,9 @@ namespace SeqCli.EndToEnd.Support
 {
     public class TestConfiguration
     {
-        public string ServerListenUrl { get; } = "http://localhost:9989";
+        public int ServerListenPort { get; } = 9989;
+
+        public string ServerListenUrl => $"http://localhost:{ServerListenPort}";
 
         string EquivalentBaseDirectory { get; } = AppDomain.CurrentDomain.BaseDirectory
             .Replace(Path.Combine("test", "SeqCli.EndToEnd"), Path.Combine("src", "SeqCli"));
@@ -30,7 +32,10 @@ namespace SeqCli.EndToEnd.Support
             if (storagePath == null) throw new ArgumentNullException(nameof(storagePath));
 
             var commandWithArgs = $"run --listen=\"{ServerListenUrl}\" --storage=\"{storagePath}\"";
-            
+            if (Environment.GetEnvironmentVariable("ENDTOEND_USE_DOCKER_SEQ") == "Y")
+            {
+                return new CaptiveProcess("docker", $"run --name seq -it --rm -e ACCEPT_EULA=Y -p {ServerListenPort}:80 datalust/seq:latest", stopCommandFullExePath: "docker", stopCommandArgs: "stop seq");
+            }
             return new CaptiveProcess("seq", commandWithArgs);
         }
     }

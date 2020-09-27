@@ -9,6 +9,8 @@ namespace SeqCli.EndToEnd.Support
     public sealed class CaptiveProcess : ITestProcess, IDisposable
     {
         readonly bool _captureOutput;
+        readonly string _stopCommandFullExePath;
+        readonly string _stopCommandArgs;
         readonly Process _process;
         readonly ManualResetEvent _outputComplete = new ManualResetEvent(false);
         readonly ManualResetEvent _errorComplete = new ManualResetEvent(false);
@@ -20,10 +22,14 @@ namespace SeqCli.EndToEnd.Support
             string fullExePath,
             string args = null,
             IDictionary<string, string> environment = null,
-            bool captureOutput = true)
+            bool captureOutput = true,
+            string stopCommandFullExePath = null,
+            string stopCommandArgs = null)
         {
             if (fullExePath == null) throw new ArgumentNullException(nameof(fullExePath));
             _captureOutput = captureOutput;
+            _stopCommandFullExePath = stopCommandFullExePath;
+            _stopCommandArgs = stopCommandArgs;
 
             var startInfo = new ProcessStartInfo
                       {
@@ -109,6 +115,23 @@ namespace SeqCli.EndToEnd.Support
             {
                 _process.Kill();
                 WaitForExit();
+                if (_stopCommandFullExePath != null)
+                {
+                    var stopCommandStartInfo = new ProcessStartInfo
+                    {
+                        UseShellExecute = false,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        RedirectStandardError = true,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true,
+                        ErrorDialog = false,
+                        FileName = _stopCommandFullExePath,
+                        Arguments = _stopCommandArgs ?? ""
+                    };
+
+                    using var stopCommandProcess = Process.Start(stopCommandStartInfo);
+                    stopCommandProcess?.WaitForExit();
+                }
             }
             catch
             {
