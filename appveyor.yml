@@ -12,6 +12,7 @@ test: off
 artifacts:
 - path: artifacts/seqcli-*.zip
 - path: artifacts/seqcli-*.tar.gz
+- path: artifacts/seqcli-*.nupkg
 
 for:
 -
@@ -29,7 +30,7 @@ for:
   - provider: GitHub
     auth_token:
       secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
-    artifact: /seqcli-.*\.(zip|tar\.gz)/
+    artifact: /seqcli-.*\.(nupkg|zip|tar\.gz)/
     tag: v$(appveyor_build_version)
     on:
       branch: main
