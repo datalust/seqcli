@@ -47,7 +47,7 @@ namespace SeqCli.Cli.Commands.Signal
 
             Options.Add(
                 "merge",
-                "Allows to merge the existing signals matching by their ids",
+                "Update signals that have ids matching those in the imported data; the default is to always create new signals",
                 _ => _merge = true);
 
             _fileInputFeature = Enable(new FileInputFeature("File to import"));
@@ -59,57 +59,55 @@ namespace SeqCli.Cli.Commands.Signal
         {
             var connection = _connectionFactory.Connect(_connection);
 
-            using (var input = _fileInputFeature.OpenInput())
+            using var input = _fileInputFeature.OpenInput();
+            var line = await input.ReadLineAsync();
+            while (line != null)
             {
-                var line = input.ReadLine();
-                while (line != null)
+                if (!string.IsNullOrWhiteSpace(line))
                 {
-                    if (!string.IsNullOrWhiteSpace(line))
-                    {
-                        // Explicitly copying fields here ensures we don't try copying links or ids; for other
-                        // entity types it'll ensure we notice places that "referential integrity" has to be
-                        // maintained.
-                        var src = _serializer.Deserialize<SignalEntity>(new JsonTextReader(new StringReader(line)));
+                    // Explicitly copying fields here ensures we don't try copying links or ids; for other
+                    // entity types it'll ensure we notice places that "referential integrity" has to be
+                    // maintained.
+                    var src = _serializer.Deserialize<SignalEntity>(new JsonTextReader(new StringReader(line)));
+                    if (src == null) continue;
 
-                        SignalEntity dest;
-                        var existing = false;
-                        if (_merge)
+                    SignalEntity dest;
+                    if (_merge)
+                    {
+                        try
                         {
-                            try
-                            {
-                                dest = await connection.Signals.FindAsync(src.Id);
-                                existing = true;
-                            }
-                            catch (Exception)
-                            {
-                                dest = await connection.Signals.TemplateAsync();
-                            }
+                            dest = await connection.Signals.FindAsync(src.Id);
                         }
-                        else
+                        catch (Exception)
                         {
                             dest = await connection.Signals.TemplateAsync();
                         }
-                        dest.Title = src.Title;
-                        dest.Description = src.Description;
-                        dest.ExplicitGroupName = src.ExplicitGroupName;
-                        dest.Grouping = src.Grouping;
-                        dest.IsProtected = src.IsProtected;
-                        dest.Filters = src.Filters;
-                        dest.Columns = src.Columns;
-                        dest.OwnerId = _entityOwner.OwnerId;
-
-                        if (_merge && existing)
-                        {
-                            await connection.Signals.UpdateAsync(dest);
-                        }
-                        else
-                        {
-                            await connection.Signals.AddAsync(dest);
-                        }
                     }
+                    else
+                    {
+                        dest = await connection.Signals.TemplateAsync();
+                    }
+                    
+                    dest.Title = src.Title;
+                    dest.Description = src.Description;
+                    dest.ExplicitGroupName = src.ExplicitGroupName;
+                    dest.Grouping = src.Grouping;
+                    dest.IsProtected = src.IsProtected;
+                    dest.Filters = src.Filters;
+                    dest.Columns = src.Columns;
+                    dest.OwnerId = _entityOwner.OwnerId;
 
-                    line = input.ReadLine();
+                    if (_merge && dest.Id != null)
+                    {
+                        await connection.Signals.UpdateAsync(dest);
+                    }
+                    else
+                    {
+                        await connection.Signals.AddAsync(dest);
+                    }
                 }
+
+                line = await input.ReadLineAsync();
             }
 
             return 0;

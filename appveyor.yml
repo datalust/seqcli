@@ -12,7 +12,7 @@ test: off
 artifacts:
 - path: artifacts/seqcli-*.zip
 - path: artifacts/seqcli-*.tar.gz
-- path: artifacts/seqcli-*.nupkg
+- path: artifacts/seqcli.*.nupkg
 
 for:
 -
@@ -32,7 +32,7 @@ for:
     api_key:
       secure: EVhhkxsbCh3YQw4IO7/d2paIjtjWiZGqs2pZl1l2Gkdz4DluOomXHA+wkPWHscj3
     skip_symbols: true
-    artifact: /seqcli-.*\.nupkg/
+    artifact: /seqcli\..*\.nupkg/
     on:
       branch: main
       
