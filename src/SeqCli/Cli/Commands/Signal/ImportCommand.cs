@@ -32,7 +32,9 @@ namespace SeqCli.Cli.Commands.Signal
         readonly FileInputFeature _fileInputFeature;
         readonly EntityOwnerFeature _entityOwner;
         readonly ConnectionFeature _connection;
-        
+
+        bool _merge;
+
         readonly JsonSerializer _serializer = JsonSerializer.Create(
             new JsonSerializerSettings{
                 Converters = { new StringEnumConverter() }
@@ -42,6 +44,12 @@ namespace SeqCli.Cli.Commands.Signal
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
+            Options.Add(
+                "merge",
+                "Allows to merge the existing signals matching by their ids",
+                _ => _merge = true);
+
             _fileInputFeature = Enable(new FileInputFeature("File to import"));
             _entityOwner = Enable(new EntityOwnerFeature("signal", "import"));
             _connection = Enable<ConnectionFeature>();
@@ -62,7 +70,25 @@ namespace SeqCli.Cli.Commands.Signal
                         // entity types it'll ensure we notice places that "referential integrity" has to be
                         // maintained.
                         var src = _serializer.Deserialize<SignalEntity>(new JsonTextReader(new StringReader(line)));
-                        var dest = await connection.Signals.TemplateAsync();
+
+                        SignalEntity dest;
+                        var existing = false;
+                        if (_merge)
+                        {
+                            try
+                            {
+                                dest = await connection.Signals.FindAsync(src.Id);
+                                existing = true;
+                            }
+                            catch (Exception)
+                            {
+                                dest = await connection.Signals.TemplateAsync();
+                            }
+                        }
+                        else
+                        {
+                            dest = await connection.Signals.TemplateAsync();
+                        }
                         dest.Title = src.Title;
                         dest.Description = src.Description;
                         dest.ExplicitGroupName = src.ExplicitGroupName;
@@ -71,7 +97,15 @@ namespace SeqCli.Cli.Commands.Signal
                         dest.Filters = src.Filters;
                         dest.Columns = src.Columns;
                         dest.OwnerId = _entityOwner.OwnerId;
-                        await connection.Signals.AddAsync(dest);
+
+                        if (_merge && existing)
+                        {
+                            await connection.Signals.UpdateAsync(dest);
+                        }
+                        else
+                        {
+                            await connection.Signals.AddAsync(dest);
+                        }
                     }
 
                     line = input.ReadLine();

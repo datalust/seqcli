@@ -443,6 +443,7 @@ seqcli signal import -i ./Exceptions.json
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+| `--merge` | Allows to merge the existing signals matching by their ids |
 
 ### `signal create`
 
