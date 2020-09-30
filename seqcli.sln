@@ -24,10 +24,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3587B633-0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "asset", "asset", "{438A0DA5-F3CF-4FCE-B43A-B6DA2981D4AE}"
 	ProjectSection(SolutionItems) = preProject
-		asset\SeqCli-Icon-128px.ico = asset\SeqCli-Icon-128px.ico
-		asset\SeqCli-Icon-128px.png = asset\SeqCli-Icon-128px.png
-		asset\SeqCli-Icon.svg = asset\SeqCli-Icon.svg
 		asset\SeqCliLicense.rtf = asset\SeqCliLicense.rtf
+		asset\SeqCli.ico = asset\SeqCli.ico
+		asset\SeqCli.png = asset\SeqCli.png
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeqCli", "src\SeqCli\SeqCli.csproj", "{EBDBEED2-A1BC-4269-B6B0-EA908CE4D687}"
