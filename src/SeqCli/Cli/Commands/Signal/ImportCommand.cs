@@ -32,7 +32,9 @@ namespace SeqCli.Cli.Commands.Signal
         readonly FileInputFeature _fileInputFeature;
         readonly EntityOwnerFeature _entityOwner;
         readonly ConnectionFeature _connection;
-        
+
+        bool _merge;
+
         readonly JsonSerializer _serializer = JsonSerializer.Create(
             new JsonSerializerSettings{
                 Converters = { new StringEnumConverter() }
@@ -42,6 +44,12 @@ namespace SeqCli.Cli.Commands.Signal
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
+            Options.Add(
+                "merge",
+                "Update signals that have ids matching those in the imported data; the default is to always create new signals",
+                _ => _merge = true);
+
             _fileInputFeature = Enable(new FileInputFeature("File to import"));
             _entityOwner = Enable(new EntityOwnerFeature("signal", "import"));
             _connection = Enable<ConnectionFeature>();
@@ -51,31 +59,55 @@ namespace SeqCli.Cli.Commands.Signal
         {
             var connection = _connectionFactory.Connect(_connection);
 
-            using (var input = _fileInputFeature.OpenInput())
+            using var input = _fileInputFeature.OpenInput();
+            var line = await input.ReadLineAsync();
+            while (line != null)
             {
-                var line = input.ReadLine();
-                while (line != null)
+                if (!string.IsNullOrWhiteSpace(line))
                 {
-                    if (!string.IsNullOrWhiteSpace(line))
+                    // Explicitly copying fields here ensures we don't try copying links or ids; for other
+                    // entity types it'll ensure we notice places that "referential integrity" has to be
+                    // maintained.
+                    var src = _serializer.Deserialize<SignalEntity>(new JsonTextReader(new StringReader(line)));
+                    if (src == null) continue;
+
+                    SignalEntity dest;
+                    if (_merge)
                     {
-                        // Explicitly copying fields here ensures we don't try copying links or ids; for other
-                        // entity types it'll ensure we notice places that "referential integrity" has to be
-                        // maintained.
-                        var src = _serializer.Deserialize<SignalEntity>(new JsonTextReader(new StringReader(line)));
-                        var dest = await connection.Signals.TemplateAsync();
-                        dest.Title = src.Title;
-                        dest.Description = src.Description;
-                        dest.ExplicitGroupName = src.ExplicitGroupName;
-                        dest.Grouping = src.Grouping;
-                        dest.IsProtected = src.IsProtected;
-                        dest.Filters = src.Filters;
-                        dest.Columns = src.Columns;
-                        dest.OwnerId = _entityOwner.OwnerId;
+                        try
+                        {
+                            dest = await connection.Signals.FindAsync(src.Id);
+                        }
+                        catch (Exception)
+                        {
+                            dest = await connection.Signals.TemplateAsync();
+                        }
+                    }
+                    else
+                    {
+                        dest = await connection.Signals.TemplateAsync();
+                    }
+                    
+                    dest.Title = src.Title;
+                    dest.Description = src.Description;
+                    dest.ExplicitGroupName = src.ExplicitGroupName;
+                    dest.Grouping = src.Grouping;
+                    dest.IsProtected = src.IsProtected;
+                    dest.Filters = src.Filters;
+                    dest.Columns = src.Columns;
+                    dest.OwnerId = _entityOwner.OwnerId;
+
+                    if (_merge && dest.Id != null)
+                    {
+                        await connection.Signals.UpdateAsync(dest);
+                    }
+                    else
+                    {
                         await connection.Signals.AddAsync(dest);
                     }
-
-                    line = input.ReadLine();
                 }
+
+                line = await input.ReadLineAsync();
             }
 
             return 0;

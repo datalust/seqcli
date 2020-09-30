@@ -25,9 +25,9 @@ function Create-ArtifactDir
 
 function Publish-Archives($version)
 {
-	$rids = @("linux-x64", "osx-x64", "win-x64")
+	$rids = @("linux-x64", "linux-musl-x64", "osx-x64", "win-x64")
 	foreach ($rid in $rids) {
-		& dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid /p:ShowLinkerSizeComparison=true
+		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid /p:ShowLinkerSizeComparison=true
 		if($LASTEXITCODE -ne 0) { exit 4 }
 
 		# Make sure the archive contains a reasonable root filename
@@ -51,6 +51,11 @@ function Publish-Archives($version)
 	}
 }
 
+function Publish-DotNetTool($version)
+{	
+	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version 
+}
+
 Push-Location $PSScriptRoot
 
 $version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
@@ -60,6 +65,7 @@ Clean-Output
 Create-ArtifactDir
 Restore-Packages
 Publish-Archives($version)
+Publish-DotNetTool($version)
 Execute-Tests
 
 Pop-Location

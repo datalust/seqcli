@@ -6,7 +6,11 @@ The [Seq](https://datalust.co/seq) client command-line app. Supports logging (`s
 
 ## Getting started
 
-Install or unzip the [release for your operating system](https://github.com/datalust/seqcli/releases).
+Install or unzip the [release for your operating system](https://github.com/datalust/seqcli/releases). Or, if you have `dotnet` installed, `seqcli` can be installed as a global tool using:
+
+```
+dotnet tool install --global seqcli
+```
 
 To set a default server URL, run:
 
@@ -443,6 +447,7 @@ seqcli signal import -i ./Exceptions.json
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+| `--merge` | Update signals that have ids matching those in the imported data; the default is to always create new signals |
 
 ### `signal create`
 

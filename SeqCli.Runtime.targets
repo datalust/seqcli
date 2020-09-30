@@ -7,7 +7,7 @@
     <IsWindows>true</IsWindows>
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(SeqCliRid)' == 'linux-x64' Or '$(SeqCliRid)' == 'linux-x64' Or ('$(SeqCliRid)' == '' And '$([MSBuild]::IsOsPlatform(`LINUX`))' == 'true')">
+  <PropertyGroup Condition=" '$(SeqCliRid)' == 'linux-x64' Or '$(SeqCliRid)' == 'linux-musl-x64' Or ('$(SeqCliRid)' == '' And '$([MSBuild]::IsOsPlatform(`LINUX`))' == 'true')">
     <IsLinux>true</IsLinux>
     <IsUnix>true</IsUnix>
     <DefineConstants>$(DefineConstants);LINUX;UNIX</DefineConstants>

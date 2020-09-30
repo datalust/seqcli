@@ -1,4 +1,4 @@
-version: 2020.2.{build}
+version: 2020.3.{build}
 skip_tags: true
 image:
 - Visual Studio 2019
@@ -12,6 +12,7 @@ test: off
 artifacts:
 - path: artifacts/seqcli-*.zip
 - path: artifacts/seqcli-*.tar.gz
+- path: artifacts/seqcli.*.nupkg
 
 for:
 -
@@ -26,10 +27,19 @@ for:
     - ps: ./Build.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
       
   deploy:
+  
+  - provider: NuGet
+    api_key:
+      secure: EVhhkxsbCh3YQw4IO7/d2paIjtjWiZGqs2pZl1l2Gkdz4DluOomXHA+wkPWHscj3
+    skip_symbols: true
+    artifact: /seqcli\..*\.nupkg/
+    on:
+      branch: main
+      
   - provider: GitHub
     auth_token:
       secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
-    artifact: /seqcli-.*\.(zip|tar\.gz)/
+    artifact: /seqcli-.*\.(nupkg|zip|tar\.gz)/
     tag: v$(appveyor_build_version)
     on:
       branch: main
