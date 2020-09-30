@@ -27,6 +27,15 @@ for:
     - ps: ./Build.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
       
   deploy:
+  
+  - provider: NuGet
+    api_key:
+      secure: EVhhkxsbCh3YQw4IO7/d2paIjtjWiZGqs2pZl1l2Gkdz4DluOomXHA+wkPWHscj3
+    skip_symbols: true
+    artifact: /seqcli-.*\.nupkg/
+    on:
+      branch: main
+      
   - provider: GitHub
     auth_token:
       secure: Bo3ypKpKFxinjR9ShkNekNvkob2iklHJU+UlYyfHtcFFIAa58SV2TkEd0xWxz633
