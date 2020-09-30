@@ -10,6 +10,8 @@
     <TreatSpecificWarningsAsErrors />
     <Platforms>x64</Platforms>
     <LangVersion>8</LangVersion>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>seqcli</ToolCommandName>
   </PropertyGroup>
   <Import Project="..\..\SeqCli.Runtime.targets" />
   <ItemGroup>

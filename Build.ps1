@@ -49,6 +49,8 @@ function Publish-Archives($version)
 			rm seqcli-$version-$rid.tar
 		}
 	}
+	
+	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version 
 }
 
 Push-Location $PSScriptRoot
