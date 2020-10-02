@@ -40,7 +40,7 @@ namespace SeqCli.Cli.Commands
         readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
         readonly ConnectionFeature _connection;
         string _filter, _pattern = DefaultPattern, _level, _message;
-        bool _json;
+        bool _json, _truncate;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
@@ -49,6 +49,10 @@ namespace SeqCli.Cli.Commands
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 
+            Options.Add("truncate",
+                "Truncate logs from server before importing",
+                v => _truncate = false);
+            
             Options.Add("x=|extract=",
                 "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
                 v => _pattern = string.IsNullOrWhiteSpace(v) ? DefaultPattern : v.Trim());
@@ -95,6 +99,11 @@ namespace SeqCli.Cli.Commands
                 }
 
                 var connection = _connectionFactory.Connect(_connection);
+
+                if (_truncate)
+                {
+                    await connection.Events.DeleteInSignalAsync();
+                }
 
                 foreach (var input in _fileInputFeature.OpenInputs())
                 {

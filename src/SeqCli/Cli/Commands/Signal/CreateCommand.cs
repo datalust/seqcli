@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Shared;
@@ -33,6 +34,7 @@ namespace SeqCli.Cli.Commands.Signal
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
+        readonly List<string> _columns = new List<string>();
         string _title, _description, _filter, _group;
         bool _isProtected, _noGrouping;
 
@@ -69,6 +71,15 @@ namespace SeqCli.Cli.Commands.Signal
                 "protected",
                 "Specify that the signal is editable only by administrators",
                 _ => _isProtected = true);
+            
+            Options.Add(
+                "c=|column=",
+                "Specify columns to display, e.g. `-c Customer -c Environment`",
+                (n) =>
+                {
+                    if(!string.IsNullOrWhiteSpace(n))
+                        _columns.Add(n.Trim());
+                });
 
             _connection = Enable<ConnectionFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
@@ -109,6 +120,11 @@ namespace SeqCli.Cli.Commands.Signal
                         FilterNonStrict = _filter
                     }
                 }.ToList();
+            }
+
+            if (_columns.Any())
+            {
+                signal.Columns = _columns.Select(c => new SignalColumnPart() {Expression = c}).ToList();
             }
 
             signal = await connection.Signals.AddAsync(signal);
