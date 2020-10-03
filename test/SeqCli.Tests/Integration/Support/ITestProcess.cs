@@ -1,4 +1,4 @@
-﻿namespace SeqCli.EndToEnd.Support
+﻿namespace SeqCli.Tests.Integration.Support
 {
     public interface ITestProcess
     {

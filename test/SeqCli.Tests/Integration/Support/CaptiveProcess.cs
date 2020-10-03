@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-namespace SeqCli.EndToEnd.Support
+namespace SeqCli.Tests.Integration.Support
 {
     public sealed class CaptiveProcess : ITestProcess, IDisposable
     {
@@ -99,11 +99,11 @@ namespace SeqCli.EndToEnd.Support
 
             if (_captureOutput)
             {
-                if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(1)))
-                    throw new IOException("STDOUT did not complete in the fixed 1 second window.");
+                if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(10)))
+                    throw new IOException("STDOUT did not complete in the fixed 10 second window.");
                 
-                if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(1)))
-                    throw new IOException("STDERR did not complete in the fixed 1 second window.");
+                if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(10)))
+                    throw new IOException("STDERR did not complete in the fixed 10 second window.");
             }
 
             return _process.ExitCode;

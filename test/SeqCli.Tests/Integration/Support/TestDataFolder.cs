@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using Serilog;
-using Serilog.Core;
 
-namespace SeqCli.EndToEnd.Support
+namespace SeqCli.Tests.Integration.Support
 {
     sealed class TestDataFolder : IDisposable
     {

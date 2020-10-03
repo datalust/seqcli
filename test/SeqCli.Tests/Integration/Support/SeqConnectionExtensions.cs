@@ -3,7 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Seq.Api;
 
-namespace SeqCli.EndToEnd.Support
+namespace SeqCli.Tests.Integration.Support
 {
     static class SeqConnectionExtensions
     {

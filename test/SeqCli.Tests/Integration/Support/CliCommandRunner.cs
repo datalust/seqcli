@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SeqCli.EndToEnd.Support
+namespace SeqCli.Tests.Integration.Support
 {
     public class CliCommandRunner
     {
