@@ -19,7 +19,7 @@ namespace SeqCli.Tests.Integration.Support
             var testConfiguration = new TestConfiguration();
             _testDataFolder = new TestDataFolder();
             _seqServerProcess = testConfiguration.SpawnServerProcess(_testDataFolder.Path);
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            await Task.Delay(TimeSpan.FromSeconds(2));
             _connection = new SeqConnection(testConfiguration.ServerListenUrl);
             await _connection.EnsureConnected();
             
