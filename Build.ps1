@@ -16,7 +16,7 @@ function Execute-Tests
 {
 	docker pull datalust/seq:latest
 	$env:ENDTOEND_USE_DOCKER_SEQ="Y"
-    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
+    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release -v n /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { exit 3 }
 }
 
