@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$framework = 'netcoreapp3.1'
+$framework = 'net5.0'
 
 function Clean-Output
 {

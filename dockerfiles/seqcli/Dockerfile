@@ -17,8 +17,8 @@ RUN apt-get update \
 && rm -rf /var/lib/apt/lists/*
 
 COPY dockerfiles/seqcli/run.sh /run.sh
-COPY src/SeqCli/bin/Release/netcoreapp3.1/linux-x64/publish /bin/seqcli
+COPY src/SeqCli/bin/Release/net5.0/linux-x64/publish /bin/seqcli
 
 ENTRYPOINT ["/run.sh"]
 
-LABEL Description="Seq" Vendor="Datalust Pty Ltd"
+LABEL Description="seqcli" Vendor="Datalust Pty Ltd"
