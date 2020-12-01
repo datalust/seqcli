@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Seq.Apps;
@@ -67,13 +68,14 @@ namespace SeqCli.Apps.Definitions
                     p => p.pi.Name,
                     p => new AppSettingDefinition
                     {
-                        DisplayName = p.attr.DisplayName,
+                        DisplayName = p.attr!.DisplayName,
                         IsOptional = p.attr.IsOptional,
                         HelpText = p.attr.HelpText,
                         InputType = p.attr.InputType == SettingInputType.Unspecified ?
                             GetSettingType(p.pi.PropertyType) :
                             (AppSettingType)Enum.Parse(typeof(AppSettingType), p.attr.InputType.ToString()),
-                        IsInvocationParameter = p.attr.IsInvocationParameter
+                        IsInvocationParameter = p.attr.IsInvocationParameter,
+                        AllowedValues = TryGetAllowedValues(p.pi.PropertyType)
                     });
         }
 
@@ -95,7 +97,7 @@ namespace SeqCli.Apps.Definitions
             typeof(bool), typeof(bool?)
         };
 
-        static AppSettingType GetSettingType(Type type)
+        internal static AppSettingType GetSettingType(Type type)
         {
             if (IntegerTypes.Contains(type))
                 return AppSettingType.Integer;
@@ -107,6 +109,21 @@ namespace SeqCli.Apps.Definitions
                 return AppSettingType.Checkbox;
 
             return AppSettingType.Text;
+        }
+
+        internal static AppSettingValue[] TryGetAllowedValues(Type type)
+        {
+            if (!type.IsEnum)
+                return null;
+
+            // Preserve declaration order
+            var values =
+                from name in Enum.GetNames(type)
+                let member = type.GetField(name)
+                let description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description
+                select new AppSettingValue(name, description);
+
+            return values.ToArray();
         }
     }
 }
