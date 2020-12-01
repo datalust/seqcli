@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Datalust Pty Ltd
+﻿// Copyright Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -27,7 +25,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
 
-// ReSharper disable SuspiciousTypeConversion.Global
+// ReSharper disable IdentifierTypo, StringLiteralTypo, SuspiciousTypeConversion.Global
 
 namespace SeqCli.Apps.Hosting
 {
@@ -58,30 +56,9 @@ namespace SeqCli.Apps.Hosting
             _loader = new AppLoader(packageBinaryPath);
 
             if (!_loader.TryLoadSeqAppType(seqAppTypeName, out var seqAppType))
-                throw new ArgumentException($"The main reactor type `{seqAppTypeName}` could not be loaded");
+                throw new ArgumentException($"The Seq app type `{seqAppTypeName}` could not be loaded.");
 
-            _seqApp = (SeqApp)Activator.CreateInstance(seqAppType);
-
-            var appSettings = seqAppType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(pi => new { pi, attr = pi.GetCustomAttribute<SeqAppSettingAttribute>() })
-                .Where(p => p.attr != null);
-
-            foreach (var setting in appSettings)
-            {
-                if (App.Settings.TryGetValue(setting.pi.Name, out var value) &&
-                    !string.IsNullOrEmpty(value))
-                {
-                    var converted = Convert.ChangeType(value,
-                        Nullable.GetUnderlyingType(setting.pi.PropertyType) ?? setting.pi.PropertyType);
-                    setting.pi.SetValue(_seqApp, converted);
-                }
-                else if (!setting.attr.IsOptional)
-                {
-                    throw new SeqAppException(
-                        $"The required setting `{setting.pi.Name}` has not been provided to {App.Title}.");
-                }
-            }
-
+            _seqApp = AppActivator.CreateInstance(seqAppType, App.Title, App.Settings);
             _seqApp.Attach(this);
         }
 
@@ -113,8 +90,7 @@ namespace SeqCli.Apps.Hosting
                 catch (Exception ex)
                 {
                     ReadSerilogEvent(clef, out var eventId, out _);
-                    Logger.Error(ex, "The event {EventId} could not be sent to {AppInstanceTitle}.", eventId,
-                        App.Title);
+                    Logger.Error(ex, "The event {EventId} could not be sent to {AppInstanceTitle}.", eventId, App.Title);
                 }
             }
             else

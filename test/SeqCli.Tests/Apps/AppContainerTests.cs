@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using Seq.Apps;
-using SeqCli.Apps;
 using SeqCli.Apps.Hosting;
 using SeqCli.Tests.Support;
 using Serilog.Core;
@@ -14,7 +13,7 @@ namespace SeqCli.Tests.Apps
         [Fact]
         public void CanLoadOutputApp()
         {
-            var appBinaries = "Apps/FirstOfTypeBinaries";
+            const string appBinaries = "Apps/FirstOfTypeBinaries";
             Assert.True(Directory.Exists(appBinaries));
 
             var appContainer = new AppContainer(Logger.None, appBinaries,
@@ -27,7 +26,7 @@ namespace SeqCli.Tests.Apps
         [Fact]
         public void CanLoadInputApp()
         {
-            var appBinaries = "Apps/HealthCheckBinaries";
+            const string appBinaries = "Apps/HealthCheckBinaries";
             Assert.True(Directory.Exists(appBinaries));
 
             var settings = new Dictionary<string, string> { ["TargetUrl"] = Some.UriString() };

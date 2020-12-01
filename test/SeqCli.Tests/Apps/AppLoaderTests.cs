@@ -1,22 +1,22 @@
 ﻿using System.IO;
-using Newtonsoft.Json;
+using SeqCli.Apps;
 using SeqCli.Apps.Definitions;
 using Xunit;
 
 namespace SeqCli.Tests.Apps
 {
-    public class PackageInterrogatorTests
+    public class AppLoaderTests
     {
         [Fact]
         public void FindsAppConfiguration()
         {
-            var appBinaries = "Apps/FirstOfTypeBinaries";
+            const string appBinaries = "Apps/FirstOfTypeBinaries";
             Assert.True(Directory.Exists(appBinaries));
 
-            var configuration = PackageInterrogator.FindAppConfiguration(appBinaries, null, false);
-            Assert.NotNull(configuration);
+            using var loader = new AppLoader(appBinaries);
+            Assert.True(loader.TryLoadSeqAppType(null, out var seqAppType));
 
-            var definition = JsonConvert.DeserializeObject<AppDefinition>(configuration);
+            var definition = AppMetadataReader.ReadFromSeqAppType(seqAppType);
             
             Assert.Equal("First of Type", definition.Name);
             
