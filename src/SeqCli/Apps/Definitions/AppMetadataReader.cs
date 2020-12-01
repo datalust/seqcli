@@ -81,34 +81,34 @@ namespace SeqCli.Apps.Definitions
 
         static readonly HashSet<Type> IntegerTypes = new HashSet<Type>
         {
-            typeof(short), typeof(short?), typeof(ushort), typeof(ushort?),
-            typeof(int), typeof(int?), typeof(uint), typeof(uint?),
-            typeof(long), typeof(long?), typeof(ulong), typeof(ulong?)
+            typeof(short), typeof(ushort), typeof(int), typeof(uint),
+            typeof(long), typeof(ulong)
         };
 
         static readonly HashSet<Type> DecimalTypes = new HashSet<Type>
         {
-            typeof(float), typeof(double), typeof(decimal),
-            typeof(float?), typeof(double?), typeof(decimal?)
+            typeof(float), typeof(double), typeof(decimal)
         };
 
         static readonly HashSet<Type> BooleanTypes = new HashSet<Type>
         {
-            typeof(bool), typeof(bool?)
+            typeof(bool)
         };
 
         internal static AppSettingType GetSettingType(Type type)
         {
-            if (IntegerTypes.Contains(type))
+            var targetType = Nullable.GetUnderlyingType(type) ?? type;
+            
+            if (IntegerTypes.Contains(targetType))
                 return AppSettingType.Integer;
 
-            if (DecimalTypes.Contains(type))
+            if (DecimalTypes.Contains(targetType))
                 return AppSettingType.Decimal;
 
-            if (BooleanTypes.Contains(type))
+            if (BooleanTypes.Contains(targetType))
                 return AppSettingType.Checkbox;
 
-            if (type.IsEnum)
+            if (targetType.IsEnum)
                 return AppSettingType.Select;
 
             return AppSettingType.Text;
@@ -116,13 +116,15 @@ namespace SeqCli.Apps.Definitions
 
         internal static AppSettingValue[] TryGetAllowedValues(Type type)
         {
-            if (!type.IsEnum)
+            var targetType = Nullable.GetUnderlyingType(type) ?? type;
+            
+            if (!targetType.IsEnum)
                 return null;
 
             // Preserve declaration order
             var values =
-                from name in Enum.GetNames(type)
-                let member = type.GetField(name)
+                from name in Enum.GetNames(targetType)
+                let member = targetType.GetField(name)
                 let description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description
                 select new AppSettingValue(name, description);
 
