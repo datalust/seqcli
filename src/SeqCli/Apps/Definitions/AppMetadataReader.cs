@@ -126,7 +126,7 @@ namespace SeqCli.Apps.Definitions
                 from name in Enum.GetNames(targetType)
                 let member = targetType.GetField(name)
                 let description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description
-                select new AppSettingValue(name, description);
+                select new AppSettingValue {Value = name, Description = description};
 
             return values.ToArray();
         }

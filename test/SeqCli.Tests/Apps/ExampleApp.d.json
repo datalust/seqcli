@@ -28,16 +28,13 @@
       "isInvocationParameter": false,
       "allowedValues": [
         {
-          "value": "Cat",
-          "description": null
+          "value": "Cat"
         },
         {
-          "value": "Dog",
-          "description": null
+          "value": "Dog"
         },
         {
-          "value": "Goldfish",
-          "description": null
+          "value": "Goldfish"
         },
         {
           "value": "ExoticSpecies",

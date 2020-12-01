@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
+
 namespace SeqCli.Apps.Definitions
 {
     class AppSettingValue
     {
-        public object Value { get; }
-        public string Description { get; }
-
-        public AppSettingValue(object value, string description)
-        {
-            Value = value;
-            Description = description;
-        }
-    }
+        public object Value { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Description { get; set; }
+   }
 }
