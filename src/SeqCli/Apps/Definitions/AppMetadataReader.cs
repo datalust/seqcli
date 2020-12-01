@@ -108,6 +108,9 @@ namespace SeqCli.Apps.Definitions
             if (BooleanTypes.Contains(type))
                 return AppSettingType.Checkbox;
 
+            if (type.IsEnum)
+                return AppSettingType.Select;
+
             return AppSettingType.Text;
         }
 

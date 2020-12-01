@@ -17,10 +17,10 @@ namespace SeqCli.Tests.Apps
         }
         
         [Fact]
-        public void TheSettingTypeForAnEnumIsText()
+        public void TheDefaultSettingTypeForAnEnumIsSelect()
         {
             var settingType = AppMetadataReader.GetSettingType(typeof(Test));
-            Assert.Equal(AppSettingType.Text, settingType);
+            Assert.Equal(AppSettingType.Select, settingType);
         }
 
         [Fact]
