@@ -18,7 +18,7 @@ namespace SeqCli.Apps.Definitions
 {
     class AppSettingValue
     {
-        public object Value { get; set; }
+        public string Value { get; set; }
         
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Description { get; set; }
