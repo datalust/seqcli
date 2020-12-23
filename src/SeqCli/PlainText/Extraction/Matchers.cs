@@ -87,6 +87,19 @@ namespace SeqCli.PlainText.Extraction
             Span.Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d+)?( [+-]\\d{2}:\\d{2})?")
                 .Select(span => (object)DateTimeOffset.Parse(span.ToStringValue(), CultureInfo.InvariantCulture));
 
+        [Matcher("unixdt")]
+        // "1608189125220" or "1608189125220.1239"
+        public static TextParser<object> UnixTimestamp { get; } =
+            Numerics.Decimal
+                .Select(span => (object)DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(1000 *
+                    Math.Round(Convert.ToDecimal(span.ToStringValue(), CultureInfo.InvariantCulture), 3))));
+
+        [Matcher("unixmsdt")]
+        // "1608189125220"
+        public static TextParser<object> UnixMsTimestamp { get; } =
+          Numerics.Integer
+              .Select(span => (object)DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(span.ToStringValue())));
+
         [Matcher("timestamp")]
         public static TextParser<object> Timestamp { get; } =
             Iso8601DateTime.Try()     

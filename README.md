@@ -629,6 +629,8 @@ There are three kinds of matchers:
 | `timestamp` | A datetime in any recognized format | |
 | `token` | Any sequence of non-whitespace characters | `1+x$3` |
 | `trailingident` | Multiline content with indented trailing lines | |
+| `unixdt` | A datetime in Unix time format (seconds since epoch) | `1608694199` |
+| `unixmsdt` | A datetime in Unix time format (milliseconds since epoch) | `1608707704559` |
 | `w3cdt` | A W3C log format date/time pair | `2019-04-02 05:18:01` |
 
 ### Processing
