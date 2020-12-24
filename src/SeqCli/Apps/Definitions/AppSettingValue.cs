@@ -1,4 +1,4 @@
-// Copyright 2020 Datalust Pty Ltd and Contributors
+﻿// Copyright 2020 Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,16 +16,11 @@ using Newtonsoft.Json;
 
 namespace SeqCli.Apps.Definitions
 {
-    // ReSharper disable all
-    class AppSettingDefinition
+    class AppSettingValue
     {
-        public string DisplayName { get; set; }
-        public string HelpText { get; set; }
-        public bool IsOptional { get; set; }
-        public AppSettingType InputType { get; set; }
-        public bool IsInvocationParameter { get; set; }
+        public string Value { get; set; }
         
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public AppSettingValue[] AllowedValues { get; set; }
-    }
+        public string Description { get; set; }
+   }
 }

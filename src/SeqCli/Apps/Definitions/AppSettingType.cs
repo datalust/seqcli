@@ -23,6 +23,10 @@ namespace SeqCli.Apps.Definitions
         Integer,
         Decimal,
         Password,
+        
+        // Not mirrored in Seq.Apps; currently, only available to C# apps when the input type is left as
+        // Unspecified, and the corresponding property is an enum type.
+        Select,
 
         // Unused; required for (very early) legacy app support.
         Number = 1000

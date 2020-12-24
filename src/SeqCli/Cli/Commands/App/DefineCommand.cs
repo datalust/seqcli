@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using SeqCli.Apps;
 using SeqCli.Apps.Definitions;
 using SeqCli.Config;
 using SeqCli.Util;
@@ -49,15 +50,14 @@ namespace SeqCli.Cli.Commands.App
 
         protected override Task<int> Run()
         {
-            var configuration = PackageInterrogator.FindAppConfiguration(_dir, _type, _indented);
-
-            if (configuration == null)
+            using var appLoader = new AppLoader(_dir);
+            if (!appLoader.TryLoadSeqAppType(_type, out var seqAppType))
             {
                 Console.Error.WriteLine("No type marked with `[SeqApp]` could be found.");
                 return Task.FromResult(1);
             }
 
-            Console.WriteLine(configuration);
+            AppDefinitionFormatter.FormatAppDefinition(seqAppType, _indented, Console.Out);
             return Task.FromResult(0);
         }
     }
