@@ -34,27 +34,43 @@ namespace SeqCli.Tests.PlainText
         }
 
         [Fact]
-        public void UnixDtMatcherProducesUtcTimestamps()
+        public void UnixDtMatcherAssumesSecondsProducesUtcTimestamps()
         {
-            var timestamp = "1608694199";
+            var timestamp = "999999999";
             var result = Matchers.UnixTimestamp.Parse(timestamp);
-            Assert.Equal(DateTimeOffset.Parse("2020-12-23T03:29:59.0000000+00:00"), result);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.0000000+00:00"), result);
         }
 
         [Fact]
-        public void UnixDtWithFractionalSecondsMatcherProducesUtcTimestamps()
+        public void UnixDtMatcherAssumesFractionalSecondsProducesUtcTimestamps()
         {
-            var timestamp = "1608694199.019";
+            var timestamp = "999999999.999";
             var result = Matchers.UnixTimestamp.Parse(timestamp);
-            Assert.Equal(DateTimeOffset.Parse("2020-12-23T03:29:59.0190000+00:00"), result);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.9990000+00:00"), result);
         }
 
         [Fact]
-        public void UnixMsDtMatcherProducesUtcTimestamps()
+        public void UnixDtMatcherAssumesMilliProducesUtcTimestamps()
         {
-            var timestamp = "1608707704559";
+            var timestamp = "999999999999";
             var result = Matchers.UnixTimestamp.Parse(timestamp);
-            Assert.Equal(DateTimeOffset.Parse("2020-12-23T07:15:04.5590000+00:00"), result);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.9990000+00:00"), result);
+        }
+
+        [Fact]
+        public void UnixDtMatcherAssumesMicroProducesUtcTimestamps()
+        {
+            var timestamp = "999999999999999";
+            var result = Matchers.UnixTimestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.9990000+00:00"), result);
+        }
+
+        [Fact]
+        public void UnixDtMatcherAssumesNanoProducesUtcTimestamps()
+        {
+            var timestamp = "999999999999999999";
+            var result = Matchers.UnixTimestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:40.0000000+00:00"), result); 
         }
 
         [Fact]
