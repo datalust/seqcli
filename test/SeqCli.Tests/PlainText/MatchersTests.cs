@@ -44,16 +44,16 @@ namespace SeqCli.Tests.PlainText
         [Fact]
         public void UnixDtWithFractionalSecondsMatcherProducesUtcTimestamps()
         {
-            var timestamp = "1608694199.0199";
+            var timestamp = "1608694199.019";
             var result = Matchers.UnixTimestamp.Parse(timestamp);
-            Assert.Equal(DateTimeOffset.Parse("2020-12-23T03:29:59.0200000+00:00"), result);
+            Assert.Equal(DateTimeOffset.Parse("2020-12-23T03:29:59.0190000+00:00"), result);
         }
 
         [Fact]
         public void UnixMsDtMatcherProducesUtcTimestamps()
         {
             var timestamp = "1608707704559";
-            var result = Matchers.UnixMsTimestamp.Parse(timestamp);
+            var result = Matchers.UnixTimestamp.Parse(timestamp);
             Assert.Equal(DateTimeOffset.Parse("2020-12-23T07:15:04.5590000+00:00"), result);
         }
 

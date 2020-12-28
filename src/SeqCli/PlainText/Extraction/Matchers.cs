@@ -18,32 +18,32 @@ namespace SeqCli.PlainText.Extraction
         public static TextParser<object> Identifier { get; } =
             Superpower.Parsers.Identifier.CStyle
                 .Cast<TextSpan, object>();
-        
+
         [Matcher("nat")]
         public static TextParser<object> Natural { get; } =
             Numerics.NaturalUInt64
                 .Cast<ulong, object>();
-        
+
         [Matcher("int")]
         public static TextParser<object> Integer { get; } =
             Numerics.IntegerInt64
                 .Cast<long, object>();
-        
+
         [Matcher("dec")]
         public static TextParser<object> Decimal { get; } =
             Numerics.Decimal
                 .Cast<TextSpan, object>();
-        
+
         [Matcher("alpha")]
         public static TextParser<object> Alphabetical { get; } =
             Span.WithAll(char.IsLetter)
                 .Cast<TextSpan, object>();
-        
+
         [Matcher("alphanum")]
         public static TextParser<object> Alphanumeric { get; } =
             Span.WithAll(char.IsLetterOrDigit)
                 .Cast<TextSpan, object>();
-        
+
         [Matcher("token")]
         public static TextParser<object> Token { get; } =
             SpanEx.NonWhiteSpace.Cast<TextSpan, object>();
@@ -68,7 +68,7 @@ namespace SeqCli.PlainText.Extraction
                         DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeLocal);
                     if (dt > DateTime.Now.AddDays(7)) // Tailing a late December log in early January :-)
                         dt = dt.AddYears(-1);
-                    return (object) dt;
+                    return (object)dt;
                 });
 
         [Matcher("w3cdt")]
@@ -90,15 +90,28 @@ namespace SeqCli.PlainText.Extraction
         [Matcher("unixdt")]
         // "1608189125220" or "1608189125220.1239"
         public static TextParser<object> UnixTimestamp { get; } =
-            Numerics.Decimal
-                .Select(span => (object)DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(1000 *
-                    Math.Round(Convert.ToDecimal(span.ToStringValue(), CultureInfo.InvariantCulture), 3))));
+            Numerics.DecimalDouble.Select(span =>
+                {
+                    long ms;
+                    if ((span >= 1E16) || (span <= -1E16))
+                    {
+                        ms = (long)(span * 0.000001); // nanoseconds
+                    }
+                    else if ((span >= 1E14) || (span <= -1E14))
+                    {
+                        ms = (long)(span * .001); //  microseconds
+                    }
+                    else if ((span >= 1E11) || (span <= -3E10))
+                    {
+                        ms = (long)(span); // milliseconds
+                    }
+                    else
+                    {
+                        ms = (long)(span * 1000); // seconds
+                    }
 
-        [Matcher("unixmsdt")]
-        // "1608189125220"
-        public static TextParser<object> UnixMsTimestamp { get; } =
-          Numerics.Integer
-              .Select(span => (object)DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(span.ToStringValue())));
+                    return (object)(DateTimeOffset.FromUnixTimeMilliseconds(ms));
+                });
 
         [Matcher("timestamp")]
         public static TextParser<object> Timestamp { get; } =
