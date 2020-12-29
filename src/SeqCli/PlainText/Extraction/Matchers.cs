@@ -18,32 +18,32 @@ namespace SeqCli.PlainText.Extraction
         public static TextParser<object> Identifier { get; } =
             Superpower.Parsers.Identifier.CStyle
                 .Cast<TextSpan, object>();
-
+        
         [Matcher("nat")]
         public static TextParser<object> Natural { get; } =
             Numerics.NaturalUInt64
                 .Cast<ulong, object>();
-
+        
         [Matcher("int")]
         public static TextParser<object> Integer { get; } =
             Numerics.IntegerInt64
                 .Cast<long, object>();
-
+        
         [Matcher("dec")]
         public static TextParser<object> Decimal { get; } =
             Numerics.Decimal
                 .Cast<TextSpan, object>();
-
+        
         [Matcher("alpha")]
         public static TextParser<object> Alphabetical { get; } =
             Span.WithAll(char.IsLetter)
                 .Cast<TextSpan, object>();
-
+        
         [Matcher("alphanum")]
         public static TextParser<object> Alphanumeric { get; } =
             Span.WithAll(char.IsLetterOrDigit)
                 .Cast<TextSpan, object>();
-
+        
         [Matcher("token")]
         public static TextParser<object> Token { get; } =
             SpanEx.NonWhiteSpace.Cast<TextSpan, object>();
@@ -68,7 +68,7 @@ namespace SeqCli.PlainText.Extraction
                         DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeLocal);
                     if (dt > DateTime.Now.AddDays(7)) // Tailing a late December log in early January :-)
                         dt = dt.AddYears(-1);
-                    return (object)dt;
+                    return (object) dt;
                 });
 
         [Matcher("w3cdt")]
