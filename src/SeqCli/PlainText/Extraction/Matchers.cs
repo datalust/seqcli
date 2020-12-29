@@ -88,7 +88,6 @@ namespace SeqCli.PlainText.Extraction
                 .Select(span => (object)DateTimeOffset.Parse(span.ToStringValue(), CultureInfo.InvariantCulture));
 
         [Matcher("unixdt")]
-        // "1608189125220" or "1608189125220.1239"
         public static TextParser<object> UnixTimestamp { get; } =
             Numerics.DecimalDouble.Select(span =>
                 {
