@@ -70,7 +70,7 @@ namespace SeqCli.Tests.PlainText
         {
             var timestamp = "999999999999999999";
             var result = Matchers.UnixTimestamp.Parse(timestamp);
-            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:40.0000000+00:00"), result); 
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.9990000+00:00"), result); 
         }
 
         [Fact]

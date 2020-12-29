@@ -89,18 +89,18 @@ namespace SeqCli.PlainText.Extraction
 
         [Matcher("unixdt")]
         public static TextParser<object> UnixTimestamp { get; } =
-            Numerics.DecimalDouble.Select(span =>
+            Numerics.DecimalDecimal.Select(span =>
                 {
                     long ms;
-                    if ((span >= 1E16) || (span <= -1E16))
+                    if ((span >= 1E16m) || (span <= -1E16m))
                     {
-                        ms = (long)(span * 0.000001); // nanoseconds
+                        ms = (long)(span * 0.000001m); // nanoseconds
                     }
-                    else if ((span >= 1E14) || (span <= -1E14))
+                    else if ((span >= 1E14m) || (span <= -1E14m))
                     {
-                        ms = (long)(span * .001); //  microseconds
+                        ms = (long)(span * .001m); //  microseconds
                     }
-                    else if ((span >= 1E11) || (span <= -3E10))
+                    else if ((span >= 1E11m) || (span <= -3E10m))
                     {
                         ms = (long)(span); // milliseconds
                     }
