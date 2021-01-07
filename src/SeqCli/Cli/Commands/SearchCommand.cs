@@ -53,7 +53,7 @@ namespace SeqCli.Cli.Commands
             Options.Add(
                 "c=|count=",
                 $"The maximum number of events to retrieve; the default is {_count}",
-                v => _count = int.Parse(v));
+                v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
             _range = Enable<DateRangeFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));

@@ -53,8 +53,8 @@ namespace SeqCli.Syntax
             if (duration.EndsWith("ms"))
                 return TimeSpan.FromMilliseconds(int.Parse(duration.Substring(0, duration.Length - 2)));
 
-            var value = int.Parse(duration.Substring(0, duration.Length - 1));
-            switch (duration[duration.Length - 1])
+            var value = int.Parse(duration.Substring(0, duration.Length - 1), CultureInfo.InvariantCulture);
+            switch (duration[^1])
             {
                 case 'd':
                     return TimeSpan.FromDays(value);

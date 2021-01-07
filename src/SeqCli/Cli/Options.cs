@@ -131,6 +131,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -454,7 +455,7 @@ namespace SeqCli.Cli
 			T t = default (T);
 			try {
 				if (value != null)
-					t = (T) Convert.ChangeType(value, targetType);
+					t = (T) Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
 			}
 			catch (Exception e) {
 				throw new OptionException (

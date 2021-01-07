@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Seq.Apps;
@@ -64,7 +65,7 @@ namespace SeqCli.Apps.Hosting
                 return Enum.Parse(targetType, value);
             }
             
-            return Convert.ChangeType(value, targetType);
+            return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
         }
     }
 }

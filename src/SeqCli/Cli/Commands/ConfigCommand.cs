@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -120,7 +121,7 @@ namespace SeqCli.Cli.Commands
             if (!second.SetMethod.IsPublic)
                 throw new ArgumentException("The value is not writeable.");
 
-            var targetValue = Convert.ChangeType(value, second.PropertyType);
+            var targetValue = Convert.ChangeType(value, second.PropertyType, CultureInfo.InvariantCulture);
             second.SetValue(v, targetValue);
         }
 
