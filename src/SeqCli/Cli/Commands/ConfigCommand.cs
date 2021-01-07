@@ -1,4 +1,4 @@
-﻿// Copyright 2018-2019 Datalust Pty Ltd
+﻿// Copyright 2018-2021 Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ namespace SeqCli.Cli.Commands
             if (pr.Key == null)
                 throw new ArgumentException($"Option {key} not found.");
 
-            Console.WriteLine(pr.Value);
+            Console.WriteLine(Format(pr.Value));
         }
 
         static void Set(SeqCliConfig config, string key, string value)
@@ -101,28 +101,28 @@ namespace SeqCli.Cli.Commands
                 throw new ArgumentException("The format of the key is incorrect; run the command without any arguments to view all keys.");
 
             var first = config.GetType().GetTypeInfo().DeclaredProperties
-                .Where(p => p.CanRead && p.GetMethod.IsPublic && !p.GetMethod.IsStatic)
+                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic)
                 .SingleOrDefault(p => Camelize(p.Name) == steps[0]);
 
             if (first == null)
                 throw new ArgumentException("The key could not be found; run the command without any arguments to view all keys.");
 
-            var v = first.GetValue(config);
-            if (v is Dictionary<string, SeqCliConnectionConfig>)
+            if (first.PropertyType == typeof(Dictionary<string, SeqCliConnectionConfig>))
                 throw new NotSupportedException("Use `seqcli profile create` to configure connection profiles.");
 
-            var second = v.GetType().GetTypeInfo().DeclaredProperties
-                .Where(p => p.CanRead && p.GetMethod.IsPublic && !p.GetMethod.IsStatic)
+            var second = first.PropertyType.GetTypeInfo().DeclaredProperties
+                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic)
                 .SingleOrDefault(p => Camelize(p.Name) == steps[1]);
 
             if (second == null)
                 throw new ArgumentException("The key could not be found; run the command without any arguments to view all keys.");
             
-            if (!second.SetMethod.IsPublic)
+            if (!second.CanWrite || !second.SetMethod!.IsPublic)
                 throw new ArgumentException("The value is not writeable.");
 
             var targetValue = Convert.ChangeType(value, second.PropertyType, CultureInfo.InvariantCulture);
-            second.SetValue(v, targetValue);
+            var configItem = first.GetValue(config);
+            second.SetValue(configItem, targetValue);
         }
 
         static void Clear(SeqCliConfig config, string key)
@@ -135,14 +135,14 @@ namespace SeqCli.Cli.Commands
             foreach (var (key, value) in ReadPairs(config))
             {
                 Console.WriteLine($"{key}:");
-                Console.WriteLine($"  {value}");
+                Console.WriteLine($"  {Format(value)}");
             }
         }
 
         static IEnumerable<KeyValuePair<string, object>> ReadPairs(object config)
         {
             foreach (var property in config.GetType().GetTypeInfo().DeclaredProperties
-                .Where(p => p.CanRead && p.GetMethod.IsPublic && !p.GetMethod.IsStatic && !p.Name.StartsWith("Encoded"))
+                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && !p.Name.StartsWith("Encoded"))
                 .OrderBy(p => p.Name))
             {
                 var propertyName = Camelize(property.Name);
@@ -180,6 +180,13 @@ namespace SeqCli.Cli.Commands
             if (s.Length < 2)
                 throw new NotSupportedException("No camel-case support for short names");
             return char.ToLowerInvariant(s[0]) + s.Substring(1);
+        }
+
+        static string Format(object value)
+        {
+            return value is IFormattable formattable
+                ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                : value?.ToString() ?? "";
         }
     }
 }
