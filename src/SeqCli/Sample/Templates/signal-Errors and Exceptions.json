@@ -1,0 +1,16 @@
+﻿{
+  "Title": "Errors and Exceptions",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@Exception is not null or @Level in ['Error', 'Fatal', 'Critical']",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "Grouping": "Inferred",
+  "ExplicitGroupName": null,
+  "OwnerId": null
+}

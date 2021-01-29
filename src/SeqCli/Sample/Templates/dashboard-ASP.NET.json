@@ -1,0 +1,196 @@
+﻿
+{
+  "OwnerId": null,
+  "Title": "ASP.NET",
+  "IsProtected": true,
+  "Charts": [
+    {
+      "Title": "Requests by Status Code",
+      "SignalExpression": null,
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "count(*)",
+              "Label": "count"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": {
+            "Kind": "Signal",
+            "SignalId": ref("signal-HTTP Requests.json")
+          },
+          "GroupBy": [
+            "StatusCode"
+          ],
+          "DisplayStyle": {
+            "Type": "Line",
+            "LineFillToZeroY": true,
+            "LineShowMarkers": false,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 12,
+        "HeightRows": 2
+      }
+    },
+    {
+      "Title": "99th Percentile Response Time (ms)",
+      "SignalExpression": null,
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "Round(percentile(Elapsed, 99), 3)",
+              "Label": "p99th"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": {
+            "Kind": "Signal",
+            "SignalId": ref("signal-HTTP Requests.json")
+          },
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Value",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": true,
+            "SuppressLegend": false,
+            "Palette": "Blues"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 4,
+        "HeightRows": 1
+      }
+    },
+    {
+      "Title": "Mean Response Time (ms)",
+      "SignalExpression": null,
+      "Queries": [
+        {
+          "Id": "chartquery-1902",
+          "Measurements": [
+            {
+              "Value": "Round(mean(Elapsed), 3)",
+              "Label": "p99th"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": {
+            "Kind": "Signal",
+            "SignalId": ref("signal-HTTP Requests.json")
+          },
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Value",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": true,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 4,
+        "HeightRows": 1
+      }
+    },
+    {
+      "Title": "Errors and Exceptions",
+      "SignalExpression": {
+        "Kind": "Signal",
+        "SignalId": ref("signal-Errors and Exceptions.json")
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "count(*)",
+              "Label": "count"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": {
+            "Kind": "Signal",
+            "SignalId": ref("signal-HTTP Requests.json")
+          },
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Bar",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": true,
+            "SuppressLegend": false,
+            "Palette": "Reds"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 4,
+        "HeightRows": 1
+      }
+    },
+    {
+      "Title": "Load Distribution",
+      "SignalExpression": null,
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "count(*)",
+              "Label": "count"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": {
+            "Kind": "Signal",
+            "SignalId": ref("signal-HTTP Requests.json")
+          },
+          "GroupBy": [
+            "MachineName"
+          ],
+          "DisplayStyle": {
+            "Type": "Line",
+            "LineFillToZeroY": true,
+            "LineShowMarkers": false,
+            "BarOverlaySum": false,
+            "SuppressLegend": true,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 12,
+        "HeightRows": 1
+      }
+    }
+  ]
+}

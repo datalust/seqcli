@@ -1,0 +1,16 @@
+﻿{
+  "Title": "HTTP Requests",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@EventType = 0x37AA1435",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "Grouping": "Inferred",
+  "ExplicitGroupName": null,
+  "OwnerId": null
+}
