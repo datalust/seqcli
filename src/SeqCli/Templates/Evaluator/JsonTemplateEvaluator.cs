@@ -9,33 +9,30 @@ namespace SeqCli.Templates.Evaluator
         public static bool TryEvaluate(
             JsonTemplate template,
             IReadOnlyDictionary<string, JsonTemplateFunction> functions,
-            out object result,
+            out JsonTemplate result,
             out string error)
         {
             (result, error) = Evaluate(template, functions);
             return error == null;
         }
 
-        static (object, string) Evaluate(JsonTemplate template,
+        static (JsonTemplate, string) Evaluate(JsonTemplate template,
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
             return template switch
             {
-                JsonTemplateNull _ => (null, null),
-                JsonTemplateBoolean b => (b.Value, null),
-                JsonTemplateNumber n => (n.Value, null),
-                JsonTemplateString s => (s.Value, null),
                 JsonTemplateArray a => EvaluateArray(a, functions),
                 JsonTemplateObject o => EvaluateObject(o, functions),
                 JsonTemplateCall c => EvaluateCall(c, functions),
-                _ => throw new ArgumentOutOfRangeException(nameof(template)),
+                { } other => (other, null),
+                null => throw new ArgumentNullException(nameof(template))
             };
         }
 
-        static (object, string) EvaluateArray(JsonTemplateArray template, 
+        static (JsonTemplate, string) EvaluateArray(JsonTemplateArray template, 
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
-            var r = new object[template.Elements.Length];
+            var r = new JsonTemplate[template.Elements.Length];
             for (var i = 0; i < template.Elements.Length; ++i)
             {
                 var (v, err) = Evaluate(template.Elements[i], functions);
@@ -44,13 +41,13 @@ namespace SeqCli.Templates.Evaluator
                 r[i] = v;
             }
 
-            return (r, null);
+            return (new JsonTemplateArray(r), null);
         }
         
-        static (object, string) EvaluateObject(JsonTemplateObject template, 
+        static (JsonTemplate, string) EvaluateObject(JsonTemplateObject template, 
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
-            var r = new Dictionary<string, object>(template.Members.Count);
+            var r = new Dictionary<string, JsonTemplate>(template.Members.Count);
             foreach (var (name, value) in template.Members)
             {
                 var (v, err) = Evaluate(value, functions);
@@ -59,17 +56,17 @@ namespace SeqCli.Templates.Evaluator
                 r[name] = v;
             }
 
-            return (r, null);
+            return (new JsonTemplateObject(r), null);
         }
         
         
-        static (object, string) EvaluateCall(JsonTemplateCall template, 
+        static (JsonTemplate, string) EvaluateCall(JsonTemplateCall template, 
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
             if (!functions.TryGetValue(template.Name, out var f))
                 return (null, $"The function name `{template.Name}` was not recognized.");
 
-            var args = new object[template.Arguments.Length];
+            var args = new JsonTemplate[template.Arguments.Length];
             for (var i = 0; i < template.Arguments.Length; ++i)
             {
                 var (v, err) = Evaluate(template.Arguments[i], functions);

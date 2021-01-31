@@ -1,4 +1,6 @@
-﻿namespace SeqCli.Templates.Evaluator
+﻿using SeqCli.Templates.Ast;
+
+namespace SeqCli.Templates.Evaluator
 {
-    delegate bool JsonTemplateFunction(object[] args, out object result, out string error);
+    delegate bool JsonTemplateFunction(JsonTemplate[] args, out JsonTemplate result, out string error);
 }

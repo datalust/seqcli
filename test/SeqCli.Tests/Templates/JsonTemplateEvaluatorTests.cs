@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SeqCli.Templates.Ast;
 using SeqCli.Templates.Evaluator;
 using SeqCli.Templates.Parser;
 using Xunit;
@@ -15,7 +16,7 @@ namespace SeqCli.Tests.Templates
             
             Assert.True(JsonTemplateEvaluator.TryEvaluate(root, new Dictionary<string, JsonTemplateFunction>(), out var r, out var err));
             Assert.Null(err);
-            Assert.Equal(42m, r);
+            Assert.True(r is JsonTemplateNumber {Value: 42m});
         }
 
         [Fact]
@@ -24,9 +25,9 @@ namespace SeqCli.Tests.Templates
             const string template = "add_1(42)";
             Assert.True(JsonTemplateParser.TryParse(template, out var root, out _, out _));
 
-            static bool Add1(object[] args, out object r, out string err)
+            static bool Add1(JsonTemplate[] args, out JsonTemplate r, out string err)
             {
-                r = 1m + (decimal) args[0];
+                r = new JsonTemplateNumber(1m + ((JsonTemplateNumber) args[0]).Value);
                 err = null;
                 return true;
             }
@@ -38,7 +39,7 @@ namespace SeqCli.Tests.Templates
             
             Assert.True(JsonTemplateEvaluator.TryEvaluate(root, functions, out var r, out var err));
             Assert.Null(err);
-            Assert.Equal(43m, r);
+            Assert.True(r is JsonTemplateNumber {Value: 43m});
         }
 
         [Fact]

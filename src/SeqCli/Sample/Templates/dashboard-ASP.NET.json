@@ -2,11 +2,14 @@
 {
   "OwnerId": null,
   "Title": "ASP.NET",
-  "IsProtected": true,
+  "IsProtected": false,
   "Charts": [
     {
       "Title": "Requests by Status Code",
-      "SignalExpression": null,
+      "SignalExpression": {
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.json")
+      },
       "Queries": [
         {
           "Measurements": [
@@ -16,10 +19,7 @@
             }
           ],
           "Where": null,
-          "SignalExpression": {
-            "Kind": "Signal",
-            "SignalId": ref("signal-HTTP Requests.json")
-          },
+          "SignalExpression": null,
           "GroupBy": [
             "StatusCode"
           ],
@@ -44,7 +44,10 @@
     },
     {
       "Title": "99th Percentile Response Time (ms)",
-      "SignalExpression": null,
+      "SignalExpression": {
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.json")
+      },
       "Queries": [
         {
           "Measurements": [
@@ -54,10 +57,7 @@
             }
           ],
           "Where": null,
-          "SignalExpression": {
-            "Kind": "Signal",
-            "SignalId": ref("signal-HTTP Requests.json")
-          },
+          "SignalExpression": null,
           "GroupBy": [],
           "DisplayStyle": {
             "Type": "Value",
@@ -80,7 +80,10 @@
     },
     {
       "Title": "Mean Response Time (ms)",
-      "SignalExpression": null,
+      "SignalExpression": {
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.json")
+      },
       "Queries": [
         {
           "Id": "chartquery-1902",
@@ -91,10 +94,7 @@
             }
           ],
           "Where": null,
-          "SignalExpression": {
-            "Kind": "Signal",
-            "SignalId": ref("signal-HTTP Requests.json")
-          },
+          "SignalExpression": null,
           "GroupBy": [],
           "DisplayStyle": {
             "Type": "Value",
@@ -118,8 +118,15 @@
     {
       "Title": "Errors and Exceptions",
       "SignalExpression": {
-        "Kind": "Signal",
-        "SignalId": ref("signal-Errors and Exceptions.json")
+        "Kind": "Intersection",
+        "Left": {
+          "Kind": "Signal",
+          "SignalId": ref("signal-Errors and Exceptions.json")
+        },
+        "Right": {
+          "Kind": "Signal",
+          "SignalId": ref("signal-HTTP Requests.json")
+        }
       },
       "Queries": [
         {
@@ -130,10 +137,7 @@
             }
           ],
           "Where": null,
-          "SignalExpression": {
-            "Kind": "Signal",
-            "SignalId": ref("signal-HTTP Requests.json")
-          },
+          "SignalExpression": null,
           "GroupBy": [],
           "DisplayStyle": {
             "Type": "Bar",
@@ -156,7 +160,10 @@
     },
     {
       "Title": "Load Distribution",
-      "SignalExpression": null,
+      "SignalExpression": {
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.json")
+      },
       "Queries": [
         {
           "Measurements": [
@@ -166,10 +173,7 @@
             }
           ],
           "Where": null,
-          "SignalExpression": {
-            "Kind": "Signal",
-            "SignalId": ref("signal-HTTP Requests.json")
-          },
+          "SignalExpression": null,
           "GroupBy": [
             "MachineName"
           ],

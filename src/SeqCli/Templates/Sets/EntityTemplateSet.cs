@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using Seq.Api;
 using Seq.Api.Model;
 using Seq.Api.Model.Root;
+using SeqCli.Templates.Ast;
 using SeqCli.Templates.Evaluator;
 using SeqCli.Templates.Files;
+using SeqCli.Templates.ObjectGraphs;
 
 namespace SeqCli.Templates.Sets
 {
@@ -34,9 +36,9 @@ namespace SeqCli.Templates.Sets
 
         static async Task<string> ApplyTemplateAsync(EntityTemplateFile template, IDictionary<string,string> ids, SeqConnection connection, RootEntity apiRoot)
         {
-            bool Ref(object[] args, out object result, out string err)
+            bool Ref(JsonTemplate[] args, out JsonTemplate result, out string err)
             {
-                if (args.Length != 1 || !(args[0] is string filename))
+                if (args.Length != 1 || !(args[0] is JsonTemplateString { Value: { } filename }))
                 {
                     result = null;
                     err = "The `ref()` function accepts a single string argument.";
@@ -50,7 +52,7 @@ namespace SeqCli.Templates.Sets
                     return false;
                 }
 
-                result = referencedId;
+                result = new JsonTemplateString(referencedId);
                 err = null;
                 return true;
             }
@@ -59,10 +61,12 @@ namespace SeqCli.Templates.Sets
             if (!JsonTemplateEvaluator.TryEvaluate(template.Entity, functions, out var entity, out var error))
                 return error;
 
+            var asObject = JsonTemplateObjectGraphConverter.Convert(entity);
+
             var resourceGroupLink = template.ResourceGroup + "Resources";
             var link = apiRoot.Links.Single(l => resourceGroupLink.Equals(l.Key, StringComparison.OrdinalIgnoreCase));
             var resourceGroup = await connection.Client.GetAsync<ResourceGroup>(apiRoot, link.Key);
-            var response = await connection.Client.PostAsync<object, GenericEntity>(resourceGroup, "Items", entity);
+            var response = await connection.Client.PostAsync<object, GenericEntity>(resourceGroup, "Items", asObject);
             ids.Add(template.Name, response.Id);
             return null;
         }
