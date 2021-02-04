@@ -5,8 +5,9 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
+using Serilog.Context;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class Router : HttpServer
     {
@@ -43,10 +44,18 @@ namespace SeqCli.Sample.Loader.Web
 
                 foreach (var (method, route) in actionMethods)
                 {
+                    var controllerName = controller.GetType().Name;
+                    var actionName = method.Name;
+                    
                     var binding = new RouteBinding(
-                        controller.GetType().Name,
-                        method.Name,
-                        r => (Task<HttpResponse>) method.Invoke(controller, new object[] {r}));
+                        controllerName,
+                        actionName,
+                        r =>
+                        {
+                            using var _ = LogContext.PushProperty("Controller", controllerName);
+                            using var __ = LogContext.PushProperty("Action", actionName);
+                            return (Task<HttpResponse>) method.Invoke(controller, new object[] {r});
+                        });
                     
                     _logger.Debug("Binding route HTTP {Method} {Path} to action method {Controller}.{Action}()",
                         route.Method, route.Path, binding.Controller, binding.Action);

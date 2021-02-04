@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     abstract class HttpServer
     {

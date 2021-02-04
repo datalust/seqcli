@@ -44,6 +44,8 @@ ProjectSection(SolutionItems) = preProject
 	dockerfiles\seqcli\run.sh = dockerfiles\seqcli\run.sh
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roastery", "src\Roastery\Roastery.csproj", "{D2CB1112-7CD3-4A1B-A114-25130C96295E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -62,6 +64,10 @@ Global
 		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Debug|x64.Build.0 = Debug|x64
 		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Release|x64.ActiveCfg = Release|x64
 		{B86DEF3C-C461-4126-AD49-986EBB19B487}.Release|x64.Build.0 = Release|x64
+		{D2CB1112-7CD3-4A1B-A114-25130C96295E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D2CB1112-7CD3-4A1B-A114-25130C96295E}.Debug|x64.Build.0 = Debug|Any CPU
+		{D2CB1112-7CD3-4A1B-A114-25130C96295E}.Release|x64.ActiveCfg = Release|Any CPU
+		{D2CB1112-7CD3-4A1B-A114-25130C96295E}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,6 +77,7 @@ Global
 		{DBC69360-519B-4A9B-829B-2AE1B5412521} = {3587B633-0C03-4235-8903-6226900328F1}
 		{B86DEF3C-C461-4126-AD49-986EBB19B487} = {3587B633-0C03-4235-8903-6226900328F1}
 		{7F7CAC3A-1046-4D2B-BF9F-F14525918295} = {0779824B-502D-450B-BB43-036949C911C4}
+		{D2CB1112-7CD3-4A1B-A114-25130C96295E} = {FC0A256C-CC1F-4ECE-AF09-707248D10DC1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D299713-28D4-4078-9DA7-9033679CD200}

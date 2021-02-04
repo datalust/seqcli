@@ -9,7 +9,6 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
     <Platforms>x64</Platforms>
-    <LangVersion>8</LangVersion>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>seqcli</ToolCommandName>
   </PropertyGroup>
@@ -37,5 +36,8 @@
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
     <PackageReference Include="Seq.Api" Version="2020.5.0" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Roastery\Roastery.csproj" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ using Serilog;
 using Serilog.Context;
 using Serilog.Events;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class RequestLoggingMiddleware : HttpServer
     {
@@ -45,8 +45,8 @@ namespace SeqCli.Sample.Loader.Web
         {
             var level = (int)statusCode >= 500 ? LogEventLevel.Error : LogEventLevel.Information;
             _logger.Write(level, exception,
-                "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms",
-                request.Method, request.Path, statusCode, sw.ElapsedMilliseconds);
+                "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.000} ms",
+                request.Method, request.Path, (int)statusCode, sw.Elapsed.TotalMilliseconds);
             return false;
         }
     }

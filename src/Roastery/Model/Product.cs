@@ -1,14 +1,15 @@
-﻿namespace SeqCli.Sample.Loader.Model
+﻿using Roastery.Data;
+
+namespace Roastery.Model
 {
-    class Product
+    class Product: IIdentifiable
     {
-        public string Id { get; }
+        public string Id { get; set; }
         public string Code { get; }
         public string Description { get; }
 
-        public Product(string id, string code, string description)
+        public Product(string code, string description)
         {
-            Id = id;
             Code = code;
             Description = description;
         }

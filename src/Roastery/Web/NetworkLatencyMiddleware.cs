@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class NetworkLatencyMiddleware : HttpServer
     {

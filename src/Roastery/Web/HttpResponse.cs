@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class HttpResponse
     {

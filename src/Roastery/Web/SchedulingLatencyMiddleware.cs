@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class SchedulingLatencyMiddleware : HttpServer
     {
@@ -26,7 +26,7 @@ namespace SeqCli.Sample.Loader.Web
                 if (current > Capacity)
                 {
                     // One extra millisecond per concurrent request over capacity, ramping up
-                    delay += (int) Math.Pow(current - Capacity, 1.2);
+                    delay += (int) Math.Pow(current - Capacity, 1.6);
                 }
                 await Task.Delay(delay);
                 return await _next.InvokeAsync(request);

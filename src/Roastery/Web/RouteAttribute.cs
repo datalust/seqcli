@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     [AttributeUsage(AttributeTargets.Method)]
     class RouteAttribute : Attribute

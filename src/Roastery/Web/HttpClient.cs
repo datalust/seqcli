@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class HttpClient
     {

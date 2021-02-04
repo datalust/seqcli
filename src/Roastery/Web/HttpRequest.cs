@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace SeqCli.Sample.Loader.Web
+namespace Roastery.Web
 {
     class HttpRequest
     {

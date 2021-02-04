@@ -9,7 +9,7 @@ namespace SeqCli.Cli.Commands.Sample
     {
         protected override async Task<int> Run()
         {
-            await new Simulation().RunAsync();
+            await Simulation.RunAsync();
             return 0;
         }
     }
