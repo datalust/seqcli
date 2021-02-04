@@ -24,6 +24,8 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
+// ReSharper disable UseAwaitUsing, MethodHasAsyncOverload
+
 namespace SeqCli.Cli.Commands
 {
     [Command("log", "Send a structured log event to the server", Example = "seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test")]
@@ -64,12 +66,11 @@ namespace SeqCli.Cli.Commands
 
         protected override async Task<int> Run()
         {
-            var payload = new JObject();
-
-            payload["@t"] = string.IsNullOrWhiteSpace(_timestamp) ?
-                DateTimeOffset.Now.ToString("o") :
-                _timestamp;
-
+            var payload = new JObject
+            {
+                ["@t"] = string.IsNullOrWhiteSpace(_timestamp) ? DateTimeOffset.Now.ToString("o") : _timestamp
+            };
+            
             if (_level != null && _level != "Information")
                 payload["@l"] = _level;
 
@@ -79,16 +80,16 @@ namespace SeqCli.Cli.Commands
             if (!string.IsNullOrWhiteSpace(_exception))
                 payload["@x"] = _exception;
 
-            foreach (var property in _properties.Properties)
+            foreach (var (key, value) in _properties.Properties)
             {
-                if (string.IsNullOrWhiteSpace(property.Key))
+                if (string.IsNullOrWhiteSpace(key))
                     continue;
 
-                var name = property.Key.Trim();
+                var name = key.Trim();
                 if (name.StartsWith("@"))
                     name = $"@{name}";
 
-                payload[name] = new JValue(property.Value);
+                payload[name] = new JValue(value);
             }
 
             StringContent content;

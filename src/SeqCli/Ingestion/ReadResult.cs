@@ -2,7 +2,7 @@
 
 namespace SeqCli.Ingestion
 {
-    struct ReadResult
+    readonly struct ReadResult
     {
         public LogEvent LogEvent { get; }
         public bool IsAtEnd { get; }

@@ -80,8 +80,8 @@ namespace SeqCli.Cli.Commands
             try
             {
                 var enrichers = new List<ILogEventEnricher>();
-                foreach (var property in _properties.Properties)
-                    enrichers.Add(new ScalarPropertyEnricher(property.Key, property.Value));
+                foreach (var (name, value) in _properties.Properties)
+                    enrichers.Add(new ScalarPropertyEnricher(name, value));
 
                 if (_level != null)
                     enrichers.Add(new ScalarPropertyEnricher(SurrogateLevelProperty.PropertyName, _level));
