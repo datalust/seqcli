@@ -95,6 +95,7 @@ namespace SeqCli.Cli.Commands
                 }
 
                 var connection = _connectionFactory.Connect(_connection);
+                var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
 
                 foreach (var input in _fileInputFeature.OpenInputs())
                 {
@@ -109,7 +110,6 @@ namespace SeqCli.Cli.Commands
                         if (_message != null)
                             reader = new StaticMessageTemplateReader(reader, _message);
 
-                        _connectionFactory.TryGetApiKey(_connection, out var apiKey);
                         var exit = await LogShipper.ShipEvents(
                             connection,
                             apiKey,

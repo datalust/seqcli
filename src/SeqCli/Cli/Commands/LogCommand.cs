@@ -103,9 +103,10 @@ namespace SeqCli.Cli.Commands
             }
 
             var connection = _connectionFactory.Connect(_connection);
+            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
 
             var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) {Content = content};
-            if (_connectionFactory.TryGetApiKey(_connection, out var apiKey))
+            if (apiKey != null)
                 request.Headers.Add(ApiConstants.ApiKeyHeaderName, apiKey);
 
             var result = await connection.Client.HttpClient.SendAsync(request);

@@ -86,7 +86,10 @@ namespace SeqCli.Levels
                 output.Write(']');
             }
 
-            var level = (string)((ScalarValue) logEvent.Properties[SurrogateLevelProperty.PropertyName]).Value;
+            var level = logEvent.Properties.TryGetValue(SurrogateLevelProperty.PropertyName, out var surrogateLevelValue) ?
+                (string)((ScalarValue) surrogateLevelValue).Value :
+                logEvent.Level.ToString();
+            
             if (level != "Information")
             {
                 output.Write(",\"@l\":\"");

@@ -18,6 +18,7 @@ namespace SeqCli.Cli.Commands.Sample
         readonly SeqConnectionFactory _connectionFactory;
 
         readonly ConnectionFeature _connection;
+        readonly ConfirmFeature _confirm;
         // bool _allowOutboundRequests;
 
         public SetupCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -25,6 +26,8 @@ namespace SeqCli.Cli.Commands.Sample
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
+            _confirm = Enable<ConfirmFeature>();
+            
             // Options.Add(
             //     "allow-outbound-requests",
             //     "Enable features that make outbound requests from the Seq server when operating, including example" +
@@ -37,6 +40,13 @@ namespace SeqCli.Cli.Commands.Sample
         protected override async Task<int> Run()
         {
             var connection = _connectionFactory.Connect(_connection);
+
+            var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
+            if (!_confirm.TryConfirm($"This will apply sample configuration items to the Seq server at {url}."))
+            {
+                await Console.Error.WriteLineAsync("Canceled by user.");
+                return 1;
+            }
 
             var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
             var templateFiles = Directory.GetFiles(templatesPath);
