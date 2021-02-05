@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac.Features.Metadata;
 using Autofac.Features.OwnedInstances;
 
 namespace SeqCli.EndToEnd.Support
@@ -9,11 +10,11 @@ namespace SeqCli.EndToEnd.Support
     class TestDriver
     {
         readonly TestConfiguration _configuration;
-        readonly IEnumerable<Func<Owned<IsolatedTestCase>>> _cases;
+        readonly IEnumerable<Meta<Func<Owned<IsolatedTestCase>>>> _cases;
 
         public TestDriver(
             TestConfiguration configuration,
-            IEnumerable<Func<Owned<IsolatedTestCase>>> cases)
+            IEnumerable<Meta<Func<Owned<IsolatedTestCase>>>> cases)
         {
             _configuration = configuration;
             _cases = cases;
@@ -31,33 +32,36 @@ namespace SeqCli.EndToEnd.Support
 
             foreach (var testCaseFactory in _cases.OrderBy(c => Guid.NewGuid()))
             {
+                if (testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser) && !_configuration.IsMultiuser)
+                    continue;
+
                 count++;
-                using (var testCase = testCaseFactory())
+
+                await using var testCase = testCaseFactory.Value();
+                
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"RUNNING {testCase.Value.Description.PadRight(50)}");
+                Console.ResetColor();
+
+                try
                 {
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine($"RUNNING {testCase.Value.Description.PadRight(50)}");
+                    await testCase.Value.ExecuteTestCaseAsync();
+
+                    passed.Add(testCase.Value.Description);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("PASS");
                     Console.ResetColor();
+                }
+                catch (Exception ex)
+                {
+                    failed.Add(testCase.Value.Description);
 
-                    try
-                    {
-                        await testCase.Value.ExecuteTestCaseAsync();
+                    Console.Write(testCase.Value.Output);
 
-                        passed.Add(testCase.Value.Description);
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("PASS");
-                        Console.ResetColor();
-                    }
-                    catch (Exception ex)
-                    {
-                        failed.Add(testCase.Value.Description);
-
-                        Console.Write(testCase.Value.Output);
-
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("FAIL");
-                        Console.WriteLine(ex);
-                        Console.ResetColor();
-                    }
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("FAIL");
+                    Console.WriteLine(ex);
+                    Console.ResetColor();
                 }
             }
 
@@ -75,3 +79,4 @@ namespace SeqCli.EndToEnd.Support
         }
     }
 }
+

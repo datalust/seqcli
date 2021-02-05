@@ -1,9 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Autofac;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
+using Module = Autofac.Module;
 
 namespace SeqCli.EndToEnd
 {
@@ -18,13 +20,29 @@ namespace SeqCli.EndToEnd
         
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterInstance(_args);
+            
             // This enables running the program with an argument like `*Ingest*` to match all test cases
             // with `Ingest` in their names.
             var testCases = _args.TestCases();
             builder.RegisterAssemblyTypes(ThisAssembly)
                 // ReSharper disable once AssignNullToNotNullAttribute
                 .Where(t => testCases == null || testCases.Length == 0 || testCases.Any(c => c.IsMatch(t.FullName)))
-                .As<ICliTestCase>();
+                .As<ICliTestCase>()
+                .WithMetadata(t =>
+                {
+                    // Autofac doesn't appear to allow optional metadata using the short-cut method.
+                    var a = t.GetCustomAttribute<CliTestCaseAttribute>();
+                    var m = new Dictionary<string, object>();
+                    if (a != null)
+                    {
+                        m["Multiuser"] = a.Multiuser;
+                    }
+
+                    return m;
+                });
+
+            builder.RegisterType<LicenseSetup>().SingleInstance();
 
             builder.RegisterType<TestConfiguration>().SingleInstance();
             builder.RegisterType<TestDataFolder>().InstancePerOwned<IsolatedTestCase>();
@@ -47,14 +65,8 @@ namespace SeqCli.EndToEnd
                     .CreateLogger())
                 .As<ILogger>()
                 .InstancePerOwned<IsolatedTestCase>();
-
-            builder.RegisterAdapter<ICliTestCase, IsolatedTestCase>((ctx, tc) =>
-                new IsolatedTestCase(
-                    ctx.Resolve<Lazy<ITestProcess>>(),
-                    ctx.Resolve<Lazy<SeqConnection>>(),
-                    ctx.Resolve<Lazy<ILogger>>(),
-                    ctx.Resolve<CliCommandRunner>(),
-                    tc));
+            
+            builder.RegisterSource(new IsolatedTestCaseRegistrationSource());
         }
     }
 }

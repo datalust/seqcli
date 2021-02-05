@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace SeqCli.EndToEnd.Support
 {
-    public sealed class CaptiveProcess : ITestProcess, IDisposable
+    public class CaptiveProcess : ITestProcess, IDisposable
     {
         readonly bool _captureOutput;
         readonly string _stopCommandFullExePath;

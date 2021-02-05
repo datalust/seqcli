@@ -1,4 +1,4 @@
-version: 2020.5.{build}
+version: 2021.1.{build}
 skip_tags: true
 image:
 - Visual Studio 2019
