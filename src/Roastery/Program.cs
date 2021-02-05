@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Roastery.Agents;
 using Roastery.Api;
 using Roastery.Data;
-using Roastery.Model;
 using Roastery.Web;
 using Serilog;
 
 namespace Roastery
 {
+    // Named this way to make stack traces a little more believable :-)
     public static class Program
     {
-        public static async Task Main(ILogger logger)
+        public static async Task Main(ILogger logger, CancellationToken cancellationToken = default)
         {
             var webApplicationLogger = logger.ForContext("Application", "Roastery Web Frontend");
 
@@ -30,23 +32,19 @@ namespace Roastery
                                     new ProductsController(logger, database)
                                 }, webApplicationLogger))))));
 
-            var simulationClientLogger = logger.ForContext("Application", "Roastery Automation Client").ForContext(typeof(Program));
-            foreach (var product in await client.GetAsync<List<Product>>("api/products"))
-            {
-                simulationClientLogger.Information("Found product {@Product}", product);
-            }
+            var agents = new List<Agent>();
+            
+            for (var i = 0; i < 10; ++i)
+                agents.Add(new Customers(client));
+            
+            for (var i = 0; i < 3; ++i)
+                agents.Add(new WarehouseStaff());
+            
+            var batchApplicationLogger = logger.ForContext("Application", "Roastery Batch Processing");
+            agents.Add(new CatalogBatch(client, batchApplicationLogger));
+            agents.Add(new ArchivingBatch());
 
-            try
-            {
-                await client.PostAsync<Order>("api/orders", new Order());
-            }
-            catch (Exception ex)
-            {
-                simulationClientLogger.Error(ex, "Could not create an order");
-            }
-
-            var created = await client.PostAsync<Order>("api/orders", new Order {CustomerName = "A. Customer", ShippingAddress = "123 A Street"});
-            simulationClientLogger.Information("Created order {OrderId}", created.Id);
+            await Task.WhenAll(agents.Select(a => Agent.Run(a, cancellationToken)));
         }
     }
 }

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Roastery.Util
 {
     class Distribution
     {
-        readonly Random _rng = new Random(DateTime.Now.Millisecond);
+        static int _nextSeed = DateTime.Now.Millisecond;
+        readonly Random _rng = new(Interlocked.Increment(ref _nextSeed));
 
         public double Uniform(double min, double max)
         {
