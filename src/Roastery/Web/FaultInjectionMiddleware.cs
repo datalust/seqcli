@@ -12,7 +12,6 @@ namespace Roastery.Web
     {
         readonly ILogger _logger;
         readonly HttpServer _next;
-        readonly Distribution _distribution = new();
         readonly Func<HttpRequest, Task<HttpResponse>>[] _faults;
 
         public FaultInjectionMiddleware(ILogger logger, HttpServer next)
@@ -56,15 +55,15 @@ namespace Roastery.Web
         
         public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
         {
-            if (_distribution.OnceIn(120))
+            if (Distribution.OnceIn(120))
             {
-                var fault = _distribution.Uniform(_faults);
+                var fault = Distribution.Uniform(_faults);
                 return await fault(request);
             }
 
             var result = await _next.InvokeAsync(request);
 
-            if (_distribution.OnceIn(180))
+            if (Distribution.OnceIn(180))
             {
                 return await Dropped();
             }

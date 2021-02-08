@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Roastery.Agents;
 using Roastery.Api;
 using Roastery.Data;
+using Roastery.Fake;
+using Roastery.Util;
 using Roastery.Web;
 using Serilog;
 
@@ -34,8 +36,8 @@ namespace Roastery
 
             var agents = new List<Agent>();
             
-            for (var i = 0; i < 10; ++i)
-                agents.Add(new Customers(client));
+            for (var i = 0; i < 100; ++i)
+                agents.Add(new Customer(client, Person.Generate(), (int)Distribution.Uniform(60000, 180000)));
             
             for (var i = 0; i < 3; ++i)
                 agents.Add(new WarehouseStaff());

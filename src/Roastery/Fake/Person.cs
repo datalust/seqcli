@@ -13,11 +13,16 @@ namespace Roastery.Fake
             Address = address;
         }
 
-        static readonly string[] Names =
+        static readonly string[] Forenames =
         {
-            "Banzai Bill",
-            "Chargin' Chuck",
-            "Torpedo Ted"
+            "Romeo",
+            "Juliette"
+        };
+        
+        static readonly string[] Surnames =
+        {
+            "Capulet",
+            "Montague",
         };
         
         static readonly string[] Streets =
@@ -27,15 +32,19 @@ namespace Roastery.Fake
             "Rocky Road",
         };
 
-        public static Person Generate(Distribution distribution)
+        public static Person Generate()
         {
-            if (distribution.OnceIn(400))
+            if (Distribution.OnceIn(400))
                 return new Person(null, null);
             
-            var streetNumber = (int) distribution.Uniform(1.0, 1000);
+            var streetNumber = (int) Distribution.Uniform(1.0, 1000);
+            var name = $"{Distribution.Uniform(Forenames)} {Distribution.Uniform(Surnames)}";
+            if (Distribution.OnceIn(20))
+                name += $"-{Distribution.Uniform(Surnames)}";
+            
             return new Person(
-                distribution.Uniform(Names),
-                $"{streetNumber} {distribution.Uniform(Streets)}");
+                name,
+                $"{streetNumber} {Distribution.Uniform(Streets)}");
         }
     }
 }

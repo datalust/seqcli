@@ -27,5 +27,10 @@ namespace Roastery.Web
         {
             return new HttpResponse(HttpStatusCode.NotFound, "The resource was not found on this server.");
         }
+
+        protected HttpResponse OK()
+        {
+            return new HttpResponse(HttpStatusCode.OK, null);
+        }
     }
 }

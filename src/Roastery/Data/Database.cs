@@ -15,8 +15,8 @@ namespace Roastery.Data
         readonly string _schemaName;
         readonly ILogger _logger;
         readonly object _sync = new();
+        // These should really be clones, we racily update their properties all over the place :-)
         readonly IDictionary<string, IIdentifiable> _data = new Dictionary<string, IIdentifiable>();
-        readonly Distribution _distribution = new();
         
         public Database(ILogger logger, string schemaName)
         {
@@ -75,6 +75,23 @@ namespace Roastery.Data
             var sql = $"insert into {TableName<T>()} ({string.Join(", ", columns.Keys)}) values ({string.Join(", ", columns.Values)}) returning id;";
             await LogExecAsync(sql, 1);
         }
+        
+        public async Task UpdateAsync<T>(T row, string updatedColumns) where T: IIdentifiable
+        {
+            var rows = 0;
+            lock (_sync)
+            {
+                if (_data.TryGetValue(row.Id, out var existing) &&
+                    existing is T)
+                {
+                    rows = 1;
+                    _data[row.Id] = row;
+                }
+            }
+            
+            var sql = $"update {TableName<T>()} set {updatedColumns} where id = '{row.Id}';";
+            await LogExecAsync(sql, rows);
+        }
 
         static string AsSqlLiteral(object o)
         {
@@ -91,14 +108,14 @@ namespace Roastery.Data
 
         async Task LogExecAsync(string sql, int rowCount)
         {
-            if (_distribution.OnceIn(200))
+            if (Distribution.OnceIn(200))
             {
                 throw new OperationCanceledException(
                     "A deadlock was detected and the transaction chosen as the deadlock victim.");
             }
             
             var sw = Stopwatch.StartNew();
-            var delay = 10 + (int)(_distribution.Uniform() * Math.Pow(rowCount, 1.6));
+            var delay = 10 + (int)(Distribution.Uniform() * Math.Pow(rowCount, 1.6));
             await Task.Delay(delay);
             _logger.Debug("Execution of {Sql} affected {RowCount} rows in {Elapsed:0.000} ms",
                 sql, rowCount, sw.Elapsed.TotalMilliseconds);

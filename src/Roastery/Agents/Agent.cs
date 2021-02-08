@@ -11,7 +11,6 @@ namespace Roastery.Agents
         protected delegate Task Behavior(CancellationToken cancellationToken);
         
         readonly int _meanBehaviorIntervalMilliseconds;
-        readonly Distribution _distribution = new();
 
         protected Agent(int meanBehaviorIntervalMilliseconds)
         {
@@ -31,9 +30,9 @@ namespace Roastery.Agents
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var behavior = _distribution.Uniform(behaviors);
+                var behavior = Distribution.Uniform(behaviors);
 
-                await Task.Delay((int) _distribution.Uniform(0, _meanBehaviorIntervalMilliseconds), cancellationToken);
+                await Task.Delay((int) Distribution.Uniform(0, _meanBehaviorIntervalMilliseconds), cancellationToken);
                 
                 try
                 {
@@ -45,7 +44,7 @@ namespace Roastery.Agents
                 }
                                     
                 await Task.Delay(_meanBehaviorIntervalMilliseconds / 2 +
-                                 (int) (_meanBehaviorIntervalMilliseconds * _distribution.Uniform()), cancellationToken);
+                                 (int) (_meanBehaviorIntervalMilliseconds * Distribution.Uniform()), cancellationToken);
 
             }
         }

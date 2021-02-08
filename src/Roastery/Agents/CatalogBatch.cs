@@ -14,7 +14,6 @@ namespace Roastery.Agents
     {
         readonly HttpClient _httpClient;
         readonly ILogger _logger;
-        readonly Distribution _distribution = new();
 
         public CatalogBatch(HttpClient httpClient, ILogger logger)
             : base(60000)
@@ -39,9 +38,9 @@ namespace Roastery.Agents
                     
                     _logger.Information("Checking product {ProductDescription} ({ProductId})", product.Description, product.Id);
                     
-                    if (_distribution.OnceIn(30))
+                    if (Distribution.OnceIn(30))
                         _logger.Warning("Product {ProductId} is low on stock", product.Id);
-                    else if (_distribution.OnceIn(70))
+                    else if (Distribution.OnceIn(70))
                         _logger.Warning("Product {ProductId} is out of stock", product.Id);
                 }
             }

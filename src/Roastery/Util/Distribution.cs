@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Roastery.Util
 {
-    class Distribution
+    static class Distribution
     {
-        static int _nextSeed = DateTime.Now.Millisecond;
-        readonly Random _rng = new(Interlocked.Increment(ref _nextSeed));
+        static readonly Random Rng = new(DateTime.Now.Millisecond);
 
-        public double Uniform(double min, double max)
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static double Uniform(double min, double max)
         {
             if (min < 0)
                 throw new ArgumentOutOfRangeException(nameof(min));
@@ -17,23 +18,26 @@ namespace Roastery.Util
             if (max < min || max - min < double.Epsilon)
                 throw new ArgumentOutOfRangeException(nameof(max));
             
-            return min + _rng.NextDouble() * (max - min);
+            return min + Rng.NextDouble() * (max - min);
         }
 
-        public T Uniform<T>(IList<T> items)
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static T Uniform<T>(IList<T> items)
         {
             var i = (int) Uniform(0, items.Count);
             return items[i];
         }
 
-        public double Uniform()
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static double Uniform()
         {
-            return _rng.NextDouble();
+            return Rng.NextDouble();
         }
 
-        public bool OnceIn(int times)
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static bool OnceIn(int times)
         {
-            return Uniform(0, (double) times) < 1.0;
+            return Uniform(0, times) < 1.0;
         }
     }
 }
