@@ -22,5 +22,10 @@ namespace Roastery.Web
             Log.Debug("Bad request: {Reason}", reason);
             return new HttpResponse(HttpStatusCode.BadRequest, reason);
         }
+
+        protected HttpResponse NotFound()
+        {
+            return new HttpResponse(HttpStatusCode.NotFound, "The resource was not found on this server.");
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Context;
@@ -27,7 +28,7 @@ namespace Roastery.Web
             }
         }
 
-        readonly IDictionary<(HttpMethod, string), RouteBinding> _routes = new Dictionary<(HttpMethod, string), RouteBinding>();
+        readonly IList<(HttpMethod, Regex, RouteBinding)> _routes = new List<(HttpMethod, Regex, RouteBinding)>();
         readonly ILogger _logger;
 
         public Router(IEnumerable<Controller> controllers, ILogger logger)
@@ -59,8 +60,9 @@ namespace Roastery.Web
                     
                     _logger.Debug("Binding route HTTP {Method} {Path} to action method {Controller}.{Action}()",
                         route.Method, route.Path, binding.Controller, binding.Action);
-                    
-                    _routes.Add((new HttpMethod(route.Method.ToUpperInvariant()), route.Path), binding);
+
+                    var rx = new Regex("^" + route.Path.Replace("*", ".*") + "$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    _routes.Add((new HttpMethod(route.Method.ToUpperInvariant()), rx, binding));
                 }
             }
         }
@@ -69,7 +71,9 @@ namespace Roastery.Web
         {
             _logger.Debug("Resolving route HTTP {Method} {Path}", request.Method, request.Path);
 
-            if (!_routes.TryGetValue((request.Method, request.Path.TrimStart('/')), out var route))
+            var requestPath = request.Path.TrimStart('/');
+            var (_, _, route) = _routes.FirstOrDefault(r => r.Item1 == request.Method && r.Item2.IsMatch(requestPath));
+            if (route == null)
             {
                 _logger.Debug("No action method is bound for this route");
                 return new HttpResponse(HttpStatusCode.NotFound,
