@@ -7,7 +7,7 @@ namespace Roastery.Model
     {
         public string Id { get; set; }
         
-        public DateTime CreatedAt { get; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public string CustomerName { get; set; }
         

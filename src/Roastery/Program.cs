@@ -40,11 +40,11 @@ namespace Roastery
                 agents.Add(new Customer(client, Person.Generate(), (int)Distribution.Uniform(60000, 180000)));
             
             for (var i = 0; i < 3; ++i)
-                agents.Add(new WarehouseStaff());
+                agents.Add(new WarehouseStaff(client));
             
             var batchApplicationLogger = logger.ForContext("Application", "Roastery Batch Processing");
             agents.Add(new CatalogBatch(client, batchApplicationLogger));
-            agents.Add(new ArchivingBatch());
+            agents.Add(new ArchivingBatch(client, batchApplicationLogger));
 
             await Task.WhenAll(agents.Select(a => Agent.Run(a, cancellationToken)));
         }

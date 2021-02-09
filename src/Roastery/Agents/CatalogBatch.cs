@@ -29,14 +29,14 @@ namespace Roastery.Agents
 
         async Task CheckStock(CancellationToken cancellationToken)
         {
+            using var _ = LogContext.PushProperty("BatchId", Guid.NewGuid());
             try
             {
                 _logger.Information("Checking stock levels");
+                
                 foreach (var product in await _httpClient.GetAsync<List<Product>>("api/products"))
                 {
-                    using var _ = LogContext.PushProperty("BatchId", Guid.NewGuid());
-                    
-                    _logger.Information("Checking product {ProductDescription} ({ProductId})", product.Description, product.Id);
+                    _logger.Information("Checking product {ProductDescription} ({ProductId})", product.FormatDescription(), product.Id);
                     
                     if (Distribution.OnceIn(30))
                         _logger.Warning("Product {ProductId} is low on stock", product.Id);

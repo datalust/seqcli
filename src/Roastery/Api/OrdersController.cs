@@ -21,6 +21,12 @@ namespace Roastery.Api
             _database = database;
         }
 
+        [Route("GET", "api/orders")]
+        public async Task<HttpResponse> List(HttpRequest request)
+        {
+            return Json(await _database.SelectAsync<Order>());
+        }
+
         [Route("POST", "api/orders")]
         public async Task<HttpResponse> Create(HttpRequest request)
         {
@@ -36,27 +42,46 @@ namespace Roastery.Api
             return Json(order, HttpStatusCode.Created);
         }
 
-        [Route("PUT", "api/orders/*")]
+        [Route("PUT", "api/orders/{id}")]
         public async Task<HttpResponse> Update(HttpRequest request)
         {
             var order = (Order) request.Body;
             using var _ = LogContext.PushProperty("OrderId", order.Id);
 
-            if (!(await _database.SelectAsync<Order>(o => o.Id == order.Id, $"id = '{order.Id}'")).Any())
+            var existing = (await _database.SelectAsync<Order>(o => o.Id == order.Id, $"id = '{order.Id}'")).SingleOrDefault();
+            if (existing == null)
                 return NotFound();
 
+            if (order.Status == existing.Status)
+                return BadRequest($"The order is already in the {order.Status} state");
+            
             await _database.UpdateAsync(order, $"status = '{order.Status}'");
             if (order.Status == OrderStatus.PendingShipment)
                 Log.Information("Order placed and ready for shipment");
             else if (order.Status == OrderStatus.Shipped)
-                Log.Information("Order shipped");
+                Log.Information("Order shipped to {CustomerName} at {ShippingAddress}", order.CustomerName, order.ShippingAddress);
             else
                 Log.Information("Order updated");
             
             return OK();
         }
         
-        [Route("POST", "api/orders/*/items")]
+        [Route("DELETE", "api/orders/{id}")]
+        public async Task<HttpResponse> Delete(HttpRequest request)
+        {
+            var orderId = request.Path.Substring("api/orders/".Length);
+            using var _ = LogContext.PushProperty("OrderId", orderId);
+
+            if (!(await _database.SelectAsync<Order>(o => o.Id == orderId, $"id = '{orderId}'")).Any())
+                return NotFound();
+
+            await _database.DeleteAsync<Order>(orderId);
+            Log.Information("Order deleted");
+            
+            return OK();
+        }
+        
+        [Route("POST", "api/orders/{id}/items")]
         public async Task<HttpResponse> AddItem(HttpRequest request)
         {
             var item = (OrderItem) request.Body;
@@ -73,7 +98,7 @@ namespace Roastery.Api
             using var __ = LogContext.PushProperty("ProductId", product.Id);
 
             await _database.InsertAsync(item);
-            Log.Information("Added 1 x product {ProductCode} to order", product.Code);
+            Log.Information("Added 1 x product {@Product} to order", new { product.Name, product.SizeInGrams });
 
             return Json(item, HttpStatusCode.Created);
         }

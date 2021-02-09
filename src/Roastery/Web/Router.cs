@@ -61,7 +61,7 @@ namespace Roastery.Web
                     _logger.Debug("Binding route HTTP {Method} {Path} to action method {Controller}.{Action}()",
                         route.Method, route.Path, binding.Controller, binding.Action);
 
-                    var rx = new Regex("^" + route.Path.Replace("*", "[^/]+") + "$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    var rx = new Regex("^" + route.Path.Replace("{id}", "[^/]+") + "$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     _routes.Add((new HttpMethod(route.Method.ToUpperInvariant()), rx, binding));
                 }
             }

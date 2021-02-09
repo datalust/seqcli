@@ -1,17 +1,23 @@
-﻿using Roastery.Data;
+﻿using System;
+using Roastery.Data;
 
 namespace Roastery.Model
 {
     class Product: IIdentifiable
     {
         public string Id { get; set; }
-        public string Code { get; }
-        public string Description { get; }
+        public string Name { get; set; }
+        public int SizeInGrams { get; set; }
+        
+        public string FormatDescription() => $"{Name} {SizeInGrams}g"; 
 
-        public Product(string code, string description)
+        [Obsolete("Serialization constructor.")]
+        public Product() { }
+        
+        public Product(string name, int sizeInGrams)
         {
-            Code = code;
-            Description = description;
+            Name = name;
+            SizeInGrams = sizeInGrams;
         }
     }
 }
