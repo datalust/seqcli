@@ -13,8 +13,7 @@ function Execute-Tests
 
     cd ./test/SeqCli.EndToEnd/
     docker pull datalust/seq:latest
-    $env:ENDTOEND_USE_DOCKER_SEQ="Y"
-    & dotnet run
+    & dotnet run -- --docker-server
     if ($LASTEXITCODE -ne 0) { exit 1 }
     cd ../..
 }

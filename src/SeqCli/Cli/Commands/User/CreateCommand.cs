@@ -124,7 +124,7 @@ namespace SeqCli.Cli.Commands.User
                     return 1;
                 }
 
-                user.RoleIds.Add(role.Title);
+                user.RoleIds.Add(role.Id);
             }
 
             if (_filter != null)

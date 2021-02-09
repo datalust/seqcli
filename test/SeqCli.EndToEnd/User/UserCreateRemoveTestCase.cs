@@ -1,48 +1,38 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
-
-#if MULTIUSER_TESTS
 using System.IO;
-#endif
+using System.Linq;
 
 namespace SeqCli.EndToEnd.User
 {
-    public class UserBasicsTestCase : ICliTestCase
+    [CliTestCase(Multiuser = true)]
+    public class UserCreateRemoveTestCase : ICliTestCase
     {
-        public Task ExecuteAsync(
+        public async Task ExecuteAsync(
             SeqConnection connection,
             ILogger logger,
             CliCommandRunner runner)
         {
-            var exit = runner.Exec("user list");
+            var exit = runner.Exec(
+                "user create",
+                "-n alice -d \"Alice Example\" -r \"User (read/write)\" -p test@1234");
             Assert.Equal(0, exit);
 
-            exit = runner.Exec("user list", "-n admin");
-            Assert.Equal(0, exit);
-
-            var output = runner.LastRunProcess.Output;
-            Assert.Equal("user-admin admin", output.Trim());
-
-#if MULTIUSER_TESTS
-            exit = runner.Exec("user create", "-n alice -d \"Alice Example\" -r \"User (read/write)\" -p test");
-            Assert.Equal(0, exit);
-
-            var lines = new StringReader(runner.LastRunProcess.Output);
-            lines.ReadLine(); // Skip password STDIN warning
-            var id = lines.ReadLine()?.Split()[0];
+            var id = runner.LastRunProcess.Output.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
             Assert.NotNull(id);
 
+            var user = await connection.Users.FindAsync(id);
+            Assert.All(user.RoleIds, r => r.StartsWith("role-", StringComparison.OrdinalIgnoreCase));
+            
             exit = runner.Exec("user remove", $"-i {id}");
             Assert.Equal(0, exit);
 
-            exit = runner.Exec("user list", "-n alice");
+            exit = runner.Exec("user list", "-i {id}");
             Assert.Equal(1, exit);
-#endif
-
-            return Task.CompletedTask;
         }
     }
 }

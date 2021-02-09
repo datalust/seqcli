@@ -6,6 +6,13 @@ namespace SeqCli.EndToEnd.Support
 {
     public class TestConfiguration
     {
+        readonly Args _args;
+
+        public TestConfiguration(Args args)
+        {
+            _args = args;
+        }
+        
         public int ServerListenPort { get; } = 9989;
 
         public string ServerListenUrl => $"http://localhost:{ServerListenPort}";
@@ -14,6 +21,8 @@ namespace SeqCli.EndToEnd.Support
             .Replace(Path.Combine("test", "SeqCli.EndToEnd"), Path.Combine("src", "SeqCli"));
 
         public string TestedBinary => Path.Combine(EquivalentBaseDirectory, "seqcli.dll");
+
+        public bool IsMultiuser => _args.Multiuser();
 
         public CaptiveProcess SpawnCliProcess(string command, string additionalArgs = null, Dictionary<string, string> environment = null, bool skipServerArg = false)
         {
@@ -32,7 +41,7 @@ namespace SeqCli.EndToEnd.Support
             if (storagePath == null) throw new ArgumentNullException(nameof(storagePath));
 
             var commandWithArgs = $"run --listen=\"{ServerListenUrl}\" --storage=\"{storagePath}\"";
-            if (Environment.GetEnvironmentVariable("ENDTOEND_USE_DOCKER_SEQ") == "Y")
+            if (_args.UseDockerSeq())
             {
                 return new CaptiveProcess("docker", $"run --name seq -it --rm -e ACCEPT_EULA=Y -p {ServerListenPort}:80 datalust/seq:latest", stopCommandFullExePath: "docker", stopCommandArgs: "stop seq");
             }
