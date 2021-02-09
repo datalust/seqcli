@@ -42,7 +42,9 @@ Available commands:
    - [`apikey create`](#apikey-create) &mdash; Create an API key for ingestion.
    - [`apikey list`](#apikey-list) &mdash; List available API keys.
    - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
- - [`app-run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
+ - `app`
+   - [`app define`](#app-define) &mdash; Generate an app definition for a .NET `[SeqApp]` plug-in.
+   - [`app run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
  - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
  - `dashboard`
    - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
@@ -69,6 +71,10 @@ Available commands:
    - [`user list`](#user-list) &mdash; List users.
    - [`user remove`](#user-remove) &mdash; Remove a user from the server.
  - [`version`](#version) &mdash; Print the current executable version.
+ - `workspace`
+   - [`workspace create`](#workspace-create) &mdash; Create a workspace.
+   - [`workspace list`](#workspace-list) &mdash; List available workspaces.
+   - [`workspace remove`](#workspace-remove) &mdash; Remove a workspace from the server.
 
 ### `apikey remove`
 
@@ -145,10 +151,30 @@ seqcli tail --json | seqcli app run -d "./bin/Debug/netstandard2.2" -p ToAddress
 | Option | Description |
 | ------ | ----------- |
 | `-d`, `--directory=VALUE` | The directory containing .NET Standard assemblies; defaults to the current directory |
-| `-t`, `--type=VALUE` | The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute |
+|       `--type=VALUE` | The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute |
 | `-p`, `--property=NAME=VALUE` | Specify name/value settings for the app, e.g. `-p ToAddress=example@example.com -p Subject="Alert!"` |
-| `-s`, `--server=VALUE` | The URL of the Seq server, used only for app configuration (no connection is made to the server); by default the `connection.serverUrl` value will be used |
 |       `--storage=VALUE` | A directory in which app-specific data can be stored; defaults to the current directory |
+| `-s`, `--server=VALUE` | The URL of the Seq server, used only for app configuration (no connection is made to the server); by default the `connection.serverUrl` value will be used |
+|       `--server-instance=VALUE` | The instance name of the Seq server, used only for app configuration; defaults to no instance name |
+| `-t`, `--title=VALUE` | The app instance title, used only for app configuration; defaults to a placeholder title. |
+|       `--id=VALUE` | The app instance id, used only for app configuration; defaults to a placeholder id. |
+|       `--read-env` | Read app configuration and settings from environment variables, as specified in https://docs.datalust.co/docs/seq-apps-in-other-languages; ignores all options except --directory and --type |
+
+### `app define`
+
+Generate an app definition for a .NET `[SeqApp]` plug-in.
+
+Example:
+
+```
+seqcli app define -d "./bin/Debug/netstandard2.2"
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-d`, `--directory=VALUE` | The directory containing .NET Standard assemblies; defaults to the current directory |
+|       `--type=VALUE` | The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute |
+|       `--indented` | Format the definition over multiple lines with indentation |
 
 ### `config`
 
@@ -179,7 +205,7 @@ seqcli dashboard render -i dashboard-159 -c 'Response Time (ms)' --last 7d --by 
 |       `--start=VALUE` | ISO 8601 date/time to query from |
 |       `--end=VALUE` | Date/time to query to |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
-|       `--timeout=VALUE` | The query execution timeout in milliseconds |
+|       `--timeout=VALUE` | The execution timeout in milliseconds |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
@@ -360,7 +386,7 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 |       `--start=VALUE` | ISO 8601 date/time to query from |
 |       `--end=VALUE` | Date/time to query to |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
-|       `--timeout=VALUE` | The query execution timeout in milliseconds |
+|       `--timeout=VALUE` | The execution timeout in milliseconds |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
@@ -442,12 +468,12 @@ seqcli signal import -i ./Exceptions.json
 
 | Option | Description |
 | ------ | ----------- |
+|       `--merge` | Update signals that have ids matching those in the imported data; the default is to always create new signals |
 | `-i`, `--input=VALUE` | File to import; if not specified, `STDIN` will be used |
 | `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are importd |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
-| `--merge` | Update signals that have ids matching those in the imported data; the default is to always create new signals |
 
 ### `signal create`
 
@@ -553,6 +579,70 @@ seqcli user create -n alice -d 'Alice Example' -r 'User (read/write)' --password
 ### `version`
 
 Print the current executable version.
+
+### `workspace remove`
+
+Remove a workspace from the server.
+
+Example:
+
+```
+seqcli workspace remove -t 'My Workspace'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the workspace(s) to remove |
+| `-i`, `--id=VALUE` | The id of a single workspace to remove |
+| `-o`, `--owner=VALUE` | The id of the user to remove workspaces for; by default, shared workspaces are removd |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `workspace list`
+
+List available workspaces.
+
+Example:
+
+```
+seqcli workspace list
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the workspace(s) to list |
+| `-i`, `--id=VALUE` | The id of a single workspace to list |
+| `-o`, `--owner=VALUE` | The id of the user to list workspaces for; by default, shared workspaces are listd |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `workspace create`
+
+Create a workspace.
+
+Example:
+
+```
+seqcli workspace create -t 'My Workspace'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | A title for the workspace |
+|       `--description=VALUE` | A description for the workspace |
+|       `--dashboard=VALUE` | The id of a dashboard to include in the workspace |
+|       `--query=VALUE` | The id of a saved query to include in the workspace |
+|       `--signal=VALUE` | The id of a signal to include in the workspace |
+|       `--protected` | Specify that the workspace is editable only by administrators |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
 
 ## Extraction patterns
 
