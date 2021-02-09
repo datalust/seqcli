@@ -37,10 +37,16 @@ namespace Roastery.Agents
                 var orders = await _client.GetAsync<List<Order>>("api/orders");
                 foreach (var order in orders)
                 {
-                    if (order.CreatedAt < DateTime.UtcNow.AddMinutes(-90) && order.Status == OrderStatus.New)
+                    if (order.Status == OrderStatus.New)
                     {
-                        _logger.Information("Order {OrderId} is abandoned; deleting", order.Id);
-                        await _client.DeleteAsync($"api/orders/{order.Id}");
+                        var age = DateTime.UtcNow - order.CreatedAt;
+                        _logger.Debug("Found unplaced order with age {Age}", age);
+
+                        if (age > TimeSpan.FromSeconds(90))
+                        {
+                            _logger.Information("Order {OrderId} is abandoned; deleting", order.Id);
+                            await _client.DeleteAsync($"api/orders/{order.Id}");
+                        }
                     }
                 }
             }

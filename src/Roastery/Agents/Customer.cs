@@ -52,7 +52,7 @@ namespace Roastery.Agents
             if (Distribution.OnceIn(15))
                 return; // Abandon cart :-)
             
-            // Customer has 90s to place order before it'll be cleaned up as abandoned; some will be too slow
+            // Customer has ~90s to place order before it'll be cleaned up as abandoned; some will be too slow
             await Task.Delay((int)Distribution.Uniform(10000, 70000), cancellationToken);
 
             // Place order

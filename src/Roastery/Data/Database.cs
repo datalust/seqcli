@@ -113,6 +113,7 @@ namespace Roastery.Data
         {
             if (o == null) return "null";
             if (o is string s) return $"'{s.Replace("'", "''")}'";
+            if (o is DateTime dt) return $"'{dt:o}'";
             if (o.GetType().GetTypeInfo().IsEnum) return $"'{o}'";
             return ((IFormattable) o).ToString(null, CultureInfo.InvariantCulture);
         }
