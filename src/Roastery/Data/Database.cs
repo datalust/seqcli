@@ -65,7 +65,7 @@ namespace Roastery.Data
 
             var columns = typeof(T).GetTypeInfo().DeclaredProperties
                 .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic &&
-                            (p.PropertyType.IsPrimitive || p.PropertyType == typeof(string) || p.PropertyType == typeof(DateTime)))
+                            (p.PropertyType.IsPrimitive || p.PropertyType.IsEnum || p.PropertyType == typeof(string) || p.PropertyType == typeof(DateTime)))
                 .Where(p => p.Name != nameof(IIdentifiable.Id))
                 .ToDictionary(
                     p => p.Name.ToLowerInvariant(),
@@ -143,7 +143,7 @@ namespace Roastery.Data
             var cloneable = typeof(T).GetTypeInfo().DeclaredProperties
                 .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic &&
                             p.CanWrite && p.SetMethod!.IsPublic && !p.SetMethod.IsStatic &&
-                            (p.PropertyType.IsPrimitive || p.PropertyType == typeof(string) ||
+                            (p.PropertyType.IsPrimitive || p.PropertyType.IsEnum || p.PropertyType == typeof(string) ||
                              p.PropertyType == typeof(DateTime)));
 
             foreach (var prop in cloneable)

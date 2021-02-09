@@ -69,7 +69,7 @@ namespace Roastery.Api
         [Route("DELETE", "api/orders/{id}")]
         public async Task<HttpResponse> Delete(HttpRequest request)
         {
-            var orderId = request.Path.Substring("api/orders/".Length);
+            var orderId = request.Path.Substring("/api/orders/".Length);
             using var _ = LogContext.PushProperty("OrderId", orderId);
 
             if (!(await _database.SelectAsync<Order>(o => o.Id == orderId, $"id = '{orderId}'")).Any())
