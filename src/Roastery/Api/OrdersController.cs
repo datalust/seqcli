@@ -75,7 +75,8 @@ namespace Roastery.Api
             if (!(await _database.SelectAsync<Order>(o => o.Id == orderId, $"id = '{orderId}'")).Any())
                 return NotFound();
 
-            await _database.DeleteAsync<Order>(orderId);
+            await _database.DeleteAsync<OrderItem>(o => o.OrderId == orderId, $"orderid = '{orderId}'");
+            await _database.DeleteAsync<Order>(o => o.Id == orderId, $"id = '{orderId}'");
             Log.Information("Order deleted");
             
             return OK();

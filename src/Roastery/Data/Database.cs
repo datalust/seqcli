@@ -92,20 +92,29 @@ namespace Roastery.Data
             await LogExecAsync(sql, rows);
         }
         
-        public async Task DeleteAsync<T>(string rowId) where T: IIdentifiable, new()
+        public async Task DeleteAsync<T>(
+            Func<T, bool> predicate,
+            string where) where T: IIdentifiable, new()
         {
-            var rows = 0;
+            int rows;
             lock (_sync)
             {
-                if (_data.TryGetValue(rowId, out var existing) &&
-                    existing is T)
+                var ids = new List<string>();
+                foreach (var r in _data.Values.OfType<T>())
                 {
-                    rows = 1;
-                    _data.Remove(rowId);
+                    if (predicate(r))
+                        ids.Add(r.Id);
                 }
+
+                foreach (var id in ids)
+                {
+                    _data.Remove(id);
+                }
+                
+                rows = ids.Count;
             }
             
-            var sql = $"delete from {TableName<T>()} where id = '{rowId}';";
+            var sql = $"delete from {TableName<T>()} where {where};";
             await LogExecAsync(sql, rows);
         }
 

@@ -55,7 +55,7 @@ namespace Roastery.Web
         
         public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
         {
-            if (Distribution.OnceIn(120))
+            if (Distribution.OnceIn(220))
             {
                 var fault = Distribution.Uniform(_faults);
                 return await fault(request);
@@ -63,7 +63,7 @@ namespace Roastery.Web
 
             var result = await _next.InvokeAsync(request);
 
-            if (Distribution.OnceIn(180))
+            if (Distribution.OnceIn(280))
             {
                 return await Dropped();
             }

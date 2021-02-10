@@ -27,10 +27,13 @@ namespace Roastery.Agents
 
         async Task CreateOrder(CancellationToken cancellationToken)
         {
+            // Trigger an error when no name/address provided.
+            var person = Distribution.OnceIn(400) ? new Person(null, null) : _person;
+
             var order = await _httpClient.PostAsync<Order>("api/orders", new Order
             {
-                CustomerName = _person.Name,
-                ShippingAddress = _person.Address
+                CustomerName = person.Name,
+                ShippingAddress = person.Address
             });
 
             var orderPath = $"api/orders/{order.Id}";

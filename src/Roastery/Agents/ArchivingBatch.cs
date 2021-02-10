@@ -40,8 +40,6 @@ namespace Roastery.Agents
                     if (order.Status == OrderStatus.New)
                     {
                         var age = DateTime.UtcNow - order.CreatedAt;
-                        _logger.Debug("Found unplaced order with age {Age}", age);
-
                         if (age > TimeSpan.FromSeconds(90))
                         {
                             _logger.Information("Order {OrderId} is abandoned; deleting", order.Id);
