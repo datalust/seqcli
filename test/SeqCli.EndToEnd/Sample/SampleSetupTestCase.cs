@@ -11,7 +11,7 @@ namespace SeqCli.EndToEnd.Sample
     {
         public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
         {
-            var exit = runner.Exec("sample setup");
+            var exit = runner.Exec("sample setup", "--confirm");
             Assert.Equal(0, exit);
 
             // Depends on the most other entities, so is a pretty good proxy for success.
