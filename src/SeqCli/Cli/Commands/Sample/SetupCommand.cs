@@ -1,4 +1,18 @@
-﻿using System;
+﻿// Copyright Datalust Pty Ltd and Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,28 +26,23 @@ using SeqCli.Util;
 namespace SeqCli.Cli.Commands.Sample
 {
     [Command("sample", "setup", "Configure a Seq instance with sample dashboards, signals, users, and so on",
-        Example = "seqcli sample setup --allow-outbound-requests")]
+        Example = "seqcli sample setup")]
     class SetupCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
 
         readonly ConnectionFeature _connection;
         readonly ConfirmFeature _confirm;
-        // bool _allowOutboundRequests;
 
         public SetupCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            _confirm = Enable<ConfirmFeature>();
+            // The command will also at some point accept an `--allow-outbound-requests` flag, which will cause sample
+            // apps to be installed, and a health check to be set up.
             
-            // Options.Add(
-            //     "allow-outbound-requests",
-            //     "Enable features that make outbound requests from the Seq server when operating, including example" +
-            //     " health checks and app package installation",
-            //     _ => _allowOutboundRequests = true);
-
+            _confirm = Enable<ConfirmFeature>();
             _connection = Enable<ConnectionFeature>();
         }
 
