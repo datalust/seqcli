@@ -1,0 +1,237 @@
+{
+    "OwnerId": null,
+    "Title": "Orders",
+    "IsProtected": false,
+    "SignalExpression": {
+      "Kind": "Signal",
+      "SignalId": ref("signal-Sample Data.json")
+    },
+    "Charts": [
+      {
+        "Title": "Order Lifecycle",
+        "SignalExpression": null,
+        "Queries": [
+          {
+            "Measurements": [
+              {
+                "Value": "count(@EventType = 0x8CC54029)",
+                "Label": "shipped"
+              },
+              {
+                "Value": "count(@EventType = 0x25C09546)",
+                "Label": "created"
+              },
+              {
+                "Value": "count(@EventType = 0xECE21A0A)",
+                "Label": "placed"
+              },
+              {
+                "Value": "count(@EventType = 0x0C664BF4)",
+                "Label": "abandoned"
+              }
+            ],
+            "Where": null,
+            "SignalExpression": null,
+            "GroupBy": [],
+            "DisplayStyle": {
+              "Type": "Bar",
+              "LineFillToZeroY": false,
+              "LineShowMarkers": true,
+              "BarOverlaySum": false,
+              "SuppressLegend": false,
+              "Palette": "Default"
+            },
+            "Alerts": [],
+            "Having": null,
+            "OrderBy": [],
+            "Limit": null
+          }
+        ],
+        "DisplayStyle": {
+          "WidthColumns": 8,
+          "HeightRows": 2
+        }
+      },
+      {
+        "Title": "Product Volume",
+        "SignalExpression": null,
+        "Queries": [
+          {
+            "Measurements": [
+              {
+                "Value": "round(sum(Product.SizeInGrams) / 1000, 1)",
+                "Label": "volume_kg"
+              }
+            ],
+            "Where": "@EventType = 0xA8DC62D6",
+            "SignalExpression": null,
+            "GroupBy": [
+              "Product.Name as product"
+            ],
+            "DisplayStyle": {
+              "Type": "Table",
+              "LineFillToZeroY": false,
+              "LineShowMarkers": true,
+              "BarOverlaySum": false,
+              "SuppressLegend": false,
+              "Palette": "Default"
+            },
+            "Alerts": [],
+            "Having": null,
+            "OrderBy": [
+              "volume_kg desc"
+            ],
+            "Limit": null
+          }
+        ],
+        "DisplayStyle": {
+          "WidthColumns": 4,
+          "HeightRows": 2
+        }
+      },
+      {
+        "Title": "Created",
+        "SignalExpression": {
+          "Kind": "Signal",
+          "SignalId": ref("signal-Order Created.json")
+        },
+        "Queries": [
+          {
+            "Measurements": [
+              {
+                "Value": "count(*)",
+                "Label": "count"
+              }
+            ],
+            "Where": null,
+            "SignalExpression": null,
+            "GroupBy": [],
+            "DisplayStyle": {
+              "Type": "Value",
+              "LineFillToZeroY": false,
+              "LineShowMarkers": true,
+              "BarOverlaySum": false,
+              "SuppressLegend": false,
+              "Palette": "Blues"
+            },
+            "Alerts": [],
+            "Having": null,
+            "OrderBy": [],
+            "Limit": null
+          }
+        ],
+        "DisplayStyle": {
+          "WidthColumns": 3,
+          "HeightRows": 1
+        }
+      },
+      {
+        "Title": "Placed",
+        "SignalExpression": {
+          "Kind": "Signal",
+          "SignalId": ref("signal-Order Placed.json")
+        },
+        "Queries": [
+          {
+            "Measurements": [
+              {
+                "Value": "count(*)",
+                "Label": "count"
+              }
+            ],
+            "Where": null,
+            "SignalExpression": null,
+            "GroupBy": [],
+            "DisplayStyle": {
+              "Type": "Value",
+              "LineFillToZeroY": false,
+              "LineShowMarkers": true,
+              "BarOverlaySum": false,
+              "SuppressLegend": false,
+              "Palette": "OrangePurple"
+            },
+            "Alerts": [],
+            "Having": null,
+            "OrderBy": [],
+            "Limit": null
+          }
+        ],
+        "DisplayStyle": {
+          "WidthColumns": 3,
+          "HeightRows": 1
+        }
+      },
+      {
+        "Title": "Shipped",
+        "SignalExpression": {
+          "Kind": "Signal",
+          "SignalId": ref("signal-Order Shipped.json")
+        },
+        "Queries": [
+          {
+            "Measurements": [
+              {
+                "Value": "count(*)",
+                "Label": "count"
+              }
+            ],
+            "Where": null,
+            "SignalExpression": null,
+            "GroupBy": [],
+            "DisplayStyle": {
+              "Type": "Value",
+              "LineFillToZeroY": false,
+              "LineShowMarkers": true,
+              "BarOverlaySum": false,
+              "SuppressLegend": false,
+              "Palette": "Greens"
+            },
+            "Alerts": [],
+            "Having": null,
+            "OrderBy": [],
+            "Limit": null
+          }
+        ],
+        "DisplayStyle": {
+          "WidthColumns": 3,
+          "HeightRows": 1
+        }
+      },
+      {
+        "Title": "Abandoned",
+        "SignalExpression": {
+          "Kind": "Signal",
+          "SignalId": ref("signal-Order Abandoned.json")
+        },
+        "Queries": [
+          {
+            "Measurements": [
+              {
+                "Value": "count(*)",
+                "Label": "count"
+              }
+            ],
+            "Where": null,
+            "SignalExpression": null,
+            "GroupBy": [],
+            "DisplayStyle": {
+              "Type": "Value",
+              "LineFillToZeroY": false,
+              "LineShowMarkers": true,
+              "BarOverlaySum": false,
+              "SuppressLegend": false,
+              "Palette": "Reds"
+            },
+            "Alerts": [],
+            "Having": null,
+            "OrderBy": [],
+            "Limit": null
+          }
+        ],
+        "DisplayStyle": {
+          "WidthColumns": 3,
+          "HeightRows": 1
+        }
+      }
+    ]
+  }

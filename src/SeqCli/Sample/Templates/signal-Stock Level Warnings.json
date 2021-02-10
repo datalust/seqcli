@@ -1,17 +1,17 @@
 {
-    "Title": "HTTP Requests",
+    "Title": "Stock Level Warnings",
     "Description": "Created by `seqcli sample setup`",
     "Filters": [
       {
         "Description": null,
         "DescriptionIsExcluded": false,
-        "Filter": "@EventType = 0x672bd10e",
-        "FilterNonStrict": null
+        "Filter": "@EventType in [4029526114, 1918830704]",
+        "FilterNonStrict": "@EventType in [0xF02DB062, 0x725F0870]"
       }
     ],
     "Columns": [],
     "IsProtected": false,
-    "Grouping": "None",
+    "Grouping": "Inferred",
     "ExplicitGroupName": null,
     "OwnerId": null
 }

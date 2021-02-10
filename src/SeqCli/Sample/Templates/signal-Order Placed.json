@@ -1,17 +1,17 @@
 {
-    "Title": "HTTP Requests",
+    "Title": "Order Placed",
     "Description": "Created by `seqcli sample setup`",
     "Filters": [
       {
         "Description": null,
         "DescriptionIsExcluded": false,
-        "Filter": "@EventType = 0x672bd10e",
+        "Filter": "@EventType = 0xece21a0a",
         "FilterNonStrict": null
       }
     ],
     "Columns": [],
     "IsProtected": false,
-    "Grouping": "None",
-    "ExplicitGroupName": null,
+    "Grouping": "Explicit",
+    "ExplicitGroupName": "Ordering",
     "OwnerId": null
 }

@@ -1,17 +1,17 @@
 {
-    "Title": "HTTP Requests",
+    "Title": "Sample Data",
     "Description": "Created by `seqcli sample setup`",
     "Filters": [
       {
         "Description": null,
         "DescriptionIsExcluded": false,
-        "Filter": "@EventType = 0x672bd10e",
-        "FilterNonStrict": null
+        "Filter": "Origin = 'seqcli sample ingest'",
+        "FilterNonStrict": "Origin = 'seqcli sample ingest'"
       }
     ],
     "Columns": [],
     "IsProtected": false,
-    "Grouping": "None",
+    "Grouping": "Inferred",
     "ExplicitGroupName": null,
     "OwnerId": null
 }

@@ -1,0 +1,7 @@
+{
+    "Title": "Order Items by Product Size",
+    "Description": "Created by `seqcli sample setup`",
+    "Sql": "select count(*) from stream group by Product.SizeInGrams",
+    "IsProtected": false,
+    "OwnerId": null
+}

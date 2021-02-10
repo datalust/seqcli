@@ -1,17 +1,17 @@
 {
-    "Title": "HTTP Requests",
+    "Title": "Bad Request",
     "Description": "Created by `seqcli sample setup`",
     "Filters": [
       {
         "Description": null,
         "DescriptionIsExcluded": false,
-        "Filter": "@EventType = 0x672bd10e",
+        "Filter": "StatusCode = 400",
         "FilterNonStrict": null
       }
     ],
     "Columns": [],
     "IsProtected": false,
-    "Grouping": "None",
+    "Grouping": "Inferred",
     "ExplicitGroupName": null,
     "OwnerId": null
 }

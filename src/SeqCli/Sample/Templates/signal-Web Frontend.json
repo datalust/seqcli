@@ -1,17 +1,17 @@
 {
-    "Title": "HTTP Requests",
-    "Description": "Created by `seqcli sample setup`",
+    "Title": "Web Frontend",
+    "Description": "Created by `seqcli signal setup`",
     "Filters": [
       {
         "Description": null,
         "DescriptionIsExcluded": false,
-        "Filter": "@EventType = 0x672bd10e",
+        "Filter": "Application = 'Roastery Web Frontend'",
         "FilterNonStrict": null
       }
     ],
     "Columns": [],
     "IsProtected": false,
-    "Grouping": "None",
+    "Grouping": "Inferred",
     "ExplicitGroupName": null,
     "OwnerId": null
 }
