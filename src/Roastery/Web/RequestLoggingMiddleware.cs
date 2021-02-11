@@ -32,7 +32,7 @@ namespace Roastery.Web
             }
             catch (Exception ex1) when (LogCompletion(ex1, request, sw, HttpStatusCode.InternalServerError))
             {
-                // We never hit this, because the exception filter always returns null.
+                // We never hit this, because the exception filter always returns false.
                 throw;
             }
             catch
