@@ -1,0 +1,17 @@
+{
+    "Title": "Bad Request",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "StatusCode = 400",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Inferred",
+    "ExplicitGroupName": null,
+    "OwnerId": null
+}

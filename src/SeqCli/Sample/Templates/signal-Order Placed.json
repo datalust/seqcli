@@ -1,0 +1,17 @@
+{
+    "Title": "Order Placed",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "@EventType = 0xece21a0a",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Explicit",
+    "ExplicitGroupName": "Ordering",
+    "OwnerId": null
+}

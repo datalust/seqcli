@@ -1,0 +1,17 @@
+{
+    "Title": "Information",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "@Level in ['inf', 'info', 'information'] ci",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Explicit",
+    "ExplicitGroupName": "@Level",
+    "OwnerId": null
+}

@@ -24,7 +24,7 @@ namespace SeqCli.Tests.PlainText
             var reader = new FrameReader(
                 new StringReader(source.ToString()),
                 SpanEx.MatchedBy(Character.Letter),
-                TimeSpan.FromMilliseconds(1));
+                TimeSpan.FromMilliseconds(100));
             
             var first = await reader.TryReadAsync();
             Assert.True(first.HasValue);
@@ -44,7 +44,7 @@ namespace SeqCli.Tests.PlainText
             var reader = new FrameReader(
                 new StringReader(""),
                 SpanEx.MatchedBy(Character.Letter),
-                TimeSpan.FromMilliseconds(1));
+                TimeSpan.FromMilliseconds(100));
             
             var none = await reader.TryReadAsync();
             Assert.False(none.HasValue);

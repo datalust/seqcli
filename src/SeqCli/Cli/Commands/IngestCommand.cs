@@ -80,8 +80,8 @@ namespace SeqCli.Cli.Commands
             try
             {
                 var enrichers = new List<ILogEventEnricher>();
-                foreach (var property in _properties.Properties)
-                    enrichers.Add(new ScalarPropertyEnricher(property.Key, property.Value));
+                foreach (var (name, value) in _properties.Properties)
+                    enrichers.Add(new ScalarPropertyEnricher(name, value));
 
                 if (_level != null)
                     enrichers.Add(new ScalarPropertyEnricher(SurrogateLevelProperty.PropertyName, _level));
@@ -95,6 +95,7 @@ namespace SeqCli.Cli.Commands
                 }
 
                 var connection = _connectionFactory.Connect(_connection);
+                var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
 
                 foreach (var input in _fileInputFeature.OpenInputs())
                 {
@@ -109,7 +110,6 @@ namespace SeqCli.Cli.Commands
                         if (_message != null)
                             reader = new StaticMessageTemplateReader(reader, _message);
 
-                        _connectionFactory.TryGetApiKey(_connection, out var apiKey);
                         var exit = await LogShipper.ShipEvents(
                             connection,
                             apiKey,

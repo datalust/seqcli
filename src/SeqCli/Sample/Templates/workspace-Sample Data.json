@@ -1,0 +1,42 @@
+{
+    "Title":"Sample",
+    "Description":"Created by `seqcli sample setup`",
+    "OwnerId":null,
+    "IsProtected":false,
+    "DefaultSignalExpression":{
+        "Kind": "Signal",
+        "SignalId": ref("signal-Sample Data.json")
+    },
+    "Content": {
+        "SignalIds": [
+            "signal-m33301",
+            "signal-m33302",
+            "signal-m33303",
+            ref("signal-Bad Request.json"),
+            ref("signal-Batch Processing.json"),
+            ref("signal-Database.json"),
+            ref("signal-HTTP Requests.json"),
+            ref("signal-Information.json"),
+            ref("signal-Internal Server Error.json"),
+            ref("signal-Not Found.json"),
+            ref("signal-Order Abandoned.json"),
+            ref("signal-Order Archived.json"),
+            ref("signal-Order Created.json"),
+            ref("signal-Order Placed.json"),
+            ref("signal-Order Shipped.json"),
+            ref("signal-Sample Data.json"),
+            ref("signal-Stock Level Warnings.json"),
+            ref("signal-Success.json"),
+            ref("signal-Web Frontend.json")
+        ],
+        "QueryIds": [
+            ref("sqlquery-Order Items by Product Size.json"),
+            ref("sqlquery-Route Bindings.json")
+        ],
+        "DashboardIds": [
+            ref("dashboard-Database.json"),
+            ref("dashboard-HTTP Requests.json"),
+            ref("dashboard-Orders.json")
+        ]
+    }
+}

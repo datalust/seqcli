@@ -1,0 +1,7 @@
+{
+    "RetentionTime": "30.00:00:00",
+    "RemovedSignalExpression": {
+        "Kind": "Signal",
+        "SignalId": ref("signal-Sample Data.json")
+    }
+}
