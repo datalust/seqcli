@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Roastery.Util;
 
 namespace Roastery.Web
 {
     class SchedulingLatencyMiddleware : HttpServer
     {
         readonly HttpServer _next;
-        readonly Random _rng = new Random(DateTime.Now.Millisecond);
 
         const int Capacity = 16; // 16 concurrent requests is just fine :-)
         int _activeRequests;
@@ -22,7 +22,7 @@ namespace Roastery.Web
             var current = Interlocked.Increment(ref _activeRequests);
             try
             {
-                var delay = (int)(10 * _rng.NextDouble());
+                var delay = (int)(10 * Distribution.Uniform());
                 if (current > Capacity)
                 {
                     // One extra millisecond per concurrent request over capacity, ramping up
