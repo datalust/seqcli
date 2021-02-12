@@ -73,29 +73,32 @@ namespace SeqCli.Cli.Commands
                     if (!string.IsNullOrWhiteSpace(_filter))
                         filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
 
-                    string lastReadEventId = null;
+                    string nextPageAfterId = null;
                     var remaining = _count;
                     while (remaining > 0)
                     {
-                        var resultSet = await connection.Events.InSignalAsync(
+                        var page = await connection.Events.InSignalAsync(
                             null,
                             _signal.Signal,
                             filter: filter,
                             count: remaining,
                             fromDateUtc: _range.Start,
                             toDateUtc: _range.End,
-                            afterId: lastReadEventId);
+                            afterId: nextPageAfterId);
 
-                        foreach (var evt in resultSet.Events)
+                        nextPageAfterId = page.Statistics.LastReadEventId;
+
+                        foreach (var evt in page.Events)
                         {
-                            remaining++;
                             output.Write(ToSerilogEvent(evt));
+                            remaining--;
+
+                            if (remaining == 0)
+                                break;
                         }
 
-                        if (resultSet.Statistics.Status != ResultSetStatus.Partial)
+                        if (page.Statistics.Status != ResultSetStatus.Partial)
                             break;
-
-                        lastReadEventId = resultSet.Statistics.LastReadEventId;
                     }
                 }
 
