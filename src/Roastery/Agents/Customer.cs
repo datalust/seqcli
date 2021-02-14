@@ -45,11 +45,7 @@ namespace Roastery.Agents
                 await Task.Delay((int)Distribution.Uniform(5000, 20000), cancellationToken);
                 
                 var product = Distribution.Uniform(products);
-                await _httpClient.PostAsync<OrderItem>(addItemPath, new OrderItem
-                {
-                    OrderId = order.Id,
-                    ProductId = product.Id
-                });
+                await _httpClient.PostAsync<OrderItem>(addItemPath, new OrderItem(order.Id!, product.Id!));
             }
 
             if (Distribution.OnceIn(15))

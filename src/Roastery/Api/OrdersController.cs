@@ -30,6 +30,9 @@ namespace Roastery.Api
         [Route("POST", "api/orders")]
         public async Task<HttpResponse> Create(HttpRequest request)
         {
+            if (request.Body == null)
+                return BadRequest("An order is required.");
+            
             var order = (Order) request.Body;
 
             if (order.CustomerName == null)
@@ -45,6 +48,9 @@ namespace Roastery.Api
         [Route("PUT", "api/orders/{id}")]
         public async Task<HttpResponse> Update(HttpRequest request)
         {
+            if (request.Body == null)
+                return BadRequest("An order is required.");
+            
             var order = (Order) request.Body;
             using var _ = LogContext.PushProperty("OrderId", order.Id);
 
@@ -85,6 +91,9 @@ namespace Roastery.Api
         [Route("POST", "api/orders/{id}/items")]
         public async Task<HttpResponse> AddItem(HttpRequest request)
         {
+            if (request.Body == null)
+                return BadRequest("An order item is required.");
+            
             var item = (OrderItem) request.Body;
             var order = (await _database.SelectAsync<Order>(o => o.Id == item.OrderId, $"id = '{item.OrderId}'")).SingleOrDefault();
             if (order == null)

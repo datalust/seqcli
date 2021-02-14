@@ -41,7 +41,7 @@ namespace Roastery.Web
             }
         }
 
-        bool LogCompletion(Exception exception, HttpRequest request, Stopwatch sw, HttpStatusCode statusCode)
+        bool LogCompletion(Exception? exception, HttpRequest request, Stopwatch sw, HttpStatusCode statusCode)
         {
             var level = (int)statusCode >= 500 ? LogEventLevel.Error : LogEventLevel.Information;
             _logger.Write(level, exception,
