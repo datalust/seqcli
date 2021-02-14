@@ -28,7 +28,7 @@ namespace SeqCli.Templates.Sets
 {
     static class EntityTemplateSet
     {
-        public static async Task<string> ApplyAsync(IEnumerable<EntityTemplateFile> templates, SeqConnection connection)
+        public static async Task<string> ApplyAsync(IEnumerable<EntityTemplateFile> templates, SeqConnection connection, IReadOnlyDictionary<string, JsonTemplate> args)
         {
             var ordering = new[] {"users", "signals", "apps", "appinstances",
                 "dashboards", "sqlqueries", "workspaces", "retentionpolicies"}.ToList();
@@ -40,7 +40,7 @@ namespace SeqCli.Templates.Sets
             
             foreach (var entityTemplateFile in sorted)
             {
-                var err = await ApplyTemplateAsync(entityTemplateFile, ids, connection, apiRoot);
+                var err = await ApplyTemplateAsync(entityTemplateFile, args, ids, connection, apiRoot);
                 if (err != null)
                     return err;
             }
@@ -48,14 +48,19 @@ namespace SeqCli.Templates.Sets
             return null;
         }
 
-        static async Task<string> ApplyTemplateAsync(EntityTemplateFile template, IDictionary<string,string> ids, SeqConnection connection, RootEntity apiRoot)
+        static async Task<string> ApplyTemplateAsync(
+            EntityTemplateFile template,
+            IReadOnlyDictionary<string, JsonTemplate> templateArgs, 
+            IDictionary<string,string> ids,
+            SeqConnection connection,
+            RootEntity apiRoot)
         {
             bool Ref(JsonTemplate[] args, out JsonTemplate result, out string err)
             {
                 if (args.Length != 1 || !(args[0] is JsonTemplateString { Value: { } filename }))
                 {
                     result = null;
-                    err = "The `ref()` function accepts a single string argument.";
+                    err = "The `ref()` function accepts a single string argument corresponding to the referenced template filename.";
                     return false;
                 }
 
@@ -71,7 +76,32 @@ namespace SeqCli.Templates.Sets
                 return true;
             }
 
-            var functions = new Dictionary<string, JsonTemplateFunction> {["ref"] = Ref};
+            bool Arg(JsonTemplate[] args, out JsonTemplate result, out string err)
+            {
+                if (args.Length != 1 || !(args[0] is JsonTemplateString { Value: { } templateArgName }))
+                {
+                    result = null;
+                    err = "The `arg()` function accepts a single string argument corresponding to the template argument name.";
+                    return false;
+                }
+
+                if (!templateArgs.TryGetValue(templateArgName, out result) ||
+                    result == null)
+                {
+                    err = $"The argument `{templateArgName}` is not defined.";
+                    return false;
+                }
+
+                err = null;
+                return true;
+            }
+
+            var functions = new Dictionary<string, JsonTemplateFunction>
+            {
+                ["ref"] = Ref,
+                ["arg"] = Arg
+            };
+            
             if (!JsonTemplateEvaluator.TryEvaluate(template.Entity, functions, out var entity, out var error))
                 return error;
 

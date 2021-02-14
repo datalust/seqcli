@@ -1,5 +1,5 @@
 {
-    "OwnerId": null,
+    "OwnerId": arg("ownerId"),
     "Title": "Orders",
     "IsProtected": false,
     "SignalExpression": {
