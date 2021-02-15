@@ -1,7 +1,7 @@
 {
     "Title":"Sample",
     "Description":"Created by `seqcli sample setup`",
-    "OwnerId":null,
+    "OwnerId": arg("ownerId"),
     "IsProtected":false,
     "DefaultSignalExpression":{
         "Kind": "Signal",

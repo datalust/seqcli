@@ -10,7 +10,7 @@ namespace Roastery.Web
 
         public HttpMethod Method { get; }
         public string RawUrl { get; }
-        public object Body { get; }
+        public object? Body { get; }
         public string Scheme { get; }
         public string Query { get; }
         public string Path { get; }
@@ -20,7 +20,7 @@ namespace Roastery.Web
         public IDictionary<string, IEnumerable<string>> Headers { get; } =
             new Dictionary<string, IEnumerable<string>>();
 
-        public HttpRequest(HttpMethod method, string url, object body = null)
+        public HttpRequest(HttpMethod method, string url, object? body = null)
         {
             Method = method;
             RawUrl = url;

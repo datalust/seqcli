@@ -4,10 +4,10 @@ namespace Roastery.Fake
 {
     class Person
     {
-        public string Name { get; }
-        public string Address { get; }
+        public string? Name { get; }
+        public string? Address { get; }
 
-        public Person(string name, string address)
+        public Person(string? name, string? address)
         {
             Name = name;
             Address = address;

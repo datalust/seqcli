@@ -6,9 +6,9 @@ namespace Roastery.Web
     class HttpResponse
     {
         public HttpStatusCode StatusCode { get; }
-        public object Body { get; }
+        public object? Body { get; }
 
-        public HttpResponse(HttpStatusCode statusCode, object body = null)
+        public HttpResponse(HttpStatusCode statusCode, object? body = null)
         {
             StatusCode = statusCode;
             Body = body;

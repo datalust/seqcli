@@ -16,6 +16,7 @@ namespace Roastery.Web
 
         class RouteBinding
         {
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
             public HttpMethod Method { get; }
             public string Template { get; }
             public string Controller { get; }
@@ -51,7 +52,7 @@ namespace Roastery.Web
                 {
                     var controllerName = controller.GetType().Name;
                     var actionName = method.Name;
-                    var httpMethod = new HttpMethod(route.Method.ToUpperInvariant());
+                    var httpMethod = new HttpMethod(route!.Method.ToUpperInvariant());
                     
                     var binding = new RouteBinding(
                         httpMethod,
@@ -62,7 +63,7 @@ namespace Roastery.Web
                         {
                             using var _ = LogContext.PushProperty("Controller", controllerName);
                             using var __ = LogContext.PushProperty("Action", actionName);
-                            return (Task<HttpResponse>) method.Invoke(controller, new object[] {r});
+                            return (Task<HttpResponse>) method.Invoke(controller, new object[] {r})!;
                         });
                     
                     _logger.Debug("Binding route HTTP {HttpMethod} {RouteTemplate} to action method {Controller}.{Action}()",
@@ -80,6 +81,7 @@ namespace Roastery.Web
 
             var requestPath = request.Path.TrimStart('/');
             var (_, _, route) = _routes.FirstOrDefault(r => r.Item1 == request.Method && r.Item2.IsMatch(requestPath));
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (route == null)
             {
                 _logger.Debug("No action method is bound for this route");

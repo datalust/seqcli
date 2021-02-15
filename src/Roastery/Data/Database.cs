@@ -29,7 +29,7 @@ namespace Roastery.Data
             {
                 foreach (var row in rows)
                 {
-                    _data.Add(row.Id, Clone(row));
+                    _data.Add(row.Id ?? throw new ArgumentException("Rows must have an id assigned before insertion."), Clone(row));
                 }
             }
         }
@@ -40,8 +40,8 @@ namespace Roastery.Data
         }
         
         public async Task<List<T>> SelectAsync<T>(
-            Func<T, bool> predicate,
-            string where) where T: IIdentifiable, new()
+            Func<T, bool>? predicate,
+            string? where) where T: IIdentifiable, new()
         {
             // Not how you should build SQL at home, folks ;-)
             var sql = $"select * from {TableName<T>()}";
@@ -80,8 +80,8 @@ namespace Roastery.Data
             var rows = 0;
             lock (_sync)
             {
-                if (_data.TryGetValue(row.Id, out var existing) &&
-                    existing is T)
+                if (_data.TryGetValue(row.Id ?? throw new ArgumentException("Rows must have an id assigned before updating."), out var existing) &&
+                                      existing is T)
                 {
                     rows = 1;
                     _data[row.Id] = Clone(row);
@@ -103,7 +103,7 @@ namespace Roastery.Data
                 foreach (var r in _data.Values.OfType<T>())
                 {
                     if (predicate(r))
-                        ids.Add(r.Id);
+                        ids.Add(r.Id ?? throw new ArgumentException("Rows must have an id assigned."));
                 }
 
                 foreach (var id in ids)
@@ -118,7 +118,7 @@ namespace Roastery.Data
             await LogExecAsync(sql, rows);
         }
 
-        static string AsSqlLiteral(object o)
+        static string AsSqlLiteral(object? o)
         {
             if (o == null) return "null";
             if (o is string s) return $"'{s.Replace("'", "''")}'";

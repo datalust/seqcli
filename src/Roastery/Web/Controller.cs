@@ -12,12 +12,12 @@ namespace Roastery.Web
             Log = logger.ForContext(GetType());
         }
 
-        protected static HttpResponse Json(object body, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected static HttpResponse Json(object? body, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             return new(statusCode, body);
         }
 
-        protected HttpResponse BadRequest(string reason = null)
+        protected HttpResponse BadRequest(string? reason = null)
         {
             Log.Debug("Bad request: {Reason}", reason);
             return new HttpResponse(HttpStatusCode.BadRequest, reason);

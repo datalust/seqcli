@@ -15,10 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Templates.Ast;
 using SeqCli.Templates.Files;
 using SeqCli.Templates.Sets;
 using SeqCli.Util;
@@ -57,6 +59,13 @@ namespace SeqCli.Cli.Commands.Sample
                 return 1;
             }
 
+            var templateArgs = new Dictionary<string, JsonTemplate>();
+            var users = await connection.Users.ListAsync();
+            if (users.Count == 1)
+                templateArgs["ownerId"] = new JsonTemplateString(users.Single().Id);
+            else
+                templateArgs["ownerId"] = new JsonTemplateNull();
+
             var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
             var templateFiles = Directory.GetFiles(templatesPath);
             var templates = new List<EntityTemplateFile>();
@@ -71,7 +80,7 @@ namespace SeqCli.Cli.Commands.Sample
                 templates.Add(template);
             }
 
-            var err = await EntityTemplateSet.ApplyAsync(templates, connection);
+            var err = await EntityTemplateSet.ApplyAsync(templates, connection, templateArgs);
             if (err != null)
             {
                 await Console.Error.WriteLineAsync(err);
