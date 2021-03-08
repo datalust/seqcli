@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Util;
 using Serilog.Events;
 using Serilog.Parsing;
 
@@ -29,7 +30,7 @@ namespace SeqCli.Ingestion
                 result.LogEvent.Level,
                 result.LogEvent.Exception,
                 _messageTemplate,
-                result.LogEvent.Properties.Select(kv => new LogEventProperty(kv.Key, kv.Value)));
+                result.LogEvent.Properties.Select(kv => LogEventPropertyFactory.SafeCreate(kv.Key, kv.Value)));
 
             return new ReadResult(evt, result.IsAtEnd);
         }

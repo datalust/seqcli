@@ -134,7 +134,7 @@ namespace SeqCli.Cli.Commands
 
         LogEventProperty CreateProperty(string name, object value)
         {
-            return new LogEventProperty(name, CreatePropertyValue(value));
+            return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
         }
 
         LogEventPropertyValue CreatePropertyValue(object value)

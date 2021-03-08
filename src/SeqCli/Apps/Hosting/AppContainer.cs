@@ -147,15 +147,12 @@ namespace SeqCli.Apps.Hosting
 
             eventId = "event-0";
             if (raw.Properties.TryGetValue("@seqid", out var id) &&
-                id is ScalarValue svid &&
-                svid.Value is string sid)
+                id is ScalarValue {Value: string sid})
                 eventId = sid;
 
             eventType = 0u;
             if (raw.Properties.TryGetValue("@i", out var et) &&
-                et is ScalarValue svet &&
-                svet.Value is string set &&
-                uint.TryParse(set, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var uet))
+                et is ScalarValue {Value: string set} && uint.TryParse(set, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var uet))
                 eventType = uet;
 
             return raw;

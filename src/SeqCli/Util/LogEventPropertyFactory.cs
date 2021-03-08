@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using SeqCli.Util;
-using Serilog.Core;
+using System;
 using Serilog.Events;
 
-namespace SeqCli.Ingestion
+namespace SeqCli.Util
 {
-    class ScalarPropertyEnricher : ILogEventEnricher
+    static class LogEventPropertyFactory
     {
-        readonly LogEventProperty _property;
-
-        public ScalarPropertyEnricher(string name, object scalarValue)
+        const string InvalidPropertyNameSubstitute = "(unnamed)";
+        
+        public static LogEventProperty SafeCreate(string name, LogEventPropertyValue value)
         {
-            _property = LogEventPropertyFactory.SafeCreate(name, new ScalarValue(scalarValue));
-        }
-
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            logEvent.AddOrUpdateProperty(_property);
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            
+            if (!LogEventProperty.IsValidName(name))
+                name = InvalidPropertyNameSubstitute;
+            
+            return new LogEventProperty(name, value);
         }
     }
 }

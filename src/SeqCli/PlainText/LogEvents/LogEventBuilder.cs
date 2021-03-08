@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using SeqCli.Levels;
+using SeqCli.Util;
 using Serilog.Events;
 using Serilog.Parsing;
 using Superpower.Model;
@@ -76,12 +77,12 @@ namespace SeqCli.PlainText.LogEvents
             var payload = properties
                 .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
                 .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object)level) })
-                .Select(p => new LogEventProperty(p.Key, new ScalarValue(p.Value)));
+                .Select(p => LogEventPropertyFactory.SafeCreate(p.Key, new ScalarValue(p.Value)));
 
             if (remainder != null)
                 payload = payload.Concat(new[]
                 {
-                    new LogEventProperty("@unmatched", new ScalarValue(remainder))
+                    LogEventPropertyFactory.SafeCreate("@unmatched", new ScalarValue(remainder))
                 });
             return payload;
         }

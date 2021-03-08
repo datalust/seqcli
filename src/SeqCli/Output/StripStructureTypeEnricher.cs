@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using SeqCli.Util;
 using Serilog.Core;
 using Serilog.Data;
 using Serilog.Events;
@@ -11,7 +12,7 @@ namespace SeqCli.Output
         {
             foreach (var property in logEvent.Properties)
             {
-                var updated = new LogEventProperty(property.Key, Visit(null, property.Value));
+                var updated = LogEventPropertyFactory.SafeCreate(property.Key, Visit(null, property.Value));
                 logEvent.AddOrUpdateProperty(updated);
             }
         }
@@ -19,7 +20,7 @@ namespace SeqCli.Output
         protected override LogEventPropertyValue VisitStructureValue(object state, StructureValue structure)
         {
             return new StructureValue(structure.Properties.Select(p =>
-                new LogEventProperty(p.Name, Visit(null, p.Value))));
+                LogEventPropertyFactory.SafeCreate(p.Name, Visit(null, p.Value))));
         }
     }
 }
