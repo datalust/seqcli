@@ -33,7 +33,7 @@ function Publish-Archives($version)
 	        $tfm = "$tfm$windowsTfmSuffix"
 	    }
 	    
-		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid
+		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid /p:VersionPrefix=$version
 		if($LASTEXITCODE -ne 0) { exit 4 }
 
 		# Make sure the archive contains a reasonable root filename
@@ -59,7 +59,7 @@ function Publish-Archives($version)
 
 function Publish-DotNetTool($version)
 {	
-	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version 
+	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version
 }
 
 Push-Location $PSScriptRoot

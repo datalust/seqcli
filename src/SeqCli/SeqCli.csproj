@@ -12,7 +12,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>seqcli</ToolCommandName>
   </PropertyGroup>
-  <Import Project="..\..\SeqCli.Runtime.targets" />
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
     <Content Include="Attribution\*.txt;..\..\LICENSE">

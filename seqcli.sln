@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{2EA56595-519
 		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
-		SeqCli.Runtime.targets = SeqCli.Runtime.targets
 		setup.sh = setup.sh
 		Build.Docker.ps1 = Build.Docker.ps1
 		docker-publish.ps1 = docker-publish.ps1

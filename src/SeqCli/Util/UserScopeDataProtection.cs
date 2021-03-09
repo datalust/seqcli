@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if WINDOWS
-
 using System;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace SeqCli.Util
 {
+    [SupportedOSPlatform("windows")]
     static class UserScopeDataProtection
     {
         public static string Unprotect(string @protected)
@@ -45,5 +45,3 @@ namespace SeqCli.Util
         }
     }
 }
-
-#endif
