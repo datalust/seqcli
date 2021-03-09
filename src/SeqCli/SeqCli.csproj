@@ -1,9 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SeqCli.Runtime.targets" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework Condition=" '$(IsWindows)' == 'true' ">net5.0-windows</TargetFramework>
-    <TargetFramework Condition=" '$(IsWindows)' != 'true' ">net5.0</TargetFramework>
+    <TargetFrameworks>net5.0;net5.0-windows</TargetFrameworks>
     <AssemblyName>seqcli</AssemblyName>
     <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;linux-musl-x64;osx-x64</RuntimeIdentifiers>
@@ -14,6 +12,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>seqcli</ToolCommandName>
   </PropertyGroup>
+  <Import Project="..\..\SeqCli.Runtime.targets" />
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
     <Content Include="Attribution\*.txt;..\..\LICENSE">

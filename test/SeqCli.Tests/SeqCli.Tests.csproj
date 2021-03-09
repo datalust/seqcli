@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SeqCli.Runtime.targets" />
   <PropertyGroup>
-    <TargetFramework Condition=" '$(IsWindows)' == 'true' ">net5.0-windows</TargetFramework>
-    <TargetFramework Condition=" '$(IsWindows)' != 'true' ">net5.0</TargetFramework>
+    <TargetFrameworks>net5.0;net5.0-windows</TargetFrameworks>
     <Platforms>x64</Platforms>
     <LangVersion>8</LangVersion>
   </PropertyGroup>

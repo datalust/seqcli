@@ -30,7 +30,7 @@ function Publish-Archives($version)
 	foreach ($rid in $rids) {
 	    $tfm = $framework
 	    if ($rid -eq "win-x64") {
-	        $tfm = "$(tfm)$(windowsTfmSuffix)"
+	        $tfm = "$tfm$windowsTfmSuffix"
 	    }
 	    
 		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid
