@@ -13,11 +13,13 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace SeqCli.Util
 {
+    [SupportedOSPlatform("windows")]
     static class UserScopeDataProtection
     {
         public static string Unprotect(string @protected)

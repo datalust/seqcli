@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $framework = 'net5.0'
+$windowsTfmSuffix = '-windows'
 
 function Clean-Output
 {
@@ -27,21 +28,26 @@ function Publish-Archives($version)
 {
 	$rids = @("linux-x64", "linux-musl-x64", "osx-x64", "win-x64")
 	foreach ($rid in $rids) {
-		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid /p:VersionPrefix=$version /p:SeqCliRid=$rid
+	    $tfm = $framework
+	    if ($rid -eq "win-x64") {
+	        $tfm = "$tfm$windowsTfmSuffix"
+	    }
+	    
+		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid /p:VersionPrefix=$version
 		if($LASTEXITCODE -ne 0) { exit 4 }
 
 		# Make sure the archive contains a reasonable root filename
-		mv ./src/SeqCli/bin/Release/$framework/$rid/publish/ ./src/SeqCli/bin/Release/$framework/$rid/seqcli-$version-$rid/
+		mv ./src/SeqCli/bin/Release/$tfm/$rid/publish/ ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
 
 		if ($rid.StartsWith("win-")) {
-			& ./build/7-zip/7za.exe a -tzip ./artifacts/seqcli-$version-$rid.zip ./src/SeqCli/bin/Release/$framework/$rid/seqcli-$version-$rid/
+			& ./build/7-zip/7za.exe a -tzip ./artifacts/seqcli-$version-$rid.zip ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
 			if($LASTEXITCODE -ne 0) { exit 5 }
 		} else {
-			& ./build/7-zip/7za.exe a -ttar seqcli-$version-$rid.tar ./src/SeqCli/bin/Release/$framework/$rid/seqcli-$version-$rid/
+			& ./build/7-zip/7za.exe a -ttar seqcli-$version-$rid.tar ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
 			if($LASTEXITCODE -ne 0) { exit 5 }
 
 			# Back to the original directory name
-			mv ./src/SeqCli/bin/Release/$framework/$rid/seqcli-$version-$rid/ ./src/SeqCli/bin/Release/$framework/$rid/publish/
+			mv ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/ ./src/SeqCli/bin/Release/$tfm/$rid/publish/
 			
 			& ./build/7-zip/7za.exe a -tgzip ./artifacts/seqcli-$version-$rid.tar.gz seqcli-$version-$rid.tar
 			if($LASTEXITCODE -ne 0) { exit 6 }
@@ -53,7 +59,7 @@ function Publish-Archives($version)
 
 function Publish-DotNetTool($version)
 {	
-	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version 
+	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version
 }
 
 Push-Location $PSScriptRoot
