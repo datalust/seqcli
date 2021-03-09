@@ -1,0 +1,17 @@
+{
+    "Title": "HTTP Requests",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "@EventType = 0x672bd10e",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "None",
+    "ExplicitGroupName": null,
+    "OwnerId": arg("ownerId")
+}

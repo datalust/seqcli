@@ -1,0 +1,17 @@
+{
+    "Title": "Success",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "StatusCode >= 200 and StatusCode < 300",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Explicit",
+    "ExplicitGroupName": "StatusCode",
+    "OwnerId": arg("ownerId")
+}

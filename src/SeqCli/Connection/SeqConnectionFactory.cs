@@ -30,6 +30,12 @@ namespace SeqCli.Connection
 
         public SeqConnection Connect(ConnectionFeature connection)
         {
+            var (url, apiKey) = GetConnectionDetails(connection);
+            return new SeqConnection(url, apiKey);
+        }
+        
+        public (string, string) GetConnectionDetails(ConnectionFeature connection)
+        {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
 
             string url, apiKey;
@@ -52,17 +58,7 @@ namespace SeqCli.Connection
                 apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.ApiKey;
             }
 
-            return new SeqConnection(url, apiKey);
-        }
-
-        public bool TryGetApiKey(ConnectionFeature connection, out string apiKey)
-        {
-            apiKey = connection.IsUrlSpecified ?
-                                connection.ApiKey :
-                                connection.IsApiKeySpecified ? 
-                                    connection.ApiKey :
-                                    _config.Connection.ApiKey;
-            return apiKey != null;
+            return (url, apiKey);
         }
     }
 }

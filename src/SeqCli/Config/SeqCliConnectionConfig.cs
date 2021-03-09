@@ -30,11 +30,13 @@ namespace SeqCli.Config
         [JsonIgnore]
         public string ApiKey
         {
-#if WINDOWS
             get
             {
                 if (string.IsNullOrWhiteSpace(EncodedApiKey))
                     return null;
+
+                if (!OperatingSystem.IsWindows())
+                    return EncodedApiKey;
 
                 if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
                     return EncodedApiKey;
@@ -49,12 +51,11 @@ namespace SeqCli.Config
                     return;
                 }
 
-                EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
+                if (OperatingSystem.IsWindows())
+                    EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
+                else
+                    EncodedApiKey = value;
             }
-#else
-            get { return EncodedApiKey; }
-            set { EncodedApiKey = value; }
-#endif
         }
     }
 }

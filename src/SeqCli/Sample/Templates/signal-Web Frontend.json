@@ -1,0 +1,17 @@
+{
+    "Title": "Web Frontend",
+    "Description": "Created by `seqcli signal setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "Application = 'Roastery Web Frontend'",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Inferred",
+    "ExplicitGroupName": null,
+    "OwnerId": arg("ownerId")
+}

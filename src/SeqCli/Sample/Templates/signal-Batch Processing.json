@@ -1,0 +1,17 @@
+{
+    "Title": "Batch Processing",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "Application = 'Roastery Batch Processing'",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Inferred",
+    "ExplicitGroupName": null,
+    "OwnerId": arg("ownerId")
+}

@@ -1,0 +1,17 @@
+{
+    "Title": "Order Abandoned",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "@EventType = 0x0c664bf4",
+        "FilterNonStrict": null
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Explicit",
+    "ExplicitGroupName": "Ordering",
+    "OwnerId": arg("ownerId")
+}

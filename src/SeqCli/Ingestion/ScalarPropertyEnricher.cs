@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using SeqCli.Util;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -23,7 +24,7 @@ namespace SeqCli.Ingestion
 
         public ScalarPropertyEnricher(string name, object scalarValue)
         {
-            _property = new LogEventProperty(name, new ScalarValue(scalarValue));
+            _property = LogEventPropertyFactory.SafeCreate(name, new ScalarValue(scalarValue));
         }
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)

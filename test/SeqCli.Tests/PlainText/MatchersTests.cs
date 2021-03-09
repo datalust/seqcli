@@ -62,5 +62,29 @@ namespace SeqCli.Tests.PlainText
             var s = Matchers.WhiteSpace(input);
             Assert.False(s.HasValue);
         }
+
+        [Fact]
+        public void UnixDtMatcherAssumesSecondsProducesUtcTimestamps()
+        {
+            var timestamp = "999999999";
+            var result = Matchers.UnixTimestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.0000000+00:00"), result);
+        }
+
+        [Fact]
+        public void UnixDtMatcherAssumesFractionalSecondsProducesUtcTimestamps()
+        {
+            var timestamp = "999999999.999";
+            var result = Matchers.UnixTimestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.9990000+00:00"), result);
+        }
+
+        [Fact]
+        public void UnixDtMatcherAssumesMilliProducesUtcTimestamps()
+        {
+            var timestamp = "999999999999";
+            var result = Matchers.UnixTimestamp.Parse(timestamp);
+            Assert.Equal(DateTimeOffset.Parse("2001-09-09T01:46:39.9990000+00:00"), result);
+        }
     }
 }
