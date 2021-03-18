@@ -59,7 +59,8 @@ function Publish-Archives($version)
 
 function Publish-DotNetTool($version)
 {	
-	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version
+	# Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
+	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFramework=$framework /p:TargetFrameworks=
 }
 
 Push-Location $PSScriptRoot
