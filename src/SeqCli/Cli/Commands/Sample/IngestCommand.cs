@@ -28,17 +28,20 @@ namespace SeqCli.Cli.Commands.Sample
         
         readonly ConnectionFeature _connection;
         readonly ConfirmFeature _confirm;
+        readonly BatchSizeFeature _batchSize;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             _confirm = Enable<ConfirmFeature>();
             _connection = Enable<ConnectionFeature>();
+            _batchSize = Enable<BatchSizeFeature>();
         }
         
         protected override async Task<int> Run()
         {
             var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+            var batchSize = _batchSize.Value;
             
             if (!_confirm.TryConfirm($"This will send sample events to the Seq server at {url}."))
             {
@@ -47,7 +50,7 @@ namespace SeqCli.Cli.Commands.Sample
             }
 
             var connection = _connectionFactory.Connect(_connection);
-            await Simulation.RunAsync(connection, apiKey);
+            await Simulation.RunAsync(connection, apiKey, batchSize);
             return 0;
         }
     }
