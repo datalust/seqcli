@@ -39,6 +39,7 @@ namespace SeqCli.Cli.Commands
         readonly PropertiesFeature _properties;
         readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
         readonly ConnectionFeature _connection;
+        readonly BatchSizeFeature _batchSize;
         string _filter, _pattern = DefaultPattern, _level, _message;
         bool _json;
 
@@ -73,6 +74,7 @@ namespace SeqCli.Cli.Commands
 
             _sendFailureHandlingFeature = Enable<SendFailureHandlingFeature>();            
             _connection = Enable<ConnectionFeature>();
+            _batchSize = Enable<BatchSizeFeature>();
         }
 
         protected override async Task<int> Run()
@@ -96,6 +98,7 @@ namespace SeqCli.Cli.Commands
 
                 var connection = _connectionFactory.Connect(_connection);
                 var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+                var batchSize = _batchSize.Value;
 
                 foreach (var input in _fileInputFeature.OpenInputs())
                 {
@@ -116,6 +119,7 @@ namespace SeqCli.Cli.Commands
                             reader,
                             _invalidDataHandlingFeature.InvalidDataHandling,
                             _sendFailureHandlingFeature.SendFailureHandling,
+                            batchSize,
                             filter);
 
                         if (exit != 0)
