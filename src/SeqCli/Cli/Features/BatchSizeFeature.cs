@@ -11,8 +11,8 @@ namespace SeqCli.Cli.Features
 
         public override void Enable(OptionSet options)
         {
-            options.Add("batchsize=",
-                "The number of events in each batch to send to Seq.",
+            options.Add("batch-size=",
+                $"The maximum number of events to send in each request to the ingestion endpoint; if not specified a value of `{DefaultBatchSize}` will be used",
                 v => _value = int.Parse(ArgumentString.Normalize(v)));
         }
     }
