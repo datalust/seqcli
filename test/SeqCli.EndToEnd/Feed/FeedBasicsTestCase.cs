@@ -13,6 +13,9 @@ namespace SeqCli.EndToEnd.Feed
         public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
         {
             var exit = runner.Exec("feed list", "-n nuget.org");
+            Assert.Equal(0, exit);
+
+            exit = runner.Exec("feed list", "-i feed-missing");
             Assert.Equal(1, exit);
 
             AssertExistence(runner, "Example", false);
