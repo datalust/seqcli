@@ -74,14 +74,12 @@ namespace SeqCli.Levels
             ["panic"] = ("Panic", LogEventLevel.Fatal)
         };
 
-        static readonly LogEventLevel DefaultLevel = LogEventLevel.Information;
-
         public static LogEventLevel ToSerilogLevel(string level)
         {
             if (string.IsNullOrEmpty(level))
-                return DefaultLevel;
+                return LogEventLevel.Information;
             
-            return LevelsByName.TryGetValue(level, out var m) ? m.Item2 : DefaultLevel;
+            return LevelsByName.TryGetValue(level, out var m) ? m.Item2 : LogEventLevel.Information;
         }
 
         public static string ToFullLevelName(string level)
