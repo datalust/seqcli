@@ -15,14 +15,17 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Seq.Api;
 using Seq.Api.Model.Inputs;
 using Seq.Api.Model.LogEvents;
+using Seq.Api.Model.Security;
 using Seq.Api.Model.Shared;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Levels;
 using SeqCli.Util;
+using Serilog;
 
 namespace SeqCli.Cli.Commands.ApiKey
 {
@@ -36,8 +39,9 @@ namespace SeqCli.Cli.Commands.ApiKey
         readonly PropertiesFeature _properties;
         readonly OutputFormatFeature _output;
 
-        string _title, _token, _filter, _level;
-        bool _useServerTimestamps;
+        string _title, _token, _filter, _level, _connectUsername, _connectPassword;
+        string[] _permissions;
+        bool _useServerTimestamps, _connectPasswordStdin;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -70,15 +74,36 @@ namespace SeqCli.Cli.Commands.ApiKey
                 "Discard client-supplied timestamps and use server clock values",
                 _ => _useServerTimestamps = true);
 
+            Options.Add(
+                "permissions=",
+                "The permissions to delegate to the API key; the default is `Ingest`",
+                v => _permissions = ArgumentString.NormalizeList(v));
+
+            Options.Add(
+                "connect-username=",
+                "A username to connect with, useful primarily when setting up the first API key",
+                v => _connectUsername = ArgumentString.Normalize(v));
+
+            Options.Add(
+                "connect-password=",
+                "When `connect-username` is specified, a corresponding password",
+                v => _connectPassword = ArgumentString.Normalize(v));
+
+            Options.Add(
+                "connect-password-stdin",
+                "When `connect-username` is specified, read the corresponding password from `STDIN`",
+                _ => _connectPasswordStdin = true);
+
             _connection = Enable<ConnectionFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
         }
 
         protected override async Task<int> Run()
         {
-            var connection = _connectionFactory.Connect(_connection);
-
-            // Default will apply the ingest permission
+            var connection = await TryConnectAsync();
+            if (connection == null)
+                return 1;
+            
             var apiKey = await connection.ApiKeys.TemplateAsync();
 
             apiKey.Title = _title;
@@ -104,6 +129,25 @@ namespace SeqCli.Cli.Commands.ApiKey
                 apiKey.InputSettings.MinimumLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_level));
             }
 
+            apiKey.AssignedPermissions.Clear();
+            if (_permissions != null)
+            {
+                foreach (var permission in _permissions)
+                {
+                    if (!Enum.TryParse<Permission>(permission, out var p))
+                    {
+                        Log.Error("Unrecognized permission {Permission}", p);
+                        return 1;
+                    }
+
+                    apiKey.AssignedPermissions.Add(p);
+                }
+            }
+            else
+            {
+                apiKey.AssignedPermissions.Add(Permission.Ingest);
+            }
+
             apiKey = await connection.ApiKeys.AddAsync(apiKey);
 
             if (_token == null && !_output.Json)
@@ -116,6 +160,40 @@ namespace SeqCli.Cli.Commands.ApiKey
             }
 
             return 0;
+        }
+
+        async Task<SeqConnection> TryConnectAsync()
+        {
+            SeqConnection connection;
+            if (_connectUsername != null)
+            {
+                if (_connection.IsApiKeySpecified)
+                {
+                    Log.Error("The `connect-username` and `apikey` options are mutually exclusive");
+                    return null;
+                }
+                
+                if (_connectPasswordStdin)
+                {
+                    if (_connectPassword != null)
+                    {
+                        Log.Error("The `connect-password` and `connect-password-stdin` options are mutually exclusive");
+                        return null;
+                    }
+
+                    _connectPassword = await Console.In.ReadLineAsync();
+                }
+
+                var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
+                connection = new SeqConnection(url);
+                await connection.Users.LoginAsync(_connectUsername, _connectPassword);
+            }
+            else
+            {
+                connection = _connectionFactory.Connect(_connection);
+            }
+
+            return connection;
         }
     }
 }
