@@ -21,7 +21,7 @@ namespace SeqCli.Levels
     public static class LevelMapping
     {
         static readonly Dictionary<string, (string, LogEventLevel)> LevelsByName =
-            new Dictionary<string, (string, LogEventLevel)>(StringComparer.OrdinalIgnoreCase)
+            new(StringComparer.OrdinalIgnoreCase)
         {
             ["t"] = ("Trace", LogEventLevel.Verbose),
             ["tr"] = ("Trace", LogEventLevel.Verbose),
@@ -76,6 +76,9 @@ namespace SeqCli.Levels
 
         public static LogEventLevel ToSerilogLevel(string level)
         {
+            if (string.IsNullOrEmpty(level))
+                return LogEventLevel.Information;
+            
             return LevelsByName.TryGetValue(level, out var m) ? m.Item2 : LogEventLevel.Information;
         }
 
