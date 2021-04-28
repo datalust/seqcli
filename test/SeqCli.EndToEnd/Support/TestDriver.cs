@@ -32,7 +32,8 @@ namespace SeqCli.EndToEnd.Support
 
             foreach (var testCaseFactory in _cases.OrderBy(c => Guid.NewGuid()))
             {
-                if (testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser) && !_configuration.IsMultiuser)
+                var isMultiuser = testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser);
+                if (isMultiuser != _configuration.IsMultiuser)
                     continue;
 
                 count++;

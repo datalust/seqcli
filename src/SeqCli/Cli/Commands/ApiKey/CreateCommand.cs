@@ -186,7 +186,7 @@ namespace SeqCli.Cli.Commands.ApiKey
 
                 var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
                 connection = new SeqConnection(url);
-                await connection.Users.LoginAsync(_connectUsername, _connectPassword);
+                await connection.Users.LoginAsync(_connectUsername, _connectPassword ?? "");
             }
             else
             {
