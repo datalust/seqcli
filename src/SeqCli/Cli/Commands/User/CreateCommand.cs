@@ -16,7 +16,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Shared;
-using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -98,8 +97,14 @@ namespace SeqCli.Cli.Commands.User
                     return 1;
                 }
 
-                while (string.IsNullOrEmpty(_password))
-                    _password = await Console.In.ReadLineAsync();
+                _password = await Console.In.ReadLineAsync();
+                if (string.IsNullOrEmpty(_password))
+                {
+                    // Prevent accidental creation of empty-password accounts if scripts malfunction and empty
+                    // lines appear in the input.
+                    Log.Error("The `password-stdin` option requires that a non-empty password be supplied");
+                    return 1;
+                }
             }
 
             if (_password != null)
