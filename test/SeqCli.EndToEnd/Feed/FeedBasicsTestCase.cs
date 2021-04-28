@@ -31,7 +31,7 @@ namespace SeqCli.EndToEnd.Feed
             Assert.Equal("Test", feed.Username);
             Assert.Null(feed.NewPassword);
 
-            exit = runner.Exec("feed remove", "-t Example");
+            exit = runner.Exec("feed remove", "-n Example");
             Assert.Equal(0, exit);
             
             AssertExistence(runner, "Example", false);
