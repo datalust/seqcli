@@ -34,7 +34,7 @@ namespace SeqCli.Cli.Commands.User
         readonly OutputFormatFeature _output;
 
         string _username, _displayName, _roleTitle, _filter, _emailAddress, _password;
-        bool _passwordStdin;
+        bool _passwordStdin, _noPasswordChange;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -75,6 +75,11 @@ namespace SeqCli.Cli.Commands.User
                 "Read the initial password for the user from `STDIN`, if username/password authentication is in use",
                 _ => _passwordStdin = true);
 
+            Options.Add(
+                "no-password-change",
+                "Don't force the user to change their password at next login",
+                _ => _noPasswordChange = true);
+            
             _connection = Enable<ConnectionFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
         }
@@ -110,7 +115,7 @@ namespace SeqCli.Cli.Commands.User
             if (_password != null)
             {
                 user.NewPassword = _password;
-                user.MustChangePassword = true;
+                user.MustChangePassword = !_noPasswordChange;
             }
             
             if (_roleTitle == null)
