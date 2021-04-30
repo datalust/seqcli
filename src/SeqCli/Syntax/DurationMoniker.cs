@@ -51,9 +51,9 @@ namespace SeqCli.Syntax
             // This is not at all robust; we could use a decent duration parser for use here in `seqcli`.
 
             if (duration.EndsWith("ms"))
-                return TimeSpan.FromMilliseconds(int.Parse(duration.Substring(0, duration.Length - 2)));
+                return TimeSpan.FromMilliseconds(int.Parse(duration[..^2]));
 
-            var value = int.Parse(duration.Substring(0, duration.Length - 1), CultureInfo.InvariantCulture);
+            var value = int.Parse(duration[..^1], CultureInfo.InvariantCulture);
             switch (duration[^1])
             {
                 case 'd':
