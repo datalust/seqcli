@@ -12,10 +12,11 @@ Install or unzip the [release for your operating system](https://github.com/data
 dotnet tool install --global seqcli
 ```
 
-To set a default server URL, run:
+To set a default server URL and API key, run:
 
 ```
 seqcli config -k connection.serverUrl -v https://your-seq-server
+seqcli config -k connection.apiKey -v your-api-key
 ```
 
 The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
