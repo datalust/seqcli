@@ -21,7 +21,7 @@ namespace SeqCli.Sample.Loader
 {
     static class Simulation
     {
-        public static async Task RunAsync(SeqConnection connection, string apiKey)
+        public static async Task RunAsync(SeqConnection connection, string apiKey, int batchSize)
         {
             var reader = new BufferingSink();
             
@@ -34,7 +34,7 @@ namespace SeqCli.Sample.Loader
                 .CreateLogger();
 
             var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, reader,
-                InvalidDataHandling.Fail, SendFailureHandling.Continue));
+                InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
 
             await Roastery.Program.Main(logger);
             logger.Dispose();

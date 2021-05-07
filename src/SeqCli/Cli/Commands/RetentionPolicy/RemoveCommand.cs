@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,41 +16,46 @@ using System;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
-using SeqCli.Sample.Loader;
+using Serilog;
 
-namespace SeqCli.Cli.Commands.Sample
+namespace SeqCli.Cli.Commands.RetentionPolicy
 {
-    [Command("sample", "ingest", "Log sample events into a Seq instance",
-        Example = "seqcli sample ingest")]
-    class IngestCommand : Command
+    [Command("retention", "remove", "Remove a retention policy from the server",
+        Example="seqcli retention remove -i retentionpolicy-17")]
+    class RemoveCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
         
         readonly ConnectionFeature _connection;
-        readonly ConfirmFeature _confirm;
-        readonly BatchSizeFeature _batchSize;
-
-        public IngestCommand(SeqConnectionFactory connectionFactory)
+        
+        string _id;
+        
+        public RemoveCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            _confirm = Enable<ConfirmFeature>();
+
+            Options.Add(
+                "i=|id=",
+                "The id of a single retention policy to remove",
+                id => _id = id);
+            
             _connection = Enable<ConnectionFeature>();
-            _batchSize = Enable<BatchSizeFeature>();
         }
-        
+
         protected override async Task<int> Run()
         {
-            var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
-            var batchSize = _batchSize.Value;
-            
-            if (!_confirm.TryConfirm($"This will send sample events to the Seq server at {url}."))
+            if (_id == null)
             {
-                await Console.Error.WriteLineAsync("Canceled by user.");
+                Log.Error("An `id` must be specified");
                 return 1;
             }
 
             var connection = _connectionFactory.Connect(_connection);
-            await Simulation.RunAsync(connection, apiKey, batchSize);
+
+            var toRemove = await connection.RetentionPolicies.FindAsync(_id);
+
+            await connection.RetentionPolicies.RemoveAsync(toRemove);
+
             return 0;
         }
     }

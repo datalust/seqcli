@@ -106,9 +106,17 @@ namespace SeqCli.Levels
             foreach (var property in logEvent.Properties)
             {
                 var name = property.Key;
-                if (name == SurrogateLevelProperty.PropertyName)
-                    continue;
-                
+                switch (name)
+                {
+                    case SurrogateLevelProperty.PropertyName:
+                        continue;
+                    case "@i":
+                        output.Write(",\"@i\":");
+                        valueFormatter.Format(property.Value, output);
+                        continue;
+                    // default: fallthrough
+                }
+
                 if (name.Length > 0 && name[0] == '@')
                 {
                     // Escape first '@' by doubling

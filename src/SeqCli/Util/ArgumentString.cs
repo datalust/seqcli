@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Linq;
+
 namespace SeqCli.Util
 {
     static class ArgumentString
@@ -19,6 +21,15 @@ namespace SeqCli.Util
         public static string Normalize(string argument)
         {
             return string.IsNullOrWhiteSpace(argument) ? null : argument.Trim();
+        }
+
+        public static string[] NormalizeList(string argument)
+        {
+            return (argument ?? "")
+                .Split(',')
+                .Select(Normalize)
+                .Where(s => s != null)
+                .ToArray();
         }
     }
 }

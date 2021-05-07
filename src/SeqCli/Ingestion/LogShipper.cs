@@ -29,9 +29,6 @@ namespace SeqCli.Ingestion
 {
     static class LogShipper
     {
-        // Keep things simple with a fixed batch size.
-        const int BatchSize = 100;
-
         static readonly SurrogateLevelAwareCompactJsonFormatter Formatter = new SurrogateLevelAwareCompactJsonFormatter();
 
         public static async Task<int> ShipEvents(
@@ -40,12 +37,13 @@ namespace SeqCli.Ingestion
             ILogEventReader reader,
             InvalidDataHandling invalidDataHandling,
             SendFailureHandling sendFailureHandling,
+            int batchSize,
             Func<LogEvent, bool> filter = null)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-            var batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
+            var batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling);
             var retries = 0;
             while (true)
             {
@@ -83,7 +81,7 @@ namespace SeqCli.Ingestion
                 if (batch.IsLast)
                     break;
                 
-                batch = await ReadBatchAsync(reader, filter, BatchSize, invalidDataHandling);
+                batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling);
             }
 
             return 0;
