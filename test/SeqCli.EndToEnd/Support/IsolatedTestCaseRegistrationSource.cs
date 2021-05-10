@@ -13,7 +13,7 @@ namespace SeqCli.EndToEnd.Support
     // Built-in decorator support didn't transfer metadata.
     class IsolatedTestCaseRegistrationSource : IRegistrationSource
     {
-        public IEnumerable<IComponentRegistration> RegistrationsFor(Service service, Func<Service, IEnumerable<IComponentRegistration>> registrationAccessor)
+        public IEnumerable<IComponentRegistration> RegistrationsFor(Service service, Func<Service, IEnumerable<ServiceRegistration>> registrationAccessor)
         {
             if (!(service is TypedService ts && ts.ServiceType == typeof(IsolatedTestCase)))
                 yield break;

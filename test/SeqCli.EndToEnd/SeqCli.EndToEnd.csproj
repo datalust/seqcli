@@ -7,9 +7,9 @@
     <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="5.2.0" />
+    <PackageReference Include="Autofac" Version="6.2.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="Serilog.Sinks.Seq" Version="4.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="5.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Data\*">
