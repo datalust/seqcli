@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Seq.Api;
-using SeqCli.EndToEnd.Support;
 using Serilog;
 
 namespace SeqCli.EndToEnd.Support
