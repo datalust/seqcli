@@ -14,22 +14,24 @@
 
 using System.Linq;
 
+#nullable enable
+
 namespace SeqCli.Util
 {
     static class ArgumentString
     {
-        public static string Normalize(string argument)
+        public static string? Normalize(string? argument)
         {
             return string.IsNullOrWhiteSpace(argument) ? null : argument.Trim();
         }
 
-        public static string[] NormalizeList(string argument)
+        public static string[] NormalizeList(string? argument)
         {
             return (argument ?? "")
                 .Split(',')
                 .Select(Normalize)
                 .Where(s => s != null)
-                .ToArray();
+                .ToArray()!;
         }
     }
 }
