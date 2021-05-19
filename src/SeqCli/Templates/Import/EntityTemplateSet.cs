@@ -24,11 +24,13 @@ using SeqCli.Templates.Evaluator;
 using SeqCli.Templates.Files;
 using SeqCli.Templates.ObjectGraphs;
 
-namespace SeqCli.Templates.Sets
+// ReSharper disable SuggestBaseTypeForParameter
+
+namespace SeqCli.Templates.Import
 {
-    static class EntityTemplateSet
+    static class TemplateSetImporter
     {
-        public static async Task<string> ApplyAsync(IEnumerable<EntityTemplateFile> templates, SeqConnection connection, IReadOnlyDictionary<string, JsonTemplate> args)
+        public static async Task<string> ImportAsync(IEnumerable<EntityTemplateFile> templates, SeqConnection connection, IReadOnlyDictionary<string, JsonTemplate> args)
         {
             var ordering = new[] {"users", "signals", "apps", "appinstances",
                 "dashboards", "sqlqueries", "workspaces", "retentionpolicies"}.ToList();
@@ -57,7 +59,7 @@ namespace SeqCli.Templates.Sets
         {
             bool Ref(JsonTemplate[] args, out JsonTemplate result, out string err)
             {
-                if (args.Length != 1 || !(args[0] is JsonTemplateString { Value: { } filename }))
+                if (args.Length != 1 || args[0] is not JsonTemplateString { Value: { } filename })
                 {
                     result = null;
                     err = "The `ref()` function accepts a single string argument corresponding to the referenced template filename.";

@@ -7,6 +7,8 @@ using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Util;
 
+// ReSharper disable once UnusedType.Global
+
 namespace SeqCli.Cli.Commands.Workspace
 {
     [Command("workspace", "create", "Create a workspace",
@@ -20,10 +22,7 @@ namespace SeqCli.Cli.Commands.Workspace
 
         string _title, _description;
         bool _isProtected;
-        readonly List<string>
-            _signals = new List<string>(),
-            _dashboards = new List<string>(),
-            _queries = new List<string>();
+        readonly List<string> _include = new();
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -40,19 +39,9 @@ namespace SeqCli.Cli.Commands.Workspace
                 d => _description = ArgumentString.Normalize(d));
 
             Options.Add(
-                "dashboard=",
-                "The id of a dashboard to include in the workspace",
-                d => _dashboards.Add(ArgumentString.Normalize(d)));
-
-            Options.Add(
-                "query=",
-                "The id of a saved query to include in the workspace",
-                s => _queries.Add(ArgumentString.Normalize(s)));
-
-            Options.Add(
-                "signal=",
-                "The id of a signal to include in the workspace",
-                s => _signals.Add(ArgumentString.Normalize(s)));
+                "i=|include=",
+                "The id of a dashboard, signal, or saved query to include in the workspace",
+                d => _include.Add(ArgumentString.Normalize(d)));
 
             Options.Add(
                 "protected",
@@ -74,9 +63,9 @@ namespace SeqCli.Cli.Commands.Workspace
             workspace.Description = _description;
             workspace.IsProtected = _isProtected;
 
-            workspace.Content.DashboardIds.AddRange(_dashboards.Where(s => s != null));
-            workspace.Content.QueryIds.AddRange(_queries.Where(s => s != null));
-            workspace.Content.SignalIds.AddRange(_signals.Where(s => s != null));
+            workspace.Content.DashboardIds.AddRange(_include.Where(s => s?.StartsWith("dashboard-") ?? false));
+            workspace.Content.QueryIds.AddRange(_include.Where(s => s?.StartsWith("sqlquery-") ?? false));
+            workspace.Content.SignalIds.AddRange(_include.Where(s => s?.StartsWith("signal-") ?? false));
 
             workspace = await connection.Workspaces.AddAsync(workspace);
 
