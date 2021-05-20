@@ -1,0 +1,19 @@
+{
+  "$version": "1",
+  "$resource": "signal",
+  "OwnerId": arg("ownerId"),
+  "Title": "Order Archived",
+  "Description": "Created by `seqcli sample setup`",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@EventType = 0xbf71696d",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "Grouping": "Explicit",
+  "ExplicitGroupName": "Ordering"
+}

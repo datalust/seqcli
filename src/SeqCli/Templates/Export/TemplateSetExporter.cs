@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Seq.Api;
 using Seq.Api.Model;
@@ -10,6 +11,7 @@ using Seq.Api.Model.Retention;
 using Seq.Api.Model.Signals;
 using Seq.Api.Model.SqlQueries;
 using Seq.Api.Model.Workspaces;
+using Serilog;
 
 #nullable enable
 
@@ -37,31 +39,31 @@ namespace SeqCli.Templates.Export
             templateValueMap.MapNonNullAsArg<WorkspaceEntity>(nameof(WorkspaceEntity.OwnerId), "ownerId");
             templateValueMap.MapNonNullAsArg<AlertPart>(nameof(AlertPart.NotificationAppInstanceId), "notificationAppInstanceId");
             templateValueMap.MapAsReference<SignalExpressionPart>(nameof(SignalExpressionPart.SignalId));
-            templateValueMap.MapAsReference<WorkspaceEntity>(nameof(WorkspaceEntity.Content.DashboardIds));
-            templateValueMap.MapAsReference<WorkspaceEntity>(nameof(WorkspaceEntity.Content.QueryIds));
-            templateValueMap.MapAsReference<WorkspaceEntity>(nameof(WorkspaceEntity.Content.SignalIds));
+            templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.DashboardIds));
+            templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.QueryIds));
+            templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.SignalIds));
             
             await ExportTemplates<SignalEntity>(
                 id => _connection.Signals.FindAsync(id),
-                () => _connection.Signals.ListAsync(shared: true),
+                () => _connection.Signals.ListAsync(ownerId: "user-admin"),
                 signal => signal.Title,
                 templateValueMap);
             
             await ExportTemplates<SqlQueryEntity>(
                 id => _connection.SqlQueries.FindAsync(id),
-                () => _connection.SqlQueries.ListAsync(shared: true),
+                () => _connection.SqlQueries.ListAsync(ownerId: "user-admin"),
                 query => query.Title,
                 templateValueMap);
             
             await ExportTemplates<DashboardEntity>(
                 id => _connection.Dashboards.FindAsync(id),
-                () => _connection.Dashboards.ListAsync(shared: true),
+                () => _connection.Dashboards.ListAsync(ownerId: "user-admin"),
                 dashboard => dashboard.Title,
                 templateValueMap);
             
             await ExportTemplates<WorkspaceEntity>(
                 id => _connection.Workspaces.FindAsync(id),
-                () => _connection.Workspaces.ListAsync(shared: true),
+                () => _connection.Workspaces.ListAsync(ownerId: "user-admin"),
                 workspace => workspace.Title,
                 templateValueMap);
             
@@ -86,7 +88,7 @@ namespace SeqCli.Templates.Export
             }
             else
             {
-                var idPrefix = IdPrefix<TEntity>();
+                var idPrefix = TemplateResource.FromEntityType(typeof(TEntity)) + "-";
                 entities = new List<TEntity>();
                 foreach (var id in _include.Where(i => i != null && i.StartsWith(idPrefix)))
                 {
@@ -96,21 +98,20 @@ namespace SeqCli.Templates.Export
             
             foreach (var entity in entities)
             {
-                var filename = OutputFilename<SignalEntity>(getTitle(entity));
+                var filename = OutputFilename<TEntity>(getTitle(entity));
                 templateValueMap.AddReferencedTemplate(entity.Id, Path.GetFileName(filename));
-                await TemplateWriter.WriteTemplateAsync(filename, entity, templateValueMap);
+                await using var f = File.Create(filename);
+                await using var w = new StreamWriter(f, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                await TemplateWriter.WriteTemplateAsync(w, entity, templateValueMap);
+                Log.Information("Exported {EntityId} to {Filename}", entity.Id, filename);
             }
         }
 
         string OutputFilename<TEntity>(string title) where TEntity : Entity
         {
             var pathSafeTitle = new string(title.Select(c => c != ':' && c != '/' && c != '\\' ? c : '_').ToArray());
-            return Path.Combine(_outputDir, $"{IdPrefix<TEntity>()}{pathSafeTitle}.{TemplateWriter.TemplateFileExtension}");
-        }
-
-        static string IdPrefix<TEntity>() where TEntity : Entity
-        {
-            return typeof(TEntity).Name.ToLowerInvariant().Replace("entity", "") + "-";
+            var resourceType = TemplateResource.FromEntityType(typeof(TEntity));
+            return Path.Combine(_outputDir, $"{resourceType}-{pathSafeTitle}.{TemplateWriter.TemplateFileExtension}");
         }
     }
 }

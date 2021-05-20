@@ -1,12 +1,14 @@
-{
-    "Title": "Batch Processing",
+﻿{
+    "$version": "1",
+    "$resource": "signal",
+    "Title": "Sample Data",
     "Description": "Created by `seqcli sample setup`",
     "Filters": [
       {
         "Description": null,
         "DescriptionIsExcluded": false,
-        "Filter": "Application = 'Roastery Batch Processing'",
-        "FilterNonStrict": null
+        "Filter": "Origin = 'seqcli sample ingest'",
+        "FilterNonStrict": "Origin = 'seqcli sample ingest'"
       }
     ],
     "Columns": [],

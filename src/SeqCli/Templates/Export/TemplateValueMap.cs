@@ -10,8 +10,9 @@ namespace SeqCli.Templates.Export
 {
     class TemplateValueMap
     {
-        readonly Dictionary<string, string> _idToFilename = new();
+        readonly Dictionary<string, string> _idToReferenceName = new();
         readonly HashSet<PropertyInfo> _referenceProperties = new();
+        readonly HashSet<PropertyInfo> _referenceListProperties = new();
         readonly Dictionary<PropertyInfo, string> _argProperties = new();
 
         static PropertyInfo GetProperty<T>(string propertyName) =>
@@ -23,23 +24,27 @@ namespace SeqCli.Templates.Export
             _referenceProperties.Add(GetProperty<T>(propertyName));
         }
 
+        public void MapAsReferenceList<T>(string propertyName)
+        {
+            _referenceListProperties.Add(GetProperty<T>(propertyName));
+        }
+
         public void MapNonNullAsArg<T>(string propertyName, string argumentName)
         {
             _argProperties.Add(GetProperty<T>(propertyName), argumentName);
         }
         
-        public void AddReferencedTemplate(string entityId, string filename)
+        public void AddReferencedTemplate(string entityId, string name)
         {
-            _idToFilename.Add(entityId, filename);
+            _idToReferenceName.Add(entityId, name);
         }
 
         public bool TryGetRawValue(PropertyInfo pi, object? value, [MaybeNullWhen(false)] out string raw)
         {
             if (value is string s && _referenceProperties.Contains(pi) &&
-                _idToFilename.TryGetValue(s, out var filename))
+                _idToReferenceName.TryGetValue(s, out var name))
             {
-                var jsonStringFilename = JsonConvert.SerializeObject(filename);
-                raw = $"ref({jsonStringFilename})";
+                raw = FormatReference(name);
                 return true;
             }
 
@@ -52,6 +57,25 @@ namespace SeqCli.Templates.Export
 
             raw = null;
             return false;
+        }
+
+        public bool TryGetRawElement(PropertyInfo pi, object? elementValue, [MaybeNullWhen(false)] out string raw)
+        {
+            if (elementValue is string s && _referenceListProperties.Contains(pi) &&
+                _idToReferenceName.TryGetValue(s, out var name))
+            {
+                raw = FormatReference(name);
+                return true;
+            }
+
+            raw = null;
+            return false;
+        }
+
+        static string FormatReference(string name)
+        {
+            var jsonStringName = JsonConvert.SerializeObject(name);
+            return $"ref({jsonStringName})";
         }
     }
 }

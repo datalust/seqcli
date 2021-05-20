@@ -21,7 +21,6 @@ using Seq.Api.Model;
 using Seq.Api.Model.Root;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Evaluator;
-using SeqCli.Templates.Files;
 using SeqCli.Templates.ObjectGraphs;
 
 // ReSharper disable SuggestBaseTypeForParameter

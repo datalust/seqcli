@@ -1,0 +1,9 @@
+{
+  "$version": "1",
+  "$resource": "sqlquery",
+  "OwnerId": arg("ownerId"),
+  "Title": "Route Bindings",
+  "Description": "Created by `seqcli sample setup`",
+  "Sql": "select first(Controller) as controller, first(Action) as action\nfrom stream\nwhere @EventType = 0x8E9D69C7 -- route bindings\ngroup by HttpMethod, RouteTemplate",
+  "IsProtected": false
+}

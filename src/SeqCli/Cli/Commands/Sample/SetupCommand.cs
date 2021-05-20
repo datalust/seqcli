@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using SeqCli.Templates.Ast;
-using SeqCli.Templates.Files;
 using SeqCli.Templates.Import;
 using SeqCli.Util;
 

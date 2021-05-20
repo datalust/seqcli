@@ -13,10 +13,11 @@
 // limitations under the License.
 
 using System.IO;
-using System.Linq;
+using SeqCli.Templates.Ast;
+using SeqCli.Templates.Export;
 using SeqCli.Templates.Parser;
 
-namespace SeqCli.Templates.Files
+namespace SeqCli.Templates.Import
 {
     static class EntityTemplateFileLoader
     {
@@ -25,15 +26,7 @@ namespace SeqCli.Templates.Files
             if (!File.Exists(path))
             {
                 template = null;
-                error = $"The file `{path}` was not found.";
-                return false;
-            }
-
-            var withoutExt = Path.GetFileNameWithoutExtension(path);
-            if (!withoutExt.Contains("-"))
-            {
-                template = null;
-                error = "Template filenames must be in `{id prefix}-{name}` dashed format.";
+                error = "the template file was not found";
                 return false;
             }
 
@@ -41,23 +34,24 @@ namespace SeqCli.Templates.Files
             if (!JsonTemplateParser.TryParse(source, out var root, out var parseError, out _))
             {
                 template = null;
-                error = $"{path}: {parseError}";
+                error = parseError;
                 return false;
             }
 
-            var resourceGroup = withoutExt.Split('-').First();
-            if (!resourceGroup.EndsWith("y"))
+            if (root is not JsonTemplateObject rootDictionary ||
+                !rootDictionary.Members.TryGetValue("$resource", out var resourceToken) ||
+                resourceToken is not JsonTemplateString resource ||
+                resource.Value is null)
             {
-                resourceGroup += "s";
+                template = null;
+                error = "the template must include a `$resource` property";
+                return false;
             }
-            else
-            {
-                resourceGroup = resourceGroup.TrimEnd('y') + "ies";
-            }
-
+            
+            var resourceGroup = TemplateResource.ToResourceGroup(resource.Value);
             var filename = Path.GetFileName(path);
             
-            template = new EntityTemplateFile(path, resourceGroup, filename, root);
+            template = new EntityTemplateFile(resourceGroup, filename, root);
             error = null;
             return true;
         }

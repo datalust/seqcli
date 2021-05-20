@@ -1,0 +1,9 @@
+{
+  "$version": "1",
+  "$resource": "retentionpolicy",
+  "RetentionTime": "30.00:00:00",
+  "RemovedSignalExpression": {
+    "SignalId": ref("signal-Sample Data.template"),
+    "Kind": "Signal"
+  }
+}
