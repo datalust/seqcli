@@ -1,6 +1,6 @@
 {
   "$version": "1",
-  "$resource": "sqlquery",
+  "$entity": "sqlquery",
   "OwnerId": arg("ownerId"),
   "Title": "Route Bindings",
   "Description": "Created by `seqcli sample setup`",

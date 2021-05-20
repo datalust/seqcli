@@ -5,7 +5,7 @@ using Seq.Api.Model;
 
 namespace SeqCli.Templates.Export
 {
-    static class TemplateResource
+    static class EntityName
     {
         public static string FromEntityType(Type entityType)
         {

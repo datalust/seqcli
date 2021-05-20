@@ -39,16 +39,25 @@ namespace SeqCli.Templates.Import
             }
 
             if (root is not JsonTemplateObject rootDictionary ||
-                !rootDictionary.Members.TryGetValue("$resource", out var resourceToken) ||
+                !rootDictionary.Members.TryGetValue("$entity", out var resourceToken) ||
                 resourceToken is not JsonTemplateString resource ||
                 resource.Value is null)
             {
                 template = null;
-                error = "the template must include a `$resource` property";
+                error = "the template must include an `$entity` property";
                 return false;
             }
             
-            var resourceGroup = TemplateResource.ToResourceGroup(resource.Value);
+            if (!rootDictionary.Members.TryGetValue("$version", out var versionToken) ||
+                versionToken is not JsonTemplateNumber version ||
+                version.Value != 1m)
+            {
+                template = null;
+                error = "the template must include a `$version` property with the value `1`";
+                return false;
+            }
+
+            var resourceGroup = EntityName.ToResourceGroup(resource.Value);
             var filename = Path.GetFileName(path);
             
             template = new EntityTemplate(resourceGroup, filename, root);

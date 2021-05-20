@@ -1,6 +1,6 @@
 {
   "$version": "1",
-  "$resource": "signal",
+  "$entity": "signal",
   "OwnerId": arg("ownerId"),
   "Title": "Web Frontend",
   "Description": "Created by `seqcli signal setup`",

@@ -1,6 +1,6 @@
 {
   "$version": "1",
-  "$resource": "dashboard",
+  "$entity": "dashboard",
   "OwnerId": arg("ownerId"),
   "Title": "HTTP Requests",
   "IsProtected": false,

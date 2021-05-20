@@ -1,6 +1,6 @@
 {
   "$version": "1",
-  "$resource": "signal",
+  "$entity": "signal",
   "OwnerId": arg("ownerId"),
   "Title": "Order Archived",
   "Description": "Created by `seqcli sample setup`",

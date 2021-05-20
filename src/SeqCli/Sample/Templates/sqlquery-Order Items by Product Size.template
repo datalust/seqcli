@@ -1,6 +1,6 @@
 {
   "$version": "1",
-  "$resource": "sqlquery",
+  "$entity": "sqlquery",
   "OwnerId": arg("ownerId"),
   "Title": "Order Items by Product Size",
   "Description": "Created by `seqcli sample setup`",

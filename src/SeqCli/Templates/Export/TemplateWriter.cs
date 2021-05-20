@@ -72,8 +72,8 @@ namespace SeqCli.Templates.Export
             {
                 await jw.WritePropertyNameAsync("$version");
                 await jw.WriteValueAsync("1");
-                await jw.WritePropertyNameAsync("$resource");
-                await jw.WriteValueAsync(TemplateResource.FromEntityType(o.GetType()));
+                await jw.WritePropertyNameAsync("$entity");
+                await jw.WriteValueAsync(EntityName.FromEntityType(o.GetType()));
             }
 
             foreach (var (pi, v) in GetTemplateProperties(o))

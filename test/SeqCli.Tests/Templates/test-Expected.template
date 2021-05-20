@@ -1,6 +1,6 @@
 ﻿{
   "$version": "1",
-  "$resource": "test",
+  "$entity": "test",
   "ReferencedId": ref("Referenced"),
   "Name": "Test Stuff",
   "Numbers": [

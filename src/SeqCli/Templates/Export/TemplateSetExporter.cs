@@ -88,7 +88,7 @@ namespace SeqCli.Templates.Export
             }
             else
             {
-                var idPrefix = TemplateResource.FromEntityType(typeof(TEntity)) + "-";
+                var idPrefix = EntityName.FromEntityType(typeof(TEntity)) + "-";
                 entities = new List<TEntity>();
                 foreach (var id in _include.Where(i => i != null && i.StartsWith(idPrefix)))
                 {
@@ -110,7 +110,7 @@ namespace SeqCli.Templates.Export
         string OutputFilename<TEntity>(string title) where TEntity : Entity
         {
             var pathSafeTitle = new string(title.Select(c => c != ':' && c != '/' && c != '\\' ? c : '_').ToArray());
-            var resourceType = TemplateResource.FromEntityType(typeof(TEntity));
+            var resourceType = EntityName.FromEntityType(typeof(TEntity));
             return Path.Combine(_outputDir, $"{resourceType}-{pathSafeTitle}.{TemplateWriter.TemplateFileExtension}");
         }
     }

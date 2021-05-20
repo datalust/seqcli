@@ -1,6 +1,6 @@
 {
   "$version": "1",
-  "$resource": "workspace",
+  "$entity": "workspace",
   "OwnerId": arg("ownerId"),
   "Title": "Sample",
   "Description": "Created by `seqcli sample setup`",

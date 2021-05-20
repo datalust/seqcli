@@ -1,6 +1,6 @@
 ﻿{
     "$version": "1",
-    "$resource": "signal",
+    "$entity": "signal",
     "Title": "Sample Data",
     "Description": "Created by `seqcli sample setup`",
     "Filters": [
