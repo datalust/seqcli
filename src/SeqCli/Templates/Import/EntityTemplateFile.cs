@@ -17,13 +17,13 @@ using SeqCli.Templates.Ast;
 
 namespace SeqCli.Templates.Import
 {
-    class EntityTemplateFile
+    class EntityTemplate
     {
         public string ResourceGroup { get; }
         public string Name { get; }
         public JsonTemplate Entity { get; }
 
-        public EntityTemplateFile(string resourceGroup, string name, JsonTemplate entity)
+        public EntityTemplate(string resourceGroup, string name, JsonTemplate entity)
         {
             ResourceGroup = resourceGroup ?? throw new ArgumentNullException(nameof(resourceGroup));
             Name = name ?? throw new ArgumentNullException(nameof(name));

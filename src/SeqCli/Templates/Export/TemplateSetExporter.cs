@@ -45,25 +45,25 @@ namespace SeqCli.Templates.Export
             
             await ExportTemplates<SignalEntity>(
                 id => _connection.Signals.FindAsync(id),
-                () => _connection.Signals.ListAsync(ownerId: "user-admin"),
+                () => _connection.Signals.ListAsync(shared: true),
                 signal => signal.Title,
                 templateValueMap);
             
             await ExportTemplates<SqlQueryEntity>(
                 id => _connection.SqlQueries.FindAsync(id),
-                () => _connection.SqlQueries.ListAsync(ownerId: "user-admin"),
+                () => _connection.SqlQueries.ListAsync(shared: true),
                 query => query.Title,
                 templateValueMap);
             
             await ExportTemplates<DashboardEntity>(
                 id => _connection.Dashboards.FindAsync(id),
-                () => _connection.Dashboards.ListAsync(ownerId: "user-admin"),
+                () => _connection.Dashboards.ListAsync(shared: true),
                 dashboard => dashboard.Title,
                 templateValueMap);
             
             await ExportTemplates<WorkspaceEntity>(
                 id => _connection.Workspaces.FindAsync(id),
-                () => _connection.Workspaces.ListAsync(ownerId: "user-admin"),
+                () => _connection.Workspaces.ListAsync(shared: true),
                 workspace => workspace.Title,
                 templateValueMap);
             

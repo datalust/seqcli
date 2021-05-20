@@ -29,7 +29,7 @@ namespace SeqCli.Templates.Import
 {
     static class TemplateSetImporter
     {
-        public static async Task<string> ImportAsync(IEnumerable<EntityTemplateFile> templates, SeqConnection connection, IReadOnlyDictionary<string, JsonTemplate> args)
+        public static async Task<string> ImportAsync(IEnumerable<EntityTemplate> templates, SeqConnection connection, IReadOnlyDictionary<string, JsonTemplate> args)
         {
             var ordering = new[] {"users", "signals", "apps", "appinstances",
                 "dashboards", "sqlqueries", "workspaces", "retentionpolicies"}.ToList();
@@ -50,7 +50,7 @@ namespace SeqCli.Templates.Import
         }
 
         static async Task<string> ApplyTemplateAsync(
-            EntityTemplateFile template,
+            EntityTemplate template,
             IReadOnlyDictionary<string, JsonTemplate> templateArgs, 
             IDictionary<string,string> ids,
             SeqConnection connection,

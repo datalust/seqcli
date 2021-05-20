@@ -15,5 +15,5 @@
     "IsProtected": false,
     "Grouping": "Inferred",
     "ExplicitGroupName": null,
-    "OwnerId": arg("ownerId")
+    "OwnerId": null
 }

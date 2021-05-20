@@ -67,10 +67,10 @@ namespace SeqCli.Cli.Commands.Sample
 
             var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
             var templateFiles = Directory.GetFiles(templatesPath);
-            var templates = new List<EntityTemplateFile>();
+            var templates = new List<EntityTemplate>();
             foreach (var templateFile in templateFiles)
             {
-                if (!EntityTemplateFileLoader.Load(templateFile, out var template, out var error))
+                if (!EntityTemplateLoader.Load(templateFile, out var template, out var error))
                 {
                     await Console.Error.WriteLineAsync(error);
                     return 1;

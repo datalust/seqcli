@@ -107,6 +107,5 @@ namespace SeqCli.Templates.Export
                 .Where(pi => pi.PropertyType != typeof(LinkCollection) && pi.Name != "Id")
                 .Select(pi => (pi, pi.GetValue(o)));
         }
-
     }
 }

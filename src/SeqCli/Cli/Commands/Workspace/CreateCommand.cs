@@ -12,7 +12,7 @@ using SeqCli.Util;
 namespace SeqCli.Cli.Commands.Workspace
 {
     [Command("workspace", "create", "Create a workspace",
-       Example = "seqcli workspace create -t 'My Workspace'")]
+       Example = "seqcli workspace create -t 'My Workspace' -c signal-314159 -c dashboard-628318")]
     class CreateCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;
@@ -39,7 +39,7 @@ namespace SeqCli.Cli.Commands.Workspace
                 d => _description = ArgumentString.Normalize(d));
 
             Options.Add(
-                "i=|include=",
+                "c=|content=",
                 "The id of a dashboard, signal, or saved query to include in the workspace",
                 d => _include.Add(ArgumentString.Normalize(d)));
 

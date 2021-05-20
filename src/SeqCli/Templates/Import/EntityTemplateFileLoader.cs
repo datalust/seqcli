@@ -19,9 +19,9 @@ using SeqCli.Templates.Parser;
 
 namespace SeqCli.Templates.Import
 {
-    static class EntityTemplateFileLoader
+    static class EntityTemplateLoader
     {
-        public static bool Load(string path, out EntityTemplateFile template, out string error)
+        public static bool Load(string path, out EntityTemplate template, out string error)
         {
             if (!File.Exists(path))
             {
@@ -51,7 +51,7 @@ namespace SeqCli.Templates.Import
             var resourceGroup = TemplateResource.ToResourceGroup(resource.Value);
             var filename = Path.GetFileName(path);
             
-            template = new EntityTemplateFile(resourceGroup, filename, root);
+            template = new EntityTemplate(resourceGroup, filename, root);
             error = null;
             return true;
         }

@@ -55,10 +55,10 @@ namespace SeqCli.Cli.Commands.Template
                 return 1;
             }
 
-            var templates = new List<EntityTemplateFile>();
+            var templates = new List<EntityTemplate>();
             foreach (var templateFile in Directory.GetFiles(_inputDir, "*." + TemplateWriter.TemplateFileExtension))
             {
-                if (!EntityTemplateFileLoader.Load(templateFile, out var template, out var error))
+                if (!EntityTemplateLoader.Load(templateFile, out var template, out var error))
                 {
                     Log.Error("Could not load template file {FilePath}: {Reason}", template, error);
                     return 1;
