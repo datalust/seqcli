@@ -71,7 +71,7 @@ namespace SeqCli.Templates.Export
             if (annotateAsResource)
             {
                 await jw.WritePropertyNameAsync("$version");
-                await jw.WriteValueAsync(1m);
+                await jw.WriteValueAsync(1);
                 await jw.WritePropertyNameAsync("$entity");
                 await jw.WriteValueAsync(EntityName.FromEntityType(o.GetType()));
             }
