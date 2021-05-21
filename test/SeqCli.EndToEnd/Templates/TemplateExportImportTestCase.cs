@@ -45,15 +45,15 @@ namespace SeqCli.EndToEnd.Templates
             exit = runner.Exec("template import", $"-i \"{_testDataFolder.Path}\"");
             Assert.Equal(0, exit);
 
-            var created = Assert.Single(await connection.Signals.ListAsync(shared: true), s => s.Title == newTitle)!;
+            var created = Assert.Single(await connection.Signals.ListAsync(shared: true), s => s.Title == newTitle);
             Assert.Equal(description, created!.Description);
             
             // Uses import state
             exit = runner.Exec("template import", $"-i \"{_testDataFolder.Path}\"");
             Assert.Equal(0, exit);
 
-            var updated = Assert.Single(await connection.Signals.ListAsync(shared: true), s => s.Title == newTitle)!;
-            Assert.Equal(created.Id, updated.Id);
+            var updated = Assert.Single(await connection.Signals.ListAsync(shared: true), s => s.Title == newTitle);
+            Assert.Equal(created.Id, updated!.Id);
         }
     }
 }
