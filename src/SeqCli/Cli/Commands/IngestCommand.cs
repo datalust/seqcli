@@ -46,7 +46,7 @@ namespace SeqCli.Cli.Commands
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
-            _fileInputFeature = Enable(new FileInputFeature("File to ingest", supportsWildcard: true));
+            _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", supportsWildcard: true));
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
             _properties = Enable<PropertiesFeature>();
 

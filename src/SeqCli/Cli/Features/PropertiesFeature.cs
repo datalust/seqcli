@@ -14,25 +14,46 @@
 
 using System.Collections.Generic;
 
+#nullable enable
+
 namespace SeqCli.Cli.Features
 {
     class PropertiesFeature : CommandFeature
     {
-        readonly Dictionary<string, object> _properties = new Dictionary<string, object>();
+        readonly string _shortOptionName;
+        readonly string _longOptionName;
+        readonly string _description;
+        readonly Dictionary<string, object?> _properties = new();
 
-        public IReadOnlyDictionary<string, object> Properties => _properties;
+        public IReadOnlyDictionary<string, object?> Properties => _properties;
+
+        public PropertiesFeature()
+            : this("p", "property", "Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production`")
+        {
+        }
+
+        public PropertiesFeature(string shortOptionName, string longOptionName, string description)
+        {
+            _shortOptionName = shortOptionName;
+            _longOptionName = longOptionName;
+            _description = description;
+        }
 
         public override void Enable(OptionSet options)
         {
             options.Add(
-                "p={=}|property={=}",
-                "Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production`",
+                _shortOptionName + "={=}|" + _longOptionName + "={=}",
+                _description,
                 (n, v) =>
                 {
                     var name = n.Trim();
                     var valueText = v?.Trim();
                     if (string.IsNullOrEmpty(valueText))
                         _properties.Add(name, null);
+                    else if (valueText == "true")
+                        _properties.Add(name, true);
+                    else if (valueText == "false")
+                        _properties.Add(name, false);
                     else if (decimal.TryParse(valueText, out var numeric))
                         _properties.Add(name, numeric);
                     else

@@ -1,0 +1,19 @@
+{
+  "$version": 1,
+  "$entity": "signal",
+  "OwnerId": arg("ownerId"),
+  "Title": "Order Shipped",
+  "Description": "Created by `seqcli sample setup`",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@EventType = 0x8cc54029",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "Grouping": "Explicit",
+  "ExplicitGroupName": "Ordering"
+}

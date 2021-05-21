@@ -1,0 +1,19 @@
+﻿{
+    "$version": 1,
+    "$entity": "signal",
+    "Title": "Sample Data",
+    "Description": "Created by `seqcli sample setup`",
+    "Filters": [
+      {
+        "Description": null,
+        "DescriptionIsExcluded": false,
+        "Filter": "Origin = 'seqcli sample ingest'",
+        "FilterNonStrict": "Origin = 'seqcli sample ingest'"
+      }
+    ],
+    "Columns": [],
+    "IsProtected": false,
+    "Grouping": "Inferred",
+    "ExplicitGroupName": null,
+    "OwnerId": null
+}

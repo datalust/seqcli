@@ -1,0 +1,137 @@
+{
+  "$version": 1,
+  "$entity": "dashboard",
+  "OwnerId": arg("ownerId"),
+  "Title": "Database",
+  "IsProtected": false,
+  "SignalExpression": {
+    "SignalId": ref("signal-Sample Data.template"),
+    "Kind": "Signal"
+  },
+  "Charts": [
+    {
+      "Title": "Database Time by Action (ms)",
+      "SignalExpression": {
+        "SignalId": ref("signal-Database.template"),
+        "Kind": "Signal"
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "sum(Elapsed)",
+              "Label": "total"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": null,
+          "GroupBy": [
+            "concat(concat(Controller, '.'), Action)"
+          ],
+          "DisplayStyle": {
+            "Type": "Pie",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 6,
+        "HeightRows": 2
+      }
+    },
+    {
+      "Title": "Slow Queries",
+      "SignalExpression": {
+        "SignalId": ref("signal-Database.template"),
+        "Kind": "Signal"
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "Elapsed",
+              "Label": "elapsed_ms"
+            },
+            {
+              "Value": "Sql",
+              "Label": "query"
+            }
+          ],
+          "Where": "Elapsed > 500",
+          "SignalExpression": null,
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Table",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [
+            "elapsed_ms desc"
+          ],
+          "Limit": 13
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 6,
+        "HeightRows": 2
+      }
+    },
+    {
+      "Title": "Statement Execution Time (ms)",
+      "SignalExpression": {
+        "SignalId": ref("signal-Database.template"),
+        "Kind": "Signal"
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "max(Elapsed)",
+              "Label": "max"
+            },
+            {
+              "Value": "mean(Elapsed)",
+              "Label": "mean"
+            },
+            {
+              "Value": "min(Elapsed)",
+              "Label": "min"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": null,
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Line",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "OrangePurple"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 12,
+        "HeightRows": 1
+      }
+    }
+  ]
+}

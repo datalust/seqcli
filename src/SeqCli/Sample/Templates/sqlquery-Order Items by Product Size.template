@@ -1,0 +1,9 @@
+{
+  "$version": 1,
+  "$entity": "sqlquery",
+  "OwnerId": arg("ownerId"),
+  "Title": "Order Items by Product Size",
+  "Description": "Created by `seqcli sample setup`",
+  "Sql": "select count(*) from stream group by Product.SizeInGrams",
+  "IsProtected": false
+}

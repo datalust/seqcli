@@ -25,14 +25,14 @@ namespace SeqCli.EndToEnd.Workspace
 
             var items = "";
             var dashboard = (await connection.Dashboards.ListAsync(shared: true)).First();
-            items += $" --dashboard={dashboard.Id}";
+            items += $" --content={dashboard.Id}";
 
             var query = (await connection.SqlQueries.ListAsync(shared: true)).First();
-            items += $" --query={query.Id}";
+            items += $" --content={query.Id}";
 
             foreach (var signal in (await connection.Signals.ListAsync(shared: true)).Take(2))
             {
-                items += $" --signal={signal.Id}";
+                items += $" --content={signal.Id}";
             }
 
             exit = runner.Exec("workspace create", $"-t Example {items}");
