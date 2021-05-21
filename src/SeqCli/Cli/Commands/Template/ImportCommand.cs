@@ -13,6 +13,8 @@ using Serilog;
 
 // ReSharper disable once UnusedType.Global
 
+#nullable enable
+
 namespace SeqCli.Cli.Commands.Template
 {
     // Uses an import directory rather than individual files, so that name resolution
@@ -26,7 +28,8 @@ namespace SeqCli.Cli.Commands.Template
         readonly ConnectionFeature _connection;
         readonly PropertiesFeature _args;
 
-        string _inputDir = ".";
+        string? _inputDir = ".";
+        string? _stateFile;
         
         public ImportCommand(SeqConnectionFactory connectionFactory)
         {
@@ -36,6 +39,13 @@ namespace SeqCli.Cli.Commands.Template
                 "i=|input=",
                 "The directory from which to read the set of `.template` files; the default is `.`",
                 i => _inputDir = ArgumentString.Normalize(i));
+
+            Options.Add(
+                "state=",
+                "The path of a file which will persist a mapping of template names to the ids of the created " +
+                "entities on the target server, avoiding duplicates when multiple imports are performed; by default, " +
+                "`import.state` in the input directory will be used",
+                s => _stateFile = ArgumentString.Normalize(s));
 
             _args = Enable(new PropertiesFeature("g", "arg", "Template arguments, e.g. `-g ownerId=user-314159`"));
             _connection = Enable<ConnectionFeature>();
@@ -66,6 +76,11 @@ namespace SeqCli.Cli.Commands.Template
                 
                 templates.Add(template);
             }
+
+            var stateFile = _stateFile ?? Path.Combine(_inputDir, "import.state");
+            var state = File.Exists(stateFile)
+                ? await TemplateImportState.LoadAsync(stateFile)
+                : new TemplateImportState();
             
             var args = _args.Properties.ToDictionary(
                 v => v.Key,
@@ -78,7 +93,15 @@ namespace SeqCli.Cli.Commands.Template
                 }));
 
             var connection = _connectionFactory.Connect(_connection);
-            await TemplateSetImporter.ImportAsync(templates, connection, args);
+            var err = await TemplateSetImporter.ImportAsync(templates, connection, args, state);
+
+            await TemplateImportState.SaveAsync(stateFile, state);
+
+            if (err != null)
+            {
+                Log.Error("Import failed: {Error}", err);
+                return 1;
+            }
             
             return 0;
         }

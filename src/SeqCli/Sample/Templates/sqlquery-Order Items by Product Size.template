@@ -1,5 +1,4 @@
 {
-  "$version": 1,
   "$entity": "sqlquery",
   "OwnerId": arg("ownerId"),
   "Title": "Order Items by Product Size",

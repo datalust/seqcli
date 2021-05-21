@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Seq.Api;
 using Seq.Api.Model;
@@ -22,6 +23,7 @@ using Seq.Api.Model.Root;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Evaluator;
 using SeqCli.Templates.ObjectGraphs;
+using Serilog;
 
 // ReSharper disable SuggestBaseTypeForParameter
 
@@ -29,19 +31,22 @@ namespace SeqCli.Templates.Import
 {
     static class TemplateSetImporter
     {
-        public static async Task<string> ImportAsync(IEnumerable<EntityTemplate> templates, SeqConnection connection, IReadOnlyDictionary<string, JsonTemplate> args)
+        public static async Task<string> ImportAsync(
+            IEnumerable<EntityTemplate> templates,
+            SeqConnection connection,
+            IReadOnlyDictionary<string, JsonTemplate> args,
+            TemplateImportState state)
         {
             var ordering = new[] {"users", "signals", "apps", "appinstances",
                 "dashboards", "sqlqueries", "workspaces", "retentionpolicies"}.ToList();
 
             var sorted = templates.OrderBy(t => ordering.IndexOf(t.ResourceGroup));
-            var ids = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             
             var apiRoot = await connection.Client.GetRootAsync();
             
             foreach (var entityTemplateFile in sorted)
             {
-                var err = await ApplyTemplateAsync(entityTemplateFile, args, ids, connection, apiRoot);
+                var err = await ApplyTemplateAsync(entityTemplateFile, args, state, connection, apiRoot);
                 if (err != null)
                     return err;
             }
@@ -52,7 +57,7 @@ namespace SeqCli.Templates.Import
         static async Task<string> ApplyTemplateAsync(
             EntityTemplate template,
             IReadOnlyDictionary<string, JsonTemplate> templateArgs, 
-            IDictionary<string,string> ids,
+            TemplateImportState state,
             SeqConnection connection,
             RootEntity apiRoot)
         {
@@ -65,7 +70,7 @@ namespace SeqCli.Templates.Import
                     return false;
                 }
 
-                if (!ids.TryGetValue(filename, out var referencedId))
+                if (!state.TryGetCreatedEntityId(filename, out var referencedId))
                 {
                     result = null;
                     err = $"The referenced template file `{filename}` does not exist or has not been evaluated.";
@@ -79,7 +84,7 @@ namespace SeqCli.Templates.Import
 
             bool Arg(JsonTemplate[] args, out JsonTemplate result, out string err)
             {
-                if (args.Length != 1 || !(args[0] is JsonTemplateString { Value: { } templateArgName }))
+                if (args.Length != 1 || args[0] is not JsonTemplateString { Value: { } templateArgName })
                 {
                     result = null;
                     err = "The `arg()` function accepts a single string argument corresponding to the template argument name.";
@@ -111,9 +116,46 @@ namespace SeqCli.Templates.Import
             var resourceGroupLink = template.ResourceGroup + "Resources";
             var link = apiRoot.Links.Single(l => resourceGroupLink.Equals(l.Key, StringComparison.OrdinalIgnoreCase));
             var resourceGroup = await connection.Client.GetAsync<ResourceGroup>(apiRoot, link.Key);
-            var response = await connection.Client.PostAsync<object, GenericEntity>(resourceGroup, "Items", asObject);
-            ids.Add(template.Name, response.Id);
+
+            if (state.TryGetCreatedEntityId(template.Name, out var existingId) &&
+                await CheckEntityExistenceAsync(connection, resourceGroup, existingId))
+            {
+                ((IDictionary<string, object>) asObject)["Id"] = existingId;
+                await UpdateEntityAsync(connection, resourceGroup, asObject, existingId);
+                Log.Information("Updated existing entity {EntityId} from {TemplateName}", existingId, template.Name);
+            }
+            else
+            {
+                var createdId = await CreateEntityAsync(connection, resourceGroup, asObject);
+                state.AddOrUpdateCreatedEntityId(template.Name, createdId);
+                Log.Information("Created new entity {EntityId} from {TemplateName}", createdId, template.Name);
+            }
+            
             return null;
+        }
+
+        static async Task<string> CreateEntityAsync(SeqConnection connection, ResourceGroup resourceGroup, object entity)
+        {
+            var response = await connection.Client.PostAsync<object, GenericEntity>(resourceGroup, "Items", entity);
+            return response.Id;
+        }
+
+        static async Task<bool> CheckEntityExistenceAsync(SeqConnection connection, ResourceGroup resourceGroup, string id)
+        {
+            var link = resourceGroup.Links["Item"].GetUri(new Dictionary<string, object>
+            {
+                ["id"] = id
+            });
+            var responseMessage = await connection.Client.HttpClient.GetAsync(link);
+            return responseMessage.StatusCode == HttpStatusCode.OK;
+        }
+
+        static async Task UpdateEntityAsync(SeqConnection connection, ResourceGroup resourceGroup, object entity, string id)
+        {
+            await connection.Client.PutAsync(resourceGroup, "Item", entity, new Dictionary<string, object>
+            {
+                ["id"] = id
+            });            
         }
     }
 }

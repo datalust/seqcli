@@ -1,5 +1,4 @@
 {
-  "$version": 1,
   "$entity": "signal",
   "OwnerId": arg("ownerId"),
   "Title": "Information",

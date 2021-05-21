@@ -79,7 +79,7 @@ namespace SeqCli.Cli.Commands.Sample
                 templates.Add(template);
             }
 
-            var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs);
+            var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs, new TemplateImportState());
             if (err != null)
             {
                 await Console.Error.WriteLineAsync(err);
