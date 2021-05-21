@@ -1,5 +1,5 @@
 {
-  "$version": "1",
+  "$version": 1,
   "$entity": "retentionpolicy",
   "RetentionTime": "30.00:00:00",
   "RemovedSignalExpression": {

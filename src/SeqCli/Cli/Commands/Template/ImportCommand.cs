@@ -60,7 +60,7 @@ namespace SeqCli.Cli.Commands.Template
             {
                 if (!EntityTemplateLoader.Load(templateFile, out var template, out var error))
                 {
-                    Log.Error("Could not load template file {FilePath}: {Reason}", template, error);
+                    Log.Error("Could not load template file {FilePath}: {Reason}", templateFile, error);
                     return 1;
                 }
                 
