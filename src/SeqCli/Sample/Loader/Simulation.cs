@@ -21,19 +21,19 @@ namespace SeqCli.Sample.Loader
 {
     static class Simulation
     {
-        public static async Task RunAsync(SeqConnection connection, string apiKey, int batchSize)
+        public static async Task RunAsync(SeqConnection connection, string apiKey, int batchSize, bool echoToStdout)
         {
-            var reader = new BufferingSink();
+            var buffer = new BufferingSink();
             
             using var logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Origin", "seqcli sample ingest")
-                .WriteTo.Console()
-                .WriteTo.Sink(reader)
+                .WriteTo.Conditional(_ => echoToStdout, wt => wt.Console())
+                .WriteTo.Sink(buffer)
                 .CreateLogger();
 
-            var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, reader,
+            var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
                 InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
 
             await Roastery.Program.Main(logger);
