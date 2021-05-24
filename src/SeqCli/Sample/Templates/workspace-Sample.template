@@ -1,5 +1,4 @@
 {
-  "$version": 1,
   "$entity": "workspace",
   "OwnerId": arg("ownerId"),
   "Title": "Sample",

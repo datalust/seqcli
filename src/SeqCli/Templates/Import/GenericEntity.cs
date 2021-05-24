@@ -14,8 +14,14 @@
 
 using Seq.Api.Model;
 
+#nullable enable
+
 namespace SeqCli.Templates.Import
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    class GenericEntity : Entity { }
+    class GenericEntity : Entity
+    {
+        public string? Title { get; set; }
+        public string? Name { get; set; }
+    }
 }

@@ -1,5 +1,4 @@
 ﻿{
-    "$version": 1,
     "$entity": "signal",
     "Title": "Sample Data",
     "Description": "Created by `seqcli sample setup`",

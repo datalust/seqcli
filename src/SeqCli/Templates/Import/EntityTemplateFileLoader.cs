@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Export;
 using SeqCli.Templates.Parser;
 
+#nullable enable
+
 namespace SeqCli.Templates.Import
 {
     static class EntityTemplateLoader
     {
-        public static bool Load(string path, out EntityTemplate template, out string error)
+        public static bool Load(string path, [MaybeNullWhen(false)] out EntityTemplate template, [MaybeNullWhen(true)] out string error)
         {
             if (!File.Exists(path))
             {
@@ -48,15 +51,6 @@ namespace SeqCli.Templates.Import
                 return false;
             }
             
-            if (!rootDictionary.Members.TryGetValue("$version", out var versionToken) ||
-                versionToken is not JsonTemplateNumber version ||
-                version.Value != 1m)
-            {
-                template = null;
-                error = "the template must include a `$version` property with the value `1`";
-                return false;
-            }
-
             var resourceGroup = EntityName.ToResourceGroup(resource.Value);
             var filename = Path.GetFileName(path);
             

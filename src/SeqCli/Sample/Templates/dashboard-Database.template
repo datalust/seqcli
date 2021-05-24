@@ -1,5 +1,4 @@
 {
-  "$version": 1,
   "$entity": "dashboard",
   "OwnerId": arg("ownerId"),
   "Title": "Database",

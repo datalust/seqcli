@@ -1,5 +1,4 @@
 ﻿{
-  "$version": 1,
   "$entity": "test",
   "ReferencedId": ref("Referenced"),
   "Name": "Test Stuff",
