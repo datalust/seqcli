@@ -30,6 +30,7 @@ namespace SeqCli.Cli.Commands.Template
 
         string? _inputDir = ".";
         string? _stateFile;
+        bool _merge;
         
         public ImportCommand(SeqConnectionFactory connectionFactory)
         {
@@ -46,6 +47,12 @@ namespace SeqCli.Cli.Commands.Template
                 "entities on the target server, avoiding duplicates when multiple imports are performed; by default, " +
                 "`import.state` in the input directory will be used",
                 s => _stateFile = ArgumentString.Normalize(s));
+
+            Options.Add(
+                "merge",
+                "For templates with no entries in the `.state` file, first check for existing entities with matching names or titles; " +
+                "does not support merging of retention policies",
+                _ => _merge = true);
 
             _args = Enable(new PropertiesFeature("g", "arg", "Template arguments, e.g. `-g ownerId=user-314159`"));
             _connection = Enable<ConnectionFeature>();
@@ -93,7 +100,7 @@ namespace SeqCli.Cli.Commands.Template
                 }));
 
             var connection = _connectionFactory.Connect(_connection);
-            var err = await TemplateSetImporter.ImportAsync(templates, connection, args, state);
+            var err = await TemplateSetImporter.ImportAsync(templates, connection, args, state, _merge);
 
             await TemplateImportState.SaveAsync(stateFile, state);
 
