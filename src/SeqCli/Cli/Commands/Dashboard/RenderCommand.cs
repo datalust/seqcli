@@ -16,7 +16,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Seq.Api.Model.Monitoring;
+using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
