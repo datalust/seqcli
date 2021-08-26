@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net5.0;net5.0-windows</TargetFrameworks>
@@ -33,7 +33,7 @@
     <PackageReference Include="Superpower" Version="2.3.0" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
-    <PackageReference Include="Seq.Api" Version="2020.3.0-dev-00164" />
+    <PackageReference Include="Seq.Api" Version="2021.3.0-dev-00168" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
     <!-- Seq.Api pulls in Tavis.UriTemplates which pulls in version 1.6.0 of this package, causing
          package downgrade warnings. -->
