@@ -6,7 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Seq.Api;
 using Seq.Api.Model;
-using Seq.Api.Model.Monitoring;
+using Seq.Api.Model.Alerting;
+using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Retention;
 using Seq.Api.Model.Signals;
 using Seq.Api.Model.SqlQueries;
@@ -37,7 +38,7 @@ namespace SeqCli.Templates.Export
             templateValueMap.MapNonNullAsArg<SignalEntity>(nameof(SignalEntity.OwnerId), "ownerId");
             templateValueMap.MapNonNullAsArg<SqlQueryEntity>(nameof(SqlQueryEntity.OwnerId), "ownerId");
             templateValueMap.MapNonNullAsArg<WorkspaceEntity>(nameof(WorkspaceEntity.OwnerId), "ownerId");
-            templateValueMap.MapNonNullAsArg<AlertPart>(nameof(AlertPart.NotificationAppInstanceId), "notificationAppInstanceId");
+            templateValueMap.MapNonNullAsArg<NotificationChannelPart>(nameof(NotificationChannelPart.NotificationAppInstanceId), "notificationAppInstanceId");
             templateValueMap.MapAsReference<SignalExpressionPart>(nameof(SignalExpressionPart.SignalId));
             templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.DashboardIds));
             templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.QueryIds));
@@ -59,6 +60,12 @@ namespace SeqCli.Templates.Export
                 id => _connection.Dashboards.FindAsync(id),
                 () => _connection.Dashboards.ListAsync(shared: true),
                 dashboard => dashboard.Title,
+                templateValueMap);
+            
+            await ExportTemplates<AlertEntity>(
+                id => _connection.Alerts.FindAsync(id),
+                () => _connection.Alerts.ListAsync(shared: true),
+                alert => alert.Title,
                 templateValueMap);
             
             await ExportTemplates<WorkspaceEntity>(

@@ -36,7 +36,8 @@ namespace SeqCli.EndToEnd
                     var m = new Dictionary<string, object>();
                     if (a != null)
                     {
-                        m["Multiuser"] = a.Multiuser;
+                        m[nameof(a.Multiuser)] = a.Multiuser;
+                        m[nameof(a.MinimumApiVersion)] = a.MinimumApiVersion;
                     }
 
                     return m;

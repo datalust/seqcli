@@ -16,7 +16,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api;
-using Seq.Api.Model.Inputs;
 using Seq.Api.Model.LogEvents;
 using Seq.Api.Model.Security;
 using Seq.Api.Model.Shared;
@@ -108,7 +107,7 @@ namespace SeqCli.Cli.Commands.ApiKey
 
             apiKey.Title = _title;
             apiKey.InputSettings.AppliedProperties = _properties.Properties
-                .Select(kvp => new InputAppliedPropertyPart {Name = kvp.Key, Value = kvp.Value})
+                .Select(kvp => new EventPropertyPart(kvp.Key, kvp.Value))
                 .ToList();
             apiKey.InputSettings.UseServerTimestamps = _useServerTimestamps;
 

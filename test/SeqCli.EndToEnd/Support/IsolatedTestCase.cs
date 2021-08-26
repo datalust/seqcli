@@ -35,10 +35,30 @@ namespace SeqCli.EndToEnd.Support
         public string Description => _testCase.GetType().Name;
         public string Output => _commandRunner.LastRunProcess?.Output ??_lastRunProcess?.Output ?? "<no process was run>";
 
-        public async Task ExecuteTestCaseAsync()
+        void ForceStartup()
         {
             _lastRunProcess = _serverProcess.Value;
-            await _connection.Value.EnsureConnected();
+        }
+
+        public async Task<bool> IsSupportedApiVersion(string minSeqVersion)
+        {
+            ForceStartup();
+            
+            await _connection.Value.EnsureConnectedAsync(TimeSpan.FromSeconds(30));
+
+            var apiVersion = (await _connection.Value.Client.GetRootAsync()).Version;
+
+            // Ignore `-pre` and other semver modifiers.
+            Version ParseVersion(string semver) => Version.Parse(semver.Split("-")[0]);
+
+            return ParseVersion(apiVersion) >= ParseVersion(minSeqVersion);
+        }
+
+        public async Task ExecuteTestCaseAsync()
+        {
+            ForceStartup();
+            
+            await _connection.Value.EnsureConnectedAsync(TimeSpan.FromSeconds(30));
             await _licenseSetup.Value.SetupAsync(_connection.Value, _logger.Value);
             await _testCase.ExecuteAsync(_connection.Value, _logger.Value, _commandRunner);
         }

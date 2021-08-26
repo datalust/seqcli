@@ -6,5 +6,6 @@ namespace SeqCli.EndToEnd.Support
     public class CliTestCaseAttribute : Attribute
     {
         public bool Multiuser { get; set; }
+        public string MinimumApiVersion { get; set; }
     }
 }
