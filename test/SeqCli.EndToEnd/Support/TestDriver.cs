@@ -26,16 +26,11 @@ namespace SeqCli.EndToEnd.Support
             Console.WriteLine($"TESTING {_configuration.TestedBinary}");
             Console.ResetColor();
 
-            var count = 0;
-            var passed = new List<string>();
+            int count = 0, passedCount = 0, skippedCount = 0;
             var failed = new List<string>();
 
             foreach (var testCaseFactory in _cases.OrderBy(c => Guid.NewGuid()))
             {
-                var isMultiuser = testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser);
-                if (isMultiuser != _configuration.IsMultiuser)
-                    continue;
-
                 count++;
 
                 await using var testCase = testCaseFactory.Value();
@@ -44,11 +39,21 @@ namespace SeqCli.EndToEnd.Support
                 Console.WriteLine($"RUNNING {testCase.Value.Description.PadRight(50)}");
                 Console.ResetColor();
 
+                var isMultiuser = testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser);
+                testCaseFactory.Metadata.TryGetValue("MinimumApiVersion", out var minSeqVersion);
+                if (isMultiuser != _configuration.IsMultiuser || minSeqVersion != null &&
+                    !await testCase.Value.IsSupportedApiVersion((string)minSeqVersion))
+                {
+                    skippedCount++;
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("SKIP");
+                    continue;
+                }
+                
                 try
                 {
                     await testCase.Value.ExecuteTestCaseAsync();
-
-                    passed.Add(testCase.Value.Description);
+                    passedCount++;
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("PASS");
                     Console.ResetColor();
@@ -68,7 +73,7 @@ namespace SeqCli.EndToEnd.Support
 
             var (color, failMsg) = failed.Count != 0 ? (ConsoleColor.Red, "Failures:") : (ConsoleColor.Green, "");
             Console.ForegroundColor = color;
-            Console.WriteLine($"Done; {count} total, {passed.Count} pass, {failed.Count} fail. {failMsg}");
+            Console.WriteLine($"Done; {count} total, {passedCount} passed, {failed.Count} failed, {skippedCount} skipped. {failMsg}");
 
             foreach (var fail in failed)
             {
