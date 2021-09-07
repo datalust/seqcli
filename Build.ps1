@@ -26,7 +26,7 @@ function Create-ArtifactDir
 
 function Publish-Archives($version)
 {
-	$rids = @("linux-x64", "linux-musl-x64", "osx-x64", "win-x64")
+	$rids = @("linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64", "win-x64")
 	foreach ($rid in $rids) {
 	    $tfm = $framework
 	    if ($rid -eq "win-x64") {
