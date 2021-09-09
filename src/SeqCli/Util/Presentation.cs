@@ -13,7 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Reflection;
 using System.Text;
+
+#nullable enable
 
 namespace SeqCli.Util
 {
@@ -30,21 +33,26 @@ namespace SeqCli.Util
         {
             if (ex == null) throw new ArgumentNullException(nameof(ex));
 
-            var baseException = ex.GetBaseException();
-            var message = new StringBuilder(baseException.Message);
-
-            var inner = baseException.InnerException?.GetBaseException();
-            if (inner != null)
+            static Exception Unwrap(Exception outer)
             {
-                message.Append(" (");
-                while (inner != null)
-                {
-                    message.Append(inner.Message);
-                    inner = inner.InnerException?.GetBaseException();
-                    if (inner != null)
-                        message.Append(" ");
-                }
-                message.Append(")");
+                return outer is AggregateException or TargetInvocationException ? outer.GetBaseException() : outer;
+            }
+
+            static string Describe(Exception toDescribe)
+            {
+                // :-)
+                return toDescribe.Message.Replace(", see inner exception", "");
+            }
+
+            var unwrapped = Unwrap(ex);
+            var message = new StringBuilder(Describe(unwrapped));
+
+            while (unwrapped.InnerException != null)
+            {
+                unwrapped = Unwrap(unwrapped.InnerException);
+                    
+                message.Append(' ');
+                message.Append(Describe(unwrapped));
             }
 
             return message.ToString();

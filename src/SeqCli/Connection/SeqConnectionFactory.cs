@@ -17,6 +17,8 @@ using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 
+#nullable enable
+
 namespace SeqCli.Connection
 {
     class SeqConnectionFactory
@@ -34,11 +36,11 @@ namespace SeqCli.Connection
             return new SeqConnection(url, apiKey);
         }
         
-        public (string, string) GetConnectionDetails(ConnectionFeature connection)
+        public (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
 
-            string url, apiKey;
+            string? url, apiKey;
             if (connection.IsUrlSpecified)
             {
                 url = connection.Url;
@@ -46,7 +48,7 @@ namespace SeqCli.Connection
             }
             else if (connection.IsProfileNameSpecified)
             {
-                if (!_config.Profiles.TryGetValue(connection.ProfileName, out var profile))
+                if (!_config.Profiles.TryGetValue(connection.ProfileName!, out var profile))
                     throw new ArgumentException($"A profile named `{connection.ProfileName}` was not found; see `seqcli profile list` for available profiles.");
                 
                 url = profile.ServerUrl;

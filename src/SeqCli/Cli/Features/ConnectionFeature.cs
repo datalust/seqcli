@@ -14,6 +14,8 @@
 
 using SeqCli.Util;
 
+#nullable enable
+
 namespace SeqCli.Cli.Features
 {
     class ConnectionFeature : CommandFeature
@@ -22,9 +24,9 @@ namespace SeqCli.Cli.Features
         public bool IsApiKeySpecified => ApiKey != null;
         public bool IsProfileNameSpecified => ProfileName != null;
 
-        public string Url { get; set; }
-        public string ApiKey { get; set; }
-        public string ProfileName { get; set; }
+        public string? Url { get; set; }
+        public string? ApiKey { get; set; }
+        public string? ProfileName { get; set; }
 
         public override void Enable(OptionSet options)
         {
