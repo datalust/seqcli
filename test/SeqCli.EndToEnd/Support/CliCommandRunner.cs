@@ -1,5 +1,7 @@
 ﻿using System;
 
+#nullable enable
+
 namespace SeqCli.EndToEnd.Support
 {
     public class CliCommandRunner
@@ -7,20 +9,18 @@ namespace SeqCli.EndToEnd.Support
         readonly TestConfiguration _configuration;
         static readonly TimeSpan DefaultExecTimeout = TimeSpan.FromSeconds(10);
         
-        public ITestProcess LastRunProcess { get; private set; }
+        public ITestProcess? LastRunProcess { get; private set; }
 
         public CliCommandRunner(TestConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        public int Exec(string command, string args = null, bool disconnected = false)
+        public int Exec(string command, string? args = null, bool disconnected = false)
         {
-            using (var process = _configuration.SpawnCliProcess(command, args, skipServerArg: disconnected))
-            {
-                LastRunProcess = process;
-                return process.WaitForExit(DefaultExecTimeout);
-            }
+            using var process = _configuration.SpawnCliProcess(command, args, skipServerArg: disconnected);
+            LastRunProcess = process;
+            return process.WaitForExit(DefaultExecTimeout);
         }
     }
 }

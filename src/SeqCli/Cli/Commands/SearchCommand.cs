@@ -65,41 +65,39 @@ namespace SeqCli.Cli.Commands
         {
             try
             {
-                using (var output = _output.CreateOutputLogger())
+                using var output = _output.CreateOutputLogger();
+                var connection = _connectionFactory.Connect(_connection);
+
+                string filter = null;
+                if (!string.IsNullOrWhiteSpace(_filter))
+                    filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
+
+                string nextPageAfterId = null;
+                var remaining = _count;
+                while (remaining > 0)
                 {
-                    var connection = _connectionFactory.Connect(_connection);
+                    var page = await connection.Events.InSignalAsync(
+                        null,
+                        _signal.Signal,
+                        filter: filter,
+                        count: remaining,
+                        fromDateUtc: _range.Start,
+                        toDateUtc: _range.End,
+                        afterId: nextPageAfterId);
 
-                    string filter = null;
-                    if (!string.IsNullOrWhiteSpace(_filter))
-                        filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
+                    nextPageAfterId = page.Statistics.LastReadEventId;
 
-                    string nextPageAfterId = null;
-                    var remaining = _count;
-                    while (remaining > 0)
+                    foreach (var evt in page.Events)
                     {
-                        var page = await connection.Events.InSignalAsync(
-                            null,
-                            _signal.Signal,
-                            filter: filter,
-                            count: remaining,
-                            fromDateUtc: _range.Start,
-                            toDateUtc: _range.End,
-                            afterId: nextPageAfterId);
+                        output.Write(ToSerilogEvent(evt));
+                        remaining--;
 
-                        nextPageAfterId = page.Statistics.LastReadEventId;
-
-                        foreach (var evt in page.Events)
-                        {
-                            output.Write(ToSerilogEvent(evt));
-                            remaining--;
-
-                            if (remaining == 0)
-                                break;
-                        }
-
-                        if (page.Statistics.Status != ResultSetStatus.Partial)
+                        if (remaining == 0)
                             break;
                     }
+
+                    if (page.Statistics.Status != ResultSetStatus.Partial)
+                        break;
                 }
 
                 return 0;

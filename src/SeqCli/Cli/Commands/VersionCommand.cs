@@ -16,6 +16,8 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace SeqCli.Cli.Commands
 {
     [Command("version", "Print the current executable version")]
@@ -31,7 +33,7 @@ namespace SeqCli.Cli.Commands
         public static string GetVersion()
         {
             return typeof(VersionCommand).GetTypeInfo().Assembly
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
         }
     }
 }

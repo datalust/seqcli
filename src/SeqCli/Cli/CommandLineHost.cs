@@ -18,6 +18,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
+using Serilog.Core;
+using Serilog.Events;
+
+#nullable enable
 
 namespace SeqCli.Cli
 {
@@ -30,10 +34,10 @@ namespace SeqCli.Cli
             _availableCommands = availableCommands.ToList();
         }
 
-        public async Task<int> Run(string[] args)
+        public async Task<int> Run(string[] args, LoggingLevelSwitch levelSwitch)
         {
             var ea = Assembly.GetEntryAssembly();
-            var name = ea.GetName().Name;
+            var name = ea!.GetName().Name;
 
             if (args.Length > 0)
             {
@@ -46,7 +50,16 @@ namespace SeqCli.Cli
                 if (cmd != null)
                 {
                     var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
-                    return await cmd.Value.Value.Invoke(args.Skip(amountToSkip).ToArray());
+                    var commandSpecificArgs = args.Skip(amountToSkip).ToArray();
+                    
+                    var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg is "-v" or "--verbose");
+                    if (verboseArg != null)
+                    {
+                        levelSwitch.MinimumLevel = LogEventLevel.Information;
+                        commandSpecificArgs = commandSpecificArgs.Where(arg => arg != verboseArg).ToArray();
+                    }
+
+                    return await cmd.Value.Value.Invoke(commandSpecificArgs);
                 }
             }
 
