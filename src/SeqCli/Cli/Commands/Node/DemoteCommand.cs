@@ -17,6 +17,7 @@ namespace SeqCli.Cli.Commands.Node
         readonly SeqConnectionFactory _connectionFactory;
 
         readonly ConnectionFeature _connection;
+        readonly ConfirmFeature _confirm;
         bool _wait;
 
         public DemoteCommand(SeqConnectionFactory connectionFactory)
@@ -24,6 +25,7 @@ namespace SeqCli.Cli.Commands.Node
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
             Options.Add("wait", "Wait for the leader to be demoted before exiting", _ => _wait = true);
+            _confirm = Enable<ConfirmFeature>();
             
             _connection = Enable<ConnectionFeature>();
         }
@@ -32,6 +34,12 @@ namespace SeqCli.Cli.Commands.Node
         {
             var connection = _connectionFactory.Connect(_connection);
 
+            if (!_confirm.TryConfirm("This will demote the current cluster leader."))
+            {
+                await Console.Error.WriteLineAsync("Canceled by user.");
+                return 1;
+            }
+            
             var demoting = (await connection.ClusterNodes.ListAsync()).SingleOrDefault(n => n.Role == NodeRole.Leader);
 
             if (demoting == null)
