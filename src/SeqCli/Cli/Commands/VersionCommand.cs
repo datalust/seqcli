@@ -30,7 +30,7 @@ namespace SeqCli.Cli.Commands
             return Task.FromResult(0);
         }
 
-        static string GetVersion()
+        public static string GetVersion()
         {
             return typeof(VersionCommand).GetTypeInfo().Assembly
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;

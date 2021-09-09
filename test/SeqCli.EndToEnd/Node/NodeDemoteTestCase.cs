@@ -6,6 +6,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Node
 {
+    [CliTestCase(MinimumApiVersion = "2021.3.6410")]
     public class NodeDemoteTestCase: ICliTestCase
     {
         public Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
