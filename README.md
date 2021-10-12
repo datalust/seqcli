@@ -51,15 +51,31 @@ Available commands:
    - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
    - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
    - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
+ - `feed`
+   - [`feed create`](#feed-create) &mdash; Create a NuGet feed.
+   - [`feed list`](#feed-list) &mdash; List NuGet feeds.
+   - [`feed remove`](#feed-remove) &mdash; Remove a NuGet feed from the server.
  - [`help`](#help) &mdash; Show information about available commands.
  - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
+ - [`license apply`](#license-apply) &mdash; Apply a license to the Seq server.
  - [`log`](#log) &mdash; Send a structured log event to the server.
+ - `node`
+   - [`node demote`](#node-demote) &mdash; Begin demotion of the current leader node.
+   - [`node health`](#node-health) &mdash; Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried.
+   - [`node list`](#node-list) &mdash; List nodes in the Seq cluster.
  - [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
  - `profile`
    - [`profile create`](#profile-create) &mdash; Create or replace a connection profile.
    - [`profile list`](#profile-list) &mdash; List connection profiles.
    - [`profile remove`](#profile-remove) &mdash; Remove a connection profile.
  - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
+ - `retention`
+   - [`retention create`](#retention-create) &mdash; Create a retention policy.
+   - [`retention list`](#retention-list) &mdash; List retention policies.
+   - [`retention remove`](#retention-remove) &mdash; Remove a retention policy from the server.
+ - `sample`
+   - [`sample ingest`](#sample-ingest) &mdash; Log sample events into a Seq instance.
+   - [`sample setup`](#sample-setup) &mdash; Configure a Seq instance with sample dashboards, signals, users, and so on.
  - [`search`](#search) &mdash; Retrieve log events that match a given filter.
  - `signal`
    - [`signal create`](#signal-create) &mdash; Create a signal.
@@ -67,6 +83,9 @@ Available commands:
    - [`signal list`](#signal-list) &mdash; List available signals.
    - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
  - [`tail`](#tail) &mdash; Stream log events matching a filter.
+ - `template`
+   - [`template export`](#template-export) &mdash; Export entities into template files.
+   - [`template import`](#template-import) &mdash; Import entities from template files.
  - `user`
    - [`user create`](#user-create) &mdash; Create a user.
    - [`user list`](#user-list) &mdash; List users.
@@ -133,6 +152,10 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--filter=VALUE` | A filter to apply to incoming events |
 |       `--minimum-level=VALUE` | The minimum event level/severity to accept; the default is to accept all events |
 |       `--use-server-timestamps` | Discard client-supplied timestamps and use server clock values |
+|       `--permissions=VALUE` | The permissions to delegate to the API key; the default is `Ingest` |
+|       `--connect-username=VALUE` | A username to connect with, useful primarily when setting up the first API key |
+|       `--connect-password=VALUE` | When `connect-username` is specified, a corresponding password |
+|       `--connect-password-stdin` | When `connect-username` is specified, read the corresponding password from `STDIN` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -253,6 +276,67 @@ seqcli dashboard list
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
+### `feed remove`
+
+Remove a NuGet feed from the server.
+
+Example:
+
+```
+seqcli feed remove -n CI
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | The name of the feed to remove |
+| `-i`, `--id=VALUE` | The id of a single feed to remove |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `feed list`
+
+List NuGet feeds.
+
+Example:
+
+```
+seqcli feed list
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | The name of the feed to list |
+| `-i`, `--id=VALUE` | The id of a single feed to list |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `feed create`
+
+Create a NuGet feed.
+
+Example:
+
+```
+seqcli feed create -n 'CI' --location="https://f.feedz.io/example/ci" -u Seq --password-stdin
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | A unique name for the feed |
+| `-l`, `--location=VALUE` | The feed location; this may be a NuGet v2 or v3 feed URL, or a local filesystem path on the Seq server |
+| `-u`, `--username=VALUE` | The username Seq should supply when connecting to the feed, if authentication is required |
+| `-p`, `--password=VALUE` | A feed password, if authentication is required; note that `--password-stdin` is more secure |
+|       `--password-stdin` | Read the feed password from `STDIN` |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+
 ### `help`
 
 Show information about available commands.
@@ -279,7 +363,7 @@ seqcli ingest -i log-*.txt --json --filter="@Level <> 'Debug'" -p Environment=Te
 
 | Option | Description |
 | ------ | ----------- |
-| `-i`, `--input=VALUE` | File to ingest, including the `*` wildcard; if not specified, `STDIN` will be used |
+| `-i`, `--input=VALUE` | File(s) to ingest, including the `*` wildcard; if not specified, `STDIN` will be used |
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: `fail` (default) or `ignore` |
 | `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
 | `-x`, `--extract=VALUE` | An extraction pattern to apply to plain-text logs (ignored when `--json` is specified) |
@@ -288,6 +372,26 @@ seqcli ingest -i log-*.txt --json --filter="@Level <> 'Debug'" -p Environment=Te
 | `-m`, `--message=VALUE` | A message to associate with the ingested events; https://messagetemplates.org syntax is supported |
 | `-l`, `--level=VALUE` | The level or severity to associate with the ingested events; this will override any level information present in the events themselves |
 |       `--send-failure=VALUE` | Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore` |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--batch-size=VALUE` | The maximum number of events to send in each request to the ingestion endpoint; if not specified a value of `100` will be used |
+
+### `license apply`
+
+Apply a license to the Seq server.
+
+Example:
+
+```
+seqcli license apply --certificate="license.txt"
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-c`, `--certificate=VALUE` | Certificate file; the file must be UTF-8 text |
+|       `--certificate-stdin` | Read the license certificate from `STDIN` |
+|       `--automatically-refresh` | If the license is for a subscription, periodically check `datalust.co` and automatically refresh the certificate when the subscription is changed or renewed |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -309,6 +413,59 @@ seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test
 | `-t`, `--timestamp=VALUE` | The event timestamp as ISO-8601 (the current UTC timestamp will be used by default) |
 | `-x`, `--exception=VALUE` | Additional exception or error information to send, if any |
 | `-p`, `--property=NAME=VALUE` | Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production` |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `node list`
+
+List nodes in the Seq cluster.
+
+Example:
+
+```
+seqcli node list --json
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-n`, `--name=VALUE` | The name of the cluster node to list |
+| `-i`, `--id=VALUE` | The id of a single cluster node to list |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `node health`
+
+Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried.
+
+Example:
+
+```
+seqcli node health -s https://seq-2.example.com
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `node demote`
+
+Begin demotion of the current leader node.
+
+Example:
+
+```
+seqcli node demote -v --wait
+```
+
+| Option | Description |
+| ------ | ----------- |
+|       `--wait` | Wait for the leader to be demoted before exiting |
+| `-y`, `--confirm` | Answer [y]es when prompted to continue |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -393,6 +550,98 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `retention remove`
+
+Remove a retention policy from the server.
+
+Example:
+
+```
+seqcli retention remove -i retentionpolicy-17
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-i`, `--id=VALUE` | The id of a single retention policy to remove |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `retention list`
+
+List retention policies.
+
+Example:
+
+```
+seqcli retention list
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-i`, `--id=VALUE` | The id of a single retention policy to list |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `retention create`
+
+Create a retention policy.
+
+Example:
+
+```
+seqcli retention create --after 30d --delete-all-events
+```
+
+| Option | Description |
+| ------ | ----------- |
+|       `--after=VALUE` | A duration after which the policy will delete events, e.g. `7d` |
+|       `--delete-all-events` | The policy should delete all events (currently the only supported option) |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+
+### `sample setup`
+
+Configure a Seq instance with sample dashboards, signals, users, and so on.
+
+Example:
+
+```
+seqcli sample setup
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-y`, `--confirm` | Answer [y]es when prompted to continue |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `sample ingest`
+
+Log sample events into a Seq instance.
+
+Example:
+
+```
+seqcli sample ingest
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-y`, `--confirm` | Answer [y]es when prompted to continue |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--quiet` | Don't echo ingested events to `STDOUT` |
+|       `--batch-size=VALUE` | The maximum number of events to send in each request to the ingestion endpoint; if not specified a value of `100` will be used |
 
 ### `search`
 
@@ -514,6 +763,44 @@ Stream log events matching a filter.
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
+### `template import`
+
+Import entities from template files.
+
+Example:
+
+```
+seqcli template import -i ./Templates
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-i`, `--input=VALUE` | The directory from which to read the set of `.template` files; the default is `.` |
+|       `--state=VALUE` | The path of a file which will persist a mapping of template names to the ids of the created entities on the target server, avoiding duplicates when multiple imports are performed; by default, `import.state` in the input directory will be used |
+|       `--merge` | For templates with no entries in the `.state` file, first check for existing entities with matching names or titles; does not support merging of retention policies |
+| `-g`, `--arg=NAME=VALUE` | Template arguments, e.g. `-g ownerId=user-314159` |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `template export`
+
+Export entities into template files.
+
+Example:
+
+```
+seqcli template export -o ./Templates
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-o`, `--output=VALUE` | The directory in which to write template files; the directory must exist; any existing files with names matching the exported templates will be overwritten; the default is `.` |
+| `-i`, `--include=VALUE` | The id of a signal, dashboard, saved query, workspace, or retention policy to export; this argument may be specified multiple times; the default is to export all shared entities |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
 ### `user remove`
 
 Remove a user from the server.
@@ -571,6 +858,7 @@ seqcli user create -n alice -d 'Alice Example' -r 'User (read/write)' --password
 | `-e`, `--email=VALUE` | The user's email address (enables a Gravatar image for the user) |
 | `-p`, `--password=VALUE` | An initial password for the user, if username/password authentication is in use; note that `--password-stdin` is more secure |
 |       `--password-stdin` | Read the initial password for the user from `STDIN`, if username/password authentication is in use |
+|       `--no-password-change` | Don't force the user to change their password at next login |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -628,16 +916,14 @@ Create a workspace.
 Example:
 
 ```
-seqcli workspace create -t 'My Workspace'
+seqcli workspace create -t 'My Workspace' -c signal-314159 -c dashboard-628318
 ```
 
 | Option | Description |
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | A title for the workspace |
 |       `--description=VALUE` | A description for the workspace |
-|       `--dashboard=VALUE` | The id of a dashboard to include in the workspace |
-|       `--query=VALUE` | The id of a saved query to include in the workspace |
-|       `--signal=VALUE` | The id of a signal to include in the workspace |
+| `-c`, `--content=VALUE` | The id of a dashboard, signal, or saved query to include in the workspace |
 |       `--protected` | Specify that the workspace is editable only by administrators |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
