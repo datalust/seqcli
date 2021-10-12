@@ -30,11 +30,16 @@ namespace SeqCli.Cli.Commands.Sample
         readonly ConfirmFeature _confirm;
         readonly BatchSizeFeature _batchSize;
 
+        bool _quiet;
+
         public IngestCommand(SeqConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             _confirm = Enable<ConfirmFeature>();
             _connection = Enable<ConnectionFeature>();
+
+            Options.Add("quiet", "Don't echo ingested events to `STDOUT`", _ => _quiet = true);
+            
             _batchSize = Enable<BatchSizeFeature>();
         }
         
@@ -50,7 +55,7 @@ namespace SeqCli.Cli.Commands.Sample
             }
 
             var connection = _connectionFactory.Connect(_connection);
-            await Simulation.RunAsync(connection, apiKey, batchSize);
+            await Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet);
             return 0;
         }
     }

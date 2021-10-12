@@ -5,7 +5,7 @@ using Serilog.Core;
 
 namespace SeqCli.EndToEnd.Support
 {
-    sealed class TestDataFolder : IDisposable
+    public sealed class TestDataFolder : IDisposable
     {
         readonly string _basePath;
 
@@ -13,7 +13,7 @@ namespace SeqCli.EndToEnd.Support
         {
             _basePath = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),
-                "Seq Test",
+                "SeqCli Test",
                 Guid.NewGuid().ToString("n"));
 
             Directory.CreateDirectory(_basePath);
@@ -21,7 +21,7 @@ namespace SeqCli.EndToEnd.Support
 
         public string Path => _basePath;
 
-        public string Folder(string relativePath)
+        public string ItemPath(string relativePath)
         {
             return System.IO.Path.Combine(_basePath, relativePath);
         }

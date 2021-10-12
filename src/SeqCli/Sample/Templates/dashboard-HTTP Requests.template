@@ -1,0 +1,165 @@
+{
+  "$entity": "dashboard",
+  "OwnerId": arg("ownerId"),
+  "Title": "HTTP Requests",
+  "IsProtected": false,
+  "SignalExpression": {
+    "SignalId": ref("signal-Sample Data.template"),
+    "Kind": "Signal"
+  },
+  "Charts": [
+    {
+      "Title": "Requests by Status Code",
+      "SignalExpression": {
+        "SignalId": ref("signal-HTTP Requests.template"),
+        "Kind": "Signal"
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "count(*)",
+              "Label": "count"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": null,
+          "GroupBy": [
+            "StatusCode"
+          ],
+          "DisplayStyle": {
+            "Type": "Line",
+            "LineFillToZeroY": true,
+            "LineShowMarkers": false,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 12,
+        "HeightRows": 2
+      }
+    },
+    {
+      "Title": "99th Percentile Response Time",
+      "SignalExpression": {
+        "SignalId": ref("signal-HTTP Requests.template"),
+        "Kind": "Signal"
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "Concat(ToJson(Round(percentile(Elapsed, 99), 0)), ' ms')",
+              "Label": "p99th"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": null,
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Value",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 4,
+        "HeightRows": 1
+      }
+    },
+    {
+      "Title": "Mean Response Time",
+      "SignalExpression": {
+        "SignalId": ref("signal-HTTP Requests.template"),
+        "Kind": "Signal"
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "Concat(ToJson(Round(mean(Elapsed), 0)), ' ms')",
+              "Label": "p99th"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": null,
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Value",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 4,
+        "HeightRows": 1
+      }
+    },
+    {
+      "Title": "Internal Server Errors",
+      "SignalExpression": {
+        "Kind": "Intersection",
+        "Left": {
+          "SignalId": ref("signal-HTTP Requests.template"),
+          "Kind": "Signal"
+        },
+        "Right": {
+          "SignalId": ref("signal-Internal Server Error.template"),
+          "Kind": "Signal"
+        }
+      },
+      "Queries": [
+        {
+          "Measurements": [
+            {
+              "Value": "count(*)",
+              "Label": "count"
+            }
+          ],
+          "Where": null,
+          "SignalExpression": null,
+          "GroupBy": [],
+          "DisplayStyle": {
+            "Type": "Bar",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": true,
+            "SuppressLegend": false,
+            "Palette": "Reds"
+          },
+          "Alerts": [],
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 4,
+        "HeightRows": 1
+      }
+    }
+  ]
+}

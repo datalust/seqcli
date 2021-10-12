@@ -12,10 +12,8 @@ namespace SeqCli.EndToEnd
 
             var builder = new ContainerBuilder();
             builder.RegisterModule(new TestDriverModule(args));
-            using (var container = builder.Build())
-            {
-                return await container.Resolve<TestDriver>().Run();
-            }
+            await using var container = builder.Build();
+            return await container.Resolve<TestDriver>().Run();
         }
     }
 }

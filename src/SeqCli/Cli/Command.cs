@@ -51,11 +51,16 @@ namespace SeqCli.Cli
 
         public void PrintUsage()
         {
-            if (Options.Any())
+            var allOptions = new OptionSet();
+            foreach (var option in Options)
             {
-                Console.Error.WriteLine("Arguments:");
-                Options.WriteOptionDescriptions(Console.Error);
+                allOptions.Add(option);
             }
+
+            allOptions.Add("v|verbose", "Print verbose output to `STDERR`", _ => { });
+
+            Console.Error.WriteLine("Arguments:");
+            allOptions.WriteOptionDescriptions(Console.Error);
         }
 
         public async Task<int> Invoke(string[] args)

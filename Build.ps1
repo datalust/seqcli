@@ -26,7 +26,7 @@ function Create-ArtifactDir
 
 function Publish-Archives($version)
 {
-	$rids = @("linux-x64", "linux-musl-x64", "osx-x64", "win-x64")
+	$rids = @("linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64", "win-x64")
 	foreach ($rid in $rids) {
 	    $tfm = $framework
 	    if ($rid -eq "win-x64") {
@@ -61,6 +61,15 @@ function Publish-DotNetTool($version)
 {	
 	# Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
 	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFramework=$framework /p:TargetFrameworks=
+    if($LASTEXITCODE -ne 0) { exit 7 }
+}
+
+function Publish-Docs($version)
+{
+    Write-Output "Generating markdown documentation"
+
+    & dotnet run --project ./src/SeqCli/SeqCli.csproj -f $framework -- help --markdown > ./artifacts/seqcli-$version.md
+    if($LASTEXITCODE -ne 0) { exit 8 }
 }
 
 Push-Location $PSScriptRoot
@@ -74,5 +83,6 @@ Restore-Packages
 Publish-Archives($version)
 Publish-DotNetTool($version)
 Execute-Tests
+Publish-Docs($version)
 
 Pop-Location

@@ -19,6 +19,7 @@ using Autofac;
 using SeqCli.Cli;
 using SeqCli.Util;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 
 namespace SeqCli
@@ -27,14 +28,9 @@ namespace SeqCli
     {
         static async Task<int> Main(string[] args)
         {
-#if WINDOWS
-            // This reverts to using the WinHTTP stack instead of managed sockets, so that
-            // Windows proxy settings are respected 
-            AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
-#endif
-
+            var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Error);
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Error()
+                .MinimumLevel.ControlledBy(levelSwitch)
                 .WriteTo.Console(
                     outputTemplate: "{Message:lj}{NewLine}{Exception}",
                     standardErrorFromLevel: LevelAlias.Minimum)
@@ -46,14 +42,14 @@ namespace SeqCli
                 Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
                 TaskScheduler.UnobservedTaskException += 
-                    (s,e) => Log.Error(e.Exception, "Unobserved task exception");
+                    (_,e) => Log.Error(e.Exception, "Unobserved task exception");
                 
                 var builder = new ContainerBuilder();
                 builder.RegisterModule<SeqCliModule>();
 
                 await using var container = builder.Build();
                 var clh = container.Resolve<CommandLineHost>();
-                var exit = await clh.Run(args);
+                var exit = await clh.Run(args, levelSwitch);
                 return exit;
             }
             catch (Exception ex)

@@ -18,12 +18,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
-using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Templates.Ast;
-using SeqCli.Templates.Files;
-using SeqCli.Templates.Sets;
+using SeqCli.Templates.Import;
 using SeqCli.Util;
+
+// ReSharper disable once UnusedType.Global
 
 namespace SeqCli.Cli.Commands.Sample
 {
@@ -36,9 +36,8 @@ namespace SeqCli.Cli.Commands.Sample
         readonly ConnectionFeature _connection;
         readonly ConfirmFeature _confirm;
 
-        public SetupCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+        public SetupCommand(SeqConnectionFactory connectionFactory)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
             // The command will also at some point accept an `--allow-outbound-requests` flag, which will cause sample
@@ -68,10 +67,10 @@ namespace SeqCli.Cli.Commands.Sample
 
             var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
             var templateFiles = Directory.GetFiles(templatesPath);
-            var templates = new List<EntityTemplateFile>();
+            var templates = new List<EntityTemplate>();
             foreach (var templateFile in templateFiles)
             {
-                if (!EntityTemplateFileLoader.Load(templateFile, out var template, out var error))
+                if (!EntityTemplateLoader.Load(templateFile, out var template, out var error))
                 {
                     await Console.Error.WriteLineAsync(error);
                     return 1;
@@ -80,7 +79,7 @@ namespace SeqCli.Cli.Commands.Sample
                 templates.Add(template);
             }
 
-            var err = await EntityTemplateSet.ApplyAsync(templates, connection, templateArgs);
+            var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs, new TemplateImportState(), merge: false);
             if (err != null)
             {
                 await Console.Error.WriteLineAsync(err);

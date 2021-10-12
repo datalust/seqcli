@@ -1,0 +1,43 @@
+{
+  "$entity": "workspace",
+  "OwnerId": arg("ownerId"),
+  "Title": "Sample",
+  "Description": "Created by `seqcli sample setup`",
+  "IsProtected": false,
+  "DefaultSignalExpression": {
+    "SignalId": ref("signal-Sample Data.template"),
+    "Kind": "Signal"
+  },
+  "Content": {
+    "DashboardIds": [
+      ref("dashboard-Database.template"),
+      ref("dashboard-HTTP Requests.template"),
+      ref("dashboard-Orders.template")
+    ],
+    "QueryIds": [
+      ref("sqlquery-Order Items by Product Size.template"),
+      ref("sqlquery-Route Bindings.template")
+    ],
+    "SignalIds": [
+      "signal-m33301",
+      "signal-m33302",
+      "signal-m33303",
+      ref("signal-Bad Request.template"),
+      ref("signal-Batch Processing.template"),
+      ref("signal-Database.template"),
+      ref("signal-HTTP Requests.template"),
+      ref("signal-Information.template"),
+      ref("signal-Internal Server Error.template"),
+      ref("signal-Not Found.template"),
+      ref("signal-Order Abandoned.template"),
+      ref("signal-Order Archived.template"),
+      ref("signal-Order Created.template"),
+      ref("signal-Order Placed.template"),
+      ref("signal-Order Shipped.template"),
+      "signal-29",
+      ref("signal-Stock Level Warnings.template"),
+      ref("signal-Success.template"),
+      ref("signal-Web Frontend.template")
+    ]
+  }
+}

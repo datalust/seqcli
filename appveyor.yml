@@ -1,4 +1,4 @@
-version: 2021.2.{build}
+version: 2021.3.{build}
 skip_tags: true
 image:
 - Visual Studio 2019
@@ -13,6 +13,7 @@ artifacts:
 - path: artifacts/seqcli-*.zip
 - path: artifacts/seqcli-*.tar.gz
 - path: artifacts/seqcli.*.nupkg
+- path: artifacts/seqcli-*.md
 
 for:
 -

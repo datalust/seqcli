@@ -1,0 +1,18 @@
+{
+  "$entity": "signal",
+  "OwnerId": arg("ownerId"),
+  "Title": "Database",
+  "Description": "Created by `seqcli sample setup`",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@EventType = 0x94002ebf",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "Grouping": "None",
+  "ExplicitGroupName": null
+}

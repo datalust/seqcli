@@ -61,19 +61,18 @@ namespace SeqCli.Cli.Commands
                 strict = converted.StrictExpression;
             }
 
-            using (var output = _output.CreateOutputLogger())
-            using (var stream = await connection.Events.StreamAsync<JObject>(
+            using var output = _output.CreateOutputLogger();
+            using var stream = await connection.Events.StreamAsync<JObject>(
                 filter: strict, 
                 signal: _signal.Signal,
-                cancellationToken: cancel.Token))
-            {
-                var subscription = stream
-                    .Select(JsonLogEventReader.ReadFromJObject)
-                    .Subscribe(evt => output.Write(evt), () => cancel.Cancel());
+                cancellationToken: cancel.Token);
+            var subscription = stream
+                .Select(JsonLogEventReader.ReadFromJObject)
+                // ReSharper disable once AccessToDisposedClosure
+                .Subscribe(evt => output.Write(evt), () => cancel.Cancel());
 
-                cancel.Token.WaitHandle.WaitOne();
-                subscription.Dispose();
-            }
+            cancel.Token.WaitHandle.WaitOne();
+            subscription.Dispose();
 
             return 0;
         }
