@@ -6,7 +6,7 @@ The [Seq](https://datalust.co/seq) client command-line app. Supports logging (`s
 
 ## Getting started
 
-Install or unzip the [release for your operating system](https://github.com/datalust/seqcli/releases). Or, if you have `dotnet` installed, `seqcli` can be installed as a global tool using:
+The Seq installer for Windows includes `seqcli`. Otherwise, download the [release for your operating system](https://github.com/datalust/seqcli/releases). Or, if you have `dotnet` installed, `seqcli` can be installed as a global tool using:
 
 ```
 dotnet tool install --global seqcli
