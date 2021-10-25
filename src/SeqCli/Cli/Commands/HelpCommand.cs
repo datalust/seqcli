@@ -24,13 +24,13 @@ namespace SeqCli.Cli.Commands
     [Command("help", "Show information about available commands", Example = "seqcli help search")]
     class HelpCommand : Command
     {
-        readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
+        readonly List<Meta<Lazy<Command>, CommandMetadata>> _orderedCommands;
         bool _markdown;
 
         public HelpCommand(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
         {
             Options.Add("m|markdown", "Generate markdown for use in documentation", _ => _markdown = true);
-            _availableCommands = availableCommands.OrderBy(c => c.Metadata.Name).ToList();
+            _orderedCommands = availableCommands.OrderBy(c => c.Metadata.Name).ThenBy(c => c.Metadata.SubCommand).ToList();
         }
 
         protected override Task<int> Run(string[] unrecognized)
@@ -53,7 +53,7 @@ namespace SeqCli.Cli.Commands
             {
                 topLevelCommand = unrecognized[0].ToLowerInvariant();
                 var subCommand = unrecognized.Length > 1 && !unrecognized[1].Contains("-") ? unrecognized[1] : null;
-                var cmds = _availableCommands.Where(c => c.Metadata.Name == topLevelCommand &&
+                var cmds = _orderedCommands.Where(c => c.Metadata.Name == topLevelCommand &&
                                                          (subCommand == null || subCommand == c.Metadata.SubCommand)).ToArray();
 
                 if (cmds.Length == 1 && cmds[0].Metadata.SubCommand == subCommand)
@@ -70,7 +70,7 @@ namespace SeqCli.Cli.Commands
                 }
             }
 
-            if (topLevelCommand != null && _availableCommands.Any(a => a.Metadata.Name == topLevelCommand))
+            if (topLevelCommand != null && _orderedCommands.Any(a => a.Metadata.Name == topLevelCommand))
                 PrintHelp(name, topLevelCommand);
             else
                 PrintHelp(name);
@@ -92,7 +92,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine("Available commands:");
             Console.WriteLine();
 
-            foreach (var cmd in _availableCommands.GroupBy(cmd => cmd.Metadata.Name).OrderBy(c => c.Key))
+            foreach (var cmd in _orderedCommands.GroupBy(cmd => cmd.Metadata.Name).OrderBy(c => c.Key))
             {
                 if (cmd.Count() == 1)
                 {
@@ -113,7 +113,7 @@ namespace SeqCli.Cli.Commands
             }
             Console.WriteLine();
 
-            foreach (var cmd in _availableCommands)
+            foreach (var cmd in _orderedCommands)
             {
                 if (cmd.Metadata.SubCommand != null)
                     Console.WriteLine($"### `{cmd.Metadata.Name} {cmd.Metadata.SubCommand}`");
@@ -164,7 +164,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine("Available commands are:");
 
             var printedGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var avail in _availableCommands.OrderBy(c => c.Metadata.Name))
+            foreach (var avail in _orderedCommands)
             {
                 if (avail.Metadata.SubCommand != null)
                 {
@@ -190,7 +190,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine();
             Console.WriteLine("Available sub-commands are:");
 
-            foreach (var avail in _availableCommands.Where(c => c.Metadata.Name == topLevelCommand).OrderBy(c => c.Metadata.SubCommand))
+            foreach (var avail in _orderedCommands.Where(c => c.Metadata.Name == topLevelCommand))
             {
                 Printing.Define($"  {avail.Metadata.SubCommand}", avail.Metadata.HelpText, 13, Console.Out);
             }
