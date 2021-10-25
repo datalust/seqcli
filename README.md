@@ -27,6 +27,8 @@ The API key will be stored in your `SeqCli.json` configuration file; on Windows,
 docker run --rm datalust/seqcli:latest <command> [<args>]
 ```
 
+To connect to Seq in a docker container on the local machine use the machine's IP address (not localhost) or specify [docker host networking](https://docs.docker.com/network/host/) with `--net host`.
+
 Use Docker networks and volumes to make local files and other containers accessible to `seqcli` within its container.
 
 ## Commands
