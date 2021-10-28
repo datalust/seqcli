@@ -75,7 +75,7 @@ namespace SeqCli.Cli.Commands.ApiKey
 
             Options.Add(
                 "permissions=",
-                "The comma-separated list of permissions to delegate to the API key; the default is `Ingest`. Options are `Ingest`,`Read`,`Setup`,`Write`",
+                "A comma-separated list of permissions to delegate to the API key; the default is `Ingest`. Options are `Ingest`,`Read`,`Setup`,`Write`",
                 v => _permissions = ArgumentString.NormalizeList(v));
 
             Options.Add(

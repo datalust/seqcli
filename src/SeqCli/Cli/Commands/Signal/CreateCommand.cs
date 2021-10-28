@@ -34,6 +34,7 @@ namespace SeqCli.Cli.Commands.Signal
         readonly OutputFormatFeature _output;
 
         string _title, _description, _filter, _group;
+        string[] _columns;
         bool _isProtected, _noGrouping;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -54,6 +55,11 @@ namespace SeqCli.Cli.Commands.Signal
                 "f=|filter=",
                 "Filter to associate with the signal",
                 f => _filter = ArgumentString.Normalize(f));
+
+            Options.Add(
+                "c=|columns=",
+                "Comma-separated list of columns to associate with the signal",
+                c => _columns = ArgumentString.NormalizeList(c));
 
             Options.Add(
                 "group=",
@@ -109,6 +115,12 @@ namespace SeqCli.Cli.Commands.Signal
                         FilterNonStrict = _filter
                     }
                 }.ToList();
+            }
+
+            if (_columns != null)
+            {
+                foreach (var column in _columns)
+                    signal.Columns.Add(new SignalColumnPart { Expression = column });
             }
 
             signal = await connection.Signals.AddAsync(signal);
