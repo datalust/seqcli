@@ -154,7 +154,7 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--filter=VALUE` | A filter to apply to incoming events |
 |       `--minimum-level=VALUE` | The minimum event level/severity to accept; the default is to accept all events |
 |       `--use-server-timestamps` | Discard client-supplied timestamps and use server clock values |
-|       `--permissions=VALUE` | A comma-separated list of permissions to delegate to the API key; the default is `Ingest`. Options are `Ingest`,`Read`,`Setup`,`Write` |
+|       `--permissions=VALUE` | A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Setup`, and `Write` |
 |       `--connect-username=VALUE` | A username to connect with, useful primarily when setting up the first API key |
 |       `--connect-password=VALUE` | When `connect-username` is specified, a corresponding password |
 |       `--connect-password-stdin` | When `connect-username` is specified, read the corresponding password from `STDIN` |
