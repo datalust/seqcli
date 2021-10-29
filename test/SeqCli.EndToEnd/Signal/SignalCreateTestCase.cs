@@ -13,7 +13,7 @@ namespace SeqCli.EndToEnd.Signal
             ILogger logger,
             CliCommandRunner runner)
         {
-            var exit = runner.Exec("signal create", " -t TestSignal -f \"@Exception is not null\" -c ApplicationName,AssemblyVersion");
+            var exit = runner.Exec("signal create", "-t TestSignal -f \"@Exception is not null\" -c Column1 -c \"round(Property2, 1)\"");
             Assert.Equal(0, exit);
 
             exit = runner.Exec("signal list", "-t TestSignal --json");
@@ -22,7 +22,7 @@ namespace SeqCli.EndToEnd.Signal
             var output = runner.LastRunProcess.Output.Trim();
 
             Assert.Contains("\"Filter\": \"@Exception is not null\"", output);
-            Assert.Contains("\"Columns\": [{\"Expression\": \"ApplicationName\"}, {\"Expression\": \"AssemblyVersion\"}]", output);
+            Assert.Contains("\"Columns\": [{\"Expression\": \"Column1\"}, {\"Expression\": \"round(Property2, 1)\"}]", output);
 
             return Task.CompletedTask;
         }

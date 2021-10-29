@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Shared;
@@ -33,8 +34,9 @@ namespace SeqCli.Cli.Commands.Signal
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
+        readonly List<string> _columns = new();
+
         string _title, _description, _filter, _group;
-        string[] _columns;
         bool _isProtected, _noGrouping;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -57,9 +59,9 @@ namespace SeqCli.Cli.Commands.Signal
                 f => _filter = ArgumentString.Normalize(f));
 
             Options.Add(
-                "c=|columns=",
-                "Comma-separated list of columns to associate with the signal",
-                c => _columns = ArgumentString.NormalizeList(c));
+                "c=|column=",
+                "Column to associate with the signal; this argument can be used multiple times",
+                c => _columns.Add(ArgumentString.Normalize(c)));
 
             Options.Add(
                 "group=",
@@ -117,11 +119,8 @@ namespace SeqCli.Cli.Commands.Signal
                 }.ToList();
             }
 
-            if (_columns != null)
-            {
-                foreach (var column in _columns)
-                    signal.Columns.Add(new SignalColumnPart { Expression = column });
-            }
+            foreach (var column in _columns)
+                signal.Columns.Add(new SignalColumnPart { Expression = column });
 
             signal = await connection.Signals.AddAsync(signal);
 

@@ -742,7 +742,7 @@ seqcli signal create -t 'Exceptions' -f "@Exception is not null"
 | `-t`, `--title=VALUE` | A title for the signal |
 |       `--description=VALUE` | A description for the signal |
 | `-f`, `--filter=VALUE` | Filter to associate with the signal |
-| `-c`, `--columns=VALUE` | A comma-separated list of columns to associate with the signal |
+| `-c`, `--column=VALUE` | Column to associate with the signal; this argument can be used multiple times |
 |       `--group=VALUE` | An explicit group name to associate with the signal; the default is to infer the group from the filter |
 |       `--no-group` | Specify that no group should be inferred; the default is to infer the group from the filter |
 |       `--protected` | Specify that the signal is editable only by administrators |
