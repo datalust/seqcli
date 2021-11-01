@@ -154,7 +154,7 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--filter=VALUE` | A filter to apply to incoming events |
 |       `--minimum-level=VALUE` | The minimum event level/severity to accept; the default is to accept all events |
 |       `--use-server-timestamps` | Discard client-supplied timestamps and use server clock values |
-|       `--permissions=VALUE` | The permissions to delegate to the API key; the default is `Ingest` |
+|       `--permissions=VALUE` | A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Setup`, and `Write` |
 |       `--connect-username=VALUE` | A username to connect with, useful primarily when setting up the first API key |
 |       `--connect-password=VALUE` | When `connect-username` is specified, a corresponding password |
 |       `--connect-password-stdin` | When `connect-username` is specified, read the corresponding password from `STDIN` |
@@ -742,6 +742,7 @@ seqcli signal create -t 'Exceptions' -f "@Exception is not null"
 | `-t`, `--title=VALUE` | A title for the signal |
 |       `--description=VALUE` | A description for the signal |
 | `-f`, `--filter=VALUE` | Filter to associate with the signal |
+| `-c`, `--column=VALUE` | Column to associate with the signal; this argument can be used multiple times |
 |       `--group=VALUE` | An explicit group name to associate with the signal; the default is to infer the group from the filter |
 |       `--no-group` | Specify that no group should be inferred; the default is to infer the group from the filter |
 |       `--protected` | Specify that the signal is editable only by administrators |
