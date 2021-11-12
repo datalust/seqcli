@@ -6,7 +6,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         libc6 \
-        libcap2-bin \
         libgcc1 \
         libgssapi-krb5-2 \
         libicu66 \
@@ -14,7 +13,6 @@ RUN apt-get update \
         libssl1.1 \
         libstdc++6 \
         zlib1g \
-        curl \
 && rm -rf /var/lib/apt/lists/*
 
 COPY src/SeqCli/bin/Release/net5.0/linux-x64/publish /bin/seqcli
