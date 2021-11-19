@@ -14,18 +14,22 @@
 
 using Newtonsoft.Json;
 
+#nullable enable
+
 namespace SeqCli.Apps.Definitions
 {
     // ReSharper disable all
     class AppSettingDefinition
     {
-        public string DisplayName { get; set; }
-        public string HelpText { get; set; }
+        public string? DisplayName { get; set; }
+        public string? HelpText { get; set; }
         public bool IsOptional { get; set; }
         public AppSettingType InputType { get; set; }
         public bool IsInvocationParameter { get; set; }
         
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public AppSettingValue[] AllowedValues { get; set; }
+        public AppSettingValue[]? AllowedValues { get; set; }
+        
+        public string? Syntax { get; set; }
     }
 }
