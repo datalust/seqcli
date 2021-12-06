@@ -21,15 +21,25 @@ namespace SeqCli.Apps.Definitions
     // ReSharper disable all
     class AppSettingDefinition
     {
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? DisplayName { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? HelpText { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool IsOptional { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public AppSettingType InputType { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool IsInvocationParameter { get; set; }
         
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public AppSettingValue[]? AllowedValues { get; set; }
         
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? Syntax { get; set; }
     }
 }

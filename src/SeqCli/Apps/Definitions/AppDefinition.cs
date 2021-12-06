@@ -12,20 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace SeqCli.Apps.Definitions
 {
     // ReSharper disable all
     class AppDefinition
     {
+        public AppDefinition(string name)
+        {
+            Name = name;
+        }
+        
         public string Name { get; set; }
-        public string Description { get; set; }
+ 
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string? Description { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool AllowReprocessing { get; set; }
-        public string Executable { get; set; }
-        public string Arguments { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string? Executable { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string? Arguments { get; set; }
+        
         public List<string> Capabilities { get; set; } = new List<string>();
-        public Dictionary<string, AppPlatformDefinition> Platform { get; set; }
-        public Dictionary<string, AppSettingDefinition> Settings { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public Dictionary<string, AppPlatformDefinition>? Platform { get; set; }
+        
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public Dictionary<string, AppSettingDefinition>? Settings { get; set; }
     }
 }

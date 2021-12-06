@@ -33,9 +33,8 @@ namespace SeqCli.Apps.Definitions
             if (declared == null)
                 throw new ArgumentException($"The provided type '{seqAppType}' is not marked with [SeqApp].");
 
-            var app = new AppDefinition
+            var app = new AppDefinition(declared.Name)
             {
-                Name = declared.Name,
                 Description = declared.Description,
                 AllowReprocessing = declared.AllowReprocessing,
                 Settings = GetAvailableSettings(seqAppType),
