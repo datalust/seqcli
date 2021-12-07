@@ -15,7 +15,7 @@ RUN apt-get update \
         zlib1g \
 && rm -rf /var/lib/apt/lists/*
 
-COPY src/SeqCli/bin/Release/net5.0/linux-x64/publish /bin/seqcli
+COPY src/SeqCli/bin/Release/net6.0/linux-x64/publish /bin/seqcli
 
 ENTRYPOINT ["/bin/seqcli/seqcli"]
 
