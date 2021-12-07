@@ -37,7 +37,7 @@ namespace SeqCli.Util
         public static string Protect(string value)
         {
             var salt = new byte[16];
-            using (var cp = new RNGCryptoServiceProvider())
+            using (var cp = RandomNumberGenerator.Create())
                 cp.GetBytes(salt);
 
             var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), salt, DataProtectionScope.CurrentUser);

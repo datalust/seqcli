@@ -1,4 +1,4 @@
-version: 2021.3.{build}
+version: 2021.4.{build}
 skip_tags: true
 image:
 - Visual Studio 2019
@@ -22,10 +22,10 @@ for:
       - image: Visual Studio 2019
 
   install:
-  - ps: ./Setup.ps1
+  - pwsh: ./Setup.ps1
 
   build_script:
-    - ps: ./Build.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
+    - pwsh: ./Build.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
       
   deploy:
   
@@ -53,4 +53,4 @@ for:
   - ./setup.sh
 
   build_script:
-  - ps: $env:PATH = "$env:HOME/.dotnetcli:$env:PATH"; ./Build.Docker.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
+  - pwsh: $env:PATH = "$env:HOME/.dotnetcli:$env:PATH"; ./Build.Docker.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
