@@ -1,31 +1,20 @@
 ﻿{
   "name": "Example App",
   "description": "Just for this test!",
-  "allowReprocessing": false,
-  "executable": null,
-  "arguments": null,
   "capabilities": [],
   "platform": {
     "hosted-dotnet": {
-      "executable": null,
-      "arguments": null,
       "seqAppTypeName": "SeqCli.Tests.Apps.AppDefinitionFormatterTests+ExampleApp"
     }
   },
   "settings": {
     "PetName": {
-      "displayName": "Pet name",
-      "helpText": null,
-      "isOptional": false,
-      "inputType": "text",
-      "isInvocationParameter": false
+      "displayName": "Pet name"
     },
     "Species": {
-      "displayName": null,
       "helpText": "The species of your pet.",
       "isOptional": true,
       "inputType": "select",
-      "isInvocationParameter": false,
       "allowedValues": [
         {
           "value": "Cat"

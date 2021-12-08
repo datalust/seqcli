@@ -19,6 +19,8 @@ using System.Linq;
 using System.Reflection;
 using Seq.Apps;
 
+#nullable  enable
+
 namespace SeqCli.Apps.Definitions
 {
     static class AppMetadataReader
@@ -31,16 +33,15 @@ namespace SeqCli.Apps.Definitions
             if (declared == null)
                 throw new ArgumentException($"The provided type '{seqAppType}' is not marked with [SeqApp].");
 
-            var app = new AppDefinition
+            var app = new AppDefinition(declared.Name)
             {
-                Name = declared.Name,
                 Description = declared.Description,
                 AllowReprocessing = declared.AllowReprocessing,
                 Settings = GetAvailableSettings(seqAppType),
                 Capabilities = GetCapabilities(seqAppType),
                 Platform = new Dictionary<string, AppPlatformDefinition>
                 {
-                    ["hosted-dotnet"] = new AppPlatformDefinition
+                    ["hosted-dotnet"] = new()
                     {
                         SeqAppTypeName = seqAppType.FullName
                     }
@@ -68,29 +69,30 @@ namespace SeqCli.Apps.Definitions
                     p => p.pi.Name,
                     p => new AppSettingDefinition
                     {
-                        DisplayName = p.attr!.DisplayName,
+                        DisplayName = Normalize(p.attr!.DisplayName),
                         IsOptional = p.attr.IsOptional,
-                        HelpText = p.attr.HelpText,
+                        HelpText = Normalize(p.attr.HelpText),
                         InputType = p.attr.InputType == SettingInputType.Unspecified ?
                             GetSettingType(p.pi.PropertyType) :
                             (AppSettingType)Enum.Parse(typeof(AppSettingType), p.attr.InputType.ToString()),
                         IsInvocationParameter = p.attr.IsInvocationParameter,
-                        AllowedValues = TryGetAllowedValues(p.pi.PropertyType)
+                        AllowedValues = TryGetAllowedValues(p.pi.PropertyType),
+                        Syntax = Normalize(p.attr.Syntax)
                     });
         }
 
-        static readonly HashSet<Type> IntegerTypes = new HashSet<Type>
+        static readonly HashSet<Type> IntegerTypes = new()
         {
             typeof(short), typeof(ushort), typeof(int), typeof(uint),
             typeof(long), typeof(ulong)
         };
 
-        static readonly HashSet<Type> DecimalTypes = new HashSet<Type>
+        static readonly HashSet<Type> DecimalTypes = new()
         {
             typeof(float), typeof(double), typeof(decimal)
         };
 
-        static readonly HashSet<Type> BooleanTypes = new HashSet<Type>
+        static readonly HashSet<Type> BooleanTypes = new()
         {
             typeof(bool)
         };
@@ -114,7 +116,7 @@ namespace SeqCli.Apps.Definitions
             return AppSettingType.Text;
         }
 
-        internal static AppSettingValue[] TryGetAllowedValues(Type type)
+        internal static AppSettingValue[]? TryGetAllowedValues(Type type)
         {
             var targetType = Nullable.GetUnderlyingType(type) ?? type;
             
@@ -129,6 +131,11 @@ namespace SeqCli.Apps.Definitions
                 select new AppSettingValue {Value = name, Description = description};
 
             return values.ToArray();
+        }
+
+        static string? Normalize(string? s)
+        {
+            return string.IsNullOrWhiteSpace(s) ? null : s;
         }
     }
 }
