@@ -42,7 +42,7 @@ namespace SeqCli.Cli
             if (args.Length > 0)
             {
                 var norm = args[0].ToLowerInvariant();
-                var subCommandNorm = args.Length > 1 && !args[1].Contains("-") ? args[1].ToLowerInvariant() : null;
+                var subCommandNorm = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
                 
                 var cmd = _availableCommands.SingleOrDefault(c =>
                     c.Metadata.Name == norm && (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
@@ -52,7 +52,7 @@ namespace SeqCli.Cli
                     var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
                     var commandSpecificArgs = args.Skip(amountToSkip).ToArray();
                     
-                    var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg is "-v" or "--verbose");
+                    var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg == "--verbose");
                     if (verboseArg != null)
                     {
                         levelSwitch.MinimumLevel = LogEventLevel.Information;
