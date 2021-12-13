@@ -57,7 +57,7 @@ namespace SeqCli.Cli
                 allOptions.Add(option);
             }
 
-            allOptions.Add("v|verbose", "Print verbose output to `STDERR`", _ => { });
+            allOptions.Add("verbose", "Print verbose output to `STDERR`", _ => { });
 
             Console.Error.WriteLine("Arguments:");
             allOptions.WriteOptionDescriptions(Console.Error);

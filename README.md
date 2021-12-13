@@ -461,7 +461,7 @@ Begin demotion of the current leader node.
 Example:
 
 ```
-seqcli node demote -v --wait
+seqcli node demote --verbose --wait
 ```
 
 | Option | Description |
