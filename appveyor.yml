@@ -1,7 +1,7 @@
 version: 2021.4.{build}
 skip_tags: true
 image:
-- Visual Studio 2019
+- Visual Studio 2022
 - Ubuntu1804
 environment:
   DOCKER_TOKEN:
@@ -19,7 +19,7 @@ for:
 -
   matrix:
     only:
-      - image: Visual Studio 2019
+      - image: Visual Studio 2022
 
   install:
   - pwsh: ./Setup.ps1
