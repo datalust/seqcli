@@ -16,7 +16,7 @@ namespace SeqCli.EndToEnd.ApiKey
             exit = runner.Exec("apikey list", "-t Test --json --no-color");
             Assert.Equal(0, exit);
 
-            var output = runner.LastRunProcess.Output;
+            var output = runner.LastRunProcess!.Output;
             Assert.Contains("\"AssignedPermissions\": [\"Ingest\"]", output);
 
             return Task.CompletedTask;

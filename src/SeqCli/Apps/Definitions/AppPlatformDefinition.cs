@@ -19,7 +19,10 @@ namespace SeqCli.Apps.Definitions
     // ReSharper disable all
     class AppPlatformDefinition
     {
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Executable { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Arguments { get; set; }
         
         // The generic host for assembly-based apps uses this.

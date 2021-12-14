@@ -18,10 +18,10 @@ namespace SeqCli.Tests.Cli
             var executed = new List<string>();
             var availableCommands = new List<Meta<Lazy<Command>, CommandMetadata>>
             {
-                new Meta<Lazy<Command>, CommandMetadata>(
+                new(
                     new Lazy<Command>(() => new ActionCommand(() => executed.Add("test"))),
                     new CommandMetadata {Name = "test"}),
-                new Meta<Lazy<Command>, CommandMetadata>(
+                new(
                     new Lazy<Command>(() => new ActionCommand(() => executed.Add("test2"))),
                     new CommandMetadata {Name = "test2"})
             };
@@ -38,10 +38,10 @@ namespace SeqCli.Tests.Cli
             var availableCommands =
                 new List<Meta<Lazy<Command>, CommandMetadata>>
                 {
-                    new Meta<Lazy<Command>, CommandMetadata>(
+                    new(
                         new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand1"))),
                         new CommandMetadata {Name = "test", SubCommand = "subcommand1"}),
-                    new Meta<Lazy<Command>, CommandMetadata>(
+                    new(
                         new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand2"))),
                         new CommandMetadata {Name = "test", SubCommand = "subcommand2"})
                 };
@@ -59,14 +59,14 @@ namespace SeqCli.Tests.Cli
             var availableCommands =
                 new List<Meta<Lazy<Command>, CommandMetadata>>
                 {
-                    new Meta<Lazy<Command>, CommandMetadata>(
+                    new(
                         new Lazy<Command>(() => new ActionCommand(() => { })),
                         new CommandMetadata {Name = "test"})
                 };
             
             var commandLineHost = new CommandLineHost(availableCommands);
             
-            await commandLineHost.Run(new[] { "test", "-v" }, levelSwitch);
+            await commandLineHost.Run(new[] { "test", "--verbose" }, levelSwitch);
             
             Assert.Equal(LogEventLevel.Information, levelSwitch.MinimumLevel);
         }

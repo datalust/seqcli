@@ -11,7 +11,7 @@ namespace SeqCli.EndToEnd.Node
     {
         public Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
         {
-            var exit = runner.Exec("node demote -v --wait --confirm");
+            var exit = runner.Exec("node demote --verbose --wait --confirm");
             Assert.Equal(1, exit);
             Assert.Contains("No cluster node is in the leader role", runner.LastRunProcess!.Output);
             return Task.CompletedTask;

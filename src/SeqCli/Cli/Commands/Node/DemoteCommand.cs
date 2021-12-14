@@ -11,7 +11,7 @@ using Serilog;
 namespace SeqCli.Cli.Commands.Node
 {
     [Command("node", "demote", "Begin demotion of the current leader node", 
-        Example = "seqcli node demote -v --wait")]
+        Example = "seqcli node demote --verbose --wait")]
     class DemoteCommand : Command
     {
         readonly SeqConnectionFactory _connectionFactory;

@@ -2,14 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net5.0;net5.0-windows</TargetFrameworks>
+    <TargetFrameworks>net6.0;net6.0-windows</TargetFrameworks>
     <Platforms>x64</Platforms>
-    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="6.2.0" />
+    <PackageReference Include="Autofac" Version="6.3.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="Serilog.Sinks.Seq" Version="5.0.1" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="5.1.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Data\*">
