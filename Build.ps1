@@ -61,7 +61,7 @@ function Publish-Archives($version)
 function Publish-DotNetTool($version)
 {	
 	# Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
-	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFramework=$framework /p:TargetFrameworks=
+	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFrameworks=$framework
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
