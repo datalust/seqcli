@@ -11,12 +11,13 @@ function Clean-Output
 function Restore-Packages
 {
 	& dotnet restore
+    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
 function Execute-Tests
 {
     & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
-    if($LASTEXITCODE -ne 0) { exit 3 }
+    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
 function Create-ArtifactDir
@@ -34,23 +35,23 @@ function Publish-Archives($version)
 	    }
 	    
 		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid /p:VersionPrefix=$version
-		if($LASTEXITCODE -ne 0) { exit 4 }
+	    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 
 		# Make sure the archive contains a reasonable root filename
 		mv ./src/SeqCli/bin/Release/$tfm/$rid/publish/ ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
 
 		if ($rid.StartsWith("win-")) {
 			& ./build/7-zip/7za.exe a -tzip ./artifacts/seqcli-$version-$rid.zip ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
-			if($LASTEXITCODE -ne 0) { exit 5 }
+		    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 		} else {
 			& ./build/7-zip/7za.exe a -ttar seqcli-$version-$rid.tar ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
-			if($LASTEXITCODE -ne 0) { exit 5 }
+		    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 
 			# Back to the original directory name
 			mv ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/ ./src/SeqCli/bin/Release/$tfm/$rid/publish/
 			
 			& ./build/7-zip/7za.exe a -tgzip ./artifacts/seqcli-$version-$rid.tar.gz seqcli-$version-$rid.tar
-			if($LASTEXITCODE -ne 0) { exit 6 }
+		    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 
 			rm seqcli-$version-$rid.tar
 		}
@@ -61,7 +62,7 @@ function Publish-DotNetTool($version)
 {	
 	# Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
 	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFramework=$framework /p:TargetFrameworks=
-    if($LASTEXITCODE -ne 0) { exit 7 }
+    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
 function Publish-Docs($version)
@@ -69,13 +70,15 @@ function Publish-Docs($version)
     Write-Output "Generating markdown documentation"
 
     & dotnet run --project ./src/SeqCli/SeqCli.csproj -f $framework -- help --markdown > ./artifacts/seqcli-$version.md
-    if($LASTEXITCODE -ne 0) { exit 8 }
+    if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
 Push-Location $PSScriptRoot
 
 $version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
 Write-Output "Building version $version"
+
+$env:Path = "$pwd/.dotnetcli;$env:Path"
 
 Clean-Output
 Create-ArtifactDir
