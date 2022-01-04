@@ -41,7 +41,10 @@ The `seqcli apikey create` command accepts `--connect-username` and `--connect-p
 ```
 $user = "admin"
 $pw = "thepassword"
-$token = (echo $pw | seqcli apikey create -t CLI --permissions="read,write,setup" --connect-username $user --connect-password-stdin)
+$token = (
+  echo $pw |
+  seqcli apikey create -t CLI --permissions="read,write,setup" --connect-username $user --connect-password-stdin
+)
 ```
 
 ## Commands
