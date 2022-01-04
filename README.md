@@ -31,6 +31,22 @@ To connect to Seq in a docker container on the local machine use the machine's I
 
 Use Docker networks and volumes to make local files and other containers accessible to `seqcli` within its container.
 
+
+### Connecting without an API key
+
+If you're automating Seq setup, chances are you won't have an API key yet for `seqcli` to use. During the initial Seq server configuration, you can specify `firstRun.adminUsername` and `firstRun.adminPasswordHash` (or the equivalent environment variables `SEQ_FIRSTRUN_ADMINUSERNAME` and `SEQ_FIRSTRUN_ADMINPASSWORDHASH`) to set an initial username and password for the administrator account. You can use these to create an API key, and then use the API key token with the remaining `seqcli` commands.
+
+The `seqcli apikey create` command accepts `--connect-username` and `--connect-password-stdin`, and prints the new API key token to `STDOUT` (PowerShell syntax is used below):
+
+```
+$user = "admin"
+$pw = "thepassword"
+$token = (
+  echo $pw |
+  seqcli apikey create -t CLI --permissions="read,write,setup" --connect-username $user --connect-password-stdin
+)
+```
+
 ## Commands
 
 Usage:
