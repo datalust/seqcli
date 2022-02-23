@@ -5,12 +5,12 @@ $windowsTfmSuffix = '-windows'
 
 function Clean-Output
 {
-	if(Test-Path ./artifacts) { rm ./artifacts -Force -Recurse }
+    if(Test-Path ./artifacts) { rm ./artifacts -Force -Recurse }
 }
 
 function Restore-Packages
 {
-	& dotnet restore
+    & dotnet restore
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
@@ -22,46 +22,46 @@ function Execute-Tests
 
 function Create-ArtifactDir
 {
-	mkdir ./artifacts
+    mkdir ./artifacts
 }
 
 function Publish-Archives($version)
 {
-	$rids = @("linux-x64", "linux-musl-x64", "linux-arm64", "osx-x64", "win-x64")
-	foreach ($rid in $rids) {
-	    $tfm = $framework
-	    if ($rid -eq "win-x64") {
-	        $tfm = "$tfm$windowsTfmSuffix"
-	    }
-	    
-		& dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid /p:VersionPrefix=$version
-	    if($LASTEXITCODE -ne 0) { throw "Build failed" }
+    $rids = $([xml](Get-Content .\src\SeqCli\SeqCli.csproj)).Project.PropertyGroup.RuntimeIdentifiers.Split(';')
+    foreach ($rid in $rids) {
+        $tfm = $framework
+        if ($rid -eq "win-x64") {
+            $tfm = "$tfm$windowsTfmSuffix"
+        }
 
-		# Make sure the archive contains a reasonable root filename
-		mv ./src/SeqCli/bin/Release/$tfm/$rid/publish/ ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
+        & dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid --self-contained /p:VersionPrefix=$version
+        if($LASTEXITCODE -ne 0) { throw "Build failed" }
 
-		if ($rid.StartsWith("win-")) {
-			& ./build/7-zip/7za.exe a -tzip ./artifacts/seqcli-$version-$rid.zip ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
-		    if($LASTEXITCODE -ne 0) { throw "Build failed" }
-		} else {
-			& ./build/7-zip/7za.exe a -ttar seqcli-$version-$rid.tar ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
-		    if($LASTEXITCODE -ne 0) { throw "Build failed" }
+        # Make sure the archive contains a reasonable root filename
+        mv ./src/SeqCli/bin/Release/$tfm/$rid/publish/ ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
 
-			# Back to the original directory name
-			mv ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/ ./src/SeqCli/bin/Release/$tfm/$rid/publish/
-			
-			& ./build/7-zip/7za.exe a -tgzip ./artifacts/seqcli-$version-$rid.tar.gz seqcli-$version-$rid.tar
-		    if($LASTEXITCODE -ne 0) { throw "Build failed" }
+        if ($rid.StartsWith("win-")) {
+            & ./build/7-zip/7za.exe a -tzip ./artifacts/seqcli-$version-$rid.zip ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
+            if($LASTEXITCODE -ne 0) { throw "Build failed" }
+        } else {
+            & ./build/7-zip/7za.exe a -ttar seqcli-$version-$rid.tar ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/
+            if($LASTEXITCODE -ne 0) { throw "Build failed" }
 
-			rm seqcli-$version-$rid.tar
-		}
-	}
+            # Back to the original directory name
+            mv ./src/SeqCli/bin/Release/$tfm/$rid/seqcli-$version-$rid/ ./src/SeqCli/bin/Release/$tfm/$rid/publish/
+            
+            & ./build/7-zip/7za.exe a -tgzip ./artifacts/seqcli-$version-$rid.tar.gz seqcli-$version-$rid.tar
+            if($LASTEXITCODE -ne 0) { throw "Build failed" }
+
+            rm seqcli-$version-$rid.tar
+        }
+    }
 }
 
 function Publish-DotNetTool($version)
-{	
-	# Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
-	dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFrameworks=$framework
+{    
+    # Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
+    dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFrameworks=$framework
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
