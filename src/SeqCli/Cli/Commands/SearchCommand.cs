@@ -18,7 +18,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
-using Seq.Api.Model.Shared;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -27,6 +26,7 @@ using SeqCli.Util;
 using Serilog;
 using Serilog.Events;
 using Serilog.Parsing;
+// ReSharper disable UnusedType.Global
 
 namespace SeqCli.Cli.Commands
 {
@@ -74,8 +74,8 @@ namespace SeqCli.Cli.Commands
 
                 await foreach (var evt in connection.Events.EnumerateAsync(null,
                                    _signal.Signal,
-                                   filter: filter,
-                                   count: _count,
+                                   filter,
+                                   _count,
                                    fromDateUtc: _range.Start,
                                    toDateUtc: _range.End))
                 {
