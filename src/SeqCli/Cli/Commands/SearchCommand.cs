@@ -28,6 +28,8 @@ using Serilog.Events;
 using Serilog.Parsing;
 // ReSharper disable UnusedType.Global
 
+#nullable enable
+
 namespace SeqCli.Cli.Commands
 {
     [Command("search", "Retrieve log events that match a given filter",
@@ -39,8 +41,9 @@ namespace SeqCli.Cli.Commands
         readonly OutputFormatFeature _output;
         readonly DateRangeFeature _range;
         readonly SignalExpressionFeature _signal;
-        string _filter;
+        string? _filter;
         int _count = 1;
+        int _httpClientTimeout = 100000;
 
         public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -58,6 +61,12 @@ namespace SeqCli.Cli.Commands
             _range = Enable<DateRangeFeature>();
             _output = Enable(new OutputFormatFeature(config.Output));
             _signal = Enable<SignalExpressionFeature>();
+
+            Options.Add(
+                "request-timeout=",
+                $"The time allowed for retrieving each page of events, in milliseconds; the default is {_httpClientTimeout}",
+                v => _httpClientTimeout = int.Parse(v.Trim()));
+            
             _connection = Enable<ConnectionFeature>();
         }
 
@@ -67,8 +76,9 @@ namespace SeqCli.Cli.Commands
             {
                 using var output = _output.CreateOutputLogger();
                 var connection = _connectionFactory.Connect(_connection);
+                connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
-                string filter = null;
+                string? filter = null;
                 if (!string.IsNullOrWhiteSpace(_filter))
                     filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
 
@@ -103,13 +113,13 @@ namespace SeqCli.Cli.Commands
                     .Concat(new[] { new LogEventProperty(SurrogateLevelProperty.PropertyName, new ScalarValue(evt.Level)) }));
         }
 
-        static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart mttp)
+        static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
         {
             // Not ideal, we lose renderings, alignment etc. here.
 
-            if (mttp.Text != null)
-                return new TextToken(mttp.Text);
-            return new PropertyToken(mttp.PropertyName, mttp.RawText ?? $"{{{mttp.PropertyName}}}");
+            if (token.Text != null)
+                return new TextToken(token.Text);
+            return new PropertyToken(token.PropertyName, token.RawText ?? $"{{{token.PropertyName}}}");
         }
 
         LogEventProperty CreateProperty(string name, object value)
