@@ -43,7 +43,10 @@ $user = "admin"
 $pw = "thepassword"
 $token = (
   echo $pw |
-  seqcli apikey create -t CLI --permissions="read,write,setup" --connect-username $user --connect-password-stdin
+  seqcli apikey create `
+    -t CLI `
+    --permissions="read,write,project,organization,system" `
+    --connect-username $user --connect-password-stdin
 )
 ```
 
@@ -57,59 +60,59 @@ seqcli <command> [<args>]
 
 Available commands:
 
-- `apikey`
+ - `apikey`
    - [`apikey create`](#apikey-create) &mdash; Create an API key for ingestion.
    - [`apikey list`](#apikey-list) &mdash; List available API keys.
    - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
-- `app`
+ - `app`
    - [`app define`](#app-define) &mdash; Generate an app definition for a .NET `[SeqApp]` plug-in.
    - [`app run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
-- [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
-- `dashboard`
+ - [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
+ - `dashboard`
    - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
    - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
    - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
-- `feed`
+ - `feed`
    - [`feed create`](#feed-create) &mdash; Create a NuGet feed.
    - [`feed list`](#feed-list) &mdash; List NuGet feeds.
    - [`feed remove`](#feed-remove) &mdash; Remove a NuGet feed from the server.
-- [`help`](#help) &mdash; Show information about available commands.
-- [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
-- [`license apply`](#license-apply) &mdash; Apply a license to the Seq server.
-- [`log`](#log) &mdash; Send a structured log event to the server.
-- `node`
+ - [`help`](#help) &mdash; Show information about available commands.
+ - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
+ - [`license apply`](#license-apply) &mdash; Apply a license to the Seq server.
+ - [`log`](#log) &mdash; Send a structured log event to the server.
+ - `node`
    - [`node demote`](#node-demote) &mdash; Begin demotion of the current leader node.
    - [`node health`](#node-health) &mdash; Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried.
    - [`node list`](#node-list) &mdash; List nodes in the Seq cluster.
-- [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
-- `profile`
+ - [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
+ - `profile`
    - [`profile create`](#profile-create) &mdash; Create or replace a connection profile.
    - [`profile list`](#profile-list) &mdash; List connection profiles.
    - [`profile remove`](#profile-remove) &mdash; Remove a connection profile.
-- [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
-- `retention`
+ - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
+ - `retention`
    - [`retention create`](#retention-create) &mdash; Create a retention policy.
    - [`retention list`](#retention-list) &mdash; List retention policies.
    - [`retention remove`](#retention-remove) &mdash; Remove a retention policy from the server.
-- `sample`
+ - `sample`
    - [`sample ingest`](#sample-ingest) &mdash; Log sample events into a Seq instance.
    - [`sample setup`](#sample-setup) &mdash; Configure a Seq instance with sample dashboards, signals, users, and so on.
-- [`search`](#search) &mdash; Retrieve log events that match a given filter.
-- `signal`
+ - [`search`](#search) &mdash; Retrieve log events that match a given filter.
+ - `signal`
    - [`signal create`](#signal-create) &mdash; Create a signal.
    - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
    - [`signal list`](#signal-list) &mdash; List available signals.
    - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
-- [`tail`](#tail) &mdash; Stream log events matching a filter.
-- `template`
+ - [`tail`](#tail) &mdash; Stream log events matching a filter.
+ - `template`
    - [`template export`](#template-export) &mdash; Export entities into template files.
    - [`template import`](#template-import) &mdash; Import entities from template files.
-- `user`
+ - `user`
    - [`user create`](#user-create) &mdash; Create a user.
    - [`user list`](#user-list) &mdash; List users.
    - [`user remove`](#user-remove) &mdash; Remove a user from the server.
-- [`version`](#version) &mdash; Print the current executable version.
-- `workspace`
+ - [`version`](#version) &mdash; Print the current executable version.
+ - `workspace`
    - [`workspace create`](#workspace-create) &mdash; Create a workspace.
    - [`workspace list`](#workspace-list) &mdash; List available workspaces.
    - [`workspace remove`](#workspace-remove) &mdash; Remove a workspace from the server.
@@ -680,6 +683,7 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
+|       `--request-timeout=VALUE` | The time allowed for retrieving each page of events, in milliseconds; the default is 100000 |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -949,7 +953,6 @@ seqcli workspace remove -t 'My Workspace'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
-
 
 ## Extraction patterns
 
