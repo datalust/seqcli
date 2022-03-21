@@ -3,8 +3,8 @@ $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO
 
 $version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
 $framework = "net6.0"
-$rids = @("linux-x64", "linux-arm64")
-$baseTag = "datalust/seqcli-ci:$version"
+$image = "datalust/seqcli"
+$archs = @("x64", "arm64")
 
 function Execute-Tests
 {
@@ -22,16 +22,17 @@ function Execute-Tests
     cd ../..
 }
 
-function Build-DockerImage($rid)
+function Build-DockerImage($arch)
 {
+    $rid = "linux-$arch"
     & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid --self-contained /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { exit 2 }
 
-    & docker build -f dockerfiles/seqcli/$rid.Dockerfile -t "$baseTag-$rid" .
+    & docker build -f dockerfiles/seqcli/$rid.Dockerfile -t "$image-ci:$version-$arch" .
     if($LASTEXITCODE -ne 0) { exit 3 }
 }
 
-function Publish-DockerImage($rid)
+function Publish-DockerImage($arch)
 {
     $ErrorActionPreference = "SilentlyContinue"
 
@@ -40,7 +41,7 @@ function Publish-DockerImage($rid)
         if ($LASTEXITCODE) { exit 3 }
     }
 
-    & docker push "$baseTag-$rid"
+    & docker push "$image-ci:$version-$arch"
     if($LASTEXITCODE -ne 0) { exit 3 }
 
     $ErrorActionPreference = "Stop"
@@ -50,11 +51,11 @@ Push-Location $PSScriptRoot
 
 Execute-Tests
 
-foreach ($rid in $rids) {
-    Build-DockerImage($rid)
+foreach ($arch in $archs) {
+    Build-DockerImage($arch)
 
     if ($IsPublishedBuild) {
-        Publish-DockerImage($rid)
+        Publish-DockerImage($arch)
     }
 }
 
