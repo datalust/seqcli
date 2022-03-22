@@ -1,4 +1,4 @@
-version: 2021.4.{build}
+version: 2022.1.{build}
 skip_tags: true
 image:
 - Visual Studio 2022
@@ -50,7 +50,7 @@ for:
       - image: Ubuntu1804
 
   install:
-  - ./setup.sh
+  - pwsh: ./setup.sh
 
   build_script:
   - pwsh: $env:PATH = "$env:HOME/.dotnetcli:$env:PATH"; ./Build.Docker.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"

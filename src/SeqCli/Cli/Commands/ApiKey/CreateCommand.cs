@@ -75,7 +75,7 @@ namespace SeqCli.Cli.Commands.ApiKey
 
             Options.Add(
                 "permissions=",
-                "A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Setup`, and `Write`",
+                "A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project` and `System`",
                 v => _permissions = ArgumentString.NormalizeList(v));
 
             Options.Add(
@@ -135,7 +135,7 @@ namespace SeqCli.Cli.Commands.ApiKey
                 {
                     if (!Enum.TryParse<Permission>(permission, out var p))
                     {
-                        Log.Error("Unrecognized permission {Permission}", p);
+                        Log.Error("Unrecognized permission {Permission}", permission);
                         return 1;
                     }
 

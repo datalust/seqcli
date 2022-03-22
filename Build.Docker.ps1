@@ -3,12 +3,12 @@ $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO
 
 $version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
 $framework = "net6.0"
-$rid = "linux-x64"
-$tag = "datalust/seqcli-ci:$version"
+$image = "datalust/seqcli"
+$archs = @("x64", "arm64")
 
 function Execute-Tests
 {
-    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release -f $framework /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
+    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release -f $framework /p:Configuration=Release /p:VersionPrefix=$version
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     cd ./test/SeqCli.EndToEnd/
@@ -22,16 +22,17 @@ function Execute-Tests
     cd ../..
 }
 
-function Build-DockerImage
+function Build-DockerImage($arch)
 {
-    & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid /p:VersionPrefix=$version
+    $rid = "linux-$arch"
+    & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid --self-contained /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { exit 2 }
 
-    & docker build -f dockerfiles/seqcli/Dockerfile -t $tag .
+    & docker build -f dockerfiles/seqcli/$rid.Dockerfile -t "$image-ci:$version-$arch" .
     if($LASTEXITCODE -ne 0) { exit 3 }
 }
 
-function Publish-DockerImage
+function Publish-DockerImage($arch)
 {
     $ErrorActionPreference = "SilentlyContinue"
 
@@ -40,7 +41,7 @@ function Publish-DockerImage
         if ($LASTEXITCODE) { exit 3 }
     }
 
-    & docker push $tag
+    & docker push "$image-ci:$version-$arch"
     if($LASTEXITCODE -ne 0) { exit 3 }
 
     $ErrorActionPreference = "Stop"
@@ -50,10 +51,12 @@ Push-Location $PSScriptRoot
 
 Execute-Tests
 
-Build-DockerImage
+foreach ($arch in $archs) {
+    Build-DockerImage($arch)
 
-if ($IsPublishedBuild) {
-    Publish-DockerImage
+    if ($IsPublishedBuild) {
+        Publish-DockerImage($arch)
+    }
 }
 
 Pop-Location
