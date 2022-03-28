@@ -17,7 +17,7 @@ $publishImages = @()
 
 foreach ($arch in $archs) {
     $ciImage = "$image-ci:$version-$arch"
-    $publishImage = "$image:$version-$arch";
+    $publishImage = "$($image):$version-$arch";
 
     docker pull $ciImage
     if ($LASTEXITCODE) { exit 1 }
@@ -31,14 +31,14 @@ foreach ($arch in $archs) {
     $publishImages += $publishImage
 }
 
-$publishManifest = "$image:$version"
+$publishManifest = "$($image):$version"
 
 $pushTags = @($publishManifest)
 
 if ($isPre -eq $True) {
-    $pushTags += "$image:preview"
+    $pushTags += "$($image):preview"
 } else {
-    $pushTags += "$image:$major", "$image:$major.$minor", "$image:latest"
+    $pushTags += "$($image):$major", "$($image):$major.$minor", "$($image):latest"
 }
 
 $choices  = "&Yes", "&No"
