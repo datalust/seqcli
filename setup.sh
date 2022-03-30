@@ -15,4 +15,4 @@ chmod +x dotnet-install.sh
 rm dotnet-install.sh
 
 docker run --privileged --rm docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
-service docker restart
+sudo service docker restart
