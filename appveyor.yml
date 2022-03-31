@@ -2,7 +2,7 @@ version: 2022.1.{build}
 skip_tags: true
 image:
 - Visual Studio 2022
-- Ubuntu1804
+- Ubuntu2004
 environment:
   DOCKER_TOKEN:
    secure: QKr2YEuliXdFKe3jN7w97w==
@@ -47,7 +47,7 @@ for:
 -
   matrix:
     only:
-      - image: Ubuntu1804
+      - image: Ubuntu2004
 
   install:
   - pwsh: ./setup.sh
