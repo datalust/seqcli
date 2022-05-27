@@ -57,7 +57,7 @@ namespace SeqCli.Cli.Commands
 
             Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
 
-            Options.Add("c|force-color",
+            Options.Add("force-color",
                 "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
                 v => _forceColor = true);
         }
