@@ -35,12 +35,13 @@ namespace SeqCli.Cli.Commands
         readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
 
         string _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
-        bool _noColor;
+        bool _noColor, _forceColor;
 
         public PrintCommand(SeqCliOutputConfig outputConfig)
         {
             if (outputConfig == null) throw new ArgumentNullException(nameof(outputConfig));
             _noColor = outputConfig.DisableColor;
+            _forceColor = outputConfig.ForceColor;
 
             _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", supportsWildcard: true));
 
@@ -55,17 +56,30 @@ namespace SeqCli.Cli.Commands
             _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
             Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+
+            Options.Add("c|force-color",
+                "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
+                v => _forceColor = true);
         }
 
         protected override async Task<int> Run()
         {
+            var applyThemeToRedirectedOutput
+                = _noColor == false && _forceColor == true;
+
+            var theme
+                = _noColor                      ? ConsoleTheme.None
+                :  applyThemeToRedirectedOutput ? OutputFormatFeature.DefaultAnsiTheme
+                :                                 OutputFormatFeature.DefaultTheme;
+
             var outputConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Is(LevelAlias.Minimum)
                 .Enrich.With<RedundantEventTypeRemovalEnricher>()
                 .Enrich.With<SurrogateLevelRemovalEnricher>()
                 .WriteTo.Console(
                     outputTemplate: _template,
-                    theme: _noColor ? ConsoleTheme.None : OutputFormatFeature.DefaultTheme);
+                    theme: theme,
+                    applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
 
             if (_filter != null)
                 outputConfiguration.Filter.ByIncludingOnly(_filter);

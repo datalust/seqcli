@@ -34,18 +34,25 @@ namespace SeqCli.Cli.Features
         public const string DefaultOutputTemplate =
             "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
 
-        public static readonly ConsoleTheme DefaultTheme = SystemConsoleTheme.Literate;
+        public static readonly ConsoleTheme DefaultTheme     = SystemConsoleTheme.Literate;
+        public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Literate;
 
-        bool _json, _noColor;
+        bool _json, _noColor, _forceColor;
 
         public OutputFormatFeature(SeqCliOutputConfig outputConfig)
         {
             _noColor = outputConfig.DisableColor;
+            _forceColor = outputConfig.ForceColor;
         }
 
         public bool Json => _json;
 
-        ConsoleTheme Theme => _noColor ? ConsoleTheme.None : DefaultTheme;
+        bool ApplyThemeToRedirectedOutput => _noColor == false && _forceColor == true;
+
+        ConsoleTheme Theme
+            => _noColor                     ? ConsoleTheme.None
+            :  ApplyThemeToRedirectedOutput ? DefaultAnsiTheme
+            :                                 DefaultTheme;
 
         public override void Enable(OptionSet options)
         {
@@ -55,6 +62,10 @@ namespace SeqCli.Cli.Features
                 v => _json = true);
 
             options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+
+            options.Add("c|force-color",
+                "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
+                v => _forceColor = true);
         }
 
         public Logger CreateOutputLogger()
@@ -72,7 +83,8 @@ namespace SeqCli.Cli.Features
                 outputConfiguration.Enrich.With<SurrogateLevelRemovalEnricher>();
                 outputConfiguration.WriteTo.Console(
                     outputTemplate: DefaultOutputTemplate,
-                    theme: Theme);
+                    theme: Theme,
+                    applyThemeToRedirectedOutput: ApplyThemeToRedirectedOutput);
             }
 
             return outputConfiguration.CreateLogger();
@@ -115,7 +127,8 @@ namespace SeqCli.Cli.Features
                     .Enrich.With<StripStructureTypeEnricher>()
                     .WriteTo.Console(
                         outputTemplate: "{@Message:j}{NewLine}",
-                        theme: Theme)
+                        theme: Theme,
+                        applyThemeToRedirectedOutput: ApplyThemeToRedirectedOutput)
                     .CreateLogger();
                 writer.Information("{@Entity}", jo);
             }
