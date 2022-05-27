@@ -35,7 +35,7 @@ namespace SeqCli.Cli.Features
             "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
 
         public static readonly ConsoleTheme DefaultTheme     = SystemConsoleTheme.Literate;
-        public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Literate;
+        public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Code;
 
         bool _json, _noColor, _forceColor;
 
