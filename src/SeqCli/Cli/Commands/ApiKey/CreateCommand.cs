@@ -28,7 +28,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.ApiKey
 {
-    [Command("apikey", "create", "Create an API key for ingestion",
+    [Command("apikey", "create", "Create an API key for automation or ingestion",
         Example = "seqcli apikey create -t 'Test API Key' -p Environment=Test")]
     class CreateCommand : Command
     {
