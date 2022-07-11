@@ -59,11 +59,7 @@ namespace SeqCli.Cli.Commands.Sample
             }
 
             var templateArgs = new Dictionary<string, JsonTemplate>();
-            var users = await connection.Users.ListAsync();
-            if (users.Count == 1)
-                templateArgs["ownerId"] = new JsonTemplateString(users.Single().Id);
-            else
-                templateArgs["ownerId"] = new JsonTemplateNull();
+            templateArgs["ownerId"] = new JsonTemplateNull();
 
             var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
             var templateFiles = Directory.GetFiles(templatesPath);

@@ -50,6 +50,10 @@ $token = (
 )
 ```
 
+## Contributing
+
+See `CONTRIBUTING.md`.
+
 ## Commands
 
 Usage:
