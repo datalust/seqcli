@@ -43,7 +43,8 @@ namespace SeqCli.EndToEnd.Support
             var commandWithArgs = $"run --listen=\"{ServerListenUrl}\" --storage=\"{storagePath}\"";
             if (_args.UseDockerSeq())
             {
-                return new CaptiveProcess("docker", $"run --name seq -it --rm -e ACCEPT_EULA=Y -p {ServerListenPort}:80 datalust/seq:latest", stopCommandFullExePath: "docker", stopCommandArgs: "stop seq");
+                var containerName = Guid.NewGuid().ToString("n");
+                return new CaptiveProcess("docker", $"run --name {containerName} -it --rm -e ACCEPT_EULA=Y -p {ServerListenPort}:80 datalust/seq:latest", stopCommandFullExePath: "docker", stopCommandArgs: $"stop {containerName}");
             }
             return new CaptiveProcess("seq", commandWithArgs);
         }
