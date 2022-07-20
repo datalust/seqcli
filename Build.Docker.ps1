@@ -6,7 +6,7 @@ $framework = "net6.0"
 $image = "datalust/seqcli"
 $archs = @(
     @{ rid = "x64"; platform = "linux/amd64" },
-    @{ rid = "arm64"; platform = "linux/arm/v8" }
+    @{ rid = "arm64"; platform = "linux/arm64/v8" }
 )
 
 function Execute-Tests
