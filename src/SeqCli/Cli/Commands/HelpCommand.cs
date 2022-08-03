@@ -63,8 +63,17 @@ namespace SeqCli.Cli.Commands
                     var subCommandHelp = subCommand == null ? "" : " " + subCommand;
                     Console.WriteLine(name + " " + cmd.Metadata.Name + subCommandHelp + argHelp);
                     Console.WriteLine();
+
                     Console.WriteLine(cmd.Metadata.HelpText);
                     Console.WriteLine();
+
+                    if (cmd.Metadata.Example != null)
+                    {
+                        Console.WriteLine("Example:");
+                        Console.WriteLine($"  {cmd.Metadata.Example}");
+                        Console.WriteLine();
+                    }
+                    
                     cmd.Value.Value.PrintUsage();
                     return Task.FromResult(0);
                 }

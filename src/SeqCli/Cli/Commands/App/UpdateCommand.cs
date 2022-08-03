@@ -81,6 +81,12 @@ class UpdateCommand : Command
             return 1;
         }
         
+        if (_all && _version != null)
+        {
+            Log.Error("The `all` and `version` options are incompatible");
+            return 1;
+        }
+        
         if (!_all && _id == null && _name == null)
         {
             Log.Error("One of `id`, `name`, or `all` must be specified");
