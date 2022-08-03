@@ -42,7 +42,7 @@ namespace SeqCli.EndToEnd.Feed
             var exit = runner.Exec("feed list", $"-n {feedName}");
             Assert.Equal(0, exit);
 
-            var output = runner.LastRunProcess.Output;
+            var output = runner.LastRunProcess!.Output;
 
             if (exists)
             {
