@@ -43,7 +43,8 @@ namespace SeqCli.Ingestion
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-            var batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling);
+            const int maxEmptyBatchWaitMS = 2000;
+            var batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling, maxEmptyBatchWaitMS);
             var retries = 0;
             while (true)
             {
@@ -81,7 +82,7 @@ namespace SeqCli.Ingestion
                 if (batch.IsLast)
                     break;
                 
-                batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling);
+                batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling, maxEmptyBatchWaitMS);
             }
 
             return 0;
@@ -91,10 +92,16 @@ namespace SeqCli.Ingestion
             ILogEventReader reader,
             Func<LogEvent, bool> filter,
             int count,
-            InvalidDataHandling invalidDataHandling)
+            InvalidDataHandling invalidDataHandling,
+            int maxWaitMS)
         {
             var batch = new List<LogEvent>();
             var isLast = false;
+            
+            // Avoid consuming stacks of CPU unnecessarily when there's no work to do. We do eventually yield
+            // an empty batch, because level switching relies on this.
+            var totalWaitMS = 0;
+            const int idleWaitMS = 5;
             do
             {
                 try
@@ -105,8 +112,16 @@ namespace SeqCli.Ingestion
                         isLast = rr.IsAtEnd;
                         var evt = rr.LogEvent;
                         if (evt == null)
-                            break;
-                        
+                        {
+                            if (isLast || batch.Count != 0 || totalWaitMS > maxWaitMS)
+                                break;
+
+                            // Nothing to to ship; wait to try to fill a batch.
+                            await Task.Delay(idleWaitMS);
+                            totalWaitMS += idleWaitMS;
+                            continue;
+                        }
+
                         if (filter == null || filter(evt))
                         {
                             batch.Add(evt);
@@ -163,7 +178,7 @@ namespace SeqCli.Ingestion
             {
                 try
                 {
-                    var error = JsonConvert.DeserializeObject<dynamic>(resultJson);
+                    var error = JsonConvert.DeserializeObject<dynamic>(resultJson)!;
 
                     Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
                         result.StatusCode,
