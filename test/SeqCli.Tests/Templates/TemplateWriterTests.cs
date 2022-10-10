@@ -16,6 +16,7 @@ namespace SeqCli.Tests.Templates
         public string ReferencedId { get; set; }
         public List<int> Numbers { get; set; }
         public List<string> Strings { get; set; }
+        public Dictionary<string, string> Dictionary { get; set; }
     }
     
     public class TemplateWriterTests
@@ -29,7 +30,8 @@ namespace SeqCli.Tests.Templates
                 Name = "Test Stuff",
                 ReferencedId = "test-ref",
                 Numbers = new List<int> { 1, 2, 3 },
-                Strings = new List<string> { "test" }
+                Strings = new List<string> { "test" },
+                Dictionary = new Dictionary<string, string>{ ["First"] = "a" }
             };
 
             const string referencedTemplateName = "Referenced";
