@@ -15,6 +15,8 @@ namespace SeqCli.Tests.Templates
         public string Name { get; set; }
         public string ReferencedId { get; set; }
         public List<int> Numbers { get; set; }
+        public List<string> Strings { get; set; }
+        public Dictionary<string, string> Dictionary { get; set; }
     }
     
     public class TemplateWriterTests
@@ -27,7 +29,9 @@ namespace SeqCli.Tests.Templates
                 Id = "test-stuff",
                 Name = "Test Stuff",
                 ReferencedId = "test-ref",
-                Numbers = new List<int> { 1, 2, 3 }
+                Numbers = new List<int> { 1, 2, 3 },
+                Strings = new List<string> { "test" },
+                Dictionary = new Dictionary<string, string>{ ["First"] = "a" }
             };
 
             const string referencedTemplateName = "Referenced";
@@ -35,6 +39,7 @@ namespace SeqCli.Tests.Templates
             var tvm = new TemplateValueMap();
             tvm.AddReferencedTemplate(entity.ReferencedId, referencedTemplateName);
             tvm.MapAsReference<TestEntity>(nameof(TestEntity.ReferencedId));
+            tvm.Ignore<TestEntity>(nameof(TestEntity.Strings));
 
             var content = new StringWriter();
             await TemplateWriter.WriteTemplateAsync(content, entity, tvm);

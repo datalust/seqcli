@@ -14,6 +14,7 @@ namespace SeqCli.Templates.Export
         readonly HashSet<PropertyInfo> _referenceProperties = new();
         readonly HashSet<PropertyInfo> _referenceListProperties = new();
         readonly Dictionary<PropertyInfo, string> _argProperties = new();
+        readonly HashSet<PropertyInfo> _ignoredProperties = new();
 
         static PropertyInfo GetProperty<T>(string propertyName) =>
             typeof(T).GetProperty(propertyName) ??
@@ -37,6 +38,11 @@ namespace SeqCli.Templates.Export
         public void AddReferencedTemplate(string entityId, string name)
         {
             _idToReferenceName.Add(entityId, name);
+        }
+
+        public void Ignore<T>(string propertyName)
+        {
+            _ignoredProperties.Add(GetProperty<T>(propertyName));
         }
 
         public bool TryGetRawValue(PropertyInfo pi, object? value, [MaybeNullWhen(false)] out string raw)
@@ -71,6 +77,8 @@ namespace SeqCli.Templates.Export
             raw = null;
             return false;
         }
+
+        public bool IsIgnored(PropertyInfo pi) => _ignoredProperties.Contains(pi);
 
         static string FormatReference(string name)
         {

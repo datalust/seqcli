@@ -30,13 +30,14 @@ namespace SeqCli.Templates.Export
             await WriteObjectAsync(jw, entity, templateValueMap, annotateAsResource: true);
         }
 
-        static async Task WriteValueAsync(JsonWriter jw, object? v, TemplateValueMap templateValueMap)
+        static async Task WriteValueAsync(JsonWriter jw, object? v, TemplateValueMap templateValueMap, PropertyInfo? enclosingProperty = null)
         {
             await (v switch
             {
                 null => jw.WriteNullAsync(),
                 string s => jw.WriteValueAsync(s),
-                IEnumerable a => WriteArrayAsync(jw, a, templateValueMap),
+                IReadOnlyDictionary<string, string> ds => WriteDictionaryAsync(jw, ds, templateValueMap, enclosingProperty),
+                IEnumerable a => WriteArrayAsync(jw, a, templateValueMap, enclosingProperty),
                 var o when o.GetType().IsClass => WriteObjectAsync(jw, o, templateValueMap),
                 var e when e.GetType().IsEnum => jw.WriteValueAsync(e.ToString()),
                 _ => jw.WriteValueAsync(v)
@@ -63,10 +64,31 @@ namespace SeqCli.Templates.Export
             await jw.WriteEndArrayAsync();
         }
 
-        static async Task WriteObjectAsync(JsonWriter jw, object o, TemplateValueMap templateValueMap, bool annotateAsResource = false)
+        static async Task WriteDictionaryAsync(JsonWriter jw, IReadOnlyDictionary<string, string> ds, TemplateValueMap templateValueMap, PropertyInfo? enclosingProperty = null)
         {
             await jw.WriteStartObjectAsync();
 
+            foreach (var (k, v) in ds)
+            {
+                await jw.WritePropertyNameAsync(k);
+
+                if (enclosingProperty != null &&
+                    templateValueMap.TryGetRawElement(enclosingProperty, v, out var raw))
+                {
+                    await jw.WriteRawValueAsync(raw);
+                }
+                else
+                {
+                    await WriteValueAsync(jw, v, templateValueMap);
+                }
+            }
+            
+            await jw.WriteEndObjectAsync();
+        }
+
+        static async Task WriteObjectAsync(JsonWriter jw, object o, TemplateValueMap templateValueMap, bool annotateAsResource = false)
+        {
+            await jw.WriteStartObjectAsync();
 
             if (annotateAsResource)
             {
@@ -76,6 +98,9 @@ namespace SeqCli.Templates.Export
 
             foreach (var (pi, v) in GetTemplateProperties(o))
             {
+                if (templateValueMap.IsIgnored(pi))
+                    continue;
+                
                 var pa = pi.GetCustomAttribute<JsonPropertyAttribute>();
                 if (pa?.DefaultValueHandling == DefaultValueHandling.Ignore &&
                     v == null || v as int? == 0 || v as decimal? == 0m || v as uint? == 0)
@@ -87,10 +112,8 @@ namespace SeqCli.Templates.Export
 
                 if (templateValueMap.TryGetRawValue(pi, v, out var raw))
                     await jw.WriteRawValueAsync(raw);
-                else if (v is not string && v is IEnumerable)
-                    await WriteArrayAsync(jw, v, templateValueMap, pi);
                 else
-                    await WriteValueAsync(jw, v, templateValueMap);
+                    await WriteValueAsync(jw, v, templateValueMap, pi);
             }
             
             await jw.WriteEndObjectAsync();
