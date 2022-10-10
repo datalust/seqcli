@@ -43,6 +43,7 @@ namespace SeqCli.Templates.Export
             templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.DashboardIds));
             templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.QueryIds));
             templateValueMap.MapAsReferenceList<WorkspaceContentPart>(nameof(WorkspaceContentPart.SignalIds));
+            templateValueMap.Ignore<AlertEntity>(nameof(AlertEntity.Activity));
             
             await ExportTemplates<SignalEntity>(
                 id => _connection.Signals.FindAsync(id),

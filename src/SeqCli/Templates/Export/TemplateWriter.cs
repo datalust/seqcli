@@ -76,6 +76,9 @@ namespace SeqCli.Templates.Export
 
             foreach (var (pi, v) in GetTemplateProperties(o))
             {
+                if (templateValueMap.IsIgnored(pi))
+                    continue;
+                
                 var pa = pi.GetCustomAttribute<JsonPropertyAttribute>();
                 if (pa?.DefaultValueHandling == DefaultValueHandling.Ignore &&
                     v == null || v as int? == 0 || v as decimal? == 0m || v as uint? == 0)
