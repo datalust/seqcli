@@ -1,6 +1,6 @@
 # based on: https://github.com/dotnet/dotnet-docker/blob/master/2.0/runtime-deps/jessie/amd64/Dockerfile
 
-FROM --platform=linux/arm64 ubuntu:20.04
+FROM --platform=linux/arm/v8 ubuntu:20.04
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
