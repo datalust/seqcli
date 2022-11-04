@@ -41,7 +41,7 @@ namespace SeqCli.Templates.Import
             bool merge)
         {
             var ordering = new[] {"users", "signals", "apps", "appinstances",
-                "dashboards", "sqlqueries", "workspaces", "retentionpolicies"}.ToList();
+                "dashboards", "sqlqueries", "workspaces", "retentionpolicies", "alerts"}.ToList();
 
             var sorted = templates.OrderBy(t => ordering.IndexOf(t.ResourceGroup));
             
