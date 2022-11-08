@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "id": "count-star",
+      "query": "select count(*) from stream",
+      "signals": []
+    },
+    {
+      "id": "starts-with",
+      "query": "select count(*) from stream where @Message like '%abcde'",
+      "signals": []
+    },
+    {
+      "id": "mean-filter",
+      "query": "select mean(RowCount) from stream where  @EventType = 0x94002EBF",
+      "signals": []
+    }
+    
+  ]
+}
