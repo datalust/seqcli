@@ -124,7 +124,10 @@ class BenchCommand : Command
             : new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.Seq(_reportingServerUrl, period: TimeSpan.FromMilliseconds(1))
+                .WriteTo.Seq(
+                    _reportingServerUrl, 
+                    apiKey: string.IsNullOrWhiteSpace(_reportingServerApiKey) ? null : _reportingServerApiKey,
+                    period: TimeSpan.FromMilliseconds(1))
                 .CreateLogger();
     }
 
