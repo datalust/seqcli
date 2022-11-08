@@ -23,7 +23,7 @@ namespace SeqCli.Cli.Features
         public override void Enable(OptionSet options)
         {
             options.Add("start=", "ISO 8601 date/time to query from", v => _start = v);
-            options.Add("end=", "Date/time to query to", v => _end = v);
+            options.Add("end=", "ISO 8601 Date/time to query to", v => _end = v);
         }
 
         public DateTime? Start => _start != null ? DateTime.Parse(_start) : (DateTime?)null;
