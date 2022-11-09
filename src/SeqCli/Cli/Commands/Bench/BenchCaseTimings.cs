@@ -19,14 +19,15 @@ using System.Linq;
 
 namespace SeqCli.Cli.Commands;
 
+/*
+ * Collects benchmarking elapsed time measurements and calculates statistics. 
+ */
 class BenchCaseTimings
 {
     List<double> _elaspseds = new() { };
-
     public double MeanElapsed => _elaspseds.Sum() / _elaspseds.Count;
     public double MinElapsed => _elaspseds.Min();
     public double MaxElapsed => _elaspseds.Max();
-
     public double StandardDeviationElapsed => StandardDeviation(_elaspseds); 
     public double RelativeStandardDeviationElapsed => StandardDeviation(_elaspseds) / MeanElapsed;
 

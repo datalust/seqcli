@@ -77,7 +77,7 @@ Example cases file format:
 class BenchCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
-    int _runs = 0;
+    int _runs = 3;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
     string _cases = "";
@@ -85,18 +85,12 @@ class BenchCommand : Command
     string _reportingServerApiKey = "";
     ILogger? _reportingLogger = null;
     
-    const int DefaultRuns = 3;
-
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
-        _runs = DefaultRuns;
         Options.Add("r|runs=", "The number of runs to execute", r =>
         {
-            if (!int.TryParse(r, out _runs))
-            {
-                _runs = DefaultRuns;
-            }
+            int.TryParse(r, out _runs);
         });
         
         Options.Add(
@@ -123,7 +117,6 @@ class BenchCommand : Command
         {
             var connection = _connectionFactory.Connect(_connection);
             _reportingLogger = BuildReportingLogger();
-        
             var cases = ReadCases(_cases);
             var runId = Guid.NewGuid().ToString("N").Substring(0, 4);
             var start = _range.Start ?? DateTime.UtcNow.AddDays(-7);
@@ -178,6 +171,9 @@ class BenchCommand : Command
         }
     }
 
+    /// <summary>
+    /// Build a second Serilog logger for logging benchmark results. 
+    /// </summary>
     Logger BuildReportingLogger()
     {
         return string.IsNullOrWhiteSpace(_reportingServerUrl) 
@@ -195,6 +191,9 @@ class BenchCommand : Command
                 .CreateLogger();
     }
 
+    /// <summary>
+    /// Read and parse the bench test cases from the file supplied or else from a default file. 
+    /// </summary>
     static BenchCasesCollection ReadCases(string filename)
     {
         var defaultCasesPath = Path.Combine(Path.GetDirectoryName(typeof(BenchCommand).Assembly.Location)!, "Cli/Commands/Bench/BenchCases.json");

@@ -47,9 +47,6 @@
     <ProjectReference Include="..\Roastery\Roastery.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Bench" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Remove="Bench\JsonCaseReader.cs" />
   </ItemGroup>
 </Project>
