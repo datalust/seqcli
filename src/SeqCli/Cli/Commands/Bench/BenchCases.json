@@ -11,19 +11,9 @@
       "signals": []
     },
     {
-      "id": "mean-filter",
-      "query": "select mean(RowCount) from stream where  @EventType = 0x94002EBF",
-      "signals": []
-    },
-    {
       "id": "without-signal",
       "query": "select count(*) from stream where @Level = 'Warning'",
       "signals": []
-    },
-    {
-      "id": "with-signal",
-      "query": "select count(*) from stream where @Level = 'Warning'",
-      "signals": ["signal-m33302"]
     },
     {
       "id": "property-match",
