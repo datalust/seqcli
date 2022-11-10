@@ -1,4 +1,4 @@
-// Copyright 2018 Datalust Pty Ltd
+// Copyright Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,9 +54,7 @@ namespace SeqCli.Cli.Commands;
     "Query": "select count(*) from stream where @Level = 'Warning'",
     "RelativeStandardDeviationElapsed": 0.05619408341421253,
     "Runs": 10,
-    "Signals": [
-        "signal-m33302"
-    ],
+    "SignalExpression": "signal-m33302",
     "Start": "2022-08-14T16:00:00.0000000"
 }
  */
@@ -148,7 +146,7 @@ class BenchCommand : Command
                 using (LogContext.PushProperty("MinElapsed", timings.MinElapsed))
                 using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
                 using (LogContext.PushProperty("Runs", _runs))
-                using (LogContext.PushProperty("Signals", c.SignalExpression))
+                using (LogContext.PushProperty("SignalExpression", c.SignalExpression))
                 using (LogContext.PushProperty("Start", start))
                 using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
                 using (end != null ? LogContext.PushProperty("End", end) : null)
