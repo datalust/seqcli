@@ -2,23 +2,24 @@
   "cases": [
     {
       "id": "count-star",
-      "query": "select count(*) from stream",
-      "signals": []
+      "query": "select count(*) from stream"
     },
     {
       "id": "starts-with",
-      "query": "select count(*) from stream where @Message like '%abcde'",
-      "signals": []
+      "query": "select count(*) from stream where @Message like '%abcde'"
     },
     {
       "id": "without-signal",
+      "query": "select count(*) from stream where @Level = 'Warning'"
+    },
+    {
+      "id": "with-signal",
       "query": "select count(*) from stream where @Level = 'Warning'",
-      "signals": []
+      "signalExpression": ""
     },
     {
       "id": "property-match",
-      "query": "select count(*) from stream where Action = 'ListAsync'",
-      "signals": []
+      "query": "select count(*) from stream where Action = 'ListAsync'"
     }
   ]
 }

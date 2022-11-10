@@ -10,6 +10,7 @@
     <TreatSpecificWarningsAsErrors />
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>seqcli</ToolCommandName>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
@@ -45,8 +46,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Roastery\Roastery.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Bench\JsonCaseReader.cs" />
   </ItemGroup>
 </Project>

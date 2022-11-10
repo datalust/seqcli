@@ -24,7 +24,7 @@ namespace SeqCli.Cli.Commands;
  */
 class BenchCaseTimings
 {
-    List<double> _elaspseds = new() { };
+    readonly List<double> _elaspseds = new() { };
     public double MeanElapsed => _elaspseds.Sum() / _elaspseds.Count;
     public double MinElapsed => _elaspseds.Min();
     public double MaxElapsed => _elaspseds.Max();

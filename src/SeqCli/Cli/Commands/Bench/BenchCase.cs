@@ -21,5 +21,5 @@ class BenchCase
 {
     public string Id = "";
     public string Query = "";
-    public IList<string> Signals = new List<string>();
+    public string SignalExpression = "";
 }

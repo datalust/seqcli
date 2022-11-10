@@ -69,7 +69,7 @@ Example cases file format:
         {
             ""id"": ""count-star"",
             ""query"": ""select count(*) from stream"",
-            ""signals"": [""signal-id-here""]
+            ""signalExpression"": ""signal-expression-here""]
         }
     ]
 }
@@ -83,7 +83,6 @@ class BenchCommand : Command
     string _cases = "";
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
-    ILogger? _reportingLogger = null;
     
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
@@ -116,7 +115,7 @@ class BenchCommand : Command
         try
         {
             var connection = _connectionFactory.Connect(_connection);
-            _reportingLogger = BuildReportingLogger();
+            using var reportingLogger = BuildReportingLogger();
             var cases = ReadCases(_cases);
             var runId = Guid.NewGuid().ToString("N").Substring(0, 4);
             var start = _range.Start ?? DateTime.UtcNow.AddDays(-7);
@@ -131,9 +130,9 @@ class BenchCommand : Command
                 {
                     var response = await connection.Data.QueryAsync(
                         c.Query,
-                        _range.Start ?? DateTime.UtcNow.AddDays(-7),
-                        _range.End,
-                        SignalExpressionPart.FromIntersectedIds(c.Signals)
+                        start,
+                        end,
+                        SignalExpressionPart.Signal(c.SignalExpression)
                     );
 
                     timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
@@ -149,14 +148,14 @@ class BenchCommand : Command
                 using (LogContext.PushProperty("MinElapsed", timings.MinElapsed))
                 using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
                 using (LogContext.PushProperty("Runs", _runs))
-                using (LogContext.PushProperty("Signals", c.Signals))
+                using (LogContext.PushProperty("Signals", c.SignalExpression))
                 using (LogContext.PushProperty("Start", start))
                 using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
                 using (end != null ? LogContext.PushProperty("End", end) : null)
                 using (LogContext.PushProperty("Query", c.Query))
                 {
-                    _reportingLogger.Information(
-                        "Bench run {BenchRunId} for query {Id}. Mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
+                    reportingLogger.Information(
+                        "Bench run {BenchRunId} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
                         runId, c.Id,
                         timings.MeanElapsed, 
                         timings.RelativeStandardDeviationElapsed);
@@ -175,20 +174,18 @@ class BenchCommand : Command
     /// Build a second Serilog logger for logging benchmark results. 
     /// </summary>
     Logger BuildReportingLogger()
-    {
-        return string.IsNullOrWhiteSpace(_reportingServerUrl) 
-            ? new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .CreateLogger()
-            : new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .WriteTo.Seq(
-                    _reportingServerUrl, 
-                    apiKey: string.IsNullOrWhiteSpace(_reportingServerApiKey) ? null : _reportingServerApiKey,
-                    period: TimeSpan.FromMilliseconds(1))
-                .CreateLogger();
+    { 
+        var loggerConfiguration = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .WriteTo.Console();
+
+        if (!string.IsNullOrWhiteSpace(_reportingServerUrl))
+            loggerConfiguration.WriteTo.Seq(
+                _reportingServerUrl, 
+                apiKey: string.IsNullOrWhiteSpace(_reportingServerApiKey) ? null : _reportingServerApiKey,
+                period: TimeSpan.FromMilliseconds(1));
+
+        return loggerConfiguration.CreateLogger();
     }
 
     /// <summary>
