@@ -153,10 +153,8 @@ class BenchCommand : Command
                 using (LogContext.PushProperty("Query", c.Query))
                 {
                     reportingLogger.Information(
-                        "Bench run {BenchRunId} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
-                        runId, c.Id,
-                        timings.MeanElapsed, 
-                        timings.RelativeStandardDeviationElapsed);
+                        "Bench run {Cases}/{RunId} against {Server} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
+                                 cases.CasesHash, runId,  _reportingServerUrl,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
                 }
             }
 
@@ -197,6 +195,8 @@ class BenchCommand : Command
             : filename);
         var casesFile = JsonConvert.DeserializeObject<BenchCasesCollection>(casesString)
             ?? new BenchCasesCollection();
+        
+        casesFile.CasesHash = casesString.GetHashCode(); // not consistent across framework versions, but that's OK
         
         if (casesFile.Cases.Select(c => c.Id).Distinct().Count() != casesFile.Cases.Count)
         {
