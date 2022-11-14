@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
+using SeqCli.Util;
 using Serilog;
 using Serilog.Context;
 using Serilog.Core;
@@ -193,8 +194,7 @@ class BenchCommand : Command
     /// </summary>
     static BenchCasesCollection ReadCases(string filename)
     {
-        var defaultCasesPath = Path.Combine(Path.GetDirectoryName(typeof(BenchCommand).Assembly.Location)!,
-            "Cli/Commands/Bench/BenchCases.json");
+        var defaultCasesPath = Content.GetPath("Cli/Commands/Bench/BenchCases.json");
         var casesString = File.ReadAllText(string.IsNullOrWhiteSpace(filename)
             ? defaultCasesPath
             : filename);

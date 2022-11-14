@@ -23,7 +23,6 @@
     <Content Include="Sample\Templates\*.template">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Remove="Cli\Commands\BenchCases.json" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Destructurama.JsonNet" Version="2.0.0" />
