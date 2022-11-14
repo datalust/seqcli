@@ -134,11 +134,14 @@ class BenchCommand : Command
                     );
 
                     timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
-                    var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
 
-                    if (i == _runs && isScalarResult)
+                    if (response.Rows != null)
                     {
-                        lastResult = response.Rows[0][0];
+                        var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
+                        if (isScalarResult && i == _runs)
+                        {
+                            lastResult = response.Rows[0][0];
+                        }
                     }
                 }
                 
