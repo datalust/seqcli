@@ -189,18 +189,24 @@ class BenchCommand : Command
     /// </summary>
     static BenchCasesCollection ReadCases(string filename)
     {
-        var defaultCasesPath = Path.Combine(Path.GetDirectoryName(typeof(BenchCommand).Assembly.Location)!, "Cli/Commands/Bench/BenchCases.json");
-        var casesString = File.ReadAllText(string.IsNullOrWhiteSpace(filename) 
-            ? defaultCasesPath 
+        var defaultCasesPath = Path.Combine(Path.GetDirectoryName(typeof(BenchCommand).Assembly.Location)!,
+            "Cli/Commands/Bench/BenchCases.json");
+        var casesString = File.ReadAllText(string.IsNullOrWhiteSpace(filename)
+            ? defaultCasesPath
             : filename);
         var casesFile = JsonConvert.DeserializeObject<BenchCasesCollection>(casesString)
-            ?? new BenchCasesCollection();
-        
+                        ?? new BenchCasesCollection();
+
         casesFile.CasesHash = casesString.GetHashCode(); // not consistent across framework versions, but that's OK
-        
+
         if (casesFile.Cases.Select(c => c.Id).Distinct().Count() != casesFile.Cases.Count)
         {
             throw new Exception($"Cases file {filename} contains a duplicate id");
+        }
+
+        if (!casesFile.Cases.Any())
+        {
+            throw new Exception($"Cases file {filename} contains no cases");
         }
 
         return casesFile;
