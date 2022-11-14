@@ -13,11 +13,6 @@
       "query": "select count(*) from stream where @Level = 'Warning'"
     },
     {
-      "id": "with-signal",
-      "query": "select count(*) from stream where @Level = 'Warning'",
-      "signalExpression": ""
-    },
-    {
       "id": "property-match",
       "query": "select count(*) from stream where Action = 'ListAsync'"
     }
