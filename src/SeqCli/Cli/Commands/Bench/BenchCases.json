@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "id": "count-star",
+      "query": "select count(*) from stream"
+    },
+    {
+      "id": "starts-with",
+      "query": "select count(*) from stream where @Message like '%abcde'"
+    },
+    {
+      "id": "without-signal",
+      "query": "select count(*) from stream where @Level = 'Warning'"
+    },
+    {
+      "id": "property-match",
+      "query": "select count(*) from stream where Action = 'ListAsync'"
+    }
+  ]
+}
