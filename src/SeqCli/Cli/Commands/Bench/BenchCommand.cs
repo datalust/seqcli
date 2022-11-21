@@ -59,20 +59,7 @@ namespace SeqCli.Cli.Commands;
     "Start": "2022-08-14T16:00:00.0000000"
 }
  */
-[Command("bench", @"Measure query performance.
-
-Example cases file format:
-    
-{
-    ""cases"": [
-        {
-            ""id"": ""count-star"",
-            ""query"": ""select count(*) from stream"",
-            ""signalExpression"": ""signal-expression-here""]
-        }
-    ]
-}
-")]
+[Command("bench", @"Measure query performance")]
 class BenchCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
