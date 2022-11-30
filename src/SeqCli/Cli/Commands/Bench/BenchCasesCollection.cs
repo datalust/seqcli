@@ -23,6 +23,6 @@ namespace SeqCli.Cli.Commands;
 class BenchCasesCollection
 {
     // An identifier for the particular cases file
-    public int CasesHash = 0;
+    public string CasesHash = "";
     public IList<BenchCase> Cases = new List<BenchCase>();
 }

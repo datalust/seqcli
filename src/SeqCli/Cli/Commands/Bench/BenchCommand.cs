@@ -17,6 +17,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api.Model.Signals;
@@ -188,7 +190,7 @@ class BenchCommand : Command
         var casesFile = JsonConvert.DeserializeObject<BenchCasesCollection>(casesString)
                         ?? new BenchCasesCollection();
 
-        casesFile.CasesHash = casesString.GetHashCode(); // not consistent across framework versions, but that's OK
+        casesFile.CasesHash = HashString(casesString); 
 
         if (casesFile.Cases.Select(c => c.Id).Distinct().Count() != casesFile.Cases.Count)
         {
@@ -201,5 +203,12 @@ class BenchCommand : Command
         }
 
         return casesFile;
+    }
+    
+    static string HashString(string input)
+    {
+        var bytes = Encoding.UTF8.GetBytes(input);
+        var hashedBytes = MD5.Create().ComputeHash(bytes);
+        return Encoding.UTF8.GetString(hashedBytes);
     }
 }
