@@ -29,7 +29,7 @@ using Serilog;
 using Serilog.Context;
 using Serilog.Core;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Bench;
 
 /*
  * Run performance benchmark tests against a Seq server.
@@ -71,6 +71,7 @@ class BenchCommand : Command
     string _cases = "";
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
+    string _description = "";
     
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
@@ -96,6 +97,10 @@ class BenchCommand : Command
             "reporting-apikey=", 
             "The API key to use when connecting to the reporting server", 
             a => _reportingServerApiKey = a);
+        Options.Add(
+            "description=", 
+            "Optional description of the bench test run", 
+            a => _description = a);
     }
     
     protected override async Task<int> Run()
@@ -143,11 +148,12 @@ class BenchCommand : Command
                 using (LogContext.PushProperty("MinElapsed", timings.MinElapsed))
                 using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
                 using (LogContext.PushProperty("Runs", _runs))
-                using (LogContext.PushProperty("SignalExpression", c.SignalExpression))
+                using (!string.IsNullOrWhiteSpace(c.SignalExpression) ? LogContext.PushProperty("SignalExpression", c.SignalExpression) : null)
                 using (LogContext.PushProperty("Start", _range.Start))
                 using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
                 using (LogContext.PushProperty("End", _range.End))
                 using (LogContext.PushProperty("Query", c.Query))
+                using (!string.IsNullOrWhiteSpace(_description) ? LogContext.PushProperty("Description", _description) : null)
                 {
                     reportingLogger.Information(
                         "Bench run {Cases}/{RunId} against {Server} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
@@ -211,9 +217,9 @@ class BenchCommand : Command
 
     public static string HashString(string input)
     {
-        using MD5 md5 = MD5.Create();
+        using var md5 = MD5.Create();
         var bytes = Encoding.ASCII.GetBytes(input);
         var hash = Convert.ToHexString(md5.ComputeHash(bytes));
-        return new String(new [] {hash[4], hash[8], hash[16], hash[24]});
+        return new string(new [] {hash[4], hash[8], hash[16], hash[24]});
     }
 }
