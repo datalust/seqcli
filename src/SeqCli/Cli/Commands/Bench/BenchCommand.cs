@@ -106,8 +106,12 @@ class BenchCommand : Command
             using var reportingLogger = BuildReportingLogger();
             var cases = ReadCases(_cases);
             var runId = Guid.NewGuid().ToString("N").Substring(0, 4);
-            var start = _range.Start ?? DateTime.UtcNow.AddDays(-7);
-            var end = _range.End;
+
+            if (_range.Start == null || _range.End == null)
+            {
+                Log.Error("Both the `start` and `end` arguments are required");
+                return 1;
+            }
 
             foreach (var c in cases.Cases)
             {
@@ -118,8 +122,8 @@ class BenchCommand : Command
                 {
                     var response = await connection.Data.QueryAsync(
                         c.Query,
-                        start,
-                        end,
+                        _range.Start,
+                        _range.End,
                         SignalExpressionPart.Signal(c.SignalExpression)
                     );
 
@@ -140,14 +144,14 @@ class BenchCommand : Command
                 using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
                 using (LogContext.PushProperty("Runs", _runs))
                 using (LogContext.PushProperty("SignalExpression", c.SignalExpression))
-                using (LogContext.PushProperty("Start", start))
+                using (LogContext.PushProperty("Start", _range.Start))
                 using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
-                using (end != null ? LogContext.PushProperty("End", end) : null)
+                using (LogContext.PushProperty("End", _range.End))
                 using (LogContext.PushProperty("Query", c.Query))
                 {
                     reportingLogger.Information(
                         "Bench run {Cases}/{RunId} against {Server} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
-                                 cases.CasesHash, runId,  _reportingServerUrl,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
+                                 cases.CasesHash, runId,  _connection.Url,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
                 }
             }
 
@@ -204,11 +208,12 @@ class BenchCommand : Command
 
         return casesFile;
     }
-    
-    static string HashString(string input)
+
+    public static string HashString(string input)
     {
-        var bytes = Encoding.UTF8.GetBytes(input);
-        var hashedBytes = MD5.Create().ComputeHash(bytes);
-        return Encoding.UTF8.GetString(hashedBytes);
+        using MD5 md5 = MD5.Create();
+        var bytes = Encoding.ASCII.GetBytes(input);
+        var hash = Convert.ToHexString(md5.ComputeHash(bytes));
+        return new String(new [] {hash[4], hash[8], hash[16], hash[24]});
     }
 }
