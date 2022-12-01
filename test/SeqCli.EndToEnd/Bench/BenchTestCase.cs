@@ -13,7 +13,7 @@ namespace SeqCli.EndToEnd.Bench
             ILogger logger,
             CliCommandRunner runner)
         {
-            var exit = runner.Exec("bench", "");
+            var exit = runner.Exec("bench", "--start=2022-01-01 --end=2022-01-02");
             Assert.Equal(0, exit);
 
             return Task.CompletedTask;
