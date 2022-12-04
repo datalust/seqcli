@@ -219,7 +219,6 @@ class BenchCommand : Command
     {
         using var md5 = MD5.Create();
         var bytes = Encoding.ASCII.GetBytes(input);
-        var hash = Convert.ToHexString(md5.ComputeHash(bytes));
-        return new string(new [] {hash[4], hash[8], hash[16], hash[24]});
+        return Convert.ToHexString(md5.ComputeHash(bytes));
     }
 }
