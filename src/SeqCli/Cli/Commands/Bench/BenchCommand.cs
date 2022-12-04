@@ -17,6 +17,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api.Model.Signals;
@@ -27,7 +29,7 @@ using Serilog;
 using Serilog.Context;
 using Serilog.Core;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Bench;
 
 /*
  * Run performance benchmark tests against a Seq server.
@@ -69,6 +71,7 @@ class BenchCommand : Command
     string _cases = "";
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
+    string _description = "";
     
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
@@ -94,6 +97,10 @@ class BenchCommand : Command
             "reporting-apikey=", 
             "The API key to use when connecting to the reporting server", 
             a => _reportingServerApiKey = a);
+        Options.Add(
+            "description=", 
+            "Optional description of the bench test run", 
+            a => _description = a);
     }
     
     protected override async Task<int> Run()
@@ -104,8 +111,12 @@ class BenchCommand : Command
             using var reportingLogger = BuildReportingLogger();
             var cases = ReadCases(_cases);
             var runId = Guid.NewGuid().ToString("N").Substring(0, 4);
-            var start = _range.Start ?? DateTime.UtcNow.AddDays(-7);
-            var end = _range.End;
+
+            if (_range.Start == null || _range.End == null)
+            {
+                Log.Error("Both the `start` and `end` arguments are required");
+                return 1;
+            }
 
             foreach (var c in cases.Cases)
             {
@@ -116,8 +127,8 @@ class BenchCommand : Command
                 {
                     var response = await connection.Data.QueryAsync(
                         c.Query,
-                        start,
-                        end,
+                        _range.Start,
+                        _range.End,
                         SignalExpressionPart.Signal(c.SignalExpression)
                     );
 
@@ -137,15 +148,16 @@ class BenchCommand : Command
                 using (LogContext.PushProperty("MinElapsed", timings.MinElapsed))
                 using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
                 using (LogContext.PushProperty("Runs", _runs))
-                using (LogContext.PushProperty("SignalExpression", c.SignalExpression))
-                using (LogContext.PushProperty("Start", start))
+                using (!string.IsNullOrWhiteSpace(c.SignalExpression) ? LogContext.PushProperty("SignalExpression", c.SignalExpression) : null)
+                using (LogContext.PushProperty("Start", _range.Start))
                 using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
-                using (end != null ? LogContext.PushProperty("End", end) : null)
+                using (LogContext.PushProperty("End", _range.End))
                 using (LogContext.PushProperty("Query", c.Query))
+                using (!string.IsNullOrWhiteSpace(_description) ? LogContext.PushProperty("Description", _description) : null)
                 {
                     reportingLogger.Information(
                         "Bench run {Cases}/{RunId} against {Server} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
-                                 cases.CasesHash, runId,  _reportingServerUrl,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
+                                 cases.CasesHash, runId,  _connection.Url,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
                 }
             }
 
@@ -188,7 +200,7 @@ class BenchCommand : Command
         var casesFile = JsonConvert.DeserializeObject<BenchCasesCollection>(casesString)
                         ?? new BenchCasesCollection();
 
-        casesFile.CasesHash = casesString.GetHashCode(); // not consistent across framework versions, but that's OK
+        casesFile.CasesHash = HashString(casesString); 
 
         if (casesFile.Cases.Select(c => c.Id).Distinct().Count() != casesFile.Cases.Count)
         {
@@ -201,5 +213,12 @@ class BenchCommand : Command
         }
 
         return casesFile;
+    }
+
+    static string HashString(string input)
+    {
+        using var md5 = MD5.Create();
+        var bytes = Encoding.ASCII.GetBytes(input);
+        return Convert.ToHexString(md5.ComputeHash(bytes));
     }
 }
