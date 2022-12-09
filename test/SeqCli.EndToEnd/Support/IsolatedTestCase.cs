@@ -49,7 +49,7 @@ class IsolatedTestCase
         var apiVersion = (await _connection.Value.Client.GetRootAsync()).Version;
 
         // Ignore `-pre` and other semver modifiers.
-        Version ParseVersion(string semver) => Version.Parse(semver.Split("-")[0]);
+        System.Version ParseVersion(string semver) => System.Version.Parse(semver.Split("-")[0]);
 
         return ParseVersion(apiVersion) >= ParseVersion(minSeqVersion);
     }
