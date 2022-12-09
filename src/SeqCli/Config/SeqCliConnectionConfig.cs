@@ -16,46 +16,45 @@ using System;
 using Newtonsoft.Json;
 using SeqCli.Util;
 
-namespace SeqCli.Config
+namespace SeqCli.Config;
+
+class SeqCliConnectionConfig
 {
-    class SeqCliConnectionConfig
+    const string ProtectedDataPrefix = "pd.";
+
+    public string ServerUrl { get; set; } = "http://localhost:5341";
+
+    [JsonProperty("apiKey")]
+    public string? EncodedApiKey { get; set; }
+
+    [JsonIgnore]
+    public string? ApiKey
     {
-        const string ProtectedDataPrefix = "pd.";
-
-        public string ServerUrl { get; set; } = "http://localhost:5341";
-
-        [JsonProperty("apiKey")]
-        public string? EncodedApiKey { get; set; }
-
-        [JsonIgnore]
-        public string? ApiKey
+        get
         {
-            get
+            if (string.IsNullOrWhiteSpace(EncodedApiKey))
+                return null;
+
+            if (!OperatingSystem.IsWindows())
+                return EncodedApiKey;
+
+            if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
+                return EncodedApiKey;
+
+            return UserScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
+        }
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
             {
-                if (string.IsNullOrWhiteSpace(EncodedApiKey))
-                    return null;
-
-                if (!OperatingSystem.IsWindows())
-                    return EncodedApiKey;
-
-                if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
-                    return EncodedApiKey;
-
-                return UserScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
+                EncodedApiKey = null;
+                return;
             }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    EncodedApiKey = null;
-                    return;
-                }
 
-                if (OperatingSystem.IsWindows())
-                    EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
-                else
-                    EncodedApiKey = value;
-            }
+            if (OperatingSystem.IsWindows())
+                EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
+            else
+                EncodedApiKey = value;
         }
     }
 }

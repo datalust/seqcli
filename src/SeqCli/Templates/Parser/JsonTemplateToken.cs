@@ -14,38 +14,37 @@
 
 using Superpower.Display;
 
-namespace SeqCli.Templates.Parser
+namespace SeqCli.Templates.Parser;
+
+enum JsonTemplateToken
 {
-    enum JsonTemplateToken
-    {
-        [Token(Example = "{")]
-        LBracket,
+    [Token(Example = "{")]
+    LBracket,
 
-        [Token(Example = "}")]
-        RBracket,
+    [Token(Example = "}")]
+    RBracket,
         
-        [Token(Example = "[")]
-        LSquareBracket,
+    [Token(Example = "[")]
+    LSquareBracket,
         
-        [Token(Example = "]")]
-        RSquareBracket,
+    [Token(Example = "]")]
+    RSquareBracket,
         
-        [Token(Example = ":")]
-        Colon,
+    [Token(Example = ":")]
+    Colon,
         
-        [Token(Example = ",")]
-        Comma,
+    [Token(Example = ",")]
+    Comma,
         
-        String,
+    String,
         
-        Number,
+    Number,
         
-        [Token(Example = "(")]
-        LParen,
+    [Token(Example = "(")]
+    LParen,
 
-        [Token(Example = ")")]
-        RParen,
+    [Token(Example = ")")]
+    RParen,
         
-        Identifier,
-    }
+    Identifier,
 }

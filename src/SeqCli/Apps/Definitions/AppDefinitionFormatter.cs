@@ -18,30 +18,29 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace SeqCli.Apps.Definitions
-{
-    static class AppDefinitionFormatter
-    {
-        public static void FormatAppDefinition(Type seqAppType, bool formatIndented, TextWriter output)
-        {
-            if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
-            if (output == null) throw new ArgumentNullException(nameof(output));
+namespace SeqCli.Apps.Definitions;
 
-            var serializer = JsonSerializer.Create(
-                new JsonSerializerSettings
+static class AppDefinitionFormatter
+{
+    public static void FormatAppDefinition(Type seqAppType, bool formatIndented, TextWriter output)
+    {
+        if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
+        if (output == null) throw new ArgumentNullException(nameof(output));
+
+        var serializer = JsonSerializer.Create(
+            new JsonSerializerSettings
+            {
+                Formatting = formatIndented ? Formatting.Indented : Formatting.None,
+                ContractResolver = new CamelCasePropertyNamesContractResolver
                 {
-                    Formatting = formatIndented ? Formatting.Indented : Formatting.None,
-                    ContractResolver = new CamelCasePropertyNamesContractResolver
-                    {
-                        NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
-                    },
-                    Converters =
-                    {
-                        new StringEnumConverter(new CamelCaseNamingStrategy())
-                    }
-                });
+                    NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
+                },
+                Converters =
+                {
+                    new StringEnumConverter(new CamelCaseNamingStrategy())
+                }
+            });
             
-            serializer.Serialize(output, AppMetadataReader.ReadFromSeqAppType(seqAppType));
-        }
+        serializer.Serialize(output, AppMetadataReader.ReadFromSeqAppType(seqAppType));
     }
 }

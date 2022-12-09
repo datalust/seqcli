@@ -15,19 +15,18 @@
 using System;
 using SeqCli.Templates.Ast;
 
-namespace SeqCli.Templates.Import
-{
-    class EntityTemplate
-    {
-        public string ResourceGroup { get; }
-        public string Name { get; }
-        public JsonTemplate Entity { get; }
+namespace SeqCli.Templates.Import;
 
-        public EntityTemplate(string resourceGroup, string name, JsonTemplate entity)
-        {
-            ResourceGroup = resourceGroup ?? throw new ArgumentNullException(nameof(resourceGroup));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Entity = entity ?? throw new ArgumentNullException(nameof(entity));
-        }
+class EntityTemplate
+{
+    public string ResourceGroup { get; }
+    public string Name { get; }
+    public JsonTemplate Entity { get; }
+
+    public EntityTemplate(string resourceGroup, string name, JsonTemplate entity)
+    {
+        ResourceGroup = resourceGroup ?? throw new ArgumentNullException(nameof(resourceGroup));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        Entity = entity ?? throw new ArgumentNullException(nameof(entity));
     }
 }

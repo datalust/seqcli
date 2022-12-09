@@ -25,116 +25,115 @@ using Serilog.Core;
 using Serilog.Events;
 using Serilog.Filters.Expressions;
 
-namespace SeqCli.Cli.Commands
+namespace SeqCli.Cli.Commands;
+
+[Command("ingest", "Send log events from a file or `STDIN`",
+    Example = "seqcli ingest -i log-*.txt --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
+class IngestCommand : Command
 {
-    [Command("ingest", "Send log events from a file or `STDIN`",
-        Example = "seqcli ingest -i log-*.txt --json --filter=\"@Level <> 'Debug'\" -p Environment=Test")]
-    class IngestCommand : Command
-    {
-        const string DefaultPattern = "{@m:line}";
+    const string DefaultPattern = "{@m:line}";
         
-        readonly SeqConnectionFactory _connectionFactory;
-        readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
-        readonly FileInputFeature _fileInputFeature;
-        readonly PropertiesFeature _properties;
-        readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
-        readonly ConnectionFeature _connection;
-        readonly BatchSizeFeature _batchSize;
-        string? _filter, _level, _message;
-        string _pattern = DefaultPattern;
-        bool _json;
+    readonly SeqConnectionFactory _connectionFactory;
+    readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
+    readonly FileInputFeature _fileInputFeature;
+    readonly PropertiesFeature _properties;
+    readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
+    readonly ConnectionFeature _connection;
+    readonly BatchSizeFeature _batchSize;
+    string? _filter, _level, _message;
+    string _pattern = DefaultPattern;
+    bool _json;
 
-        public IngestCommand(SeqConnectionFactory connectionFactory)
+    public IngestCommand(SeqConnectionFactory connectionFactory)
+    {
+        _connectionFactory = connectionFactory;
+        _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", supportsWildcard: true));
+        _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
+        _properties = Enable<PropertiesFeature>();
+
+        Options.Add("x=|extract=",
+            "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
+            v => _pattern = string.IsNullOrWhiteSpace(v) ? DefaultPattern : v.Trim());
+
+        Options.Add("json",
+            "Read the events as JSON (the default assumes plain text)",
+            v => _json = true);
+
+        Options.Add("f=|filter=",
+            "Filter expression to select a subset of events",
+            v => _filter = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
+        Options.Add(
+            "m=|message=",
+            "A message to associate with the ingested events; https://messagetemplates.org syntax is supported",
+            v => _message = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
+        Options.Add("l=|level=",
+            "The level or severity to associate with the ingested events; this will override any " +
+            "level information present in the events themselves",
+            v => _level = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+
+        _sendFailureHandlingFeature = Enable<SendFailureHandlingFeature>();            
+        _connection = Enable<ConnectionFeature>();
+        _batchSize = Enable<BatchSizeFeature>();
+    }
+
+    protected override async Task<int> Run()
+    {
+        try
         {
-            _connectionFactory = connectionFactory;
-            _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", supportsWildcard: true));
-            _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
-            _properties = Enable<PropertiesFeature>();
+            var enrichers = new List<ILogEventEnricher>();
+            foreach (var (name, value) in _properties.Properties)
+                enrichers.Add(new ScalarPropertyEnricher(name, value));
 
-            Options.Add("x=|extract=",
-                "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
-                v => _pattern = string.IsNullOrWhiteSpace(v) ? DefaultPattern : v.Trim());
+            if (_level != null)
+                enrichers.Add(new ScalarPropertyEnricher(SurrogateLevelProperty.PropertyName, _level));
 
-            Options.Add("json",
-                "Read the events as JSON (the default assumes plain text)",
-                v => _json = true);
+            Func<LogEvent, bool>? filter = null;
+            if (_filter != null)
+            {
+                var expr = _filter.Replace("@Level", SurrogateLevelProperty.PropertyName);
+                var eval = FilterLanguage.CreateFilter(expr);
+                filter = evt => true.Equals(eval(evt));
+            }
 
-            Options.Add("f=|filter=",
-                "Filter expression to select a subset of events",
-                v => _filter = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+            var connection = _connectionFactory.Connect(_connection);
+            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+            var batchSize = _batchSize.Value;
 
-            Options.Add(
-                "m=|message=",
-                "A message to associate with the ingested events; https://messagetemplates.org syntax is supported",
-                v => _message = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+            foreach (var input in _fileInputFeature.OpenInputs())
+            {
+                using (input)
+                {
+                    var reader = _json
+                        ? (ILogEventReader) new JsonLogEventReader(input)
+                        : new PlainTextLogEventReader(input, _pattern);
 
-            Options.Add("l=|level=",
-                "The level or severity to associate with the ingested events; this will override any " +
-                "level information present in the events themselves",
-                v => _level = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+                    reader = new EnrichingReader(reader, enrichers);
 
-            _sendFailureHandlingFeature = Enable<SendFailureHandlingFeature>();            
-            _connection = Enable<ConnectionFeature>();
-            _batchSize = Enable<BatchSizeFeature>();
+                    if (_message != null)
+                        reader = new StaticMessageTemplateReader(reader, _message);
+
+                    var exit = await LogShipper.ShipEvents(
+                        connection,
+                        apiKey,
+                        reader,
+                        _invalidDataHandlingFeature.InvalidDataHandling,
+                        _sendFailureHandlingFeature.SendFailureHandling,
+                        batchSize,
+                        filter);
+
+                    if (exit != 0)
+                        return exit;
+                }
+            }
+
+            return 0;
         }
-
-        protected override async Task<int> Run()
+        catch (Exception ex)
         {
-            try
-            {
-                var enrichers = new List<ILogEventEnricher>();
-                foreach (var (name, value) in _properties.Properties)
-                    enrichers.Add(new ScalarPropertyEnricher(name, value));
-
-                if (_level != null)
-                    enrichers.Add(new ScalarPropertyEnricher(SurrogateLevelProperty.PropertyName, _level));
-
-                Func<LogEvent, bool>? filter = null;
-                if (_filter != null)
-                {
-                    var expr = _filter.Replace("@Level", SurrogateLevelProperty.PropertyName);
-                    var eval = FilterLanguage.CreateFilter(expr);
-                    filter = evt => true.Equals(eval(evt));
-                }
-
-                var connection = _connectionFactory.Connect(_connection);
-                var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
-                var batchSize = _batchSize.Value;
-
-                foreach (var input in _fileInputFeature.OpenInputs())
-                {
-                    using (input)
-                    {
-                        var reader = _json
-                            ? (ILogEventReader) new JsonLogEventReader(input)
-                            : new PlainTextLogEventReader(input, _pattern);
-
-                        reader = new EnrichingReader(reader, enrichers);
-
-                        if (_message != null)
-                            reader = new StaticMessageTemplateReader(reader, _message);
-
-                        var exit = await LogShipper.ShipEvents(
-                            connection,
-                            apiKey,
-                            reader,
-                            _invalidDataHandlingFeature.InvalidDataHandling,
-                            _sendFailureHandlingFeature.SendFailureHandling,
-                            batchSize,
-                            filter);
-
-                        if (exit != 0)
-                            return exit;
-                    }
-                }
-
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Ingestion failed: {ErrorMessage}", ex.Message);
-                return 1;
-            }
+            Log.Error(ex, "Ingestion failed: {ErrorMessage}", ex.Message);
+            return 1;
         }
     }
 }

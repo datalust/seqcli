@@ -14,31 +14,30 @@
 
 using Seq.Api.Model.Signals;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class SignalExpressionFeature : CommandFeature
 {
-    class SignalExpressionFeature : CommandFeature
+    string? _signalExpression;
+
+    public SignalExpressionPart? Signal
     {
-        string? _signalExpression;
-
-        public SignalExpressionPart? Signal
+        get
         {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(_signalExpression))
-                    return null;
+            if (string.IsNullOrWhiteSpace(_signalExpression))
+                return null;
 
-                // This is a hack that just happens to work because of the way
-                // signal ids are passed through ToString() as literals
-                return SignalExpressionPart.Signal(_signalExpression.Trim());
-            }
+            // This is a hack that just happens to work because of the way
+            // signal ids are passed through ToString() as literals
+            return SignalExpressionPart.Signal(_signalExpression.Trim());
         }
+    }
 
-        public override void Enable(OptionSet options)
-        {
-            options.Add(
-                "signal=",
-                "A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2`",
-                v => _signalExpression = v);
-        }
+    public override void Enable(OptionSet options)
+    {
+        options.Add(
+            "signal=",
+            "A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2`",
+            v => _signalExpression = v);
     }
 }

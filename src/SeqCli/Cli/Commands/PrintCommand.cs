@@ -25,94 +25,93 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 
-namespace SeqCli.Cli.Commands
+namespace SeqCli.Cli.Commands;
+
+[Command("print", "Pretty-print events in CLEF/JSON format, from a file or `STDIN`",
+    Example = "seqcli print -i log-20201028.clef")]
+class PrintCommand : Command
 {
-    [Command("print", "Pretty-print events in CLEF/JSON format, from a file or `STDIN`",
-        Example = "seqcli print -i log-20201028.clef")]
-    class PrintCommand : Command
+    readonly FileInputFeature _fileInputFeature;
+    readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
+
+    string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
+    bool _noColor, _forceColor;
+
+    public PrintCommand(SeqCliOutputConfig outputConfig)
     {
-        readonly FileInputFeature _fileInputFeature;
-        readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
+        if (outputConfig == null) throw new ArgumentNullException(nameof(outputConfig));
+        _noColor = outputConfig.DisableColor;
+        _forceColor = outputConfig.ForceColor;
 
-        string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
-        bool _noColor, _forceColor;
+        _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", supportsWildcard: true));
 
-        public PrintCommand(SeqCliOutputConfig outputConfig)
+        Options.Add("f=|filter=",
+            "Filter expression to select a subset of events",
+            v => _filter = ArgumentString.Normalize(v));
+
+        Options.Add("template=",
+            "Specify an output template to control plain text formatting",
+            v => _template = ArgumentString.Normalize(v));
+
+        _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
+
+        Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+
+        Options.Add("force-color",
+            "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
+            v => _forceColor = true);
+    }
+
+    protected override async Task<int> Run()
+    {
+        var applyThemeToRedirectedOutput
+            = !_noColor && _forceColor;
+
+        var theme
+            = _noColor                      ? ConsoleTheme.None
+            :  applyThemeToRedirectedOutput ? OutputFormatFeature.DefaultAnsiTheme
+            :                                 OutputFormatFeature.DefaultTheme;
+
+        var outputConfiguration = new LoggerConfiguration()
+            .MinimumLevel.Is(LevelAlias.Minimum)
+            .Enrich.With<RedundantEventTypeRemovalEnricher>()
+            .Enrich.With<SurrogateLevelRemovalEnricher>()
+            .WriteTo.Console(
+                outputTemplate: _template ?? OutputFormatFeature.DefaultOutputTemplate,
+                theme: theme,
+                applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
+
+        if (_filter != null)
+            outputConfiguration.Filter.ByIncludingOnly(_filter);
+
+        await using var logger = outputConfiguration.CreateLogger();
+        foreach (var input in _fileInputFeature.OpenInputs())
         {
-            if (outputConfig == null) throw new ArgumentNullException(nameof(outputConfig));
-            _noColor = outputConfig.DisableColor;
-            _forceColor = outputConfig.ForceColor;
-
-            _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", supportsWildcard: true));
-
-            Options.Add("f=|filter=",
-                "Filter expression to select a subset of events",
-                v => _filter = ArgumentString.Normalize(v));
-
-            Options.Add("template=",
-                "Specify an output template to control plain text formatting",
-                v => _template = ArgumentString.Normalize(v));
-
-            _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
-
-            Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
-
-            Options.Add("force-color",
-                "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
-                v => _forceColor = true);
-        }
-
-        protected override async Task<int> Run()
-        {
-            var applyThemeToRedirectedOutput
-                = !_noColor && _forceColor;
-
-            var theme
-                = _noColor                      ? ConsoleTheme.None
-                :  applyThemeToRedirectedOutput ? OutputFormatFeature.DefaultAnsiTheme
-                :                                 OutputFormatFeature.DefaultTheme;
-
-            var outputConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Is(LevelAlias.Minimum)
-                .Enrich.With<RedundantEventTypeRemovalEnricher>()
-                .Enrich.With<SurrogateLevelRemovalEnricher>()
-                .WriteTo.Console(
-                    outputTemplate: _template ?? OutputFormatFeature.DefaultOutputTemplate,
-                    theme: theme,
-                    applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
-
-            if (_filter != null)
-                outputConfiguration.Filter.ByIncludingOnly(_filter);
-
-            await using var logger = outputConfiguration.CreateLogger();
-            foreach (var input in _fileInputFeature.OpenInputs())
+            using (input)
             {
-                using (input)
+                var reader = new JsonLogEventReader(input);
+
+                var isAtEnd = false;
+                do
                 {
-                    var reader = new JsonLogEventReader(input);
-
-                    var isAtEnd = false;
-                    do
+                    try
                     {
-                        try
-                        {
-                            var result = await reader.TryReadAsync();
-                            isAtEnd = result.IsAtEnd;
+                        var result = await reader.TryReadAsync();
+                        isAtEnd = result.IsAtEnd;
 
-                            if (result.LogEvent != null)
-                                logger.Write(result.LogEvent);
-                        }
-                        catch (Exception ex)
-                        {
-                            if (ex is not JsonReaderException && ex is not InvalidDataException ||
-                                _invalidDataHandlingFeature.InvalidDataHandling != InvalidDataHandling.Ignore)
-                                throw;
-                        }
-                    } while (!isAtEnd);
-                }
+                        if (result.LogEvent != null)
+                            logger.Write(result.LogEvent);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex is not JsonReaderException && ex is not InvalidDataException ||
+                            _invalidDataHandlingFeature.InvalidDataHandling != InvalidDataHandling.Ignore)
+                            throw;
+                    }
+                } while (!isAtEnd);
             }
-
-            return 0;
         }
+
+        return 0;
     }
 }

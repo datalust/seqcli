@@ -1,7 +1,6 @@
-﻿namespace Roastery.Data
+﻿namespace Roastery.Data;
+
+interface IIdentifiable
 {
-    interface IIdentifiable
-    {
-        public string? Id { get; set; }
-    }
+    public string? Id { get; set; }
 }

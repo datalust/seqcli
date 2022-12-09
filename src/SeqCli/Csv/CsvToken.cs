@@ -1,15 +1,14 @@
-﻿namespace SeqCli.Csv
+﻿namespace SeqCli.Csv;
+
+enum CsvToken
 {
-    enum CsvToken
-    {
-        None,
-        Newline,
-        DoubleQuote,
-        Comma,
-        Number,
-        Boolean,
-        Null,
-        Text,
-        EscapedDoubleQuote
-    }
+    None,
+    Newline,
+    DoubleQuote,
+    Comma,
+    Number,
+    Boolean,
+    Null,
+    Text,
+    EscapedDoubleQuote
 }

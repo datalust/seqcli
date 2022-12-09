@@ -14,19 +14,18 @@
 
 using System;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class DateRangeFeature : CommandFeature
 {
-    class DateRangeFeature : CommandFeature
+    string? _start, _end;
+
+    public override void Enable(OptionSet options)
     {
-        string? _start, _end;
-
-        public override void Enable(OptionSet options)
-        {
-            options.Add("start=", "ISO 8601 date/time to query from", v => _start = v);
-            options.Add("end=", "ISO 8601 date/time to query to", v => _end = v);
-        }
-
-        public DateTime? Start => _start != null ? DateTime.Parse(_start) : null;
-        public DateTime? End => _end != null ? DateTime.Parse(_end) : null;
+        options.Add("start=", "ISO 8601 date/time to query from", v => _start = v);
+        options.Add("end=", "ISO 8601 date/time to query to", v => _end = v);
     }
+
+    public DateTime? Start => _start != null ? DateTime.Parse(_start) : null;
+    public DateTime? End => _end != null ? DateTime.Parse(_end) : null;
 }

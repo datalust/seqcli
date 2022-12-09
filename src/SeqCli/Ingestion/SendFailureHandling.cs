@@ -12,32 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Ingestion
+namespace SeqCli.Ingestion;
+
+/// <summary>
+/// Controls how connection failures during ingestion are handled.
+/// </summary>
+/// <remarks>A 'retry' option will appear here at some future point.</remarks>
+enum SendFailureHandling
 {
     /// <summary>
-    /// Controls how connection failures during ingestion are handled.
+    /// Log error information and exit.
     /// </summary>
-    /// <remarks>A 'retry' option will appear here at some future point.</remarks>
-    enum SendFailureHandling
-    {
-        /// <summary>
-        /// Log error information and exit.
-        /// </summary>
-        Fail,
+    Fail,
         
-        /// <summary>
-        /// Log error information, drop the failed batch, and continue.
-        /// </summary>
-        Continue,
+    /// <summary>
+    /// Log error information, drop the failed batch, and continue.
+    /// </summary>
+    Continue,
         
-        /// <summary>
-        /// Silently ignore failures.
-        /// </summary>
-        Ignore,
+    /// <summary>
+    /// Silently ignore failures.
+    /// </summary>
+    Ignore,
 
-        /// <summary>
-        /// Log error information, wait for up to a minute, then retry.
-        /// </summary>
-        Retry
-    }
+    /// <summary>
+    /// Log error information, wait for up to a minute, then retry.
+    /// </summary>
+    Retry
 }

@@ -18,20 +18,19 @@ using SeqCli.Cli;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli
+namespace SeqCli;
+
+class SeqCliModule : Autofac.Module
 {
-    class SeqCliModule : Autofac.Module
+    protected override void Load(ContainerBuilder builder)
     {
-        protected override void Load(ContainerBuilder builder)
-        {
-            builder.RegisterType<CommandLineHost>();
-            builder.RegisterAssemblyTypes(typeof(Program).GetTypeInfo().Assembly)
-                .As<Command>()
-                .WithMetadataFrom<CommandAttribute>();
-            builder.RegisterType<SeqConnectionFactory>();
-            builder.Register(c => SeqCliConfig.Read()).SingleInstance();
-            builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
-            builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
-        }
+        builder.RegisterType<CommandLineHost>();
+        builder.RegisterAssemblyTypes(typeof(Program).GetTypeInfo().Assembly)
+            .As<Command>()
+            .WithMetadataFrom<CommandAttribute>();
+        builder.RegisterType<SeqConnectionFactory>();
+        builder.Register(c => SeqCliConfig.Read()).SingleInstance();
+        builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
+        builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
     }
 }

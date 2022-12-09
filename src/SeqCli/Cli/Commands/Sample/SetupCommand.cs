@@ -25,64 +25,63 @@ using SeqCli.Util;
 
 // ReSharper disable once UnusedType.Global
 
-namespace SeqCli.Cli.Commands.Sample
+namespace SeqCli.Cli.Commands.Sample;
+
+[Command("sample", "setup", "Configure a Seq instance with sample dashboards, signals, users, and so on",
+    Example = "seqcli sample setup")]
+class SetupCommand : Command
 {
-    [Command("sample", "setup", "Configure a Seq instance with sample dashboards, signals, users, and so on",
-        Example = "seqcli sample setup")]
-    class SetupCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly ConnectionFeature _connection;
+    readonly ConfirmFeature _confirm;
+
+    public SetupCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly ConnectionFeature _connection;
-        readonly ConfirmFeature _confirm;
-
-        public SetupCommand(SeqConnectionFactory connectionFactory)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            // The command will also at some point accept an `--allow-outbound-requests` flag, which will cause sample
-            // apps to be installed, and a health check to be set up.
+        // The command will also at some point accept an `--allow-outbound-requests` flag, which will cause sample
+        // apps to be installed, and a health check to be set up.
             
-            _confirm = Enable<ConfirmFeature>();
-            _connection = Enable<ConnectionFeature>();
+        _confirm = Enable<ConfirmFeature>();
+        _connection = Enable<ConnectionFeature>();
+    }
+
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
+        if (!_confirm.TryConfirm($"This will apply sample configuration items to the Seq server at {url}."))
+        {
+            await Console.Error.WriteLineAsync("Canceled by user.");
+            return 1;
         }
 
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
+        var templateArgs = new Dictionary<string, JsonTemplate>();
+        templateArgs["ownerId"] = new JsonTemplateNull();
 
-            var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
-            if (!_confirm.TryConfirm($"This will apply sample configuration items to the Seq server at {url}."))
+        var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
+        var templateFiles = Directory.GetFiles(templatesPath);
+        var templates = new List<EntityTemplate>();
+        foreach (var templateFile in templateFiles)
+        {
+            if (!EntityTemplateLoader.Load(templateFile, out var template, out var error))
             {
-                await Console.Error.WriteLineAsync("Canceled by user.");
+                await Console.Error.WriteLineAsync(error);
                 return 1;
             }
-
-            var templateArgs = new Dictionary<string, JsonTemplate>();
-            templateArgs["ownerId"] = new JsonTemplateNull();
-
-            var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
-            var templateFiles = Directory.GetFiles(templatesPath);
-            var templates = new List<EntityTemplate>();
-            foreach (var templateFile in templateFiles)
-            {
-                if (!EntityTemplateLoader.Load(templateFile, out var template, out var error))
-                {
-                    await Console.Error.WriteLineAsync(error);
-                    return 1;
-                }
                 
-                templates.Add(template);
-            }
-
-            var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs, new TemplateImportState(), merge: false);
-            if (err != null)
-            {
-                await Console.Error.WriteLineAsync(err);
-                return 1;
-            }
-            
-            return 0;
+            templates.Add(template);
         }
+
+        var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs, new TemplateImportState(), merge: false);
+        if (err != null)
+        {
+            await Console.Error.WriteLineAsync(err);
+            return 1;
+        }
+            
+        return 0;
     }
 }

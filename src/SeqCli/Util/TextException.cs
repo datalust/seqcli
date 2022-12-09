@@ -14,21 +14,20 @@
 
 using System;
 
-namespace SeqCli.Util
+namespace SeqCli.Util;
+
+class TextException : Exception
 {
-    class TextException : Exception
+    readonly string _text;
+
+    public TextException(string text)
+        : base("This exception type provides ToString() access to details only.")
     {
-        readonly string _text;
+        _text = text;
+    }
 
-        public TextException(string text)
-            : base("This exception type provides ToString() access to details only.")
-        {
-            _text = text;
-        }
-
-        public override string ToString()
-        {
-            return _text;
-        }
+    public override string ToString()
+    {
+        return _text;
     }
 }

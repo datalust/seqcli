@@ -14,15 +14,14 @@
 
 using System;
 
-namespace SeqCli.Templates.Ast
-{
-    class JsonTemplateString : JsonTemplate
-    {
-        public string Value { get; }
+namespace SeqCli.Templates.Ast;
 
-        public JsonTemplateString(string value)
-        {
-            Value = value ?? throw new ArgumentNullException(nameof(value));
-        }
+class JsonTemplateString : JsonTemplate
+{
+    public string Value { get; }
+
+    public JsonTemplateString(string value)
+    {
+        Value = value ?? throw new ArgumentNullException(nameof(value));
     }
 }

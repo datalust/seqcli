@@ -19,91 +19,90 @@ using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
 
-namespace SeqCli.Templates.Parser
+namespace SeqCli.Templates.Parser;
+
+static class JsonTemplateParser
 {
-    static class JsonTemplateParser
-    {
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonString { get; } =
-            Token.EqualTo(JsonTemplateToken.String)
-                .Apply(JsonTemplateTextParsers.String)
-                .Select(s => (JsonTemplate)new JsonTemplateString(s));
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonString { get; } =
+        Token.EqualTo(JsonTemplateToken.String)
+            .Apply(JsonTemplateTextParsers.String)
+            .Select(s => (JsonTemplate)new JsonTemplateString(s));
         
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonNumber { get; } =
-            Token.EqualTo(JsonTemplateToken.Number)
-                .Apply(JsonTemplateTextParsers.Number)
-                .Select(n => (JsonTemplate)new JsonTemplateNumber(n));
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonNumber { get; } =
+        Token.EqualTo(JsonTemplateToken.Number)
+            .Apply(JsonTemplateTextParsers.Number)
+            .Select(n => (JsonTemplate)new JsonTemplateNumber(n));
 
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonObject { get; } =
-            from begin in Token.EqualTo(JsonTemplateToken.LBracket)
-            from members in JsonString
-                .Named("property name")
-                .Then(name => Token.EqualTo(JsonTemplateToken.Colon)
-                    .IgnoreThen(Parse.Ref(() => JsonTemplateValue!)
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonObject { get; } =
+        from begin in Token.EqualTo(JsonTemplateToken.LBracket)
+        from members in JsonString
+            .Named("property name")
+            .Then(name => Token.EqualTo(JsonTemplateToken.Colon)
+                .IgnoreThen(Parse.Ref(() => JsonTemplateValue!)
                     .Select(value => KeyValuePair.Create(((JsonTemplateString)name).Value, value))))    
-                .ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma),
-                    end: Token.EqualTo(JsonTemplateToken.RBracket))
-            select (JsonTemplate)new JsonTemplateObject(new Dictionary<string, JsonTemplate>(members));
+            .ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma),
+                end: Token.EqualTo(JsonTemplateToken.RBracket))
+        select (JsonTemplate)new JsonTemplateObject(new Dictionary<string, JsonTemplate>(members));
 
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonArray { get; } =
-            from begin in Token.EqualTo(JsonTemplateToken.LSquareBracket)
-            from elements in Parse.Ref(() => JsonTemplateValue!)
-                .ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma),
-                    end: Token.EqualTo(JsonTemplateToken.RSquareBracket))
-            select (JsonTemplate)new JsonTemplateArray(elements);
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonArray { get; } =
+        from begin in Token.EqualTo(JsonTemplateToken.LSquareBracket)
+        from elements in Parse.Ref(() => JsonTemplateValue!)
+            .ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma),
+                end: Token.EqualTo(JsonTemplateToken.RSquareBracket))
+        select (JsonTemplate)new JsonTemplateArray(elements);
 
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTrue { get; } =
-            Token.EqualToValue(JsonTemplateToken.Identifier, "true").Value((JsonTemplate)new JsonTemplateBoolean(true));
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTrue { get; } =
+        Token.EqualToValue(JsonTemplateToken.Identifier, "true").Value((JsonTemplate)new JsonTemplateBoolean(true));
         
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonFalse { get; } =
-            Token.EqualToValue(JsonTemplateToken.Identifier, "false").Value((JsonTemplate)new JsonTemplateBoolean(false));
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonFalse { get; } =
+        Token.EqualToValue(JsonTemplateToken.Identifier, "false").Value((JsonTemplate)new JsonTemplateBoolean(false));
 
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonNull { get; } =
-            Token.EqualToValue(JsonTemplateToken.Identifier, "null").Value((JsonTemplate)new JsonTemplateNull());
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonNull { get; } =
+        Token.EqualToValue(JsonTemplateToken.Identifier, "null").Value((JsonTemplate)new JsonTemplateNull());
         
-        static TokenListParser<JsonTemplateToken, JsonTemplate> Call { get; } =
-            (from name in Token.EqualTo(JsonTemplateToken.Identifier)
-                from lparen in Token.EqualTo(JsonTemplateToken.LParen)
-                from args in Parse.Ref(() => JsonTemplateValue!).ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma))
-                from rparen in Token.EqualTo(JsonTemplateToken.RParen)
-                select (JsonTemplate)new JsonTemplateCall(name.ToStringValue(), args)).Named("function");
+    static TokenListParser<JsonTemplateToken, JsonTemplate> Call { get; } =
+        (from name in Token.EqualTo(JsonTemplateToken.Identifier)
+            from lparen in Token.EqualTo(JsonTemplateToken.LParen)
+            from args in Parse.Ref(() => JsonTemplateValue!).ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma))
+            from rparen in Token.EqualTo(JsonTemplateToken.RParen)
+            select (JsonTemplate)new JsonTemplateCall(name.ToStringValue(), args)).Named("function");
 
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTemplateValue { get; } =
-            JsonString
-                .Or(JsonNumber)
-                .Or(JsonObject)
-                .Or(JsonArray)
-                .Or(JsonTrue)
-                .Or(JsonFalse)
-                .Or(JsonNull)
-                .Or(Call)
-                .Named("JSON value");
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTemplateValue { get; } =
+        JsonString
+            .Or(JsonNumber)
+            .Or(JsonObject)
+            .Or(JsonArray)
+            .Or(JsonTrue)
+            .Or(JsonFalse)
+            .Or(JsonNull)
+            .Or(Call)
+            .Named("JSON value");
 
-        static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTemplate { get; } = JsonTemplateValue.AtEnd();
+    static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTemplate { get; } = JsonTemplateValue.AtEnd();
 
-        public static bool TryParse(string json, [NotNullWhen(true)] out JsonTemplate? value, [NotNullWhen(false)] out string? error, out Position errorPosition)
+    public static bool TryParse(string json, [NotNullWhen(true)] out JsonTemplate? value, [NotNullWhen(false)] out string? error, out Position errorPosition)
+    {
+        var tokens = JsonTemplateTokenizer.Instance.TryTokenize(json);
+        if (!tokens.HasValue)
         {
-            var tokens = JsonTemplateTokenizer.Instance.TryTokenize(json);
-            if (!tokens.HasValue)
-            {
-                value = null;
-                error = tokens.ToString();
-                errorPosition = tokens.ErrorPosition;
-                return false;
-            }
-
-            var parsed = JsonTemplate.TryParse(tokens.Value);
-            if (!parsed.HasValue)
-            {
-                value = null;
-                error = parsed.ToString();
-                errorPosition = parsed.ErrorPosition;
-                return false;
-            }
-
-            value = parsed.Value;
-            error = null;
-            errorPosition = Position.Empty;
-            return true;
+            value = null;
+            error = tokens.ToString();
+            errorPosition = tokens.ErrorPosition;
+            return false;
         }
+
+        var parsed = JsonTemplate.TryParse(tokens.Value);
+        if (!parsed.HasValue)
+        {
+            value = null;
+            error = parsed.ToString();
+            errorPosition = parsed.ErrorPosition;
+            return false;
+        }
+
+        value = parsed.Value;
+        error = null;
+        errorPosition = Position.Empty;
+        return true;
     }
 }

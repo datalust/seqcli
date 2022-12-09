@@ -15,42 +15,41 @@
 using System;
 using System.Collections.Generic;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class EntityIdentityFeature : CommandFeature
 {
-    class EntityIdentityFeature : CommandFeature
+    readonly string _entityName;
+    readonly string _verb;
+
+    string? _title, _id;
+
+    public EntityIdentityFeature(string entityName, string verb)
     {
-        readonly string _entityName;
-        readonly string _verb;
-
-        string? _title, _id;
-
-        public EntityIdentityFeature(string entityName, string verb)
-        {
-            _entityName = entityName ?? throw new ArgumentNullException(nameof(entityName));
-            _verb = verb ?? throw new ArgumentNullException(nameof(verb));
-        }
-
-        public override void Enable(OptionSet options)
-        {
-            options.Add(
-                "t=|title=",
-                $"The title of the {_entityName}(s) to {_verb}",
-                t => _title = t);
-
-            options.Add(
-                "i=|id=",
-                $"The id of a single {_entityName} to {_verb}",
-                t => _id = t);
-        }
-
-        public override IEnumerable<string> GetUsageErrors()
-        {
-            if (Title != null && Id != null)
-                yield return "Only one of either `title` or `id` can be specified";
-        }
-
-        public string? Title => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
-
-        public string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
+        _entityName = entityName ?? throw new ArgumentNullException(nameof(entityName));
+        _verb = verb ?? throw new ArgumentNullException(nameof(verb));
     }
+
+    public override void Enable(OptionSet options)
+    {
+        options.Add(
+            "t=|title=",
+            $"The title of the {_entityName}(s) to {_verb}",
+            t => _title = t);
+
+        options.Add(
+            "i=|id=",
+            $"The id of a single {_entityName} to {_verb}",
+            t => _id = t);
+    }
+
+    public override IEnumerable<string> GetUsageErrors()
+    {
+        if (Title != null && Id != null)
+            yield return "Only one of either `title` or `id` can be specified";
+    }
+
+    public string? Title => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
+
+    public string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
 }

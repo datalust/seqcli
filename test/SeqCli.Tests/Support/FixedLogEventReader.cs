@@ -1,20 +1,19 @@
 ﻿using System.Threading.Tasks;
 using SeqCli.Ingestion;
 
-namespace SeqCli.Tests.Support
+namespace SeqCli.Tests.Support;
+
+class FixedLogEventReader : ILogEventReader
 {
-    class FixedLogEventReader : ILogEventReader
+    readonly ReadResult _result;
+
+    public FixedLogEventReader(ReadResult result)
     {
-        readonly ReadResult _result;
+        _result = result;
+    }
 
-        public FixedLogEventReader(ReadResult result)
-        {
-            _result = result;
-        }
-
-        public Task<ReadResult> TryReadAsync()
-        {
-            return Task.FromResult(_result);
-        }
+    public Task<ReadResult> TryReadAsync()
+    {
+        return Task.FromResult(_result);
     }
 }

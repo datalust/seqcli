@@ -19,45 +19,44 @@ using SeqCli.Apps.Definitions;
 using SeqCli.Config;
 using SeqCli.Util;
 
-namespace SeqCli.Cli.Commands.App
+namespace SeqCli.Cli.Commands.App;
+
+[Command("app", "define", "Generate an app definition for a .NET `[SeqApp]` plug-in",
+    Example = "seqcli app define -d \"./bin/Debug/netstandard2.2\"")]
+class DefineCommand : Command
 {
-    [Command("app", "define", "Generate an app definition for a .NET `[SeqApp]` plug-in",
-        Example = "seqcli app define -d \"./bin/Debug/netstandard2.2\"")]
-    class DefineCommand : Command
+    string _dir = Environment.CurrentDirectory;
+    string? _type;
+    bool _indented;
+
+    public DefineCommand()
     {
-        string _dir = Environment.CurrentDirectory;
-        string? _type;
-        bool _indented;
+        Options.Add(
+            "d=|directory=",
+            "The directory containing .NET Standard assemblies; defaults to the current directory",
+            d => _dir = ArgumentString.Normalize(d) ?? _dir);
 
-        public DefineCommand()
+        Options.Add(
+            "type=",
+            "The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute",
+            t => _type = ArgumentString.Normalize(t));
+
+        Options.Add(
+            "indented",
+            "Format the definition over multiple lines with indentation",
+            _ => _indented = true);
+    }
+
+    protected override Task<int> Run()
+    {
+        using var appLoader = new AppLoader(_dir);
+        if (!appLoader.TryLoadSeqAppType(_type, out var seqAppType))
         {
-            Options.Add(
-                "d=|directory=",
-                "The directory containing .NET Standard assemblies; defaults to the current directory",
-                d => _dir = ArgumentString.Normalize(d) ?? _dir);
-
-            Options.Add(
-                "type=",
-                "The [SeqApp] plug-in type name; defaults to scanning assemblies for a single type marked with this attribute",
-                t => _type = ArgumentString.Normalize(t));
-
-            Options.Add(
-                "indented",
-                "Format the definition over multiple lines with indentation",
-                _ => _indented = true);
+            Console.Error.WriteLine("No type marked with `[SeqApp]` could be found.");
+            return Task.FromResult(1);
         }
 
-        protected override Task<int> Run()
-        {
-            using var appLoader = new AppLoader(_dir);
-            if (!appLoader.TryLoadSeqAppType(_type, out var seqAppType))
-            {
-                Console.Error.WriteLine("No type marked with `[SeqApp]` could be found.");
-                return Task.FromResult(1);
-            }
-
-            AppDefinitionFormatter.FormatAppDefinition(seqAppType, _indented, Console.Out);
-            return Task.FromResult(0);
-        }
+        AppDefinitionFormatter.FormatAppDefinition(seqAppType, _indented, Console.Out);
+        return Task.FromResult(0);
     }
 }

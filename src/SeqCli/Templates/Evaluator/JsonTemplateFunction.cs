@@ -15,7 +15,6 @@
 using System.Diagnostics.CodeAnalysis;
 using SeqCli.Templates.Ast;
 
-namespace SeqCli.Templates.Evaluator
-{
-    delegate bool JsonTemplateFunction(JsonTemplate[] args, [NotNullWhen(true)] out JsonTemplate? result, [NotNullWhen(false)] out string? error);
-}
+namespace SeqCli.Templates.Evaluator;
+
+delegate bool JsonTemplateFunction(JsonTemplate[] args, [NotNullWhen(true)] out JsonTemplate? result, [NotNullWhen(false)] out string? error);

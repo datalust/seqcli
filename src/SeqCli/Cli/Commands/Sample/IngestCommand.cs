@@ -18,45 +18,44 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using SeqCli.Sample.Loader;
 
-namespace SeqCli.Cli.Commands.Sample
+namespace SeqCli.Cli.Commands.Sample;
+
+[Command("sample", "ingest", "Log sample events into a Seq instance",
+    Example = "seqcli sample ingest")]
+class IngestCommand : Command
 {
-    [Command("sample", "ingest", "Log sample events into a Seq instance",
-        Example = "seqcli sample ingest")]
-    class IngestCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+        
+    readonly ConnectionFeature _connection;
+    readonly ConfirmFeature _confirm;
+    readonly BatchSizeFeature _batchSize;
+
+    bool _quiet;
+
+    public IngestCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
-        
-        readonly ConnectionFeature _connection;
-        readonly ConfirmFeature _confirm;
-        readonly BatchSizeFeature _batchSize;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        _confirm = Enable<ConfirmFeature>();
+        _connection = Enable<ConnectionFeature>();
 
-        bool _quiet;
-
-        public IngestCommand(SeqConnectionFactory connectionFactory)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            _confirm = Enable<ConfirmFeature>();
-            _connection = Enable<ConnectionFeature>();
-
-            Options.Add("quiet", "Don't echo ingested events to `STDOUT`", _ => _quiet = true);
+        Options.Add("quiet", "Don't echo ingested events to `STDOUT`", _ => _quiet = true);
             
-            _batchSize = Enable<BatchSizeFeature>();
-        }
+        _batchSize = Enable<BatchSizeFeature>();
+    }
         
-        protected override async Task<int> Run()
-        {
-            var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
-            var batchSize = _batchSize.Value;
+    protected override async Task<int> Run()
+    {
+        var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+        var batchSize = _batchSize.Value;
             
-            if (!_confirm.TryConfirm($"This will send sample events to the Seq server at {url}."))
-            {
-                await Console.Error.WriteLineAsync("Canceled by user.");
-                return 1;
-            }
-
-            var connection = _connectionFactory.Connect(_connection);
-            await Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet);
-            return 0;
+        if (!_confirm.TryConfirm($"This will send sample events to the Seq server at {url}."))
+        {
+            await Console.Error.WriteLineAsync("Canceled by user.");
+            return 1;
         }
+
+        var connection = _connectionFactory.Connect(_connection);
+        await Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet);
+        return 0;
     }
 }

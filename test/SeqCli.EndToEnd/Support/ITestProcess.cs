@@ -1,7 +1,6 @@
-﻿namespace SeqCli.EndToEnd.Support
+﻿namespace SeqCli.EndToEnd.Support;
+
+public interface ITestProcess
 {
-    public interface ITestProcess
-    {
-        string Output { get; }
-    }
+    string Output { get; }
 }

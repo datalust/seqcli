@@ -19,53 +19,52 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.Feed
+namespace SeqCli.Cli.Commands.Feed;
+
+[Command("feed", "list", "List NuGet feeds", Example="seqcli feed list")]
+class ListCommand : Command
 {
-    [Command("feed", "list", "List NuGet feeds", Example="seqcli feed list")]
-    class ListCommand : Command
-    {
-        readonly SeqConnectionFactory _connectionFactory;
+    readonly SeqConnectionFactory _connectionFactory;
         
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
 
-        string? _name, _id;
+    string? _name, _id;
 
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
-        {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            Options.Add(
-                "n=|name=",
-                "The name of the feed to list",
-                n => _name = n);
+        Options.Add(
+            "n=|name=",
+            "The name of the feed to list",
+            n => _name = n);
 
-            Options.Add(
-                "i=|id=",
-                "The id of a single feed to list",
-                id => _id = id);
+        Options.Add(
+            "i=|id=",
+            "The id of a single feed to list",
+            id => _id = id);
             
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
-        }
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        protected override async Task<int> Run()
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _id != null ?
+            new[] { await connection.Feeds.FindAsync(_id) } :
+            (await connection.Feeds.ListAsync())
+            .Where(f => _name == null || _name == f.Name)
+            .ToArray();
+
+        foreach (var feed in list)
         {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _id != null ?
-                new[] { await connection.Feeds.FindAsync(_id) } :
-                (await connection.Feeds.ListAsync())
-                    .Where(f => _name == null || _name == f.Name)
-                    .ToArray();
-
-            foreach (var feed in list)
-            {
-                _output.WriteEntity(feed);
-            }
-            
-            return 0;
+            _output.WriteEntity(feed);
         }
+            
+        return 0;
     }
 }

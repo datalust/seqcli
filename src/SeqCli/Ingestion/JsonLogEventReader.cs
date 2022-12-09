@@ -25,65 +25,64 @@ using Serilog.Formatting.Compact.Reader;
 using Superpower;
 using Superpower.Model;
 
-namespace SeqCli.Ingestion
+namespace SeqCli.Ingestion;
+
+class JsonLogEventReader : ILogEventReader
 {
-    class JsonLogEventReader : ILogEventReader
-    {
-        static readonly TimeSpan TrailingLineArrivalDeadline = TimeSpan.FromMilliseconds(10);
+    static readonly TimeSpan TrailingLineArrivalDeadline = TimeSpan.FromMilliseconds(10);
         
-        readonly FrameReader _reader;
-        readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
-        {
-            DateParseHandling = DateParseHandling.None,
-            Culture = CultureInfo.InvariantCulture
-        });
+    readonly FrameReader _reader;
+    readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
+    {
+        DateParseHandling = DateParseHandling.None,
+        Culture = CultureInfo.InvariantCulture
+    });
 
-        public JsonLogEventReader(TextReader input)
+    public JsonLogEventReader(TextReader input)
+    {
+        _reader = new FrameReader(
+            input ?? throw new ArgumentNullException(nameof(input)),
+            Parse.Return(TextSpan.None),
+            TrailingLineArrivalDeadline);
+    }
+
+    public async Task<ReadResult> TryReadAsync()
+    {
+        var frame = await _reader.TryReadAsync();
+        if (!frame.HasValue)
+            return new ReadResult(null, frame.IsAtEnd);
+
+        if (frame.IsOrphan)
+            throw new InvalidDataException($"A line arrived late or could not be parsed: `{frame.Value.Trim()}`.");
+
+        var frameValue = new JsonTextReader(new StringReader(frame.Value));
+        if (!(_serializer.Deserialize<JToken>(frameValue) is JObject jobject))
+            throw new InvalidDataException($"The line is not a JSON object: `{frame.Value.Trim()}`.");
+
+        var evt = ReadFromJObject(jobject);
+        return new ReadResult(evt, frame.IsAtEnd);
+    }
+
+    public static LogEvent ReadFromJObject(JObject jObject)
+    {
+        if (!jObject.TryGetValue("@t", out _))
+            jObject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
+
+        if (jObject.TryGetValue("@l", out var levelToken))
         {
-            _reader = new FrameReader(
-                input ?? throw new ArgumentNullException(nameof(input)),
-                Parse.Return(TextSpan.None),
-                TrailingLineArrivalDeadline);
+            jObject.Remove("@l");
+
+            var serilogLevel = LevelMapping.ToSerilogLevel(levelToken.Value<string>()!);
+            if (serilogLevel != LogEventLevel.Information)
+                jObject.Add("@l", new JValue(serilogLevel.ToString()));
+
+            jObject.Add(SurrogateLevelProperty.PropertyName, levelToken);
+        }
+        else
+        {
+            jObject.Add(SurrogateLevelProperty.PropertyName, new JValue("Information"));
         }
 
-        public async Task<ReadResult> TryReadAsync()
-        {
-            var frame = await _reader.TryReadAsync();
-            if (!frame.HasValue)
-                return new ReadResult(null, frame.IsAtEnd);
-
-            if (frame.IsOrphan)
-                throw new InvalidDataException($"A line arrived late or could not be parsed: `{frame.Value.Trim()}`.");
-
-            var frameValue = new JsonTextReader(new StringReader(frame.Value));
-            if (!(_serializer.Deserialize<JToken>(frameValue) is JObject jobject))
-                throw new InvalidDataException($"The line is not a JSON object: `{frame.Value.Trim()}`.");
-
-            var evt = ReadFromJObject(jobject);
-            return new ReadResult(evt, frame.IsAtEnd);
-        }
-
-        public static LogEvent ReadFromJObject(JObject jObject)
-        {
-            if (!jObject.TryGetValue("@t", out _))
-                jObject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
-
-            if (jObject.TryGetValue("@l", out var levelToken))
-            {
-                jObject.Remove("@l");
-
-                var serilogLevel = LevelMapping.ToSerilogLevel(levelToken.Value<string>()!);
-                if (serilogLevel != LogEventLevel.Information)
-                    jObject.Add("@l", new JValue(serilogLevel.ToString()));
-
-                jObject.Add(SurrogateLevelProperty.PropertyName, levelToken);
-            }
-            else
-            {
-                jObject.Add(SurrogateLevelProperty.PropertyName, new JValue("Information"));
-            }
-
-            return LogEventReader.ReadFromJObject(jObject);
-        }
+        return LogEventReader.ReadFromJObject(jObject);
     }
 }

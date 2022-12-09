@@ -19,53 +19,52 @@ using System.Linq;
 using System.Reflection;
 using Seq.Apps;
 
-namespace SeqCli.Apps.Hosting
+namespace SeqCli.Apps.Hosting;
+
+static class AppActivator
 {
-    static class AppActivator
+    public static SeqApp CreateInstance(Type seqAppType, string title, IReadOnlyDictionary<string, string> settings)
     {
-        public static SeqApp CreateInstance(Type seqAppType, string title, IReadOnlyDictionary<string, string> settings)
+        if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
+        if (title == null) throw new ArgumentNullException(nameof(title));
+        if (settings == null) throw new ArgumentNullException(nameof(settings));
+
+        var instance = (SeqApp?)Activator.CreateInstance(seqAppType) ??
+                       throw new InvalidOperationException($"The Seq app type {seqAppType} cannot be constructed.");
+
+        var appSettings = seqAppType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Select(pi => new { pi, attr = pi.GetCustomAttribute<SeqAppSettingAttribute>() })
+            .Where(p => p.attr != null);
+
+        foreach (var setting in appSettings)
         {
-            if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
-            if (title == null) throw new ArgumentNullException(nameof(title));
-            if (settings == null) throw new ArgumentNullException(nameof(settings));
-
-            var instance = (SeqApp?)Activator.CreateInstance(seqAppType) ??
-                           throw new InvalidOperationException($"The Seq app type {seqAppType} cannot be constructed.");
-
-            var appSettings = seqAppType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(pi => new { pi, attr = pi.GetCustomAttribute<SeqAppSettingAttribute>() })
-                .Where(p => p.attr != null);
-
-            foreach (var setting in appSettings)
+            if (settings.TryGetValue(setting.pi.Name, out var value) &&
+                !string.IsNullOrEmpty(value))
             {
-                if (settings.TryGetValue(setting.pi.Name, out var value) &&
-                    !string.IsNullOrEmpty(value))
-                {
-                    var converted = ConvertToSettingType(value, setting.pi.PropertyType);
-                    setting.pi.SetValue(instance, converted);
-                }
-                else if (!setting.attr!.IsOptional)
-                {
-                    throw new SeqAppException(
-                        $"The required setting `{setting.pi.Name}` has not been provided to {title}.");
-                }
+                var converted = ConvertToSettingType(value, setting.pi.PropertyType);
+                setting.pi.SetValue(instance, converted);
             }
-
-            return instance;
+            else if (!setting.attr!.IsOptional)
+            {
+                throw new SeqAppException(
+                    $"The required setting `{setting.pi.Name}` has not been provided to {title}.");
+            }
         }
 
-        internal static object ConvertToSettingType(string value, Type settingType)
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            if (settingType == null) throw new ArgumentNullException(nameof(settingType));
+        return instance;
+    }
 
-            var targetType = Nullable.GetUnderlyingType(settingType) ?? settingType;
-            if (targetType.IsEnum )
-            {
-                return Enum.Parse(targetType, value);
-            }
+    internal static object ConvertToSettingType(string value, Type settingType)
+    {
+        if (value == null) throw new ArgumentNullException(nameof(value));
+        if (settingType == null) throw new ArgumentNullException(nameof(settingType));
+
+        var targetType = Nullable.GetUnderlyingType(settingType) ?? settingType;
+        if (targetType.IsEnum )
+        {
+            return Enum.Parse(targetType, value);
+        }
             
-            return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
-        }
+        return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
     }
 }

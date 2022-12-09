@@ -23,49 +23,48 @@ using Serilog.Events;
 
 #nullable enable
 
-namespace SeqCli.Cli
+namespace SeqCli.Cli;
+
+class CommandLineHost
 {
-    class CommandLineHost
+    readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
+
+    public CommandLineHost(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
     {
-        readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
+        _availableCommands = availableCommands.ToList();
+    }
 
-        public CommandLineHost(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
+    public async Task<int> Run(string[] args, LoggingLevelSwitch levelSwitch)
+    {
+        var ea = Assembly.GetEntryAssembly();
+        var name = ea!.GetName().Name;
+
+        if (args.Length > 0)
         {
-            _availableCommands = availableCommands.ToList();
-        }
-
-        public async Task<int> Run(string[] args, LoggingLevelSwitch levelSwitch)
-        {
-            var ea = Assembly.GetEntryAssembly();
-            var name = ea!.GetName().Name;
-
-            if (args.Length > 0)
+            var norm = args[0].ToLowerInvariant();
+            var subCommandNorm = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
+                
+            var cmd = _availableCommands.SingleOrDefault(c =>
+                c.Metadata.Name == norm && (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
+                
+            if (cmd != null)
             {
-                var norm = args[0].ToLowerInvariant();
-                var subCommandNorm = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
-                
-                var cmd = _availableCommands.SingleOrDefault(c =>
-                    c.Metadata.Name == norm && (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
-                
-                if (cmd != null)
-                {
-                    var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
-                    var commandSpecificArgs = args.Skip(amountToSkip).ToArray();
+                var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
+                var commandSpecificArgs = args.Skip(amountToSkip).ToArray();
                     
-                    var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg == "--verbose");
-                    if (verboseArg != null)
-                    {
-                        levelSwitch.MinimumLevel = LogEventLevel.Information;
-                        commandSpecificArgs = commandSpecificArgs.Where(arg => arg != verboseArg).ToArray();
-                    }
-
-                    return await cmd.Value.Value.Invoke(commandSpecificArgs);
+                var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg == "--verbose");
+                if (verboseArg != null)
+                {
+                    levelSwitch.MinimumLevel = LogEventLevel.Information;
+                    commandSpecificArgs = commandSpecificArgs.Where(arg => arg != verboseArg).ToArray();
                 }
-            }
 
-            Console.WriteLine($"Usage: {name} <command> [<args>]");
-            Console.WriteLine($"Type `{name} help` for available commands");
-            return -1;
+                return await cmd.Value.Value.Invoke(commandSpecificArgs);
+            }
         }
+
+        Console.WriteLine($"Usage: {name} <command> [<args>]");
+        Console.WriteLine($"Type `{name} help` for available commands");
+        return -1;
     }
 }

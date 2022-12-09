@@ -17,28 +17,27 @@ using Seq.Api;
 using SeqCli.Ingestion;
 using Serilog;
 
-namespace SeqCli.Sample.Loader
+namespace SeqCli.Sample.Loader;
+
+static class Simulation
 {
-    static class Simulation
+    public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout)
     {
-        public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout)
-        {
-            var buffer = new BufferingSink();
+        var buffer = new BufferingSink();
 
-            await using var logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("Origin", "seqcli sample ingest")
-                .WriteTo.Conditional(_ => echoToStdout, wt => wt.Console())
-                .WriteTo.Sink(buffer)
-                .CreateLogger();
+        await using var logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("Origin", "seqcli sample ingest")
+            .WriteTo.Conditional(_ => echoToStdout, wt => wt.Console())
+            .WriteTo.Sink(buffer)
+            .CreateLogger();
 
-            var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
-                InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
+        var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
+            InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
 
-            await Roastery.Program.Main(logger);
-            await logger.DisposeAsync();
-            await ship;
-        }
+        await Roastery.Program.Main(logger);
+        await logger.DisposeAsync();
+        await ship;
     }
 }

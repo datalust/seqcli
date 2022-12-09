@@ -21,64 +21,63 @@ using SeqCli.Syntax;
 using SeqCli.Util;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.RetentionPolicy
+namespace SeqCli.Cli.Commands.RetentionPolicy;
+
+[Command("retention", "create", "Create a retention policy",
+    Example = "seqcli retention create --after 30d --delete-all-events")]
+class CreateCommand : Command
 {
-    [Command("retention", "create", "Create a retention policy",
-        Example = "seqcli retention create --after 30d --delete-all-events")]
-    class CreateCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+
+    string? _afterDuration;
+    bool _deleteAllEvents; // Currently the only supported option
+
+    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
-
-        string? _afterDuration;
-        bool _deleteAllEvents; // Currently the only supported option
-
-        public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            Options.Add(
-                "after=",
-                "A duration after which the policy will delete events, e.g. `7d`",
-                v => _afterDuration = ArgumentString.Normalize(v));
+        Options.Add(
+            "after=",
+            "A duration after which the policy will delete events, e.g. `7d`",
+            v => _afterDuration = ArgumentString.Normalize(v));
             
-            Options.Add(
-                "delete-all-events",
-                "The policy should delete all events (currently the only supported option)",
-                _ => _deleteAllEvents = true);
+        Options.Add(
+            "delete-all-events",
+            "The policy should delete all events (currently the only supported option)",
+            _ => _deleteAllEvents = true);
 
-            _connection = Enable<ConnectionFeature>();
-            _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+        _output = Enable(new OutputFormatFeature(config.Output));
+    }
+
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        if (!_deleteAllEvents)
+        {
+            Log.Error("The `delete-all-events` option must be specified");
+            return 1;
+        }
+            
+        if (_afterDuration == null)
+        {
+            Log.Error("A duration must be specified using `after`");
+            return 1;
         }
 
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            if (!_deleteAllEvents)
-            {
-                Log.Error("The `delete-all-events` option must be specified");
-                return 1;
-            }
+        var duration = DurationMoniker.ToTimeSpan(_afterDuration);
             
-            if (_afterDuration == null)
-            {
-                Log.Error("A duration must be specified using `after`");
-                return 1;
-            }
+        var policy = await connection.RetentionPolicies.TemplateAsync();
+        policy.RetentionTime = duration;
 
-            var duration = DurationMoniker.ToTimeSpan(_afterDuration);
-            
-            var policy = await connection.RetentionPolicies.TemplateAsync();
-            policy.RetentionTime = duration;
+        policy = await connection.RetentionPolicies.AddAsync(policy);
 
-            policy = await connection.RetentionPolicies.AddAsync(policy);
+        _output.WriteEntity(policy);
 
-            _output.WriteEntity(policy);
-
-            return 0;
-        }
+        return 0;
     }
 }

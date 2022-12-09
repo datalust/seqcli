@@ -16,33 +16,32 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SeqCli.Syntax
+namespace SeqCli.Syntax;
+
+class CombinedFilterBuilder
 {
-    class CombinedFilterBuilder
+    readonly List<string> _elements = new();
+
+    public CombinedFilterBuilder Intersect(string? filter)
     {
-        readonly List<string> _elements = new();
-
-        public CombinedFilterBuilder Intersect(string? filter)
-        {
-            if (filter == null)
-                return this;
-
-            if (string.IsNullOrWhiteSpace(filter))
-                throw new ArgumentNullException(nameof(filter));
-
-            _elements.Add(filter.Trim());
+        if (filter == null)
             return this;
-        }
 
-        public string? Build()
-        {
-            if (!_elements.Any())
-                return null;            
+        if (string.IsNullOrWhiteSpace(filter))
+            throw new ArgumentNullException(nameof(filter));
 
-            if (_elements.Count == 1)
-                return _elements.Single();
+        _elements.Add(filter.Trim());
+        return this;
+    }
 
-            return "(" + string.Join(")and(", _elements) + ")";
-        }
+    public string? Build()
+    {
+        if (!_elements.Any())
+            return null;            
+
+        if (_elements.Count == 1)
+            return _elements.Single();
+
+        return "(" + string.Join(")and(", _elements) + ")";
     }
 }

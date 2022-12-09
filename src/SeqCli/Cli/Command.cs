@@ -18,87 +18,86 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace SeqCli.Cli
+namespace SeqCli.Cli;
+
+abstract class Command
 {
-    abstract class Command
+    readonly IList<CommandFeature> _features = new List<CommandFeature>();
+
+    protected Command()
     {
-        readonly IList<CommandFeature> _features = new List<CommandFeature>();
+        Options = new OptionSet();
+    }
 
-        protected Command()
+    public OptionSet Options { get; }
+
+    public bool HasArgs => Options.Any();
+
+    protected T Enable<T>()
+        where T : CommandFeature, new()
+    {
+        var t = new T();
+        return Enable(t);
+    }
+
+    protected T Enable<T>(T t)
+        where T : CommandFeature
+    {
+        if (t == null) throw new ArgumentNullException(nameof(t));
+        t.Enable(Options);
+        _features.Add(t);
+        return t;
+    }
+
+    public void PrintUsage()
+    {
+        var allOptions = new OptionSet();
+        foreach (var option in Options)
         {
-            Options = new OptionSet();
+            allOptions.Add(option);
         }
 
-        public OptionSet Options { get; }
+        allOptions.Add("verbose", "Print verbose output to `STDERR`", _ => { });
 
-        public bool HasArgs => Options.Any();
+        Console.Error.WriteLine("Arguments:");
+        allOptions.WriteOptionDescriptions(Console.Error);
+    }
 
-        protected T Enable<T>()
-            where T : CommandFeature, new()
+    public async Task<int> Invoke(string[] args)
+    {
+        var unrecognised = Options.Parse(args).ToArray();
+
+        var errs = _features.SelectMany(f => f.GetUsageErrors()).ToList();
+
+        if (errs.Any())
         {
-            var t = new T();
-            return Enable(t);
+            ShowUsageErrors(errs);
+            return 1;
         }
 
-        protected T Enable<T>(T t)
-            where T : CommandFeature
+        return await Run(unrecognised);
+    }
+
+    protected virtual async Task<int> Run(string[] unrecognized)
+    {
+        if (unrecognized.Any())
         {
-            if (t == null) throw new ArgumentNullException(nameof(t));
-            t.Enable(Options);
-            _features.Add(t);
-            return t;
+            ShowUsageErrors(new [] { "Unrecognized options: " + string.Join(", ", unrecognized) });
+            return 1;
         }
 
-        public void PrintUsage()
+        return await Run();
+    }
+
+    protected virtual Task<int> Run() { return Task.FromResult(0); }
+
+    protected virtual void ShowUsageErrors(IEnumerable<string> errors)
+    {
+        foreach (var error in errors)
         {
-            var allOptions = new OptionSet();
-            foreach (var option in Options)
-            {
-                allOptions.Add(option);
-            }
-
-            allOptions.Add("verbose", "Print verbose output to `STDERR`", _ => { });
-
-            Console.Error.WriteLine("Arguments:");
-            allOptions.WriteOptionDescriptions(Console.Error);
-        }
-
-        public async Task<int> Invoke(string[] args)
-        {
-            var unrecognised = Options.Parse(args).ToArray();
-
-            var errs = _features.SelectMany(f => f.GetUsageErrors()).ToList();
-
-            if (errs.Any())
-            {
-                ShowUsageErrors(errs);
-                return 1;
-            }
-
-            return await Run(unrecognised);
-        }
-
-        protected virtual async Task<int> Run(string[] unrecognized)
-        {
-            if (unrecognized.Any())
-            {
-                ShowUsageErrors(new [] { "Unrecognized options: " + string.Join(", ", unrecognized) });
-                return 1;
-            }
-
-            return await Run();
-        }
-
-        protected virtual Task<int> Run() { return Task.FromResult(0); }
-
-        protected virtual void ShowUsageErrors(IEnumerable<string> errors)
-        {
-            foreach (var error in errors)
-            {
 #pragma warning disable Serilog004 // Constant MessageTemplate verifier
-                Log.Error(error);
+            Log.Error(error);
 #pragma warning restore Serilog004 // Constant MessageTemplate verifier
-            }
         }
     }
 }

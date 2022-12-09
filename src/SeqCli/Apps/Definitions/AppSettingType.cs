@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Apps.Definitions
-{
-    // Matches https://github.com/datalust/seq-apps-runtime/blob/dev/src/Seq.Apps/Apps/SettingInputType.cs
-    public enum AppSettingType
-    {
-        Text,
-        LongText,
-        Checkbox,
-        Integer,
-        Decimal,
-        Password,
-        
-        // Not mirrored in Seq.Apps; currently, only available to C# apps when the input type is left as
-        // Unspecified, and the corresponding property is an enum type.
-        Select,
+namespace SeqCli.Apps.Definitions;
 
-        // Unused; required for (very early) legacy app support.
-        Number = 1000
-    }
+// Matches https://github.com/datalust/seq-apps-runtime/blob/dev/src/Seq.Apps/Apps/SettingInputType.cs
+public enum AppSettingType
+{
+    Text,
+    LongText,
+    Checkbox,
+    Integer,
+    Decimal,
+    Password,
+        
+    // Not mirrored in Seq.Apps; currently, only available to C# apps when the input type is left as
+    // Unspecified, and the corresponding property is an enum type.
+    Select,
+
+    // Unused; required for (very early) legacy app support.
+    Number = 1000
 }

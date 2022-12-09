@@ -1,9 +1,8 @@
-﻿namespace Roastery.Model
+﻿namespace Roastery.Model;
+
+enum OrderStatus
 {
-    enum OrderStatus
-    {
-        New,
-        PendingShipment,
-        Shipped
-    }
+    New,
+    PendingShipment,
+    Shipped
 }

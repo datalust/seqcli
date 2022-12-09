@@ -3,21 +3,19 @@ using System.Reflection;
 using SeqCli.Cli;
 using Xunit;
 
-namespace SeqCli.Tests.Cli
+namespace SeqCli.Tests.Cli;
+
+public class NoDuplicateCommands
 {
-
-    public class NoDuplicateCommands
+    [Fact]
+    public void EnsureNoDuplicateCommands()
     {
-        [Fact]
-        public void EnsureNoDuplicateCommands()
-        {
-            var anyDuplicates = typeof(Command).GetTypeInfo().Assembly.GetExportedTypes()
-                .Where(t => t.IsAssignableFrom(typeof(Command)))
-                .Select(t => new {CommandType = t, Attribute = t.GetCustomAttribute<CommandAttribute>()})
-                .GroupBy(t => new {t.Attribute.Name, t.Attribute.SubCommand})
-                .Any(t => t.Count() > 1);
+        var anyDuplicates = typeof(Command).GetTypeInfo().Assembly.GetExportedTypes()
+            .Where(t => t.IsAssignableFrom(typeof(Command)))
+            .Select(t => new {CommandType = t, Attribute = t.GetCustomAttribute<CommandAttribute>()})
+            .GroupBy(t => new {t.Attribute.Name, t.Attribute.SubCommand})
+            .Any(t => t.Count() > 1);
 
-            Assert.False(anyDuplicates);
-        }
+        Assert.False(anyDuplicates);
     }
 }

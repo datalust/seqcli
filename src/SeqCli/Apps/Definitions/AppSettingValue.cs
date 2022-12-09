@@ -14,13 +14,12 @@
 
 using Newtonsoft.Json;
 
-namespace SeqCli.Apps.Definitions
+namespace SeqCli.Apps.Definitions;
+
+class AppSettingValue
 {
-    class AppSettingValue
-    {
-        public string? Value { get; set; }
+    public string? Value { get; set; }
         
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? Description { get; set; }
-   }
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? Description { get; set; }
 }
