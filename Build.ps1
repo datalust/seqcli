@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$framework = 'net6.0'
+$framework = 'net7.0'
 $windowsTfmSuffix = '-windows'
 
 function Clean-Output

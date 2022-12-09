@@ -44,7 +44,7 @@ namespace SeqCli.Apps.Hosting
 
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
-            using var log = new LoggerConfiguration()
+            await using var log = new LoggerConfiguration()
                 .MinimumLevel.Is(LevelAlias.Minimum)
                 .WriteTo.Console(new CompactJsonFormatter(), standardErrorFromLevel: LevelAlias.Minimum)
                 .CreateLogger();
@@ -57,8 +57,7 @@ namespace SeqCli.Apps.Hosting
                 using var appContainer = new AppContainer(log, packageBinaryPath, app, host, mainAppTypeName);
                 appContainer.StartPublishing(Console.Out);
 
-                string line;
-                while ((line = Console.ReadLine()) != null)
+                while (Console.ReadLine() is { } line)
                 {
                     await appContainer.SendAsync(line);
                 }
