@@ -17,7 +17,7 @@ namespace SeqCli.Cli
     interface ICommandMetadata
     {
         string Name { get; }
-        string SubCommand { get; }
+        string? SubCommand { get; }
         string HelpText { get; }
     }
 }

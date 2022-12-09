@@ -28,7 +28,7 @@ namespace SeqCli.Cli.Commands
     [Command("config", "View and set fields in the `SeqCli.json` file; run with no arguments to list all fields")]
     class ConfigCommand : Command
     {
-        string _key, _value;
+        string? _key, _value;
         bool _clear;
 
         public ConfigCommand()
@@ -91,7 +91,7 @@ namespace SeqCli.Cli.Commands
             Console.WriteLine(Format(pr.Value));
         }
 
-        static void Set(SeqCliConfig config, string key, string value)
+        static void Set(SeqCliConfig config, string key, string? value)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -139,7 +139,7 @@ namespace SeqCli.Cli.Commands
             }
         }
 
-        static IEnumerable<KeyValuePair<string, object>> ReadPairs(object config)
+        static IEnumerable<KeyValuePair<string, object?>> ReadPairs(object config)
         {
             foreach (var property in config.GetType().GetTypeInfo().DeclaredProperties
                 .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && !p.Name.StartsWith("Encoded"))
@@ -152,9 +152,9 @@ namespace SeqCli.Cli.Commands
                 {
                     foreach (var elementKey in dict.Keys)
                     {
-                        foreach (var elementPair in ReadPairs(dict[elementKey]))
+                        foreach (var elementPair in ReadPairs(dict[elementKey]!))
                         {
-                            yield return new KeyValuePair<string, object>(
+                            yield return new KeyValuePair<string, object?>(
                                 $"{propertyName}[{elementKey}].{elementPair.Key}",
                                 elementPair.Value);
                         }
@@ -165,12 +165,12 @@ namespace SeqCli.Cli.Commands
                     foreach (var childPair in ReadPairs(propertyValue))
                     {
                         var name = propertyName + "." + childPair.Key;
-                        yield return new KeyValuePair<string, object>(name, childPair.Value);
+                        yield return new KeyValuePair<string, object?>(name, childPair.Value);
                     }
                 }
                 else
                 {
-                    yield return new KeyValuePair<string, object>(propertyName, propertyValue);
+                    yield return new KeyValuePair<string, object?>(propertyName, propertyValue);
                 }
             }
         }
@@ -182,7 +182,7 @@ namespace SeqCli.Cli.Commands
             return char.ToLowerInvariant(s[0]) + s.Substring(1);
         }
 
-        static string Format(object value)
+        static string Format(object? value)
         {
             return value is IFormattable formattable
                 ? formattable.ToString(null, CultureInfo.InvariantCulture)

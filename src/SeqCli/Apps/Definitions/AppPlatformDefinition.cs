@@ -20,13 +20,13 @@ namespace SeqCli.Apps.Definitions
     class AppPlatformDefinition
     {
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Executable { get; set; }
+        public string? Executable { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Arguments { get; set; }
+        public string? Arguments { get; set; }
         
         // The generic host for assembly-based apps uses this.
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string SeqAppTypeName { get; set; }
+        public string? SeqAppTypeName { get; set; }
     }
 }

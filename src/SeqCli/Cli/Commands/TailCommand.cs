@@ -31,7 +31,7 @@ namespace SeqCli.Cli.Commands
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
         readonly SignalExpressionFeature _signal;
-        string _filter;
+        string? _filter;
 
         public TailCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -50,18 +50,18 @@ namespace SeqCli.Cli.Commands
         protected override async Task<int> Run()
         {
             var cancel = new CancellationTokenSource();
-            Console.CancelKeyPress += (s,a) => cancel.Cancel();
+            Console.CancelKeyPress += (_,_) => cancel.Cancel();
             
             var connection = _connectionFactory.Connect(_connection);
 
-            string strict = null;
+            string? strict = null;
             if (!string.IsNullOrWhiteSpace(_filter))
             {
                 var converted = await connection.Expressions.ToStrictAsync(_filter, cancel.Token);
                 strict = converted.StrictExpression;
             }
 
-            using var output = _output.CreateOutputLogger();
+            await using var output = _output.CreateOutputLogger();
             using var stream = await connection.Events.StreamAsync<JObject>(
                 filter: strict, 
                 signal: _signal.Signal,

@@ -32,7 +32,7 @@ namespace SeqCli.Cli.Commands.RetentionPolicy
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _afterDuration;
+        string? _afterDuration;
         bool _deleteAllEvents; // Currently the only supported option
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)

@@ -72,7 +72,7 @@ namespace SeqCli.Ingestion
             {
                 jObject.Remove("@l");
 
-                var serilogLevel = LevelMapping.ToSerilogLevel(levelToken.Value<string>());
+                var serilogLevel = LevelMapping.ToSerilogLevel(levelToken.Value<string>()!);
                 if (serilogLevel != LogEventLevel.Information)
                     jObject.Add("@l", new JValue(serilogLevel.ToString()));
 

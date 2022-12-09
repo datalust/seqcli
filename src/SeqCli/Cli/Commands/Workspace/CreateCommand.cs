@@ -20,9 +20,9 @@ namespace SeqCli.Cli.Commands.Workspace
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _title, _description;
+        string? _title, _description;
         bool _isProtected;
-        readonly List<string> _include = new();
+        readonly List<string?> _include = new();
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {

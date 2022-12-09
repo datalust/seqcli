@@ -20,9 +20,9 @@ namespace SeqCli.Syntax
 {
     class CombinedFilterBuilder
     {
-        readonly List<string> _elements = new List<string>();
+        readonly List<string> _elements = new();
 
-        public CombinedFilterBuilder Intersect(string filter)
+        public CombinedFilterBuilder Intersect(string? filter)
         {
             if (filter == null)
                 return this;
@@ -34,7 +34,7 @@ namespace SeqCli.Syntax
             return this;
         }
 
-        public string Build()
+        public string? Build()
         {
             if (!_elements.Any())
                 return null;            

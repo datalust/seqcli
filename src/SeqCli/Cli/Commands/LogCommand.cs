@@ -34,7 +34,7 @@ namespace SeqCli.Cli.Commands
         readonly SeqConnectionFactory _connectionFactory;
         readonly PropertiesFeature _properties;
         readonly ConnectionFeature _connection;
-        string _message, _level, _timestamp, _exception;
+        string? _message, _level, _timestamp, _exception;
 
         public LogCommand(SeqConnectionFactory connectionFactory)
         {
@@ -119,7 +119,7 @@ namespace SeqCli.Cli.Commands
             {
                 try
                 {
-                    var error = JsonConvert.DeserializeObject<dynamic>(resultJson);
+                    var error = JsonConvert.DeserializeObject<dynamic>(resultJson)!;
 
                     Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
                         result.StatusCode,

@@ -34,7 +34,7 @@ namespace SeqCli.Cli.Commands
         readonly DateRangeFeature _range;
         readonly SignalExpressionFeature _signal;
         readonly TimeoutFeature _timeout;
-        string _query;
+        string? _query;
 
         public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {

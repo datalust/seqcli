@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Superpower;
 using Superpower.Model;
 
@@ -6,11 +7,11 @@ namespace SeqCli.PlainText.Extraction
 {
     abstract class PatternElement
     {
-        readonly string _name;
+        readonly string? _name;
         
         bool IsIgnored => _name == null;
 
-        protected PatternElement(string name)
+        protected PatternElement(string? name)
         {
             _name = name;
         }
@@ -19,13 +20,13 @@ namespace SeqCli.PlainText.Extraction
 
         public abstract bool TryExtract(
             TextSpan input,
-            Dictionary<string, object> result,
+            Dictionary<string, object?> result,
             out TextSpan remainder);
 
-        protected void CollectResult(Dictionary<string, object> result, object value)
+        protected void CollectResult(Dictionary<string, object?> result, object? value)
         {
             if (!IsIgnored)
-                result.Add(_name, value);                
+                result.Add(_name!, value);                
         }
     }
 }

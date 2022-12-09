@@ -32,8 +32,8 @@ namespace SeqCli.Apps.Hosting
             string seqBaseUri,
             string appInstanceId,
             string appInstanceTitle,
-            string seqInstanceName = null,
-            string mainAppTypeName = null)
+            string? seqInstanceName = null,
+            string? mainAppTypeName = null)
         {
             if (packageBinaryPath == null) throw new ArgumentNullException(nameof(packageBinaryPath));
             if (appSettings == null) throw new ArgumentNullException(nameof(appSettings));

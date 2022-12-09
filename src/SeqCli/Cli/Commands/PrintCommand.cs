@@ -34,7 +34,7 @@ namespace SeqCli.Cli.Commands
         readonly FileInputFeature _fileInputFeature;
         readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
 
-        string _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
+        string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
         bool _noColor, _forceColor;
 
         public PrintCommand(SeqCliOutputConfig outputConfig)
@@ -65,7 +65,7 @@ namespace SeqCli.Cli.Commands
         protected override async Task<int> Run()
         {
             var applyThemeToRedirectedOutput
-                = _noColor == false && _forceColor == true;
+                = !_noColor && _forceColor;
 
             var theme
                 = _noColor                      ? ConsoleTheme.None
@@ -77,40 +77,38 @@ namespace SeqCli.Cli.Commands
                 .Enrich.With<RedundantEventTypeRemovalEnricher>()
                 .Enrich.With<SurrogateLevelRemovalEnricher>()
                 .WriteTo.Console(
-                    outputTemplate: _template,
+                    outputTemplate: _template ?? OutputFormatFeature.DefaultOutputTemplate,
                     theme: theme,
                     applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
 
             if (_filter != null)
                 outputConfiguration.Filter.ByIncludingOnly(_filter);
 
-            using (var logger = outputConfiguration.CreateLogger())
+            await using var logger = outputConfiguration.CreateLogger();
+            foreach (var input in _fileInputFeature.OpenInputs())
             {
-                foreach (var input in _fileInputFeature.OpenInputs())
+                using (input)
                 {
-                    using (input)
+                    var reader = new JsonLogEventReader(input);
+
+                    var isAtEnd = false;
+                    do
                     {
-                        var reader = new JsonLogEventReader(input);
-
-                        var isAtEnd = false;
-                        do
+                        try
                         {
-                            try
-                            {
-                                var result = await reader.TryReadAsync();
-                                isAtEnd = result.IsAtEnd;
+                            var result = await reader.TryReadAsync();
+                            isAtEnd = result.IsAtEnd;
 
-                                if (result.LogEvent != null)
-                                    logger.Write(result.LogEvent);
-                            }
-                            catch (Exception ex)
-                            {
-                                if (!(ex is JsonReaderException) && !(ex is InvalidDataException) ||
-                                    _invalidDataHandlingFeature.InvalidDataHandling != InvalidDataHandling.Ignore)
-                                    throw;
-                            }
-                        } while (!isAtEnd);
-                    }
+                            if (result.LogEvent != null)
+                                logger.Write(result.LogEvent);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex is not JsonReaderException && ex is not InvalidDataException ||
+                                _invalidDataHandlingFeature.InvalidDataHandling != InvalidDataHandling.Ignore)
+                                throw;
+                        }
+                    } while (!isAtEnd);
                 }
             }
 

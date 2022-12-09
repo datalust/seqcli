@@ -6,7 +6,7 @@ using Serilog.Events;
 
 namespace SeqCli.Output
 {
-    public class StripStructureTypeEnricher : LogEventPropertyValueRewriter<object>, ILogEventEnricher
+    public class StripStructureTypeEnricher : LogEventPropertyValueRewriter<object?>, ILogEventEnricher
     {
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
@@ -17,7 +17,7 @@ namespace SeqCli.Output
             }
         }
 
-        protected override LogEventPropertyValue VisitStructureValue(object state, StructureValue structure)
+        protected override LogEventPropertyValue VisitStructureValue(object? state, StructureValue structure)
         {
             return new StructureValue(structure.Properties.Select(p =>
                 LogEventPropertyFactory.SafeCreate(p.Name, Visit(null, p.Value))));

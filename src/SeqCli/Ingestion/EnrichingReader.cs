@@ -25,7 +25,8 @@ namespace SeqCli.Ingestion
             if (result.LogEvent != null)
             {
                 foreach (var enricher in _enrichers)
-                    enricher.Enrich(result.LogEvent, null);
+                    // We're breaking the nullability contract of `ILogEventEnricher.Enrich()`, here.
+                    enricher.Enrich(result.LogEvent, null!);
             }
 
             return result;

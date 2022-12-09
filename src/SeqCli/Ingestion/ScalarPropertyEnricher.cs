@@ -22,7 +22,7 @@ namespace SeqCli.Ingestion
     {
         readonly LogEventProperty _property;
 
-        public ScalarPropertyEnricher(string name, object scalarValue)
+        public ScalarPropertyEnricher(string name, object? scalarValue)
         {
             _property = LogEventPropertyFactory.SafeCreate(name, new ScalarValue(scalarValue));
         }

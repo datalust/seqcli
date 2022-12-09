@@ -31,7 +31,7 @@ namespace SeqCli.PlainText.Patterns
 
         static readonly TextParser<CaptureContentExpression> GroupedContent =
             Span.EqualTo("=")
-                .IgnoreThen(Superpower.Parse.Ref(() => Elements))
+                .IgnoreThen(Superpower.Parse.Ref(() => Elements!))
                 .Select(els => (CaptureContentExpression) new GroupedContentExpression(new ExtractionPattern(els)));
 
         static readonly TextParser<CaptureContentExpression> CaptureContent =
@@ -41,10 +41,10 @@ namespace SeqCli.PlainText.Patterns
 
         static readonly TextParser<CapturePatternExpression> Capture =
             from _ in Character.EqualTo('{')
-            from name in CaptureName.OptionalOrDefault()
+            from name in CaptureName!.OptionalOrDefault()
             from content in Character.EqualTo(':')
-                .IgnoreThen(CaptureContent)
-                .OptionalOrDefault()
+                .IgnoreThen(CaptureContent!)
+                .OptionalOrDefault(null!)
             where name != null || content != null
             from __ in Character.EqualTo('}')
             select new CapturePatternExpression(name, content);

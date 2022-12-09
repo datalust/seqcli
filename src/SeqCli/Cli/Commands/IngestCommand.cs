@@ -40,7 +40,8 @@ namespace SeqCli.Cli.Commands
         readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
         readonly ConnectionFeature _connection;
         readonly BatchSizeFeature _batchSize;
-        string _filter, _pattern = DefaultPattern, _level, _message;
+        string? _filter, _level, _message;
+        string _pattern = DefaultPattern;
         bool _json;
 
         public IngestCommand(SeqConnectionFactory connectionFactory)
@@ -88,7 +89,7 @@ namespace SeqCli.Cli.Commands
                 if (_level != null)
                     enrichers.Add(new ScalarPropertyEnricher(SurrogateLevelProperty.PropertyName, _level));
 
-                Func<LogEvent, bool> filter = null;
+                Func<LogEvent, bool>? filter = null;
                 if (_filter != null)
                 {
                     var expr = _filter.Replace("@Level", SurrogateLevelProperty.PropertyName);

@@ -21,9 +21,9 @@ namespace SeqCli.Cli.Features
     {
         readonly string _entityName;
         readonly string _verb;
-        readonly EntityIdentityFeature _identityFeature;
+        readonly EntityIdentityFeature? _identityFeature;
 
-        public EntityOwnerFeature(string entityName, string verb, EntityIdentityFeature identityFeature = null)
+        public EntityOwnerFeature(string entityName, string verb, EntityIdentityFeature? identityFeature = null)
         {
             _entityName = entityName ?? throw new ArgumentNullException(nameof(entityName));
             _verb = verb ?? throw new ArgumentNullException(nameof(verb));
@@ -52,7 +52,7 @@ namespace SeqCli.Cli.Features
             }
         }
 
-        public string OwnerId { get; private set; }
+        public string? OwnerId { get; private set; }
 
         public bool IncludeShared { get; private set; } = true;
     }

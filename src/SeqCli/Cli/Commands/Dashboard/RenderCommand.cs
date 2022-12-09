@@ -41,7 +41,7 @@ namespace SeqCli.Cli.Commands.Dashboard
         readonly SignalExpressionFeature _signal;
         readonly TimeoutFeature _timeout;
 
-        string _id, _lastDuration, _intervalDuration, _chartTitle;
+        string? _id, _lastDuration, _intervalDuration, _chartTitle;
 
         public RenderCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {
@@ -134,14 +134,13 @@ namespace SeqCli.Cli.Commands.Dashboard
             if (_range.Start.HasValue)
             {
                 rangeStart = _range.Start.Value;
-                // ReSharper disable once PossibleInvalidOperationException
-                rangeEnd = _range.End.Value;
+                rangeEnd = _range.End!.Value;
             }
             else
             {
                 // Note, this is local time.
                 rangeEnd = DateTime.Now;
-                var last = DurationMoniker.ToTimeSpan(_lastDuration);
+                var last = DurationMoniker.ToTimeSpan(_lastDuration!);
                 rangeStart = rangeEnd - last;
                 if (timeGrouping.HasValue)
                 {
@@ -202,9 +201,9 @@ namespace SeqCli.Cli.Commands.Dashboard
             return sql.Build();
         }
 
-        static SignalExpressionPart Intersect(params SignalExpressionPart[] expressions)
+        static SignalExpressionPart? Intersect(params SignalExpressionPart?[] expressions)
         {
-            var result = (SignalExpressionPart) null;
+            var result = (SignalExpressionPart?) null;
 
             foreach (var s in expressions)
             {

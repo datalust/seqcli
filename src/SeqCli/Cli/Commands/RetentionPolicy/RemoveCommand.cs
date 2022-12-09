@@ -28,7 +28,7 @@ namespace SeqCli.Cli.Commands.RetentionPolicy
         
         readonly ConnectionFeature _connection;
         
-        string _id;
+        string? _id;
         
         public RemoveCommand(SeqConnectionFactory connectionFactory)
         {

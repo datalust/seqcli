@@ -10,7 +10,7 @@ namespace SeqCli.Cli.Commands.Profile
         Example = "seqcli profile remove -n Production")]
     class RemoveCommand : Command
     {
-        string _name;
+        string? _name;
 
         public RemoveCommand()
         {

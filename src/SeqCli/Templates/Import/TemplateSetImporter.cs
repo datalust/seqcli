@@ -70,7 +70,7 @@ namespace SeqCli.Templates.Import
             if (!JsonTemplateEvaluator.TryEvaluate(template.Entity, functions.Exports, out var entity, out var error))
                 return error;
 
-            var asObject = (IDictionary<string, object>) JsonTemplateObjectGraphConverter.Convert(entity);
+            var asObject = (IDictionary<string, object>) JsonTemplateObjectGraphConverter.Convert(entity)!;
 
             // O(Ntemplates) - easy target for optimization with some caching.
             var resourceGroupLink = template.ResourceGroup + "Resources";

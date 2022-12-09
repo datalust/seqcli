@@ -96,7 +96,7 @@ namespace SeqCli.Csv
         static bool IsEscapedDoubleQuote(TextSpan span)
         {
             return span.Length >= 2 &&
-                   span.Source[span.Position.Absolute] == '"' &&
+                   span.Source![span.Position.Absolute] == '"' &&
                    span.Source[span.Position.Absolute + 1] == '"';
         }
 

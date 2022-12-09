@@ -20,7 +20,7 @@ namespace SeqCli.Templates.ObjectGraphs
 {
     static class JsonTemplateObjectGraphConverter
     {
-        public static object Convert(JsonTemplate template)
+        public static object? Convert(JsonTemplate template)
         {
             if (template == null) throw new ArgumentNullException(nameof(template));
 
@@ -55,7 +55,7 @@ namespace SeqCli.Templates.ObjectGraphs
 
         static object ConvertArray(JsonTemplateArray template)
         {
-            var r = new object[template.Elements.Length];
+            var r = new object?[template.Elements.Length];
             for (var i = 0; i < template.Elements.Length; ++i)
             {
                 r[i] = Convert(template.Elements[i]);
@@ -66,7 +66,7 @@ namespace SeqCli.Templates.ObjectGraphs
         
         static object ConvertObject(JsonTemplateObject template)
         {
-            var r = new Dictionary<string, object>(template.Members.Count);
+            var r = new Dictionary<string, object?>(template.Members.Count);
             foreach (var (name, value) in template.Members)
             {
                 r[name] = Convert(value);

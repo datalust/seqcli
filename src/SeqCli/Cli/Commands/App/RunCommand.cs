@@ -26,15 +26,18 @@ namespace SeqCli.Cli.Commands.App
     class RunCommand : Command
     {
         bool _readEnv;
+
         string _dir = Environment.CurrentDirectory,
-            _type,
-            _serverUrl,
             _storage = Environment.CurrentDirectory,
-            _appInstanceId = "appinstance-0",
+            _serverUrl,
             _appInstanceTitle = "Test Instance",
+            _appInstanceId = "appinstance-0";
+
+        string?
+            _type,
             _seqInstanceName;
         
-        readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
+        readonly Dictionary<string, string> _settings = new();
 
         public RunCommand(SeqCliConfig config)
         {
@@ -78,12 +81,12 @@ namespace SeqCli.Cli.Commands.App
             Options.Add(
                 "t=|title=",
                 "The app instance title, used only for app configuration; defaults to a placeholder title.",
-                v => _appInstanceTitle = ArgumentString.Normalize(v));
+                v => _appInstanceTitle = ArgumentString.Normalize(v) ?? throw new ArgumentException("Title requires a value."));
 
             Options.Add(
                 "id=",
                 "The app instance id, used only for app configuration; defaults to a placeholder id.",
-                v => _appInstanceId = ArgumentString.Normalize(v));
+                v => _appInstanceId = ArgumentString.Normalize(v) ?? throw new ArgumentException("Id requires a value."));
 
             Options.Add(
                 "read-env",

@@ -33,12 +33,12 @@ namespace SeqCli.Ingestion
 
         public static async Task<int> ShipEvents(
             SeqConnection connection,
-            string apiKey,
+            string? apiKey,
             ILogEventReader reader,
             InvalidDataHandling invalidDataHandling,
             SendFailureHandling sendFailureHandling,
             int batchSize,
-            Func<LogEvent, bool> filter = null)
+            Func<LogEvent, bool>? filter = null)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -90,7 +90,7 @@ namespace SeqCli.Ingestion
 
         static async Task<BatchResult> ReadBatchAsync(
             ILogEventReader reader,
-            Func<LogEvent, bool> filter,
+            Func<LogEvent, bool>? filter,
             int count,
             InvalidDataHandling invalidDataHandling,
             int maxWaitMS)
@@ -145,7 +145,7 @@ namespace SeqCli.Ingestion
 
         static async Task<bool> SendBatchAsync(
             SeqConnection connection,
-            string apiKey,
+            string? apiKey,
             IReadOnlyCollection<LogEvent> batch,
             bool logSendFailures)
         {
@@ -153,6 +153,7 @@ namespace SeqCli.Ingestion
                 return true;
 
             StringContent content;
+            // ReSharper disable once UseAwaitUsing
             using (var builder = new StringWriter())
             {
                 foreach (var evt in batch)

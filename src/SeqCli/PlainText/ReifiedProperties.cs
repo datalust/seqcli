@@ -10,7 +10,7 @@ namespace SeqCli.PlainText
             Level = "@l",
             Exception = "@x";
         
-        static readonly HashSet<string> All = new HashSet<string>
+        static readonly HashSet<string> All = new()
         {
             Message, Timestamp, Level, Exception
         };

@@ -18,7 +18,7 @@ namespace SeqCli.Cli.Features
 {
     class DateRangeFeature : CommandFeature
     {
-        string _start, _end;
+        string? _start, _end;
 
         public override void Enable(OptionSet options)
         {
@@ -26,7 +26,7 @@ namespace SeqCli.Cli.Features
             options.Add("end=", "ISO 8601 date/time to query to", v => _end = v);
         }
 
-        public DateTime? Start => _start != null ? DateTime.Parse(_start) : (DateTime?)null;
-        public DateTime? End => _end != null ? DateTime.Parse(_end) : (DateTime?)null;
+        public DateTime? Start => _start != null ? DateTime.Parse(_start) : null;
+        public DateTime? End => _end != null ? DateTime.Parse(_end) : null;
     }
 }

@@ -46,7 +46,7 @@ namespace SeqCli.Apps.Hosting
             foreach (string key in variables.Keys)
             {
                 if (key.StartsWith("SEQ_APP_SETTING_"))
-                    result.Add(key.Substring(16), (string)variables[key]);
+                    result.Add(key.Substring(16), (string)variables[key]!);
             }
             return result;
         }

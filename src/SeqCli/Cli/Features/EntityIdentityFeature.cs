@@ -22,8 +22,7 @@ namespace SeqCli.Cli.Features
         readonly string _entityName;
         readonly string _verb;
 
-        string _title;
-        string _id;
+        string? _title, _id;
 
         public EntityIdentityFeature(string entityName, string verb)
         {
@@ -50,8 +49,8 @@ namespace SeqCli.Cli.Features
                 yield return "Only one of either `title` or `id` can be specified";
         }
 
-        public string Title => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
+        public string? Title => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
 
-        public string Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
+        public string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
     }
 }

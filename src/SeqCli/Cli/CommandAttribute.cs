@@ -20,10 +20,10 @@ namespace SeqCli.Cli
     public class CommandAttribute : Attribute, ICommandMetadata
     {
         public string Name { get; }
-        public string SubCommand { get; }
+        public string? SubCommand { get; }
         public string HelpText { get; }
 
-        public string Example { get; set; }
+        public string? Example { get; set; }
 
         public CommandAttribute(string name, string helpText)
         {

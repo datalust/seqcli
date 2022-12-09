@@ -45,7 +45,7 @@ namespace SeqCli.Apps.Hosting
             string packageBinaryPath,
             App app,
             Host host,
-            string seqAppTypeName = null)
+            string? seqAppTypeName = null)
         {
             if (packageBinaryPath == null) throw new ArgumentNullException(nameof(packageBinaryPath));
 
@@ -140,7 +140,7 @@ namespace SeqCli.Apps.Hosting
             if (jobject.TryGetValue("@l", out var levelToken))
             {
                 jobject.Remove("@l");
-                jobject.Add("@l", new JValue(LevelMapping.ToSerilogLevel(levelToken.Value<string>()).ToString()));
+                jobject.Add("@l", new JValue(LevelMapping.ToSerilogLevel(levelToken.Value<string>()!).ToString()));
             }
 
             var raw = LogEventReader.ReadFromJObject(jobject);

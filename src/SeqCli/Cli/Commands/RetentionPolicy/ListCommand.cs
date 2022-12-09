@@ -29,7 +29,7 @@ namespace SeqCli.Cli.Commands.RetentionPolicy
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _id;
+        string? _id;
 
         public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
         {

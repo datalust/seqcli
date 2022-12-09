@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -40,7 +41,7 @@ namespace SeqCli.Apps
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
         }
 
-        public bool TryLoadSeqAppType(string seqAppTypeName, out Type seqAppType)
+        public bool TryLoadSeqAppType(string? seqAppTypeName, [NotNullWhen(true)] out Type? seqAppType)
         {
             seqAppType = null;
             var packageAssemblies = LoadPackageAssemblies();
@@ -101,10 +102,8 @@ namespace SeqCli.Apps
             return loaded.Values;
         }
 
-        Assembly OnAssemblyResolve(object _, ResolveEventArgs e)
+        Assembly? OnAssemblyResolve(object? _, ResolveEventArgs e)
         {
-            if (e.Name == null) return null;
-            
             var target = new AssemblyName(e.Name);
 
             foreach (var contract in _contracts)

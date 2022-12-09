@@ -26,7 +26,7 @@ namespace SeqCli.PlainText.LogEvents
 {
     static class LogEventBuilder
     {
-        public static LogEvent FromProperties(IDictionary<string, object> properties, string remainder)
+        public static LogEvent FromProperties(IDictionary<string, object?> properties, string? remainder)
         {
             var timestamp = GetTimestamp(properties);
             var level = GetLevel(properties);          
@@ -44,7 +44,7 @@ namespace SeqCli.PlainText.LogEvents
         
         static readonly MessageTemplate NoMessage = new MessageTemplateParser().Parse("");
 
-        static MessageTemplate GetMessageTemplate(IDictionary<string, object> properties)
+        static MessageTemplate GetMessageTemplate(IDictionary<string, object?> properties)
         {
             if (properties.TryGetValue(ReifiedProperties.Message, out var m) &&
                 m is TextSpan ts)
@@ -56,7 +56,7 @@ namespace SeqCli.PlainText.LogEvents
             return NoMessage;
         }
 
-        static string GetLevel(IDictionary<string, object> properties)
+        static string GetLevel(IDictionary<string, object?> properties)
         {
             if (properties.TryGetValue(ReifiedProperties.Level, out var l) &&
                 l is TextSpan ts)
@@ -64,7 +64,7 @@ namespace SeqCli.PlainText.LogEvents
             return LogEventLevel.Information.ToString();
         }
 
-        static Exception TryGetException(IDictionary<string, object> properties)
+        static Exception? TryGetException(IDictionary<string, object?> properties)
         {
             if (properties.TryGetValue(ReifiedProperties.Exception, out var x) &&
                 x is TextSpan ts)
@@ -72,11 +72,11 @@ namespace SeqCli.PlainText.LogEvents
             return null;
         }
 
-        static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object> properties, string remainder, string level)
+        static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder, string level)
         {
             var payload = properties
                 .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
-                .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object)level) })
+                .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object?)level) })
                 .Select(p => LogEventPropertyFactory.SafeCreate(p.Key, new ScalarValue(p.Value)));
 
             if (remainder != null)
@@ -87,7 +87,7 @@ namespace SeqCli.PlainText.LogEvents
             return payload;
         }
 
-        static DateTimeOffset GetTimestamp(IDictionary<string, object> properties)
+        static DateTimeOffset GetTimestamp(IDictionary<string, object?> properties)
         {
             if (properties.TryGetValue(ReifiedProperties.Timestamp, out var t))
             {

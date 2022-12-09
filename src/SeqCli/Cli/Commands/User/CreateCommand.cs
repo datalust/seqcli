@@ -33,7 +33,7 @@ namespace SeqCli.Cli.Commands.User
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _username, _displayName, _roleTitle, _filter, _emailAddress, _password;
+        string? _username, _displayName, _roleTitle, _filter, _emailAddress, _password;
         bool _passwordStdin, _noPasswordChange;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)

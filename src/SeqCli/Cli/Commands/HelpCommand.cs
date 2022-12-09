@@ -37,7 +37,7 @@ namespace SeqCli.Cli.Commands
         {
             var ea = Assembly.GetEntryAssembly();
             // ReSharper disable once PossibleNullReferenceException
-            var name = ea.GetName().Name;
+            var name = ea!.GetName().Name!;
             
             if (_markdown)
             {
@@ -48,7 +48,7 @@ namespace SeqCli.Cli.Commands
                 return Task.FromResult(0);
             }
             
-            string topLevelCommand = null;
+            string? topLevelCommand = null;
             if (unrecognized.Length > 0)
             {
                 topLevelCommand = unrecognized[0].ToLowerInvariant();

@@ -25,13 +25,12 @@ namespace SeqCli.Cli.Commands.App
         Example = "seqcli app define -d \"./bin/Debug/netstandard2.2\"")]
     class DefineCommand : Command
     {
-        string _dir = Environment.CurrentDirectory, _type;
+        string _dir = Environment.CurrentDirectory;
+        string? _type;
         bool _indented;
 
-        public DefineCommand(SeqCliConfig config)
+        public DefineCommand()
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-
             Options.Add(
                 "d=|directory=",
                 "The directory containing .NET Standard assemblies; defaults to the current directory",

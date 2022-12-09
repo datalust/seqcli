@@ -10,7 +10,7 @@ namespace SeqCli.PlainText.Extraction
     {
         readonly PatternElement[] _content;
 
-        public GroupedPatternElement(IEnumerable<PatternElement> content, string name = null)
+        public GroupedPatternElement(IEnumerable<PatternElement> content, string? name = null)
             : base(name)
         {
             _content = content?.ToArray() ?? throw new ArgumentNullException(nameof(content));
@@ -23,10 +23,10 @@ namespace SeqCli.PlainText.Extraction
         
         public override bool TryExtract(
             TextSpan input, 
-            Dictionary<string, object> result,
+            Dictionary<string, object?> result,
             out TextSpan remainder)
         {
-            var temp = new Dictionary<string, object>();
+            var temp = new Dictionary<string, object?>();
 
             var rem = input;
             foreach (var element in _content)

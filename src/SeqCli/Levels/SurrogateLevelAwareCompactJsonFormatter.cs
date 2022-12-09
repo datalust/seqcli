@@ -31,7 +31,7 @@ namespace SeqCli.Levels
         /// <see cref="LogEventPropertyValue"/>s on the event.
         /// </summary>
         /// <param name="valueFormatter">A value formatter, or null.</param>
-        public SurrogateLevelAwareCompactJsonFormatter(JsonValueFormatter valueFormatter = null)
+        public SurrogateLevelAwareCompactJsonFormatter(JsonValueFormatter? valueFormatter = null)
         {
             _valueFormatter = valueFormatter ?? new JsonValueFormatter(typeTagName: "$type");
         }
@@ -87,7 +87,7 @@ namespace SeqCli.Levels
             }
 
             var level = logEvent.Properties.TryGetValue(SurrogateLevelProperty.PropertyName, out var surrogateLevelValue) ?
-                (string)((ScalarValue) surrogateLevelValue).Value :
+                (string)((ScalarValue) surrogateLevelValue).Value! :
                 logEvent.Level.ToString();
             
             if (level != "Information")

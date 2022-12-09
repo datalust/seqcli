@@ -31,7 +31,7 @@ namespace SeqCli.Cli.Commands.Feed
         readonly ConnectionFeature _connection;
         readonly OutputFormatFeature _output;
 
-        string _name, _location, _username, _password;
+        string? _name, _location, _username, _password;
         bool _passwordStdin;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)

@@ -38,8 +38,8 @@ namespace SeqCli.Cli.Commands.ApiKey
         readonly PropertiesFeature _properties;
         readonly OutputFormatFeature _output;
 
-        string _title, _token, _filter, _level, _connectUsername, _connectPassword;
-        string[] _permissions;
+        string? _title, _token, _filter, _level, _connectUsername, _connectPassword;
+        string[]? _permissions;
         bool _useServerTimestamps, _connectPasswordStdin;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -161,7 +161,7 @@ namespace SeqCli.Cli.Commands.ApiKey
             return 0;
         }
 
-        async Task<SeqConnection> TryConnectAsync()
+        async Task<SeqConnection?> TryConnectAsync()
         {
             SeqConnection connection;
             if (_connectUsername != null)

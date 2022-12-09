@@ -36,7 +36,7 @@ namespace SeqCli.Cli.Commands.Signal
 
         readonly List<string> _columns = new();
 
-        string _title, _description, _filter, _group;
+        string? _title, _description, _filter, _group;
         bool _isProtected, _noGrouping;
 
         public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
@@ -61,7 +61,7 @@ namespace SeqCli.Cli.Commands.Signal
             Options.Add(
                 "c=|column=",
                 "Column to associate with the signal; this argument can be used multiple times",
-                c => _columns.Add(ArgumentString.Normalize(c)));
+                c => _columns.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Columns require a value.")));
 
             Options.Add(
                 "group=",

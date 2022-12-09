@@ -25,10 +25,10 @@ namespace SeqCli.Config
         public string ServerUrl { get; set; } = "http://localhost:5341";
 
         [JsonProperty("apiKey")]
-        public string EncodedApiKey { get; set; }
+        public string? EncodedApiKey { get; set; }
 
         [JsonIgnore]
-        public string ApiKey
+        public string? ApiKey
         {
             get
             {

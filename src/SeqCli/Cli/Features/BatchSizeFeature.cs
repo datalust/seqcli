@@ -1,4 +1,5 @@
-﻿using SeqCli.Util;
+﻿using System;
+using SeqCli.Util;
 
 namespace SeqCli.Cli.Features
 {
@@ -13,7 +14,7 @@ namespace SeqCli.Cli.Features
         {
             options.Add("batch-size=",
                 $"The maximum number of events to send in each request to the ingestion endpoint; if not specified a value of `{DefaultBatchSize}` will be used",
-                v => _value = int.Parse(ArgumentString.Normalize(v)));
+                v => _value = int.Parse(ArgumentString.Normalize(v) ?? throw new ArgumentException("Batch size requires an argument.")));
         }
     }
 }

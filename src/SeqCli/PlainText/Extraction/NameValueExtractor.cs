@@ -20,10 +20,10 @@ namespace SeqCli.PlainText.Extraction
 
         public TextParser<Unit> StartMarker => _elements[0].Match;
 
-        public (IDictionary<string, object>, string) ExtractValues(string plainText)
+        public (IDictionary<string, object?>, string?) ExtractValues(string plainText)
         {
             var input = new TextSpan(plainText);
-            var result = new Dictionary<string, object>();
+            var result = new Dictionary<string, object?>();
             
             var remainder = input;
             foreach (var element in _elements)

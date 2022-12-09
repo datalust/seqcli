@@ -41,7 +41,7 @@ namespace SeqCli.Config
                 return new SeqCliConfig();
             
             var content = File.ReadAllText(DefaultConfigFilename);
-            return JsonConvert.DeserializeObject<SeqCliConfig>(content, SerializerSettings);
+            return JsonConvert.DeserializeObject<SeqCliConfig>(content, SerializerSettings)!;
         }
 
         public static void Write(SeqCliConfig data)

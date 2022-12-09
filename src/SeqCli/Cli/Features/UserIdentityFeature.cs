@@ -21,8 +21,8 @@ namespace SeqCli.Cli.Features
     {
         readonly string _verb;
 
-        string _name;
-        string _id;
+        string? _name;
+        string? _id;
 
         public UserIdentityFeature(string verb)
         {
@@ -48,8 +48,8 @@ namespace SeqCli.Cli.Features
                 yield return "Only one of either `name` or `id` can be specified";
         }
 
-        public string Name => string.IsNullOrWhiteSpace(_name) ? null : _name.Trim();
+        public string? Name => string.IsNullOrWhiteSpace(_name) ? null : _name.Trim();
 
-        public string Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
+        public string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
     }
 }

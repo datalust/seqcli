@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using SeqCli.Templates.Ast;
 
 namespace SeqCli.Templates.Evaluator
@@ -23,14 +24,16 @@ namespace SeqCli.Templates.Evaluator
         public static bool TryEvaluate(
             JsonTemplate template,
             IReadOnlyDictionary<string, JsonTemplateFunction> functions,
-            out JsonTemplate result,
-            out string error)
+            [NotNullWhen(true)]
+            out JsonTemplate? result,
+            [NotNullWhen(false)]
+            out string? error)
         {
             (result, error) = Evaluate(template, functions);
             return error == null;
         }
 
-        static (JsonTemplate, string) Evaluate(JsonTemplate template,
+        static (JsonTemplate?, string?) Evaluate(JsonTemplate template,
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
             return template switch
@@ -43,7 +46,7 @@ namespace SeqCli.Templates.Evaluator
             };
         }
 
-        static (JsonTemplate, string) EvaluateArray(JsonTemplateArray template, 
+        static (JsonTemplate?, string?) EvaluateArray(JsonTemplateArray template, 
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
             var r = new JsonTemplate[template.Elements.Length];
@@ -52,13 +55,13 @@ namespace SeqCli.Templates.Evaluator
                 var (v, err) = Evaluate(template.Elements[i], functions);
                 if (err != null)
                     return (null, err);
-                r[i] = v;
+                r[i] = v!;
             }
 
             return (new JsonTemplateArray(r), null);
         }
         
-        static (JsonTemplate, string) EvaluateObject(JsonTemplateObject template, 
+        static (JsonTemplate?, string?) EvaluateObject(JsonTemplateObject template, 
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
             var r = new Dictionary<string, JsonTemplate>(template.Members.Count);
@@ -67,14 +70,14 @@ namespace SeqCli.Templates.Evaluator
                 var (v, err) = Evaluate(value, functions);
                 if (err != null)
                     return (null, err);
-                r[name] = v;
+                r[name] = v!;
             }
 
             return (new JsonTemplateObject(r), null);
         }
         
         
-        static (JsonTemplate, string) EvaluateCall(JsonTemplateCall template, 
+        static (JsonTemplate?, string?) EvaluateCall(JsonTemplateCall template, 
             IReadOnlyDictionary<string, JsonTemplateFunction> functions)
         {
             if (!functions.TryGetValue(template.Name, out var f))
@@ -86,7 +89,7 @@ namespace SeqCli.Templates.Evaluator
                 var (v, err) = Evaluate(template.Arguments[i], functions);
                 if (err != null)
                     return (null, err);
-                args[i] = v;
+                args[i] = v!;
             }
 
             if (!f(args, out var r, out var err2))

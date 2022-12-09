@@ -11,6 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>seqcli</ToolCommandName>
     <LangVersion>default</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />

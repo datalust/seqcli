@@ -16,9 +16,9 @@ namespace SeqCli.Cli
 {
     public class CommandMetadata : ICommandMetadata
     {
-        public string Name { get; set; }
-        public string SubCommand { get; set; }
-        public string HelpText { get; set; }
-        public string Example { get; set; }
+        public string Name { get; set; } = null!;
+        public string? SubCommand { get; set; }
+        public string HelpText { get; set; } = null!;
+        public string? Example { get; set; }
     }
 }

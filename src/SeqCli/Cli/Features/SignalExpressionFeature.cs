@@ -18,9 +18,9 @@ namespace SeqCli.Cli.Features
 {
     class SignalExpressionFeature : CommandFeature
     {
-        string _signalExpression;
+        string? _signalExpression;
 
-        public SignalExpressionPart Signal
+        public SignalExpressionPart? Signal
         {
             get
             {

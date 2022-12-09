@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using SeqCli.Templates.Ast;
 using Superpower;
 using Superpower.Model;
@@ -37,7 +38,7 @@ namespace SeqCli.Templates.Parser
             from members in JsonString
                 .Named("property name")
                 .Then(name => Token.EqualTo(JsonTemplateToken.Colon)
-                    .IgnoreThen(Parse.Ref(() => JsonTemplateValue)
+                    .IgnoreThen(Parse.Ref(() => JsonTemplateValue!)
                     .Select(value => KeyValuePair.Create(((JsonTemplateString)name).Value, value))))    
                 .ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma),
                     end: Token.EqualTo(JsonTemplateToken.RBracket))
@@ -45,7 +46,7 @@ namespace SeqCli.Templates.Parser
 
         static TokenListParser<JsonTemplateToken, JsonTemplate> JsonArray { get; } =
             from begin in Token.EqualTo(JsonTemplateToken.LSquareBracket)
-            from elements in Parse.Ref(() => JsonTemplateValue)
+            from elements in Parse.Ref(() => JsonTemplateValue!)
                 .ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma),
                     end: Token.EqualTo(JsonTemplateToken.RSquareBracket))
             select (JsonTemplate)new JsonTemplateArray(elements);
@@ -62,7 +63,7 @@ namespace SeqCli.Templates.Parser
         static TokenListParser<JsonTemplateToken, JsonTemplate> Call { get; } =
             (from name in Token.EqualTo(JsonTemplateToken.Identifier)
                 from lparen in Token.EqualTo(JsonTemplateToken.LParen)
-                from args in Parse.Ref(() => JsonTemplateValue).ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma))
+                from args in Parse.Ref(() => JsonTemplateValue!).ManyDelimitedBy(Token.EqualTo(JsonTemplateToken.Comma))
                 from rparen in Token.EqualTo(JsonTemplateToken.RParen)
                 select (JsonTemplate)new JsonTemplateCall(name.ToStringValue(), args)).Named("function");
 
@@ -79,7 +80,7 @@ namespace SeqCli.Templates.Parser
 
         static TokenListParser<JsonTemplateToken, JsonTemplate> JsonTemplate { get; } = JsonTemplateValue.AtEnd();
 
-        public static bool TryParse(string json, out JsonTemplate value, out string error, out Position errorPosition)
+        public static bool TryParse(string json, [NotNullWhen(true)] out JsonTemplate? value, [NotNullWhen(false)] out string? error, out Position errorPosition)
         {
             var tokens = JsonTemplateTokenizer.Instance.TryTokenize(json);
             if (!tokens.HasValue)

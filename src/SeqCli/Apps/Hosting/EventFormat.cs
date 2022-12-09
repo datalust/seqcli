@@ -26,10 +26,10 @@ namespace SeqCli.Apps.Hosting
     {
         public static Event<LogEventData> FromRaw(string eventId, uint eventType, LogEvent raw)
         {
-            var properties = new Dictionary<string, object>();
+            var properties = new Dictionary<string, object?>();
             foreach (var prop in raw.Properties)
             {
-                if (prop.Key == "@seqid" || prop.Key == "@i")
+                if (prop.Key is "@seqid" or "@i")
                     continue;
 
                 properties.Add(prop.Key, ToData(prop.Value));
@@ -49,7 +49,7 @@ namespace SeqCli.Apps.Hosting
             return new Event<LogEventData>(eventId, eventType, raw.Timestamp.UtcDateTime, data);
         }
 
-        static object ToData(LogEventPropertyValue value)
+        static object? ToData(LogEventPropertyValue value)
         {
             switch (value)
             {
@@ -63,9 +63,9 @@ namespace SeqCli.Apps.Hosting
                 case SequenceValue seq:
                     return seq.Elements.Select(ToData).ToArray();
                 case DictionaryValue dv:
-                    var dict = new Dictionary<object, object>();
+                    var dict = new Dictionary<object, object?>();
                     foreach (var kvp in dv.Elements)
-                        dict[ToData(kvp.Key)] = ToData(kvp.Value);
+                        dict[ToData(kvp.Key)!] = ToData(kvp.Value);
                     return dict;
                 default:
                     throw new NotSupportedException($"Value type {value} is not supported.");

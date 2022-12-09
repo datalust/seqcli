@@ -29,7 +29,7 @@ namespace SeqCli.Apps.Hosting
             if (title == null) throw new ArgumentNullException(nameof(title));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-            var instance = (SeqApp)Activator.CreateInstance(seqAppType) ??
+            var instance = (SeqApp?)Activator.CreateInstance(seqAppType) ??
                            throw new InvalidOperationException($"The Seq app type {seqAppType} cannot be constructed.");
 
             var appSettings = seqAppType.GetProperties(BindingFlags.Public | BindingFlags.Instance)

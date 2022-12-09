@@ -7,11 +7,11 @@ namespace SeqCli.PlainText.Extraction
 {
     class SimplePatternElement : PatternElement
     {
-        readonly TextParser<object> _parser;
+        readonly TextParser<object?> _parser;
 
         public override TextParser<Unit> Match { get; }
 
-        public SimplePatternElement(TextParser<object> parser, string name = null)
+        public SimplePatternElement(TextParser<object?> parser, string? name = null)
             : base(name)
         {
             _parser = parser ?? throw new ArgumentNullException(nameof(parser));
@@ -20,7 +20,7 @@ namespace SeqCli.PlainText.Extraction
 
         public override bool TryExtract(
             TextSpan input,
-            Dictionary<string, object> result,
+            Dictionary<string, object?> result,
             out TextSpan remainder)
         {
             var match = _parser(input);

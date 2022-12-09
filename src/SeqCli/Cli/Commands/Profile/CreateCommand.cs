@@ -10,7 +10,7 @@ namespace SeqCli.Cli.Commands.Profile
         Example = "seqcli profile create -n Production -s https://seq.example.com -a th15ISanAPIk3y")]
     class CreateCommand : Command
     {
-        string _url, _apiKey, _name;
+        string? _url, _apiKey, _name;
 
         public CreateCommand()
         {

@@ -21,11 +21,11 @@ namespace SeqCli.Sample.Loader
 {
     static class Simulation
     {
-        public static async Task RunAsync(SeqConnection connection, string apiKey, int batchSize, bool echoToStdout)
+        public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout)
         {
             var buffer = new BufferingSink();
-            
-            using var logger = new LoggerConfiguration()
+
+            await using var logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Origin", "seqcli sample ingest")
@@ -37,7 +37,7 @@ namespace SeqCli.Sample.Loader
                 InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
 
             await Roastery.Program.Main(logger);
-            logger.Dispose();
+            await logger.DisposeAsync();
             await ship;
         }
     }

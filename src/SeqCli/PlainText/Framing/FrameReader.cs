@@ -27,8 +27,8 @@ namespace SeqCli.PlainText.Framing
         readonly TimeSpan _trailingLineArrivalDeadline;
         readonly TextParser<TextSpan> _frameStart;
 
-        string _unconsumedFirstLine;
-        Task<string> _unawaitedNextLine;
+        string? _unconsumedFirstLine;
+        Task<string?>? _unawaitedNextLine;
 
         public FrameReader(TextReader source, TextParser<TextSpan> frameStart, TimeSpan trailingLineArrivalDeadline)
         {
@@ -77,7 +77,7 @@ namespace SeqCli.PlainText.Framing
                     return new Frame {HasValue = true, IsOrphan = true, Value = valueBuilder.ToString()};
             }
 
-            Task<string> readLine = null;
+            Task<string?>? readLine = null;
             while (true)
             {
                 readLine = readLine ?? Task.Run(_source.ReadLineAsync);                

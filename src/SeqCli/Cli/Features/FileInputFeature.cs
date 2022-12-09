@@ -30,7 +30,7 @@ namespace SeqCli.Cli.Features
             _supportsWildcard = supportsWildcard;
         }
 
-        string InputFilename { get; set; }
+        string? InputFilename { get; set; }
 
         public override void Enable(OptionSet options)
         {

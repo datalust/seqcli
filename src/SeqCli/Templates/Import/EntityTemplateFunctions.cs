@@ -26,7 +26,7 @@ namespace SeqCli.Templates.Import
 
         public IReadOnlyDictionary<string, JsonTemplateFunction> Exports { get; }
 
-        bool Ref(JsonTemplate[] args, [MaybeNullWhen(false)] out JsonTemplate result, [MaybeNullWhen(true)] out string err)
+        bool Ref(JsonTemplate[] args, [NotNullWhen(true)] out JsonTemplate? result, [NotNullWhen(false)] out string? err)
         {
             if (args.Length != 1 || args[0] is not JsonTemplateString { Value: { } filename })
             {
