@@ -30,121 +30,120 @@ using Serilog.Parsing;
 
 #nullable enable
 
-namespace SeqCli.Cli.Commands
+namespace SeqCli.Cli.Commands;
+
+[Command("search", "Retrieve log events that match a given filter",
+    Example = "seqcli search -f \"@Exception like '%TimeoutException%'\" -c 30")]
+class SearchCommand : Command
 {
-    [Command("search", "Retrieve log events that match a given filter",
-        Example = "seqcli search -f \"@Exception like '%TimeoutException%'\" -c 30")]
-    class SearchCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+    readonly DateRangeFeature _range;
+    readonly SignalExpressionFeature _signal;
+    string? _filter;
+    int _count = 1;
+    int _httpClientTimeout = 100000;
+
+    public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
-        readonly DateRangeFeature _range;
-        readonly SignalExpressionFeature _signal;
-        string? _filter;
-        int _count = 1;
-        int _httpClientTimeout = 100000;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        Options.Add(
+            "f=|filter=",
+            "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
+            v => _filter = v);
+        Options.Add(
+            "c=|count=",
+            $"The maximum number of events to retrieve; the default is {_count}",
+            v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
-            Options.Add(
-                "f=|filter=",
-                "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
-                v => _filter = v);
-            Options.Add(
-                "c=|count=",
-                $"The maximum number of events to retrieve; the default is {_count}",
-                v => _count = int.Parse(v, CultureInfo.InvariantCulture));
+        _range = Enable<DateRangeFeature>();
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _signal = Enable<SignalExpressionFeature>();
 
-            _range = Enable<DateRangeFeature>();
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _signal = Enable<SignalExpressionFeature>();
-
-            Options.Add(
-                "request-timeout=",
-                $"The time allowed for retrieving each page of events, in milliseconds; the default is {_httpClientTimeout}",
-                v => _httpClientTimeout = int.Parse(v.Trim()));
+        Options.Add(
+            "request-timeout=",
+            $"The time allowed for retrieving each page of events, in milliseconds; the default is {_httpClientTimeout}",
+            v => _httpClientTimeout = int.Parse(v.Trim()));
             
-            _connection = Enable<ConnectionFeature>();
-        }
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        protected override async Task<int> Run()
+    protected override async Task<int> Run()
+    {
+        try
         {
-            try
+            using var output = _output.CreateOutputLogger();
+            var connection = _connectionFactory.Connect(_connection);
+            connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
+
+            string? filter = null;
+            if (!string.IsNullOrWhiteSpace(_filter))
+                filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
+
+            await foreach (var evt in connection.Events.EnumerateAsync(null,
+                               _signal.Signal,
+                               filter,
+                               _count,
+                               fromDateUtc: _range.Start,
+                               toDateUtc: _range.End))
             {
-                using var output = _output.CreateOutputLogger();
-                var connection = _connectionFactory.Connect(_connection);
-                connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
-
-                string? filter = null;
-                if (!string.IsNullOrWhiteSpace(_filter))
-                    filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
-
-                await foreach (var evt in connection.Events.EnumerateAsync(null,
-                                   _signal.Signal,
-                                   filter,
-                                   _count,
-                                   fromDateUtc: _range.Start,
-                                   toDateUtc: _range.End))
-                {
-                    output.Write(ToSerilogEvent(evt));
-                }
-
-                return 0;
+                output.Write(ToSerilogEvent(evt));
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Could not retrieve search result: {ErrorMessage}", ex.Message);
-                return 1;
-            }
+
+            return 0;
         }
-
-        LogEvent ToSerilogEvent(EventEntity evt)
+        catch (Exception ex)
         {
-            return new LogEvent(
-                DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
-                LevelMapping.ToSerilogLevel(evt.Level),
-                string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
-                new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
-                evt.Properties
-                    .Select(p => CreateProperty(p.Name, p.Value))
-                    .Concat(new[] { new LogEventProperty(SurrogateLevelProperty.PropertyName, new ScalarValue(evt.Level)) }));
+            Log.Error(ex, "Could not retrieve search result: {ErrorMessage}", ex.Message);
+            return 1;
         }
+    }
 
-        static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
+    LogEvent ToSerilogEvent(EventEntity evt)
+    {
+        return new LogEvent(
+            DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
+            LevelMapping.ToSerilogLevel(evt.Level),
+            string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
+            new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
+            evt.Properties
+                .Select(p => CreateProperty(p.Name, p.Value))
+                .Concat(new[] { new LogEventProperty(SurrogateLevelProperty.PropertyName, new ScalarValue(evt.Level)) }));
+    }
+
+    static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
+    {
+        // Not ideal, we lose renderings, alignment etc. here.
+
+        if (token.Text != null)
+            return new TextToken(token.Text);
+        return new PropertyToken(token.PropertyName, token.RawText ?? $"{{{token.PropertyName}}}");
+    }
+
+    LogEventProperty CreateProperty(string name, object value)
+    {
+        return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
+    }
+
+    LogEventPropertyValue CreatePropertyValue(object value)
+    {
+        switch (value)
         {
-            // Not ideal, we lose renderings, alignment etc. here.
+            case JObject jo:
+                jo.TryGetValue("$typeTag", out var tt);
+                return new StructureValue(
+                    jo.Properties()
+                        .Where(kvp => kvp.Name != "$typeTag")
+                        .Select(kvp => CreateProperty(kvp.Name, kvp.Value)),
+                    (tt as JValue)?.Value as string);
 
-            if (token.Text != null)
-                return new TextToken(token.Text);
-            return new PropertyToken(token.PropertyName, token.RawText ?? $"{{{token.PropertyName}}}");
-        }
+            case JArray ja:
+                return new SequenceValue(ja.Select(CreatePropertyValue));
 
-        LogEventProperty CreateProperty(string name, object value)
-        {
-            return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
-        }
-
-        LogEventPropertyValue CreatePropertyValue(object value)
-        {
-            switch (value)
-            {
-                case JObject jo:
-                    jo.TryGetValue("$typeTag", out var tt);
-                    return new StructureValue(
-                        jo.Properties()
-                            .Where(kvp => kvp.Name != "$typeTag")
-                            .Select(kvp => CreateProperty(kvp.Name, kvp.Value)),
-                        (tt as JValue)?.Value as string);
-
-                case JArray ja:
-                    return new SequenceValue(ja.Select(CreatePropertyValue));
-
-                default:
-                    return new ScalarValue(value);
-            }
+            default:
+                return new ScalarValue(value);
         }
     }
 }

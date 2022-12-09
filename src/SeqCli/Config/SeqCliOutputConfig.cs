@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Config
+namespace SeqCli.Config;
+
+class SeqCliOutputConfig
 {
-    class SeqCliOutputConfig
-    {
-        public bool DisableColor { get; set; }
-        public bool ForceColor   { get; set; }
-    }
+    public bool DisableColor { get; set; }
+    public bool ForceColor   { get; set; }
 }

@@ -15,41 +15,40 @@
 using System;
 using System.Collections.Generic;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class UserIdentityFeature : CommandFeature
 {
-    class UserIdentityFeature : CommandFeature
+    readonly string _verb;
+
+    string? _name;
+    string? _id;
+
+    public UserIdentityFeature(string verb)
     {
-        readonly string _verb;
-
-        string _name;
-        string _id;
-
-        public UserIdentityFeature(string verb)
-        {
-            _verb = verb ?? throw new ArgumentNullException(nameof(verb));
-        }
-
-        public override void Enable(OptionSet options)
-        {
-            options.Add(
-                "n=|name=",
-                $"The username of the user(s) to {_verb}",
-                t => _name = t);
-
-            options.Add(
-                "i=|id=",
-                $"The id of a single user to {_verb}",
-                t => _id = t);
-        }
-
-        public override IEnumerable<string> GetUsageErrors()
-        {
-            if (Name != null && Id != null)
-                yield return "Only one of either `name` or `id` can be specified";
-        }
-
-        public string Name => string.IsNullOrWhiteSpace(_name) ? null : _name.Trim();
-
-        public string Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
+        _verb = verb ?? throw new ArgumentNullException(nameof(verb));
     }
+
+    public override void Enable(OptionSet options)
+    {
+        options.Add(
+            "n=|name=",
+            $"The username of the user(s) to {_verb}",
+            t => _name = t);
+
+        options.Add(
+            "i=|id=",
+            $"The id of a single user to {_verb}",
+            t => _id = t);
+    }
+
+    public override IEnumerable<string> GetUsageErrors()
+    {
+        if (Name != null && Id != null)
+            yield return "Only one of either `name` or `id` can be specified";
+    }
+
+    public string? Name => string.IsNullOrWhiteSpace(_name) ? null : _name.Trim();
+
+    public string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
 }

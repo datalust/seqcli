@@ -22,59 +22,58 @@ using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Ingestion;
 
-namespace SeqCli.Cli.Commands
+namespace SeqCli.Cli.Commands;
+
+[Command("tail", "Stream log events matching a filter")]
+class TailCommand : Command
 {
-    [Command("tail", "Stream log events matching a filter")]
-    class TailCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+    readonly SignalExpressionFeature _signal;
+    string? _filter;
+
+    public TailCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
-        readonly SignalExpressionFeature _signal;
-        string _filter;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        public TailCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        Options.Add(
+            "f=|filter=",
+            "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
+            v => _filter = v);
 
-            Options.Add(
-                "f=|filter=",
-                "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
-                v => _filter = v);
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _signal = Enable<SignalExpressionFeature>();
+        _connection = Enable<ConnectionFeature>();
+    }
 
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _signal = Enable<SignalExpressionFeature>();
-            _connection = Enable<ConnectionFeature>();
-        }
-
-        protected override async Task<int> Run()
-        {
-            var cancel = new CancellationTokenSource();
-            Console.CancelKeyPress += (s,a) => cancel.Cancel();
+    protected override async Task<int> Run()
+    {
+        var cancel = new CancellationTokenSource();
+        Console.CancelKeyPress += (_,_) => cancel.Cancel();
             
-            var connection = _connectionFactory.Connect(_connection);
+        var connection = _connectionFactory.Connect(_connection);
 
-            string strict = null;
-            if (!string.IsNullOrWhiteSpace(_filter))
-            {
-                var converted = await connection.Expressions.ToStrictAsync(_filter, cancel.Token);
-                strict = converted.StrictExpression;
-            }
-
-            using var output = _output.CreateOutputLogger();
-            using var stream = await connection.Events.StreamAsync<JObject>(
-                filter: strict, 
-                signal: _signal.Signal,
-                cancellationToken: cancel.Token);
-            var subscription = stream
-                .Select(JsonLogEventReader.ReadFromJObject)
-                // ReSharper disable once AccessToDisposedClosure
-                .Subscribe(evt => output.Write(evt), () => cancel.Cancel());
-
-            cancel.Token.WaitHandle.WaitOne();
-            subscription.Dispose();
-
-            return 0;
+        string? strict = null;
+        if (!string.IsNullOrWhiteSpace(_filter))
+        {
+            var converted = await connection.Expressions.ToStrictAsync(_filter, cancel.Token);
+            strict = converted.StrictExpression;
         }
+
+        await using var output = _output.CreateOutputLogger();
+        using var stream = await connection.Events.StreamAsync<JObject>(
+            filter: strict, 
+            signal: _signal.Signal,
+            cancellationToken: cancel.Token);
+        var subscription = stream
+            .Select(JsonLogEventReader.ReadFromJObject)
+            // ReSharper disable once AccessToDisposedClosure
+            .Subscribe(evt => output.Write(evt), () => cancel.Cancel());
+
+        cancel.Token.WaitHandle.WaitOne();
+        subscription.Dispose();
+
+        return 0;
     }
 }

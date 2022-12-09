@@ -19,45 +19,44 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.Dashboard
+namespace SeqCli.Cli.Commands.Dashboard;
+
+[Command("dashboard", "list", "List dashboards", Example="seqcli dashboard list")]
+class ListCommand : Command
 {
-    [Command("dashboard", "list", "List dashboards", Example="seqcli dashboard list")]
-    class ListCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly EntityIdentityFeature _entityIdentity;
+    readonly EntityOwnerFeature _entityOwner;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;        
+
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly EntityIdentityFeature _entityIdentity;
-        readonly EntityOwnerFeature _entityOwner;
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;        
+        _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "list"));
+        _entityOwner = Enable(new EntityOwnerFeature("dashboard", "list", _entityIdentity));
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _entityIdentity.Id != null ?
+            new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
+            (await connection.Dashboards.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
+            .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title)
+            .ToArray();
+
+        foreach (var dashboardEntity in list)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "list"));
-            _entityOwner = Enable(new EntityOwnerFeature("dashboard", "list", _entityIdentity));
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
+            _output.WriteEntity(dashboardEntity);
         }
-
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _entityIdentity.Id != null ?
-                new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
-                (await connection.Dashboards.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-                    .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title)
-                    .ToArray();
-
-            foreach (var dashboardEntity in list)
-            {
-                _output.WriteEntity(dashboardEntity);
-            }
             
-            return 0;
-        }
+        return 0;
     }
 }

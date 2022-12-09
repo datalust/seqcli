@@ -23,110 +23,109 @@ using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Util;
 
-namespace SeqCli.Cli.Commands.Signal
+namespace SeqCli.Cli.Commands.Signal;
+
+[Command("signal", "create", "Create a signal",
+    Example = "seqcli signal create -t 'Exceptions' -f \"@Exception is not null\"")]
+class CreateCommand : Command
 {
-    [Command("signal", "create", "Create a signal",
-        Example = "seqcli signal create -t 'Exceptions' -f \"@Exception is not null\"")]
-    class CreateCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+
+    readonly List<string> _columns = new();
+
+    string? _title, _description, _filter, _group;
+    bool _isProtected, _noGrouping;
+
+    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
+        Options.Add(
+            "t=|title=",
+            "A title for the signal",
+            t => _title = ArgumentString.Normalize(t));
 
-        readonly List<string> _columns = new();
+        Options.Add(
+            "description=",
+            "A description for the signal",
+            d => _description = ArgumentString.Normalize(d));
 
-        string _title, _description, _filter, _group;
-        bool _isProtected, _noGrouping;
+        Options.Add(
+            "f=|filter=",
+            "Filter to associate with the signal",
+            f => _filter = ArgumentString.Normalize(f));
 
-        public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+        Options.Add(
+            "c=|column=",
+            "Column to associate with the signal; this argument can be used multiple times",
+            c => _columns.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Columns require a value.")));
+
+        Options.Add(
+            "group=",
+            "An explicit group name to associate with the signal; the default is to infer the group from the filter",
+            g => _group = ArgumentString.Normalize(g));
+
+        Options.Add(
+            "no-group",
+            "Specify that no group should be inferred; the default is to infer the group from the filter",
+            _ => _noGrouping = true);
+
+        Options.Add(
+            "protected",
+            "Specify that the signal is editable only by administrators",
+            _ => _isProtected = true);
+
+        _connection = Enable<ConnectionFeature>();
+        _output = Enable(new OutputFormatFeature(config.Output));
+    }
+
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var signal = await connection.Signals.TemplateAsync();
+        signal.OwnerId = null;
+
+        signal.Title = _title;
+        signal.Description = _description;
+        signal.IsProtected = _isProtected;
+
+        if (_noGrouping)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            Options.Add(
-                "t=|title=",
-                "A title for the signal",
-                t => _title = ArgumentString.Normalize(t));
-
-            Options.Add(
-                "description=",
-                "A description for the signal",
-                d => _description = ArgumentString.Normalize(d));
-
-            Options.Add(
-                "f=|filter=",
-                "Filter to associate with the signal",
-                f => _filter = ArgumentString.Normalize(f));
-
-            Options.Add(
-                "c=|column=",
-                "Column to associate with the signal; this argument can be used multiple times",
-                c => _columns.Add(ArgumentString.Normalize(c)));
-
-            Options.Add(
-                "group=",
-                "An explicit group name to associate with the signal; the default is to infer the group from the filter",
-                g => _group = ArgumentString.Normalize(g));
-
-            Options.Add(
-                "no-group",
-                "Specify that no group should be inferred; the default is to infer the group from the filter",
-                _ => _noGrouping = true);
-
-            Options.Add(
-                "protected",
-                "Specify that the signal is editable only by administrators",
-                _ => _isProtected = true);
-
-            _connection = Enable<ConnectionFeature>();
-            _output = Enable(new OutputFormatFeature(config.Output));
+            signal.Grouping = SignalGrouping.None;
+        }
+        else if (_group != null)
+        {
+            signal.Grouping = SignalGrouping.Explicit;
+            signal.ExplicitGroupName = _group;
+        }
+        else
+        {
+            signal.Grouping = SignalGrouping.Inferred;
         }
 
-        protected override async Task<int> Run()
+        if (_filter != null)
         {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var signal = await connection.Signals.TemplateAsync();
-            signal.OwnerId = null;
-
-            signal.Title = _title;
-            signal.Description = _description;
-            signal.IsProtected = _isProtected;
-
-            if (_noGrouping)
+            signal.Filters = new[]
             {
-                signal.Grouping = SignalGrouping.None;
-            }
-            else if (_group != null)
-            {
-                signal.Grouping = SignalGrouping.Explicit;
-                signal.ExplicitGroupName = _group;
-            }
-            else
-            {
-                signal.Grouping = SignalGrouping.Inferred;
-            }
-
-            if (_filter != null)
-            {
-                signal.Filters = new[]
+                new DescriptiveFilterPart
                 {
-                    new DescriptiveFilterPart
-                    {
-                        Filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression,
-                        FilterNonStrict = _filter
-                    }
-                }.ToList();
-            }
-
-            foreach (var column in _columns)
-                signal.Columns.Add(new SignalColumnPart { Expression = column });
-
-            signal = await connection.Signals.AddAsync(signal);
-
-            _output.WriteEntity(signal);
-
-            return 0;
+                    Filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression,
+                    FilterNonStrict = _filter
+                }
+            }.ToList();
         }
+
+        foreach (var column in _columns)
+            signal.Columns.Add(new SignalColumnPart { Expression = column });
+
+        signal = await connection.Signals.AddAsync(signal);
+
+        _output.WriteEntity(signal);
+
+        return 0;
     }
 }

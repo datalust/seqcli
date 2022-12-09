@@ -16,20 +16,19 @@ using SeqCli.Util;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace SeqCli.Ingestion
+namespace SeqCli.Ingestion;
+
+class ScalarPropertyEnricher : ILogEventEnricher
 {
-    class ScalarPropertyEnricher : ILogEventEnricher
+    readonly LogEventProperty _property;
+
+    public ScalarPropertyEnricher(string name, object? scalarValue)
     {
-        readonly LogEventProperty _property;
+        _property = LogEventPropertyFactory.SafeCreate(name, new ScalarValue(scalarValue));
+    }
 
-        public ScalarPropertyEnricher(string name, object scalarValue)
-        {
-            _property = LogEventPropertyFactory.SafeCreate(name, new ScalarValue(scalarValue));
-        }
-
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            logEvent.AddOrUpdateProperty(_property);
-        }
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+    {
+        logEvent.AddOrUpdateProperty(_property);
     }
 }

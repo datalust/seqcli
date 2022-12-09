@@ -16,12 +16,11 @@ using Seq.Api.Model;
 
 #nullable enable
 
-namespace SeqCli.Templates.Import
+namespace SeqCli.Templates.Import;
+
+// ReSharper disable once ClassNeverInstantiated.Global
+class GenericEntity : Entity
 {
-    // ReSharper disable once ClassNeverInstantiated.Global
-    class GenericEntity : Entity
-    {
-        public string? Title { get; set; }
-        public string? Name { get; set; }
-    }
+    public string? Title { get; set; }
+    public string? Name { get; set; }
 }

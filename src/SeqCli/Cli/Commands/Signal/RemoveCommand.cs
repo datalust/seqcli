@@ -19,53 +19,52 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal
+namespace SeqCli.Cli.Commands.Signal;
+
+[Command("signal", "remove", "Remove a signal from the server",
+    Example = "seqcli signal remove -t 'Test Signal'")]
+class RemoveCommand : Command
 {
-    [Command("signal", "remove", "Remove a signal from the server",
-        Example = "seqcli signal remove -t 'Test Signal'")]
-    class RemoveCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly EntityIdentityFeature _entityIdentity;
+    readonly ConnectionFeature _connection;
+    readonly EntityOwnerFeature _entityOwner;
+
+    public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly EntityIdentityFeature _entityIdentity;
-        readonly ConnectionFeature _connection;
-        readonly EntityOwnerFeature _entityOwner;
+        _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
+        _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", _entityIdentity));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public RemoveCommand(SeqConnectionFactory connectionFactory)
+    protected override async Task<int> Run()
+    {
+        if (_entityIdentity.Title == null && _entityIdentity.Id == null)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
-            _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", _entityIdentity));
-            _connection = Enable<ConnectionFeature>();
+            Log.Error("A `title` or `id` must be specified");
+            return 1;
         }
 
-        protected override async Task<int> Run()
+        var connection = _connectionFactory.Connect(_connection);
+
+        var toRemove = _entityIdentity.Id != null ?
+            new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
+            (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
+            .Where(signal => _entityIdentity.Title == signal.Title)
+            .ToArray();
+
+        if (!toRemove.Any())
         {
-            if (_entityIdentity.Title == null && _entityIdentity.Id == null)
-            {
-                Log.Error("A `title` or `id` must be specified");
-                return 1;
-            }
-
-            var connection = _connectionFactory.Connect(_connection);
-
-            var toRemove = _entityIdentity.Id != null ?
-                new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-                    .Where(signal => _entityIdentity.Title == signal.Title)
-                    .ToArray();
-
-            if (!toRemove.Any())
-            {
-                Log.Error("No matching signal was found");
-                return 1;
-            }
-
-            foreach (var signal in toRemove)
-                await connection.Signals.RemoveAsync(signal);
-
-            return 0;
+            Log.Error("No matching signal was found");
+            return 1;
         }
+
+        foreach (var signal in toRemove)
+            await connection.Signals.RemoveAsync(signal);
+
+        return 0;
     }
 }

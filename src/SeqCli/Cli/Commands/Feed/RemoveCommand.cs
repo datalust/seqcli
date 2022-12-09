@@ -19,61 +19,60 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Feed
+namespace SeqCli.Cli.Commands.Feed;
+
+[Command("feed", "remove", "Remove a NuGet feed from the server",
+    Example="seqcli feed remove -n CI")]
+class RemoveCommand : Command
 {
-    [Command("feed", "remove", "Remove a NuGet feed from the server",
-        Example="seqcli feed remove -n CI")]
-    class RemoveCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+        
+    readonly ConnectionFeature _connection;
+        
+    string? _name, _id;
+        
+    public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
-        
-        readonly ConnectionFeature _connection;
-        
-        string _name, _id;
-        
-        public RemoveCommand(SeqConnectionFactory connectionFactory)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            Options.Add(
-                "n=|name=",
-                "The name of the feed to remove",
-                n => _name = n);
+        Options.Add(
+            "n=|name=",
+            "The name of the feed to remove",
+            n => _name = n);
 
-            Options.Add(
-                "i=|id=",
-                "The id of a single feed to remove",
-                id => _id = id);
+        Options.Add(
+            "i=|id=",
+            "The id of a single feed to remove",
+            id => _id = id);
             
-            _connection = Enable<ConnectionFeature>();
-        }
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        protected override async Task<int> Run()
+    protected override async Task<int> Run()
+    {
+        if (_name == null && _id == null)
         {
-            if (_name == null && _id == null)
-            {
-                Log.Error("A `name` or `id` must be specified");
-                return 1;
-            }
-
-            var connection = _connectionFactory.Connect(_connection);
-
-            var toRemove = _id != null ?
-                new[] {await connection.Feeds.FindAsync(_id)} :
-                (await connection.Feeds.ListAsync())
-                    .Where(f => _name == f.Name) 
-                    .ToArray();
-
-            if (!toRemove.Any())
-            {
-                Log.Error("No matching feed was found");
-                return 1;
-            }
-
-            foreach (var feed in toRemove)
-                await connection.Feeds.RemoveAsync(feed);
-
-            return 0;
+            Log.Error("A `name` or `id` must be specified");
+            return 1;
         }
+
+        var connection = _connectionFactory.Connect(_connection);
+
+        var toRemove = _id != null ?
+            new[] {await connection.Feeds.FindAsync(_id)} :
+            (await connection.Feeds.ListAsync())
+            .Where(f => _name == f.Name) 
+            .ToArray();
+
+        if (!toRemove.Any())
+        {
+            Log.Error("No matching feed was found");
+            return 1;
+        }
+
+        foreach (var feed in toRemove)
+            await connection.Feeds.RemoveAsync(feed);
+
+        return 0;
     }
 }

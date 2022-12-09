@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace Roastery.Web
+namespace Roastery.Web;
+
+abstract class HttpServer
 {
-    abstract class HttpServer
-    {
-        public abstract Task<HttpResponse> InvokeAsync(HttpRequest request);
-    }
+    public abstract Task<HttpResponse> InvokeAsync(HttpRequest request);
 }

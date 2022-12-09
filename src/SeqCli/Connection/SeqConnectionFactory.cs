@@ -19,48 +19,47 @@ using SeqCli.Config;
 
 #nullable enable
 
-namespace SeqCli.Connection
+namespace SeqCli.Connection;
+
+class SeqConnectionFactory
 {
-    class SeqConnectionFactory
+    readonly SeqCliConfig _config;
+
+    public SeqConnectionFactory(SeqCliConfig config)
     {
-        readonly SeqCliConfig _config;
+        _config = config ?? throw new ArgumentNullException(nameof(config));
+    }
 
-        public SeqConnectionFactory(SeqCliConfig config)
-        {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-        }
-
-        public SeqConnection Connect(ConnectionFeature connection)
-        {
-            var (url, apiKey) = GetConnectionDetails(connection);
-            return new SeqConnection(url, apiKey);
-        }
+    public SeqConnection Connect(ConnectionFeature connection)
+    {
+        var (url, apiKey) = GetConnectionDetails(connection);
+        return new SeqConnection(url, apiKey);
+    }
         
-        public (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection)
+    public (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection)
+    {
+        if (connection == null) throw new ArgumentNullException(nameof(connection));
+
+        string? url, apiKey;
+        if (connection.IsUrlSpecified)
         {
-            if (connection == null) throw new ArgumentNullException(nameof(connection));
-
-            string? url, apiKey;
-            if (connection.IsUrlSpecified)
-            {
-                url = connection.Url;
-                apiKey = connection.ApiKey;
-            }
-            else if (connection.IsProfileNameSpecified)
-            {
-                if (!_config.Profiles.TryGetValue(connection.ProfileName!, out var profile))
-                    throw new ArgumentException($"A profile named `{connection.ProfileName}` was not found; see `seqcli profile list` for available profiles.");
-                
-                url = profile.ServerUrl;
-                apiKey = profile.ApiKey;
-            }
-            else
-            {
-                url = _config.Connection.ServerUrl;
-                apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.ApiKey;
-            }
-
-            return (url, apiKey);
+            url = connection.Url;
+            apiKey = connection.ApiKey;
         }
+        else if (connection.IsProfileNameSpecified)
+        {
+            if (!_config.Profiles.TryGetValue(connection.ProfileName!, out var profile))
+                throw new ArgumentException($"A profile named `{connection.ProfileName}` was not found; see `seqcli profile list` for available profiles.");
+                
+            url = profile.ServerUrl;
+            apiKey = profile.ApiKey;
+        }
+        else
+        {
+            url = _config.Connection.ServerUrl;
+            apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.ApiKey;
+        }
+
+        return (url, apiKey);
     }
 }

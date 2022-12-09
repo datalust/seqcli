@@ -4,50 +4,49 @@ using Xunit;
 
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
-namespace SeqCli.Tests.Apps
+namespace SeqCli.Tests.Apps;
+
+public class AppMetadataReaderTests
 {
-    public class AppMetadataReaderTests
+    enum Test
     {
-        enum Test
-        {
-            First,
-            Second = First,
-            [Description("The third")]
-            Third
-        }
+        First,
+        Second = First,
+        [Description("The third")]
+        Third
+    }
         
-        [Fact]
-        public void TheDefaultSettingTypeForAnEnumIsSelect()
+    [Fact]
+    public void TheDefaultSettingTypeForAnEnumIsSelect()
+    {
+        var settingType = AppMetadataReader.GetSettingType(typeof(Test));
+        Assert.Equal(AppSettingType.Select, settingType);
+    }
+
+    [Fact]
+    public void TheAllowedValuesForANonEnumTypeAreUndefined()
+    {
+        var allowed = AppMetadataReader.TryGetAllowedValues(typeof(string));
+        Assert.Null(allowed);
+    }
+
+    [Fact]
+    public void TheAllowedValuesForAnEnumTypeAreAllNames()
+    {
+        var allowed = AppMetadataReader.TryGetAllowedValues(typeof(Test));
+        Assert.Equal(3, allowed.Length);
+
+        static void AssertSettingValueMembers(
+            AppSettingValue value,
+            object expectedValue,
+            string expectedDescription)
         {
-            var settingType = AppMetadataReader.GetSettingType(typeof(Test));
-            Assert.Equal(AppSettingType.Select, settingType);
+            Assert.Equal(expectedValue, value.Value);
+            Assert.Equal(expectedDescription, value.Description);
         }
-
-        [Fact]
-        public void TheAllowedValuesForANonEnumTypeAreUndefined()
-        {
-            var allowed = AppMetadataReader.TryGetAllowedValues(typeof(string));
-            Assert.Null(allowed);
-        }
-
-        [Fact]
-        public void TheAllowedValuesForAnEnumTypeAreAllNames()
-        {
-            var allowed = AppMetadataReader.TryGetAllowedValues(typeof(Test));
-            Assert.Equal(3, allowed.Length);
-
-            static void AssertSettingValueMembers(
-                AppSettingValue value,
-                object expectedValue,
-                string expectedDescription)
-            {
-                Assert.Equal(expectedValue, value.Value);
-                Assert.Equal(expectedDescription, value.Description);
-            }
             
-            AssertSettingValueMembers(allowed[0], "First", null);
-            AssertSettingValueMembers(allowed[1], "Second", null);
-            AssertSettingValueMembers(allowed[2], "Third", "The third");
-        }
+        AssertSettingValueMembers(allowed[0], "First", null);
+        AssertSettingValueMembers(allowed[1], "Second", null);
+        AssertSettingValueMembers(allowed[2], "Third", "The third");
     }
 }

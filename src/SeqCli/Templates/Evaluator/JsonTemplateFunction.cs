@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
 using SeqCli.Templates.Ast;
 
-namespace SeqCli.Templates.Evaluator
-{
-    delegate bool JsonTemplateFunction(JsonTemplate[] args, out JsonTemplate result, out string error);
-}
+namespace SeqCli.Templates.Evaluator;
+
+delegate bool JsonTemplateFunction(JsonTemplate[] args, [NotNullWhen(true)] out JsonTemplate? result, [NotNullWhen(false)] out string? error);

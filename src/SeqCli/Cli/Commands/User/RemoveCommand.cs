@@ -19,51 +19,50 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.User
+namespace SeqCli.Cli.Commands.User;
+
+[Command("user", "remove", "Remove a user from the server",
+    Example="seqcli user remove -n alice")]
+class RemoveCommand : Command
 {
-    [Command("user", "remove", "Remove a user from the server",
-        Example="seqcli user remove -n alice")]
-    class RemoveCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly UserIdentityFeature _userIdentity;
+    readonly ConnectionFeature _connection;
+
+    public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly UserIdentityFeature _userIdentity;
-        readonly ConnectionFeature _connection;
+        _userIdentity = Enable(new UserIdentityFeature("remove"));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public RemoveCommand(SeqConnectionFactory connectionFactory)
+    protected override async Task<int> Run()
+    {
+        if (_userIdentity.Name == null && _userIdentity.Id == null)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _userIdentity = Enable(new UserIdentityFeature("remove"));
-            _connection = Enable<ConnectionFeature>();
+            Log.Error("A `name` or `id` must be specified");
+            return 1;
         }
 
-        protected override async Task<int> Run()
+        var connection = _connectionFactory.Connect(_connection);
+
+        var toRemove = _userIdentity.Id != null ?
+            new[] {await connection.Users.FindAsync(_userIdentity.Id)} :
+            (await connection.Users.ListAsync())
+            .Where(u => _userIdentity.Name == u.Username) 
+            .ToArray();
+
+        if (!toRemove.Any())
         {
-            if (_userIdentity.Name == null && _userIdentity.Id == null)
-            {
-                Log.Error("A `name` or `id` must be specified");
-                return 1;
-            }
-
-            var connection = _connectionFactory.Connect(_connection);
-
-            var toRemove = _userIdentity.Id != null ?
-                new[] {await connection.Users.FindAsync(_userIdentity.Id)} :
-                (await connection.Users.ListAsync())
-                    .Where(u => _userIdentity.Name == u.Username) 
-                    .ToArray();
-
-            if (!toRemove.Any())
-            {
-                Log.Error("No matching user was found");
-                return 1;
-            }
-
-            foreach (var userEntity in toRemove)
-                await connection.Users.RemoveAsync(userEntity);
-
-            return 0;
+            Log.Error("No matching user was found");
+            return 1;
         }
+
+        foreach (var userEntity in toRemove)
+            await connection.Users.RemoveAsync(userEntity);
+
+        return 0;
     }
 }

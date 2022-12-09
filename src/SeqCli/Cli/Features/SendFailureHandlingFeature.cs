@@ -15,18 +15,16 @@
 using System;
 using SeqCli.Ingestion;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class SendFailureHandlingFeature : CommandFeature
 {
-    class SendFailureHandlingFeature : CommandFeature
+    public SendFailureHandling SendFailureHandling { get; private set; }
+
+    public override void Enable(OptionSet options)
     {
-        public SendFailureHandling SendFailureHandling { get; private set; }
-
-        public override void Enable(OptionSet options)
-        {
-            options.Add("send-failure=",
-                "Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore`",
-                v => SendFailureHandling = (SendFailureHandling)Enum.Parse(typeof(SendFailureHandling), v, ignoreCase: true));
-        }
+        options.Add("send-failure=",
+            "Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore`",
+            v => SendFailureHandling = (SendFailureHandling)Enum.Parse(typeof(SendFailureHandling), v, ignoreCase: true));
     }
-
 }

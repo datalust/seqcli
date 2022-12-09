@@ -14,19 +14,18 @@
 
 using Newtonsoft.Json;
 
-namespace SeqCli.Apps.Definitions
-{
-    // ReSharper disable all
-    class AppPlatformDefinition
-    {
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Executable { get; set; }
+namespace SeqCli.Apps.Definitions;
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Arguments { get; set; }
+// ReSharper disable all
+class AppPlatformDefinition
+{
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? Executable { get; set; }
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? Arguments { get; set; }
         
-        // The generic host for assembly-based apps uses this.
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string SeqAppTypeName { get; set; }
-    }
+    // The generic host for assembly-based apps uses this.
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? SeqAppTypeName { get; set; }
 }

@@ -6,84 +6,83 @@ using Newtonsoft.Json;
 
 #nullable enable
 
-namespace SeqCli.Templates.Export
+namespace SeqCli.Templates.Export;
+
+class TemplateValueMap
 {
-    class TemplateValueMap
+    readonly Dictionary<string, string> _idToReferenceName = new();
+    readonly HashSet<PropertyInfo> _referenceProperties = new();
+    readonly HashSet<PropertyInfo> _referenceListProperties = new();
+    readonly Dictionary<PropertyInfo, string> _argProperties = new();
+    readonly HashSet<PropertyInfo> _ignoredProperties = new();
+
+    static PropertyInfo GetProperty<T>(string propertyName) =>
+        typeof(T).GetProperty(propertyName) ??
+        throw new ArgumentException($"No property `{propertyName}` found on {typeof(T)}");
+        
+    public void MapAsReference<T>(string propertyName)
     {
-        readonly Dictionary<string, string> _idToReferenceName = new();
-        readonly HashSet<PropertyInfo> _referenceProperties = new();
-        readonly HashSet<PropertyInfo> _referenceListProperties = new();
-        readonly Dictionary<PropertyInfo, string> _argProperties = new();
-        readonly HashSet<PropertyInfo> _ignoredProperties = new();
+        _referenceProperties.Add(GetProperty<T>(propertyName));
+    }
 
-        static PropertyInfo GetProperty<T>(string propertyName) =>
-            typeof(T).GetProperty(propertyName) ??
-            throw new ArgumentException($"No property `{propertyName}` found on {typeof(T)}");
+    public void MapAsReferenceList<T>(string propertyName)
+    {
+        _referenceListProperties.Add(GetProperty<T>(propertyName));
+    }
+
+    public void MapNonNullAsArg<T>(string propertyName, string argumentName)
+    {
+        _argProperties.Add(GetProperty<T>(propertyName), argumentName);
+    }
         
-        public void MapAsReference<T>(string propertyName)
+    public void AddReferencedTemplate(string entityId, string name)
+    {
+        _idToReferenceName.Add(entityId, name);
+    }
+
+    public void Ignore<T>(string propertyName)
+    {
+        _ignoredProperties.Add(GetProperty<T>(propertyName));
+    }
+
+    public bool TryGetRawValue(PropertyInfo pi, object? value, [MaybeNullWhen(false)] out string raw)
+    {
+        if (value is string s && _referenceProperties.Contains(pi) &&
+            _idToReferenceName.TryGetValue(s, out var name))
         {
-            _referenceProperties.Add(GetProperty<T>(propertyName));
+            raw = FormatReference(name);
+            return true;
         }
 
-        public void MapAsReferenceList<T>(string propertyName)
+        if (value != null && _argProperties.TryGetValue(pi, out var arg))
         {
-            _referenceListProperties.Add(GetProperty<T>(propertyName));
+            var jsonStringArg = JsonConvert.SerializeObject(arg);
+            raw = $"arg({jsonStringArg})";
+            return true;
         }
 
-        public void MapNonNullAsArg<T>(string propertyName, string argumentName)
-        {
-            _argProperties.Add(GetProperty<T>(propertyName), argumentName);
-        }
-        
-        public void AddReferencedTemplate(string entityId, string name)
-        {
-            _idToReferenceName.Add(entityId, name);
-        }
+        raw = null;
+        return false;
+    }
 
-        public void Ignore<T>(string propertyName)
+    public bool TryGetRawElement(PropertyInfo pi, object? elementValue, [MaybeNullWhen(false)] out string raw)
+    {
+        if (elementValue is string s && _referenceListProperties.Contains(pi) &&
+            _idToReferenceName.TryGetValue(s, out var name))
         {
-            _ignoredProperties.Add(GetProperty<T>(propertyName));
+            raw = FormatReference(name);
+            return true;
         }
 
-        public bool TryGetRawValue(PropertyInfo pi, object? value, [MaybeNullWhen(false)] out string raw)
-        {
-            if (value is string s && _referenceProperties.Contains(pi) &&
-                _idToReferenceName.TryGetValue(s, out var name))
-            {
-                raw = FormatReference(name);
-                return true;
-            }
+        raw = null;
+        return false;
+    }
 
-            if (value != null && _argProperties.TryGetValue(pi, out var arg))
-            {
-                var jsonStringArg = JsonConvert.SerializeObject(arg);
-                raw = $"arg({jsonStringArg})";
-                return true;
-            }
+    public bool IsIgnored(PropertyInfo pi) => _ignoredProperties.Contains(pi);
 
-            raw = null;
-            return false;
-        }
-
-        public bool TryGetRawElement(PropertyInfo pi, object? elementValue, [MaybeNullWhen(false)] out string raw)
-        {
-            if (elementValue is string s && _referenceListProperties.Contains(pi) &&
-                _idToReferenceName.TryGetValue(s, out var name))
-            {
-                raw = FormatReference(name);
-                return true;
-            }
-
-            raw = null;
-            return false;
-        }
-
-        public bool IsIgnored(PropertyInfo pi) => _ignoredProperties.Contains(pi);
-
-        static string FormatReference(string name)
-        {
-            var jsonStringName = JsonConvert.SerializeObject(name);
-            return $"ref({jsonStringName})";
-        }
+    static string FormatReference(string name)
+    {
+        var jsonStringName = JsonConvert.SerializeObject(name);
+        return $"ref({jsonStringName})";
     }
 }

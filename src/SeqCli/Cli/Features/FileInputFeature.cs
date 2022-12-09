@@ -17,51 +17,50 @@ using System.Collections.Generic;
 using System.IO;
 using SeqCli.Util;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class FileInputFeature : CommandFeature
 {
-    class FileInputFeature : CommandFeature
+    readonly string _description;
+    readonly bool _supportsWildcard;
+
+    public FileInputFeature(string description, bool supportsWildcard = false)
     {
-        readonly string _description;
-        readonly bool _supportsWildcard;
+        _description = description;
+        _supportsWildcard = supportsWildcard;
+    }
 
-        public FileInputFeature(string description, bool supportsWildcard = false)
+    string? InputFilename { get; set; }
+
+    public override void Enable(OptionSet options)
+    {
+        var wildcardHelp = _supportsWildcard ? $", including the `{DirectoryExt.Wildcard}` wildcard" : "";
+        options.Add("i=|input=",
+            $"{_description}{wildcardHelp}; if not specified, `STDIN` will be used",
+            v => InputFilename = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+    }
+
+    static TextReader OpenText(string filename)
+    {
+        return new StreamReader(
+            File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+    }
+
+    public TextReader OpenInput()
+    {
+        return InputFilename != null ? OpenText(InputFilename) : Console.In;
+    }
+
+    public IEnumerable<TextReader> OpenInputs()
+    {
+        if (InputFilename == null || !DirectoryExt.IncludesWildcard(InputFilename))
         {
-            _description = description;
-            _supportsWildcard = supportsWildcard;
+            yield return OpenInput();
         }
-
-        string InputFilename { get; set; }
-
-        public override void Enable(OptionSet options)
+        else
         {
-            var wildcardHelp = _supportsWildcard ? $", including the `{DirectoryExt.Wildcard}` wildcard" : "";
-            options.Add("i=|input=",
-                $"{_description}{wildcardHelp}; if not specified, `STDIN` will be used",
-                v => InputFilename = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
-        }
-
-        static TextReader OpenText(string filename)
-        {
-            return new StreamReader(
-                File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-        }
-
-        public TextReader OpenInput()
-        {
-            return InputFilename != null ? OpenText(InputFilename) : Console.In;
-        }
-
-        public IEnumerable<TextReader> OpenInputs()
-        {
-            if (InputFilename == null || !DirectoryExt.IncludesWildcard(InputFilename))
-            {
-                yield return OpenInput();
-            }
-            else
-            {
-                foreach (var path in DirectoryExt.GetFiles(InputFilename))
-                    yield return OpenText(path);
-            }
+            foreach (var path in DirectoryExt.GetFiles(InputFilename))
+                yield return OpenText(path);
         }
     }
 }

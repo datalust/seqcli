@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.PlainText.Framing
+namespace SeqCli.PlainText.Framing;
+
+struct Frame
 {
-    struct Frame
-    {
-        public bool HasValue { get; set; }
-        public bool IsOrphan { get; set; }
-        public string Value { get; set; }
-        public bool IsAtEnd { get; set; }
-    }
+    public bool HasValue { get; set; }
+    public bool IsOrphan { get; set; }
+    public string Value { get; set; }
+    public bool IsAtEnd { get; set; }
 }

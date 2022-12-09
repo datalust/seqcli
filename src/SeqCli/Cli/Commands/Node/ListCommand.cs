@@ -21,53 +21,52 @@ using SeqCli.Connection;
 
 #nullable enable
 
-namespace SeqCli.Cli.Commands.Node
+namespace SeqCli.Cli.Commands.Node;
+
+[Command("node", "list", "List nodes in the Seq cluster",
+    Example = "seqcli node list --json")]
+class ListCommand : Command
 {
-    [Command("node", "list", "List nodes in the Seq cluster",
-        Example = "seqcli node list --json")]
-    class ListCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+
+    string? _name, _id;
+        
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+            
+        Options.Add(
+            "n=|name=",
+            "The name of the cluster node to list",
+            n => _name = n);
 
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
-
-        string? _name, _id;
+        Options.Add(
+            "i=|id=",
+            "The id of a single cluster node to list",
+            id => _id = id);
+            
+        _output = Enable(new OutputFormatFeature(outputConfig));
+        _connection = Enable<ConnectionFeature>();
+    }
         
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _id != null ?
+            new[] { await connection.ClusterNodes.FindAsync(_id) } :
+            (await connection.ClusterNodes.ListAsync())
+            .Where(n => _name == null || _name == n.Name)
+            .ToArray();
+
+        foreach (var clusterNode in list)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            
-            Options.Add(
-                "n=|name=",
-                "The name of the cluster node to list",
-                n => _name = n);
-
-            Options.Add(
-                "i=|id=",
-                "The id of a single cluster node to list",
-                id => _id = id);
-            
-            _output = Enable(new OutputFormatFeature(outputConfig));
-            _connection = Enable<ConnectionFeature>();
+            _output.WriteEntity(clusterNode);
         }
-        
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _id != null ?
-                new[] { await connection.ClusterNodes.FindAsync(_id) } :
-                (await connection.ClusterNodes.ListAsync())
-                .Where(n => _name == null || _name == n.Name)
-                .ToArray();
-
-            foreach (var clusterNode in list)
-            {
-                _output.WriteEntity(clusterNode);
-            }
             
-            return 0;
-        }
+        return 0;
     }
 }

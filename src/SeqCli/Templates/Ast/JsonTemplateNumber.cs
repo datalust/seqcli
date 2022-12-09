@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Templates.Ast
-{
-    class JsonTemplateNumber : JsonTemplate
-    {
-        public decimal Value { get; }
+namespace SeqCli.Templates.Ast;
 
-        public JsonTemplateNumber(decimal value)
-        {
-            Value = value;
-        }
+class JsonTemplateNumber : JsonTemplate
+{
+    public decimal Value { get; }
+
+    public JsonTemplateNumber(decimal value)
+    {
+        Value = value;
     }
 }

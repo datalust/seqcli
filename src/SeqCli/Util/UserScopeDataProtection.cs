@@ -17,31 +17,30 @@ using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace SeqCli.Util
+namespace SeqCli.Util;
+
+[SupportedOSPlatform("windows")]
+static class UserScopeDataProtection
 {
-    [SupportedOSPlatform("windows")]
-    static class UserScopeDataProtection
+    public static string Unprotect(string @protected)
     {
-        public static string Unprotect(string @protected)
-        {
-            var parts = @protected.Split(new[] { '$' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length != 2)
-                throw new InvalidOperationException("Encoded data format is invalid.");
+        var parts = @protected.Split(new[] { '$' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2)
+            throw new InvalidOperationException("Encoded data format is invalid.");
 
-            var bytes = Convert.FromBase64String(parts[0]);
-            var salt = Convert.FromBase64String(parts[1]);
-            var decoded = ProtectedData.Unprotect(bytes, salt, DataProtectionScope.CurrentUser);
-            return Encoding.UTF8.GetString(decoded);
-        }
+        var bytes = Convert.FromBase64String(parts[0]);
+        var salt = Convert.FromBase64String(parts[1]);
+        var decoded = ProtectedData.Unprotect(bytes, salt, DataProtectionScope.CurrentUser);
+        return Encoding.UTF8.GetString(decoded);
+    }
 
-        public static string Protect(string value)
-        {
-            var salt = new byte[16];
-            using (var cp = RandomNumberGenerator.Create())
-                cp.GetBytes(salt);
+    public static string Protect(string value)
+    {
+        var salt = new byte[16];
+        using (var cp = RandomNumberGenerator.Create())
+            cp.GetBytes(salt);
 
-            var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), salt, DataProtectionScope.CurrentUser);
-            return $"{Convert.ToBase64String(bytes)}${Convert.ToBase64String(salt)}";
-        }
+        var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), salt, DataProtectionScope.CurrentUser);
+        return $"{Convert.ToBase64String(bytes)}${Convert.ToBase64String(salt)}";
     }
 }

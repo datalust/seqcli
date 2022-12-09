@@ -18,45 +18,44 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.RetentionPolicy
+namespace SeqCli.Cli.Commands.RetentionPolicy;
+
+[Command("retention", "remove", "Remove a retention policy from the server",
+    Example="seqcli retention remove -i retentionpolicy-17")]
+class RemoveCommand : Command
 {
-    [Command("retention", "remove", "Remove a retention policy from the server",
-        Example="seqcli retention remove -i retentionpolicy-17")]
-    class RemoveCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+        
+    readonly ConnectionFeature _connection;
+        
+    string? _id;
+        
+    public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
-        
-        readonly ConnectionFeature _connection;
-        
-        string _id;
-        
-        public RemoveCommand(SeqConnectionFactory connectionFactory)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-            Options.Add(
-                "i=|id=",
-                "The id of a single retention policy to remove",
-                id => _id = id);
+        Options.Add(
+            "i=|id=",
+            "The id of a single retention policy to remove",
+            id => _id = id);
             
-            _connection = Enable<ConnectionFeature>();
-        }
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        protected override async Task<int> Run()
+    protected override async Task<int> Run()
+    {
+        if (_id == null)
         {
-            if (_id == null)
-            {
-                Log.Error("An `id` must be specified");
-                return 1;
-            }
-
-            var connection = _connectionFactory.Connect(_connection);
-
-            var toRemove = await connection.RetentionPolicies.FindAsync(_id);
-
-            await connection.RetentionPolicies.RemoveAsync(toRemove);
-
-            return 0;
+            Log.Error("An `id` must be specified");
+            return 1;
         }
+
+        var connection = _connectionFactory.Connect(_connection);
+
+        var toRemove = await connection.RetentionPolicies.FindAsync(_id);
+
+        await connection.RetentionPolicies.RemoveAsync(toRemove);
+
+        return 0;
     }
 }

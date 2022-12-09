@@ -17,36 +17,35 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace SeqCli.Apps.Definitions
-{
-    // ReSharper disable all
-    class AppDefinition
-    {
-        public AppDefinition(string name)
-        {
-            Name = name;
-        }
-        
-        public string Name { get; set; }
- 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? Description { get; set; }
+namespace SeqCli.Apps.Definitions;
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool AllowReprocessing { get; set; }
-        
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? Executable { get; set; }
-        
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? Arguments { get; set; }
-        
-        public List<string> Capabilities { get; set; } = new List<string>();
-        
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, AppPlatformDefinition>? Platform { get; set; }
-        
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, AppSettingDefinition>? Settings { get; set; }
+// ReSharper disable all
+class AppDefinition
+{
+    public AppDefinition(string name)
+    {
+        Name = name;
     }
+        
+    public string Name { get; set; }
+ 
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? Description { get; set; }
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public bool AllowReprocessing { get; set; }
+        
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? Executable { get; set; }
+        
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public string? Arguments { get; set; }
+        
+    public List<string> Capabilities { get; set; } = new List<string>();
+        
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public Dictionary<string, AppPlatformDefinition>? Platform { get; set; }
+        
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public Dictionary<string, AppSettingDefinition>? Settings { get; set; }
 }

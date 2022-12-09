@@ -17,102 +17,101 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SeqCli.Syntax
+namespace SeqCli.Syntax;
+
+class QueryBuilder
 {
-    class QueryBuilder
+    readonly List<(string, string)> _columns = new List<(string, string)>();
+    readonly List<string> _where = new List<string>();
+    readonly List<string> _groupBy = new List<string>();
+    readonly List<string> _having = new List<string>();
+
+    public void Select(string value, string label)
     {
-        readonly List<(string, string)> _columns = new List<(string, string)>();
-        readonly List<string> _where = new List<string>();
-        readonly List<string> _groupBy = new List<string>();
-        readonly List<string> _having = new List<string>();
+        if (value == null) throw new ArgumentNullException(nameof(value));
+        _columns.Add((value, label));
+    }
 
-        public void Select(string value, string label)
+    public bool FromStream { get; set; }
+
+    public void Where(string predicate)
+    {
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        _where.Add(predicate);
+    }
+
+    public void GroupBy(string grouping)
+    {
+        if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+        _groupBy.Add(grouping);
+    }
+
+    public void GroupBy(TimeSpan interval)
+    {
+        _groupBy.Add($"time({DurationMoniker.FromTimeSpan(interval)})");
+    }
+
+    public void Having(string predicate)
+    {
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        _having.Add(predicate);
+    }
+
+    public int? Limit { get; set; }
+
+    public string Build()
+    {
+        var result = new StringBuilder(140);
+
+        result.Append("select");
+        var selectDelim = " ";
+        foreach (var (value, label) in _columns)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            _columns.Add((value, label));
+            result.Append($"{selectDelim}{value}");
+            selectDelim = ", ";
+
+            if (label != null)
+                result.Append($" as {label}");
         }
 
-        public bool FromStream { get; set; }
+        if (FromStream)
+            result.Append(" from stream");
 
-        public void Where(string predicate)
+        if (_where.Any())
         {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            _where.Add(predicate);
+            var builder = new CombinedFilterBuilder();
+
+            foreach (var where in _where)
+                builder.Intersect(where);
+
+            result.Append($" where {builder.Build()}");
         }
 
-        public void GroupBy(string grouping)
+        if (_groupBy.Any())
         {
-            if (grouping == null) throw new ArgumentNullException(nameof(grouping));
-            _groupBy.Add(grouping);
-        }
+            result.Append(" group by");
 
-        public void GroupBy(TimeSpan interval)
-        {
-            _groupBy.Add($"time({DurationMoniker.FromTimeSpan(interval)})");
-        }
-
-        public void Having(string predicate)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            _having.Add(predicate);
-        }
-
-        public int? Limit { get; set; }
-
-        public string Build()
-        {
-            var result = new StringBuilder(140);
-
-            result.Append("select");
-            var selectDelim = " ";
-            foreach (var (value, label) in _columns)
+            var groupDelim = " ";
+            foreach (var grouping in _groupBy)
             {
-                result.Append($"{selectDelim}{value}");
-                selectDelim = ", ";
-
-                if (label != null)
-                    result.Append($" as {label}");
+                result.Append($"{groupDelim}{grouping}");
+                groupDelim = ", ";
             }
-
-            if (FromStream)
-                result.Append(" from stream");
-
-            if (_where.Any())
-            {
-                var builder = new CombinedFilterBuilder();
-
-                foreach (var where in _where)
-                    builder.Intersect(where);
-
-                result.Append($" where {builder.Build()}");
-            }
-
-            if (_groupBy.Any())
-            {
-                result.Append(" group by");
-
-                var groupDelim = " ";
-                foreach (var grouping in _groupBy)
-                {
-                    result.Append($"{groupDelim}{grouping}");
-                    groupDelim = ", ";
-                }
-            }
-
-            if (_having.Any())
-            {
-                var builder = new CombinedFilterBuilder();
-
-                foreach (var having in _having)
-                    builder.Intersect(having);
-
-                result.Append($" having {builder.Build()}");
-            }
-
-            if (Limit.HasValue)
-                result.Append($" limit {Limit}");
-
-            return result.ToString();
         }
+
+        if (_having.Any())
+        {
+            var builder = new CombinedFilterBuilder();
+
+            foreach (var having in _having)
+                builder.Intersect(having);
+
+            result.Append($" having {builder.Build()}");
+        }
+
+        if (Limit.HasValue)
+            result.Append($" limit {Limit}");
+
+        return result.ToString();
     }
 }

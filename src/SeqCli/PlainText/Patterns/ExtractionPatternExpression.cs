@@ -1,6 +1,5 @@
-﻿namespace SeqCli.PlainText.Patterns
+﻿namespace SeqCli.PlainText.Patterns;
+
+abstract class ExtractionPatternExpression
 {
-    abstract class ExtractionPatternExpression
-    {
-    }
 }

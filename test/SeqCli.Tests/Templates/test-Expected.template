@@ -1,7 +1,7 @@
 ﻿{
   "$entity": "test",
-  "ReferencedId": ref("Referenced"),
   "Name": "Test Stuff",
+  "ReferencedId": ref("Referenced"),
   "Numbers": [
     1,
     2,

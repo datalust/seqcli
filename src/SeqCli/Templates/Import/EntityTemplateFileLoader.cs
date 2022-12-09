@@ -20,43 +20,42 @@ using SeqCli.Templates.Parser;
 
 #nullable enable
 
-namespace SeqCli.Templates.Import
+namespace SeqCli.Templates.Import;
+
+static class EntityTemplateLoader
 {
-    static class EntityTemplateLoader
+    public static bool Load(string path, [MaybeNullWhen(false)] out EntityTemplate template, [MaybeNullWhen(true)] out string error)
     {
-        public static bool Load(string path, [MaybeNullWhen(false)] out EntityTemplate template, [MaybeNullWhen(true)] out string error)
+        if (!File.Exists(path))
         {
-            if (!File.Exists(path))
-            {
-                template = null;
-                error = "the template file was not found";
-                return false;
-            }
-
-            var source = File.ReadAllText(path);
-            if (!JsonTemplateParser.TryParse(source, out var root, out var parseError, out _))
-            {
-                template = null;
-                error = parseError;
-                return false;
-            }
-
-            if (root is not JsonTemplateObject rootDictionary ||
-                !rootDictionary.Members.TryGetValue("$entity", out var resourceToken) ||
-                resourceToken is not JsonTemplateString resource ||
-                resource.Value is null)
-            {
-                template = null;
-                error = "the template must include an `$entity` property";
-                return false;
-            }
-            
-            var resourceGroup = EntityName.ToResourceGroup(resource.Value);
-            var filename = Path.GetFileName(path);
-            
-            template = new EntityTemplate(resourceGroup, filename, root);
-            error = null;
-            return true;
+            template = null;
+            error = "the template file was not found";
+            return false;
         }
+
+        var source = File.ReadAllText(path);
+        if (!JsonTemplateParser.TryParse(source, out var root, out var parseError, out _))
+        {
+            template = null;
+            error = parseError;
+            return false;
+        }
+
+        if (root is not JsonTemplateObject rootDictionary ||
+            !rootDictionary.Members.TryGetValue("$entity", out var resourceToken) ||
+            resourceToken is not JsonTemplateString resource ||
+            resource.Value is null)
+        {
+            template = null;
+            error = "the template must include an `$entity` property";
+            return false;
+        }
+            
+        var resourceGroup = EntityName.ToResourceGroup(resource.Value);
+        var filename = Path.GetFileName(path);
+            
+        template = new EntityTemplate(resourceGroup, filename, root);
+        error = null;
+        return true;
     }
 }

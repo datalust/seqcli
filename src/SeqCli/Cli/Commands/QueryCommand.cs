@@ -22,58 +22,57 @@ using Serilog;
 
 // ReSharper disable UnusedType.Global
 
-namespace SeqCli.Cli.Commands
+namespace SeqCli.Cli.Commands;
+
+[Command("query", "Execute an SQL query and receive results in CSV format",
+    Example = "seqcli query -q \"select count(*) from stream group by @Level\" --start=\"2018-02-28T13:00Z\"")]
+class QueryCommand : Command
 {
-    [Command("query", "Execute an SQL query and receive results in CSV format",
-        Example = "seqcli query -q \"select count(*) from stream group by @Level\" --start=\"2018-02-28T13:00Z\"")]
-    class QueryCommand : Command
+    readonly OutputFormatFeature _output;
+    readonly SeqConnectionFactory _connectionFactory;
+    readonly ConnectionFeature _connection;
+    readonly DateRangeFeature _range;
+    readonly SignalExpressionFeature _signal;
+    readonly TimeoutFeature _timeout;
+    string? _query;
+
+    public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly OutputFormatFeature _output;
-        readonly SeqConnectionFactory _connectionFactory;
-        readonly ConnectionFeature _connection;
-        readonly DateRangeFeature _range;
-        readonly SignalExpressionFeature _signal;
-        readonly TimeoutFeature _timeout;
-        string _query;
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        Options.Add("q=|query=", "The query to execute", v => _query = v);
+        _range = Enable<DateRangeFeature>();
+        _signal = Enable<SignalExpressionFeature>();
+        _timeout = Enable<TimeoutFeature>();
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    protected override async Task<int> Run()
+    {
+        if (string.IsNullOrWhiteSpace(_query))
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            Options.Add("q=|query=", "The query to execute", v => _query = v);
-            _range = Enable<DateRangeFeature>();
-            _signal = Enable<SignalExpressionFeature>();
-            _timeout = Enable<TimeoutFeature>();
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
+            Log.Error("A query must be specified");
+            return 1;
         }
 
-        protected override async Task<int> Run()
-        {
-            if (string.IsNullOrWhiteSpace(_query))
-            {
-                Log.Error("A query must be specified");
-                return 1;
-            }
+        var connection = _connectionFactory.Connect(_connection);
 
-            var connection = _connectionFactory.Connect(_connection);
-
-            var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
+        var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
             
-            if (_output.Json)
-            {
-                var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
+        if (_output.Json)
+        {
+            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
 
-                // Some friendlier JSON output is definitely possible here
-                Console.WriteLine(JsonConvert.SerializeObject(result));
-            }
-            else
-            {
-                var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
-                _output.WriteCsv(result);
-            }
-
-            return 0;
+            // Some friendlier JSON output is definitely possible here
+            Console.WriteLine(JsonConvert.SerializeObject(result));
         }
+        else
+        {
+            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
+            _output.WriteCsv(result);
+        }
+
+        return 0;
     }
 }

@@ -16,32 +16,31 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace SeqCli.Util
+namespace SeqCli.Util;
+
+static class DirectoryExt
 {
-    static class DirectoryExt
+    public const char Wildcard = '*';
+
+    public static bool IncludesWildcard(string filePath)
     {
-        public const char Wildcard = '*';
+        if (filePath == null) throw new ArgumentNullException(nameof(filePath));
+        return filePath.Contains(Wildcard);
+    }
 
-        public static bool IncludesWildcard(string filePath)
-        {
-            if (filePath == null) throw new ArgumentNullException(nameof(filePath));
-            return filePath.Contains(Wildcard);
-        }
+    public static IEnumerable<string> GetFiles(string filePathWithWildcard)
+    {
+        if (!IncludesWildcard(filePathWithWildcard))
+            throw new ArgumentException("The path does not contain a wildcard.");
 
-        public static IEnumerable<string> GetFiles(string filePathWithWildcard)
-        {
-            if (!IncludesWildcard(filePathWithWildcard))
-                throw new ArgumentException("The path does not contain a wildcard.");
+        var directory = Path.GetDirectoryName(filePathWithWildcard);
+        if (string.IsNullOrWhiteSpace(directory))
+            directory = ".";
+        else if (IncludesWildcard(directory))
+            throw new ArgumentException("The wildcard may not appear in the directory path.");
 
-            var directory = Path.GetDirectoryName(filePathWithWildcard);
-            if (string.IsNullOrWhiteSpace(directory))
-                directory = ".";
-            else if (IncludesWildcard(directory))
-                throw new ArgumentException("The wildcard may not appear in the directory path.");
+        var searchPattern = Path.GetFileName(filePathWithWildcard);
 
-            var searchPattern = Path.GetFileName(filePathWithWildcard);
-
-            return Directory.GetFiles(directory, searchPattern, SearchOption.TopDirectoryOnly);
-        }
+        return Directory.GetFiles(directory, searchPattern, SearchOption.TopDirectoryOnly);
     }
 }

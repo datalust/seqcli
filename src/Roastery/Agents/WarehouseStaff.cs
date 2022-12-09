@@ -4,33 +4,32 @@ using System.Threading.Tasks;
 using Roastery.Model;
 using Roastery.Web;
 
-namespace Roastery.Agents
+namespace Roastery.Agents;
+
+class WarehouseStaff : Agent
 {
-    class WarehouseStaff : Agent
+    readonly HttpClient _client;
+
+    public WarehouseStaff(HttpClient client) 
+        : base(20000)
     {
-        readonly HttpClient _client;
+        _client = client;
+    }
 
-        public WarehouseStaff(HttpClient client) 
-            : base(20000)
-        {
-            _client = client;
-        }
+    protected override IEnumerable<Behavior> GetBehaviors()
+    {
+        yield return ShipOrders;
+    }
 
-        protected override IEnumerable<Behavior> GetBehaviors()
+    async Task ShipOrders(CancellationToken cancellationToken)
+    {
+        var orders = await _client.GetAsync<List<Order>>("api/orders");
+        foreach (var order in orders)
         {
-            yield return ShipOrders;
-        }
-
-        async Task ShipOrders(CancellationToken cancellationToken)
-        {
-            var orders = await _client.GetAsync<List<Order>>("api/orders");
-            foreach (var order in orders)
+            if (order.Status == OrderStatus.PendingShipment)
             {
-                if (order.Status == OrderStatus.PendingShipment)
-                {
-                    order.Status = OrderStatus.Shipped;
-                    await _client.PutAsync($"api/orders/{order.Id}", order);
-                }
+                order.Status = OrderStatus.Shipped;
+                await _client.PutAsync($"api/orders/{order.Id}", order);
             }
         }
     }

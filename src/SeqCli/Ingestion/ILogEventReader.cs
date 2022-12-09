@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace SeqCli.Ingestion
+namespace SeqCli.Ingestion;
+
+interface ILogEventReader
 {
-    interface ILogEventReader
-    {
-        Task<ReadResult> TryReadAsync();
-    }
+    Task<ReadResult> TryReadAsync();
 }

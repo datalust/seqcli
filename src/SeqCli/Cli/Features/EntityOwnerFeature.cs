@@ -15,45 +15,44 @@
 using System;
 using System.Collections.Generic;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class EntityOwnerFeature : CommandFeature
 {
-    class EntityOwnerFeature : CommandFeature
+    readonly string _entityName;
+    readonly string _verb;
+    readonly EntityIdentityFeature? _identityFeature;
+
+    public EntityOwnerFeature(string entityName, string verb, EntityIdentityFeature? identityFeature = null)
     {
-        readonly string _entityName;
-        readonly string _verb;
-        readonly EntityIdentityFeature _identityFeature;
-
-        public EntityOwnerFeature(string entityName, string verb, EntityIdentityFeature identityFeature = null)
-        {
-            _entityName = entityName ?? throw new ArgumentNullException(nameof(entityName));
-            _verb = verb ?? throw new ArgumentNullException(nameof(verb));
-            _identityFeature = identityFeature;
-        }
-
-        public override void Enable(OptionSet options)
-        {
-            options.Add(
-                "o=|owner=",
-                $"The id of the user to {_verb} {_entityName}s for; by default, shared {_entityName}s are {_verb.TrimEnd('e')}d",
-                o =>
-                {
-                    OwnerId = StringNormalizationExtensions.Normalize(o);
-                    if (OwnerId != null)
-                        IncludeShared = false;
-                });
-        }
-
-        public override IEnumerable<string> GetUsageErrors()
-        {
-
-            if (OwnerId != null && _identityFeature?.Id != null)
-            {
-                yield return "Only one of either `owner` or `id` can be specified";
-            }
-        }
-
-        public string OwnerId { get; private set; }
-
-        public bool IncludeShared { get; private set; } = true;
+        _entityName = entityName ?? throw new ArgumentNullException(nameof(entityName));
+        _verb = verb ?? throw new ArgumentNullException(nameof(verb));
+        _identityFeature = identityFeature;
     }
+
+    public override void Enable(OptionSet options)
+    {
+        options.Add(
+            "o=|owner=",
+            $"The id of the user to {_verb} {_entityName}s for; by default, shared {_entityName}s are {_verb.TrimEnd('e')}d",
+            o =>
+            {
+                OwnerId = StringNormalizationExtensions.Normalize(o);
+                if (OwnerId != null)
+                    IncludeShared = false;
+            });
+    }
+
+    public override IEnumerable<string> GetUsageErrors()
+    {
+
+        if (OwnerId != null && _identityFeature?.Id != null)
+        {
+            yield return "Only one of either `owner` or `id` can be specified";
+        }
+    }
+
+    public string? OwnerId { get; private set; }
+
+    public bool IncludeShared { get; private set; } = true;
 }

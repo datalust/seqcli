@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Ingestion
+namespace SeqCli.Ingestion;
+
+enum InvalidDataHandling
 {
-    enum InvalidDataHandling
-    {
-        Fail,
-        Ignore
-    }
+    Fail,
+    Ignore
 }

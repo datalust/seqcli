@@ -16,57 +16,56 @@ using System;
 using System.Globalization;
 using System.Linq;
 
-namespace SeqCli.Syntax
+namespace SeqCli.Syntax;
+
+static class DurationMoniker
 {
-    static class DurationMoniker
+    public static string FromTimeSpan(TimeSpan timeSpan)
     {
-        public static string FromTimeSpan(TimeSpan timeSpan)
+        if (timeSpan == TimeSpan.Zero || Math.Abs(timeSpan.Ticks) < TimeSpan.FromMilliseconds(1).Ticks)
+            return "0d";
+
+        return new[] {
+            Component(timeSpan.TotalDays, "d"),
+            Component(timeSpan.TotalHours, "h"),
+            Component(timeSpan.TotalMinutes, "m"),
+            Component(timeSpan.TotalSeconds, "s"),
+            Component(timeSpan.TotalMilliseconds, "ms")
+        }.First(c => c != "");
+    }
+
+    static string Component(double value, string moniker)
+    {
+        if (moniker == null) throw new ArgumentNullException(nameof(moniker));
+
+        if (Math.Abs(value) < double.Epsilon || Math.Abs(value - (int)value) > double.Epsilon)
+            return "";
+
+        return ((int)value).ToString(CultureInfo.InvariantCulture) + moniker;
+    }
+
+    public static TimeSpan ToTimeSpan(string duration)
+    {
+        if (duration == null) throw new ArgumentNullException(nameof(duration));
+
+        // This is not at all robust; we could use a decent duration parser for use here in `seqcli`.
+
+        if (duration.EndsWith("ms"))
+            return TimeSpan.FromMilliseconds(int.Parse(duration[..^2]));
+
+        var value = int.Parse(duration[..^1], CultureInfo.InvariantCulture);
+        switch (duration[^1])
         {
-            if (timeSpan == TimeSpan.Zero || Math.Abs(timeSpan.Ticks) < TimeSpan.FromMilliseconds(1).Ticks)
-                return "0d";
-
-            return new[] {
-                Component(timeSpan.TotalDays, "d"),
-                Component(timeSpan.TotalHours, "h"),
-                Component(timeSpan.TotalMinutes, "m"),
-                Component(timeSpan.TotalSeconds, "s"),
-                Component(timeSpan.TotalMilliseconds, "ms")
-            }.First(c => c != "");
-        }
-
-        static string Component(double value, string moniker)
-        {
-            if (moniker == null) throw new ArgumentNullException(nameof(moniker));
-
-            if (Math.Abs(value) < double.Epsilon || Math.Abs(value - (int)value) > double.Epsilon)
-                return "";
-
-            return ((int)value).ToString(CultureInfo.InvariantCulture) + moniker;
-        }
-
-        public static TimeSpan ToTimeSpan(string duration)
-        {
-            if (duration == null) throw new ArgumentNullException(nameof(duration));
-
-            // This is not at all robust; we could use a decent duration parser for use here in `seqcli`.
-
-            if (duration.EndsWith("ms"))
-                return TimeSpan.FromMilliseconds(int.Parse(duration[..^2]));
-
-            var value = int.Parse(duration[..^1], CultureInfo.InvariantCulture);
-            switch (duration[^1])
-            {
-                case 'd':
-                    return TimeSpan.FromDays(value);
-                case 'h':
-                    return TimeSpan.FromHours(value);
-                case 'm':
-                    return TimeSpan.FromMinutes(value);
-                case 's':
-                    return TimeSpan.FromSeconds(value);
-                default:
-                    throw new ArgumentException($"Unrecognized duration `{duration}`.");
-            }
+            case 'd':
+                return TimeSpan.FromDays(value);
+            case 'h':
+                return TimeSpan.FromHours(value);
+            case 'm':
+                return TimeSpan.FromMinutes(value);
+            case 's':
+                return TimeSpan.FromSeconds(value);
+            default:
+                throw new ArgumentException($"Unrecognized duration `{duration}`.");
         }
     }
 }

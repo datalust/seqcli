@@ -14,26 +14,25 @@
 
 using System;
 
-namespace SeqCli.Cli
+namespace SeqCli.Cli;
+
+[AttributeUsage(AttributeTargets.Class)]
+public class CommandAttribute : Attribute, ICommandMetadata
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public class CommandAttribute : Attribute, ICommandMetadata
+    public string Name { get; }
+    public string? SubCommand { get; }
+    public string HelpText { get; }
+
+    public string? Example { get; set; }
+
+    public CommandAttribute(string name, string helpText)
     {
-        public string Name { get; }
-        public string SubCommand { get; }
-        public string HelpText { get; }
+        Name = name;
+        HelpText = helpText;
+    }
 
-        public string Example { get; set; }
-
-        public CommandAttribute(string name, string helpText)
-        {
-            Name = name;
-            HelpText = helpText;
-        }
-
-        public CommandAttribute(string name, string subCommand, string helpText) : this(name, helpText)
-        {
-            SubCommand = subCommand;
-        }
+    public CommandAttribute(string name, string subCommand, string helpText) : this(name, helpText)
+    {
+        SubCommand = subCommand;
     }
 }
