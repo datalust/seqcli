@@ -1,4 +1,4 @@
-version: 2022.1.{build}
+version: 2023.1.{build}
 skip_tags: true
 image:
 - Visual Studio 2022
