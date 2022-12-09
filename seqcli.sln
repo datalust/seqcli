@@ -40,8 +40,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "seqcli", "seqcli", "{7F7CAC3A-1046-4D2B-BF9F-F14525918295}"
 ProjectSection(SolutionItems) = preProject
 	dockerfiles\seqcli\.gitignore = dockerfiles\seqcli\.gitignore
-	dockerfiles\seqcli\Dockerfile = dockerfiles\seqcli\Dockerfile
-	dockerfiles\seqcli\run.sh = dockerfiles\seqcli\run.sh
+	dockerfiles\seqcli\linux-arm64.Dockerfile = dockerfiles\seqcli\linux-arm64.Dockerfile
+	dockerfiles\seqcli\linux-x64.Dockerfile = dockerfiles\seqcli\linux-x64.Dockerfile
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roastery", "src\Roastery\Roastery.csproj", "{D2CB1112-7CD3-4A1B-A114-25130C96295E}"
