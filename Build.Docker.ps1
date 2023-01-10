@@ -28,7 +28,7 @@ function Execute-Tests
 function Build-DockerImage($arch)
 {
     $rid = "linux-$($arch.rid)"
-    & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid --self-contained /p:VersionPrefix=$version
+    & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid --self-contained /p:VersionPrefix=$version /p:PublishSingleFile=true
     if($LASTEXITCODE -ne 0) { exit 2 }
 
     & docker buildx build --platform "$($arch.platform)" -f dockerfiles/seqcli/$rid.Dockerfile -t "$image-ci:$version-$($arch.rid)" .
