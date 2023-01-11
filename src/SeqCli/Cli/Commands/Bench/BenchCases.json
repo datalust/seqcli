@@ -11,13 +11,13 @@
       "notes": "Tests sparse deserialization and condition evaluation atop basic page traversal."
     },
     {
-      "id": "count-exception-starts-with-s",
-      "query": "select count(*) from stream where @Exception like 'S%' and @Timestamp >= now() - 30d",
-      "notes": "Text search performance. Chooses 'S' because in .NET data there should be some hits."
+      "id": "count-exception-starts-with-sys",
+      "query": "select count(*) from stream where @Exception like 'Sys%' and @Timestamp >= now() - 30d",
+      "notes": "Text search performance. Chooses 'Sys' because in .NET data there should be some hits."
     },
     {
-      "id": "count-message-starts-with-e",
-      "query": "select count(*) from stream where @Message like 'E%' and @Timestamp >= now() - 30d",
+      "id": "count-message-starts-with-fai",
+      "query": "select count(*) from stream where @Message like 'Fai%' and @Timestamp >= now() - 30d",
       "notes": "Text search performance; worse on @Message than other properties because fragment pre-filtering is not used."
     },
     {
