@@ -108,7 +108,7 @@ class BenchCommand : Command
             var seqVersion = (await connection.Client.GetRootAsync()).Version;
 
             var cases = ReadCases(_cases);
-            var runId = Guid.NewGuid().ToString("N");
+            var runId = Guid.NewGuid().ToString("N")[..16];
             
             await using var reportingLogger = BuildReportingLogger();
 
