@@ -65,7 +65,7 @@ namespace SeqCli.Cli.Commands.Bench;
 class BenchCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
-    int _runs = 3;
+    int _runs = 10;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
     string _cases = "";
@@ -76,10 +76,7 @@ class BenchCommand : Command
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
-        Options.Add("r|runs=", "The number of runs to execute", r =>
-        {
-            int.TryParse(r, out _runs);
-        });
+        Options.Add("r|runs=", "The number of runs to execute; the default is 10", r => _runs = int.Parse(r));
         
         Options.Add(
             "c|cases=", 
@@ -108,56 +105,63 @@ class BenchCommand : Command
         try
         {
             var connection = _connectionFactory.Connect(_connection);
-            using var reportingLogger = BuildReportingLogger();
-            var cases = ReadCases(_cases);
-            var runId = Guid.NewGuid().ToString("N").Substring(0, 4);
+            var seqVersion = (await connection.Client.GetRootAsync()).Version;
 
-            if (_range.Start == null || _range.End == null)
+            var cases = ReadCases(_cases);
+            var runId = Guid.NewGuid().ToString("N");
+            
+            await using var reportingLogger = BuildReportingLogger();
+
+            using (!string.IsNullOrWhiteSpace(_description)
+                       ? LogContext.PushProperty("Description", _description)
+                       : null)
             {
-                Log.Error("Both the `start` and `end` arguments are required");
-                return 1;
+                reportingLogger.Information(
+                    "Bench run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
+                    runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
             }
 
-            foreach (var c in cases.Cases)
+            using (LogContext.PushProperty("RunId", runId))
+            using (LogContext.PushProperty("Start", _range.Start))
+            using (LogContext.PushProperty("End", _range.End))
             {
-                var timings = new BenchCaseTimings();
-                object? lastResult = null;
-                
-                foreach (var i in Enumerable.Range(1, _runs))
+                foreach (var c in cases.Cases)
                 {
-                    var response = await connection.Data.QueryAsync(
-                        c.Query,
-                        _range.Start,
-                        _range.End,
-                        SignalExpressionPart.Signal(c.SignalExpression)
-                    );
+                    var timings = new BenchCaseTimings();
+                    object? lastResult = null;
 
-                    timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
-
-                    if (response.Rows != null)
+                    foreach (var i in Enumerable.Range(1, _runs))
                     {
-                        var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
-                        if (isScalarResult && i == _runs)
+                        var response = await connection.Data.QueryAsync(
+                            c.Query,
+                            _range.Start,
+                            _range.End,
+                            c.SignalExpression != null ? SignalExpressionPart.Signal(c.SignalExpression) : null
+                        );
+
+                        timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
+
+                        if (response.Rows != null)
                         {
-                            lastResult = response.Rows[0][0];
+                            var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
+                            if (isScalarResult && i == _runs)
+                            {
+                                lastResult = response.Rows[0][0];
+                            }
                         }
                     }
-                }
-                
-                using (lastResult != null ? LogContext.PushProperty("LastResult", lastResult) : null)
-                using (LogContext.PushProperty("MinElapsed", timings.MinElapsed))
-                using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
-                using (LogContext.PushProperty("Runs", _runs))
-                using (!string.IsNullOrWhiteSpace(c.SignalExpression) ? LogContext.PushProperty("SignalExpression", c.SignalExpression) : null)
-                using (LogContext.PushProperty("Start", _range.Start))
-                using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
-                using (LogContext.PushProperty("End", _range.End))
-                using (LogContext.PushProperty("Query", c.Query))
-                using (!string.IsNullOrWhiteSpace(_description) ? LogContext.PushProperty("Description", _description) : null)
-                {
-                    reportingLogger.Information(
-                        "Bench run {Cases}/{RunId} against {Server} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
-                                 cases.CasesHash, runId,  _connection.Url,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
+
+                    using (lastResult != null ? LogContext.PushProperty("LastResult", lastResult) : null)
+                    using (!string.IsNullOrWhiteSpace(c.SignalExpression)
+                               ? LogContext.PushProperty("SignalExpression", c.SignalExpression)
+                               : null)
+                    using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
+                    using (LogContext.PushProperty("Query", c.Query))
+                    {
+                        reportingLogger.Information(
+                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
+                            c.Id, timings.MeanElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
+                    }
                 }
             }
 
@@ -197,28 +201,20 @@ class BenchCommand : Command
         var casesString = File.ReadAllText(string.IsNullOrWhiteSpace(filename)
             ? defaultCasesPath
             : filename);
+        
         var casesFile = JsonConvert.DeserializeObject<BenchCasesCollection>(casesString)
                         ?? new BenchCasesCollection();
 
-        casesFile.CasesHash = HashString(casesString); 
-
         if (casesFile.Cases.Select(c => c.Id).Distinct().Count() != casesFile.Cases.Count)
         {
-            throw new Exception($"Cases file {filename} contains a duplicate id");
+            throw new ArgumentException($"Cases file `{filename}` contains a duplicate id.");
         }
 
         if (!casesFile.Cases.Any())
         {
-            throw new Exception($"Cases file {filename} contains no cases");
+            throw new ArgumentException($"Cases file `{filename}` contains no cases.");
         }
 
         return casesFile;
-    }
-
-    static string HashString(string input)
-    {
-        using var md5 = MD5.Create();
-        var bytes = Encoding.ASCII.GetBytes(input);
-        return Convert.ToHexString(md5.ComputeHash(bytes));
     }
 }

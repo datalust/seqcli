@@ -13,13 +13,18 @@
 // limitations under the License.
 
 #nullable enable
-using System.Collections.Generic;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Bench;
+
+// ReSharper disable ClassNeverInstantiated.Global AutoPropertyCanBeMadeGetOnly.Global UnusedAutoPropertyAccessor.Global
 
 class BenchCase
 {
-    public string Id = "";
-    public string Query = "";
-    public string SignalExpression = "";
+    public string Id { get; set; } = null!;
+    public string Query { get; set; } = null!;
+    public string? SignalExpression { get; set; }
+    
+    // Not used programmatically at this time.
+    // ReSharper disable once UnusedMember.Global
+    public string? Notes { get; set; }
 }
