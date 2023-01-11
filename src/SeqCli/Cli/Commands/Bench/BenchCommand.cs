@@ -159,8 +159,8 @@ class BenchCommand : Command
                     using (LogContext.PushProperty("Query", c.Query))
                     {
                         reportingLogger.Information(
-                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
-                            c.Id, timings.MeanElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
+                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (first {FirstElapsed:N0} ms, min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
+                            c.Id, timings.MeanElapsed, timings.FirstElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
                     }
                 }
             }

@@ -29,6 +29,7 @@ class BenchCaseTimings
     public double MeanElapsed => _timings.Sum() / _timings.Count;
     public double MinElapsed => _timings.Min();
     public double MaxElapsed => _timings.Max();
+    public double FirstElapsed => _timings.First();
     public double StandardDeviationElapsed => StandardDeviation(_timings); 
     public double RelativeStandardDeviationElapsed => StandardDeviation(_timings) / MeanElapsed;
 
