@@ -125,7 +125,7 @@ class BenchCommand : Command
             using (LogContext.PushProperty("Start", _range.Start))
             using (LogContext.PushProperty("End", _range.End))
             {
-                foreach (var c in cases.Cases)
+                foreach (var c in cases.Cases.OrderBy(c => c.Id))
                 {
                     var timings = new BenchCaseTimings();
                     object? lastResult = null;
@@ -159,7 +159,7 @@ class BenchCommand : Command
                     using (LogContext.PushProperty("Query", c.Query))
                     {
                         reportingLogger.Information(
-                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (first {FirstElapsed:N0} ms, min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
+                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (first {FirstElapsed:,5N0} ms, min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
                             c.Id, timings.MeanElapsed, timings.FirstElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
                     }
                 }
