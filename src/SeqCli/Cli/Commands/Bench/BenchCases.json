@@ -16,7 +16,7 @@
       "notes": "Common reducer/grouping combination used when monitoring performance."
     },
     {
-      "id": "count-having-request-id",
+      "id": "count-with-request-id",
       "query": "select count(*) from stream where RequestId is not null and @Timestamp >= now() - 30d",
       "notes": "Tests sparse deserialization and condition evaluation atop basic page traversal."
     },
