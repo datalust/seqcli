@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Templates.Ast
-{
-    class JsonTemplateBoolean : JsonTemplate
-    {
-        public bool Value { get; }
+namespace SeqCli.Templates.Ast;
 
-        public JsonTemplateBoolean(bool value)
-        {
-            Value = value;
-        }
+class JsonTemplateBoolean : JsonTemplate
+{
+    public bool Value { get; }
+
+    public JsonTemplateBoolean(bool value)
+    {
+        Value = value;
     }
 }

@@ -17,6 +17,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api.Model.Signals;
@@ -27,7 +29,7 @@ using Serilog;
 using Serilog.Context;
 using Serilog.Core;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Bench;
 
 /*
  * Run performance benchmark tests against a Seq server.
@@ -59,37 +61,22 @@ namespace SeqCli.Cli.Commands;
     "Start": "2022-08-14T16:00:00.0000000"
 }
  */
-[Command("bench", @"Measure query performance.
-
-Example cases file format:
-    
-{
-    ""cases"": [
-        {
-            ""id"": ""count-star"",
-            ""query"": ""select count(*) from stream"",
-            ""signalExpression"": ""signal-expression-here""]
-        }
-    ]
-}
-")]
+[Command("bench", @"Measure query performance")]
 class BenchCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
-    int _runs = 3;
+    int _runs = 10;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
     string _cases = "";
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
+    string _description = "";
     
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
-        Options.Add("r|runs=", "The number of runs to execute", r =>
-        {
-            int.TryParse(r, out _runs);
-        });
+        Options.Add("r|runs=", "The number of runs to execute; the default is 10", r => _runs = int.Parse(r));
         
         Options.Add(
             "c|cases=", 
@@ -107,6 +94,10 @@ class BenchCommand : Command
             "reporting-apikey=", 
             "The API key to use when connecting to the reporting server", 
             a => _reportingServerApiKey = a);
+        Options.Add(
+            "description=", 
+            "Optional description of the bench test run", 
+            a => _description = a);
     }
     
     protected override async Task<int> Run()
@@ -114,51 +105,63 @@ class BenchCommand : Command
         try
         {
             var connection = _connectionFactory.Connect(_connection);
-            using var reportingLogger = BuildReportingLogger();
+            var seqVersion = (await connection.Client.GetRootAsync()).Version;
+
             var cases = ReadCases(_cases);
-            var runId = Guid.NewGuid().ToString("N").Substring(0, 4);
-            var start = _range.Start ?? DateTime.UtcNow.AddDays(-7);
-            var end = _range.End;
+            var runId = Guid.NewGuid().ToString("N")[..16];
+            
+            await using var reportingLogger = BuildReportingLogger();
 
-            foreach (var c in cases.Cases)
+            using (!string.IsNullOrWhiteSpace(_description)
+                       ? LogContext.PushProperty("Description", _description)
+                       : null)
             {
-                var timings = new BenchCaseTimings();
-                object? lastResult = null;
-                
-                foreach (var i in Enumerable.Range(1, _runs))
+                reportingLogger.Information(
+                    "Bench run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
+                    runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
+            }
+
+            using (LogContext.PushProperty("RunId", runId))
+            using (LogContext.PushProperty("Start", _range.Start))
+            using (LogContext.PushProperty("End", _range.End))
+            {
+                foreach (var c in cases.Cases.OrderBy(c => c.Id))
                 {
-                    var response = await connection.Data.QueryAsync(
-                        c.Query,
-                        start,
-                        end,
-                        SignalExpressionPart.Signal(c.SignalExpression)
-                    );
+                    var timings = new BenchCaseTimings();
+                    object? lastResult = null;
 
-                    timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
-
-                    if (response.Rows != null)
+                    foreach (var i in Enumerable.Range(1, _runs))
                     {
-                        var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
-                        if (isScalarResult && i == _runs)
+                        var response = await connection.Data.QueryAsync(
+                            c.Query,
+                            _range.Start,
+                            _range.End,
+                            c.SignalExpression != null ? SignalExpressionPart.Signal(c.SignalExpression) : null
+                        );
+
+                        timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
+
+                        if (response.Rows != null)
                         {
-                            lastResult = response.Rows[0][0];
+                            var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
+                            if (isScalarResult && i == _runs)
+                            {
+                                lastResult = response.Rows[0][0];
+                            }
                         }
                     }
-                }
-                
-                using (lastResult != null ? LogContext.PushProperty("LastResult", lastResult) : null)
-                using (LogContext.PushProperty("MinElapsed", timings.MinElapsed))
-                using (LogContext.PushProperty("MaxElapsed", timings.MaxElapsed))
-                using (LogContext.PushProperty("Runs", _runs))
-                using (LogContext.PushProperty("SignalExpression", c.SignalExpression))
-                using (LogContext.PushProperty("Start", start))
-                using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
-                using (end != null ? LogContext.PushProperty("End", end) : null)
-                using (LogContext.PushProperty("Query", c.Query))
-                {
-                    reportingLogger.Information(
-                        "Bench run {Cases}/{RunId} against {Server} for query {Id}: mean {MeanElapsed:N0} ms with relative dispersion {RelativeStandardDeviationElapsed:N2}", 
-                                 cases.CasesHash, runId,  _reportingServerUrl,     c.Id,      timings.MeanElapsed,                      timings.RelativeStandardDeviationElapsed);
+
+                    using (lastResult != null ? LogContext.PushProperty("LastResult", lastResult) : null)
+                    using (!string.IsNullOrWhiteSpace(c.SignalExpression)
+                               ? LogContext.PushProperty("SignalExpression", c.SignalExpression)
+                               : null)
+                    using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
+                    using (LogContext.PushProperty("Query", c.Query))
+                    {
+                        reportingLogger.Information(
+                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (first {FirstElapsed,5:N0} ms, min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
+                            c.Id, timings.MeanElapsed, timings.FirstElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
+                    }
                 }
             }
 
@@ -198,19 +201,18 @@ class BenchCommand : Command
         var casesString = File.ReadAllText(string.IsNullOrWhiteSpace(filename)
             ? defaultCasesPath
             : filename);
+        
         var casesFile = JsonConvert.DeserializeObject<BenchCasesCollection>(casesString)
                         ?? new BenchCasesCollection();
 
-        casesFile.CasesHash = casesString.GetHashCode(); // not consistent across framework versions, but that's OK
-
         if (casesFile.Cases.Select(c => c.Id).Distinct().Count() != casesFile.Cases.Count)
         {
-            throw new Exception($"Cases file {filename} contains a duplicate id");
+            throw new ArgumentException($"Cases file `{filename}` contains a duplicate id.");
         }
 
         if (!casesFile.Cases.Any())
         {
-            throw new Exception($"Cases file {filename} contains no cases");
+            throw new ArgumentException($"Cases file `{filename}` contains no cases.");
         }
 
         return casesFile;

@@ -15,14 +15,13 @@
 #nullable enable
 using System.Collections.Generic;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Bench;
 
 /*
  * A target type for deserialization of bench case files.
  */
 class BenchCasesCollection
 {
-    // An identifier for the particular cases file
-    public int CasesHash = 0;
-    public IList<BenchCase> Cases = new List<BenchCase>();
+    // ReSharper disable once CollectionNeverUpdated.Global
+    public IList<BenchCase> Cases { get; } = new List<BenchCase>();
 }

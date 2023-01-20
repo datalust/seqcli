@@ -22,46 +22,45 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace SeqCli
+namespace SeqCli;
+
+class Program
 {
-    class Program
+    static async Task<int> Main(string[] args)
     {
-        static async Task<int> Main(string[] args)
-        {
-            var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Error);
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(levelSwitch)
-                .WriteTo.Console(
-                    outputTemplate: "{Message:lj}{NewLine}{Exception}",
-                    standardErrorFromLevel: LevelAlias.Minimum)
-                .CreateLogger();
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Error);
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.ControlledBy(levelSwitch)
+            .WriteTo.Console(
+                outputTemplate: "{Message:lj}{NewLine}{Exception}",
+                standardErrorFromLevel: LevelAlias.Minimum)
+            .CreateLogger();
             
-            try
-            {
-                Console.InputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-                Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        try
+        {
+            Console.InputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-                TaskScheduler.UnobservedTaskException += 
-                    (_,e) => Log.Error(e.Exception, "Unobserved task exception");
+            TaskScheduler.UnobservedTaskException += 
+                (_,e) => Log.Error(e.Exception, "Unobserved task exception");
                 
-                var builder = new ContainerBuilder();
-                builder.RegisterModule<SeqCliModule>();
+            var builder = new ContainerBuilder();
+            builder.RegisterModule<SeqCliModule>();
 
-                await using var container = builder.Build();
-                var clh = container.Resolve<CommandLineHost>();
-                var exit = await clh.Run(args, levelSwitch);
-                return exit;
-            }
-            catch (Exception ex)
-            {
-                Log.Debug(ex, "Unhandled command exception");
-                Log.Fatal("The command failed: {UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
-                return 1;
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
+            await using var container = builder.Build();
+            var clh = container.Resolve<CommandLineHost>();
+            var exit = await clh.Run(args, levelSwitch);
+            return exit;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Unhandled command exception");
+            Log.Fatal("The command failed: {UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
+            return 1;
+        }
+        finally
+        {
+            Log.CloseAndFlush();
         }
     }
 }

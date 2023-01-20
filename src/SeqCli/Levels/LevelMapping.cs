@@ -16,12 +16,12 @@ using System;
 using System.Collections.Generic;
 using Serilog.Events;
 
-namespace SeqCli.Levels
+namespace SeqCli.Levels;
+
+public static class LevelMapping
 {
-    public static class LevelMapping
-    {
-        static readonly Dictionary<string, (string, LogEventLevel)> LevelsByName =
-            new(StringComparer.OrdinalIgnoreCase)
+    static readonly Dictionary<string, (string, LogEventLevel)> LevelsByName =
+        new(StringComparer.OrdinalIgnoreCase)
         {
             ["t"] = ("Trace", LogEventLevel.Verbose),
             ["tr"] = ("Trace", LogEventLevel.Verbose),
@@ -74,17 +74,16 @@ namespace SeqCli.Levels
             ["panic"] = ("Panic", LogEventLevel.Fatal)
         };
 
-        public static LogEventLevel ToSerilogLevel(string level)
-        {
-            if (string.IsNullOrEmpty(level))
-                return LogEventLevel.Information;
+    public static LogEventLevel ToSerilogLevel(string level)
+    {
+        if (string.IsNullOrEmpty(level))
+            return LogEventLevel.Information;
             
-            return LevelsByName.TryGetValue(level, out var m) ? m.Item2 : LogEventLevel.Information;
-        }
+        return LevelsByName.TryGetValue(level, out var m) ? m.Item2 : LogEventLevel.Information;
+    }
 
-        public static string ToFullLevelName(string level)
-        {
-            return LevelsByName.TryGetValue(level, out var m) ? m.Item1 : level;
-        }
+    public static string ToFullLevelName(string level)
+    {
+        return LevelsByName.TryGetValue(level, out var m) ? m.Item1 : level;
     }
 }

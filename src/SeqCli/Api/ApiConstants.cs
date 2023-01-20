@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Api
+namespace SeqCli.Api;
+
+static class ApiConstants
 {
-    static class ApiConstants
-    {
-        public const string ClefMediatType = "application/vnd.serilog.clef";
-        public const string IngestionEndpoint = "api/events/raw";
-        public const string ApiKeyHeaderName = "X-Seq-ApiKey";
-    }
+    public const string ClefMediatType = "application/vnd.serilog.clef";
+    public const string IngestionEndpoint = "api/events/raw";
+    public const string ApiKeyHeaderName = "X-Seq-ApiKey";
 }

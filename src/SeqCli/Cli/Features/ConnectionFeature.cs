@@ -16,31 +16,30 @@ using SeqCli.Util;
 
 #nullable enable
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class ConnectionFeature : CommandFeature
 {
-    class ConnectionFeature : CommandFeature
+    public bool IsUrlSpecified => Url != null;
+    public bool IsApiKeySpecified => ApiKey != null;
+    public bool IsProfileNameSpecified => ProfileName != null;
+
+    public string? Url { get; set; }
+    public string? ApiKey { get; set; }
+    public string? ProfileName { get; set; }
+
+    public override void Enable(OptionSet options)
     {
-        public bool IsUrlSpecified => Url != null;
-        public bool IsApiKeySpecified => ApiKey != null;
-        public bool IsProfileNameSpecified => ProfileName != null;
+        options.Add("s=|server=",
+            "The URL of the Seq server; by default the `connection.serverUrl` config value will be used",
+            v => Url = ArgumentString.Normalize(v));
 
-        public string? Url { get; set; }
-        public string? ApiKey { get; set; }
-        public string? ProfileName { get; set; }
+        options.Add("a=|apikey=",
+            "The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used",
+            v => ApiKey = ArgumentString.Normalize(v));
 
-        public override void Enable(OptionSet options)
-        {
-            options.Add("s=|server=",
-                "The URL of the Seq server; by default the `connection.serverUrl` config value will be used",
-                v => Url = ArgumentString.Normalize(v));
-
-            options.Add("a=|apikey=",
-                "The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used",
-                v => ApiKey = ArgumentString.Normalize(v));
-
-            options.Add("profile=",
-                "A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used",
-                v => ProfileName = ArgumentString.Normalize(v));
-        }
+        options.Add("profile=",
+            "A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used",
+            v => ProfileName = ArgumentString.Normalize(v));
     }
 }

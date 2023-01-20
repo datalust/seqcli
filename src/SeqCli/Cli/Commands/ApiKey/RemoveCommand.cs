@@ -19,51 +19,50 @@ using SeqCli.Cli.Features;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.ApiKey
+namespace SeqCli.Cli.Commands.ApiKey;
+
+[Command("apikey", "remove", "Remove an API key from the server",
+    Example="seqcli apikey remove -t 'Test API Key'")]
+class RemoveCommand : Command
 {
-    [Command("apikey", "remove", "Remove an API key from the server",
-        Example="seqcli apikey remove -t 'Test API Key'")]
-    class RemoveCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly EntityIdentityFeature _entityIdentity;
+    readonly ConnectionFeature _connection;
+
+    public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly EntityIdentityFeature _entityIdentity;
-        readonly ConnectionFeature _connection;
+        _entityIdentity = Enable(new EntityIdentityFeature("API key", "remove"));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public RemoveCommand(SeqConnectionFactory connectionFactory)
+    protected override async Task<int> Run()
+    {
+        if (_entityIdentity.Title == null && _entityIdentity.Id == null)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _entityIdentity = Enable(new EntityIdentityFeature("API key", "remove"));
-            _connection = Enable<ConnectionFeature>();
+            Log.Error("A `title` or `id` must be specified");
+            return 1;
         }
 
-        protected override async Task<int> Run()
+        var connection = _connectionFactory.Connect(_connection);
+
+        var toRemove = _entityIdentity.Id != null ?
+            new[] {await connection.ApiKeys.FindAsync(_entityIdentity.Id)} :
+            (await connection.ApiKeys.ListAsync())
+            .Where(ak => _entityIdentity.Title == ak.Title) 
+            .ToArray();
+
+        if (!toRemove.Any())
         {
-            if (_entityIdentity.Title == null && _entityIdentity.Id == null)
-            {
-                Log.Error("A `title` or `id` must be specified");
-                return 1;
-            }
-
-            var connection = _connectionFactory.Connect(_connection);
-
-            var toRemove = _entityIdentity.Id != null ?
-                new[] {await connection.ApiKeys.FindAsync(_entityIdentity.Id)} :
-                (await connection.ApiKeys.ListAsync())
-                    .Where(ak => _entityIdentity.Title == ak.Title) 
-                    .ToArray();
-
-            if (!toRemove.Any())
-            {
-                Log.Error("No matching API key was found");
-                return 1;
-            }
-
-            foreach (var apiKeyEntity in toRemove)
-                await connection.ApiKeys.RemoveAsync(apiKeyEntity);
-
-            return 0;
+            Log.Error("No matching API key was found");
+            return 1;
         }
+
+        foreach (var apiKeyEntity in toRemove)
+            await connection.ApiKeys.RemoveAsync(apiKeyEntity);
+
+        return 0;
     }
 }

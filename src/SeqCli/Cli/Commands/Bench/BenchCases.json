@@ -1,20 +1,69 @@
 {
   "cases": [
     {
-      "id": "count-star",
-      "query": "select count(*) from stream"
+      "id": "count-all",
+      "query": "select count(*) from stream where @Timestamp >= now() - 30d",
+      "notes": "Tests page traversal performance only; avoids data copies, serialization, and evaluation."
     },
     {
-      "id": "starts-with",
-      "query": "select count(*) from stream where @Message like '%abcde'"
+      "id": "multiple-reductions",
+      "query": "select count(*), sum(A), min(B), max(C) from stream where @Timestamp >= now() - 30d",
+      "notes": "Reducer performance. Percentile is excluded because it prevents parallelization unless time-grouped."
     },
     {
-      "id": "without-signal",
-      "query": "select count(*) from stream where @Level = 'Warning'"
+      "id": "percentile-by-12h",
+      "query": "select percentile(@Timestamp % 1ms, 90) from stream where @Timestamp >= now() - 30d group by @Level, time(12h)",
+      "notes": "Common reducer/grouping combination used when monitoring performance."
     },
     {
-      "id": "property-match",
-      "query": "select count(*) from stream where Action = 'ListAsync'"
+      "id": "count-with-request-id",
+      "query": "select count(*) from stream where RequestId is not null and @Timestamp >= now() - 30d",
+      "notes": "Tests sparse deserialization and condition evaluation atop basic page traversal."
+    },
+    {
+      "id": "count-exception-starts-with-sys",
+      "query": "select count(*) from stream where @Exception like 'Sys%' and @Timestamp >= now() - 30d",
+      "notes": "Text search performance. Chooses 'Sys' because in .NET data there should be some hits."
+    },
+    {
+      "id": "count-message-starts-with-fai",
+      "query": "select count(*) from stream where @Message like 'Fai%' and @Timestamp >= now() - 30d",
+      "notes": "Text search performance; worse on @Message than other properties because fragment pre-filtering is not used."
+    },
+    {
+      "id": "group-by-level",
+      "query": "select count(*) from stream where @Timestamp >= now() - 30d group by @Level",
+      "notes": "Grouping performance, strings, small number of groups."
+    },
+    {
+      "id": "group-by-millisecond",
+      "query": "select count(*) from stream where @Timestamp >= now() - 30d group by @Timestamp % 1ms limit 100",
+      "notes": "Grouping performance, numbers, up to 10000 groups."
+    },
+    {
+      "id": "group-by-12h",
+      "query": "select count(*) from stream where @Timestamp >= now() - 30d group by time(12h)",
+      "notes": "Time partitioning performance."
+    },
+    {
+      "id": "distinct-exception-20ch-limit-100",
+      "query": "select distinct(substring(@Exception, 0, 20)) from stream where @Exception is not null and @Timestamp >= now() - 30d limit 100",
+      "notes": "Distinct on computed text."
+    },
+    {
+      "id": "order-by-ts-mod-10k",
+      "query": "select @Timestamp from stream where @Timestamp >= now() - 30d order by @Timestamp % 1ms limit 10",
+      "notes": "Tests performance of limited sort."
+    },
+    {
+      "id": "order-by-message-limit-10",
+      "query": "select @Message from stream where @Timestamp >= now() - 30d order by @Message limit 10",
+      "notes": "Adds character collation to limited sort."
+    },
+    {
+      "id": "count-where-heavy-predicate",
+      "query": "select count(*) from stream where (A = 1 or B = '2' or C or D <> null or length(E) > 5 or F = {f: 6} or G = '7' or H like '8%' or I > 9 or J % 10 = 0) and @Timestamp >= now() - 30d",
+      "notes": "Tests expression evaluation performance."
     }
   ]
 }

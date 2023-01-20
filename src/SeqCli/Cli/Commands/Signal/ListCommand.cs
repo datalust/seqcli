@@ -19,46 +19,44 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.Signal
+namespace SeqCli.Cli.Commands.Signal;
+
+[Command("signal", "list", "List available signals", Example="seqcli signal list")]
+class ListCommand : Command
 {
-    [Command("signal", "list", "List available signals", Example="seqcli signal list")]
-    class ListCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly EntityIdentityFeature _entityIdentity;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+    readonly EntityOwnerFeature _entityOwner;
+
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly EntityIdentityFeature _entityIdentity;
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
-        readonly EntityOwnerFeature _entityOwner;
+        _entityIdentity = Enable(new EntityIdentityFeature("signal", "list"));
+        _entityOwner = Enable(new EntityOwnerFeature("signal", "list", _entityIdentity));
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _entityIdentity.Id != null ?
+            new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
+            (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
+            .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title)
+            .ToArray();
+
+        foreach (var signal in list)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _entityIdentity = Enable(new EntityIdentityFeature("signal", "list"));
-            _entityOwner = Enable(new EntityOwnerFeature("signal", "list", _entityIdentity));
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
+            _output.WriteEntity(signal);
         }
 
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _entityIdentity.Id != null ?
-                new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
-                (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-                    .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title)
-                    .ToArray();
-
-            foreach (var signal in list)
-            {
-                _output.WriteEntity(signal);
-            }
-
-            return 0;
-        }
+        return 0;
     }
 }
-

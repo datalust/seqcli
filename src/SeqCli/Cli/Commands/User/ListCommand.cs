@@ -19,43 +19,42 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.User
+namespace SeqCli.Cli.Commands.User;
+
+[Command("user", "list", "List users", Example="seqcli user list")]
+class ListCommand : Command
 {
-    [Command("user", "list", "List users", Example="seqcli user list")]
-    class ListCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly UserIdentityFeature _userIdentity;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly UserIdentityFeature _userIdentity;
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
+        _userIdentity = Enable(new UserIdentityFeature("list"));
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _userIdentity.Id != null ?
+            new[] { await connection.Users.FindAsync(_userIdentity.Id) } :
+            (await connection.Users.ListAsync())
+            .Where(u => _userIdentity.Name == null || _userIdentity.Name == u.Username)
+            .ToArray();
+
+        foreach (var user in list)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _userIdentity = Enable(new UserIdentityFeature("list"));
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
+            _output.WriteEntity(user);
         }
-
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _userIdentity.Id != null ?
-                new[] { await connection.Users.FindAsync(_userIdentity.Id) } :
-                (await connection.Users.ListAsync())
-                    .Where(u => _userIdentity.Name == null || _userIdentity.Name == u.Username)
-                    .ToArray();
-
-            foreach (var user in list)
-            {
-                _output.WriteEntity(user);
-            }
             
-            return 0;
-        }
+        return 0;
     }
 }

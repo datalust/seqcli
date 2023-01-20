@@ -17,31 +17,34 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Bench;
 
 /*
  * Collects benchmarking elapsed time measurements and calculates statistics. 
  */
 class BenchCaseTimings
 {
-    readonly List<double> _elaspseds = new() { };
-    public double MeanElapsed => _elaspseds.Sum() / _elaspseds.Count;
-    public double MinElapsed => _elaspseds.Min();
-    public double MaxElapsed => _elaspseds.Max();
-    public double StandardDeviationElapsed => StandardDeviation(_elaspseds); 
-    public double RelativeStandardDeviationElapsed => StandardDeviation(_elaspseds) / MeanElapsed;
+    readonly List<double> _timings = new();
+    
+    public double MeanElapsed => _timings.Sum() / _timings.Count;
+    public double MinElapsed => _timings.Min();
+    public double MaxElapsed => _timings.Max();
+    public double FirstElapsed => _timings.First();
+    public double StandardDeviationElapsed => StandardDeviation(_timings); 
+    public double RelativeStandardDeviationElapsed => StandardDeviation(_timings) / MeanElapsed;
 
     public void PushElapsed(double elapsed)
     {
-        _elaspseds.Add(elapsed);
+        _timings.Add(elapsed);
     }
 
-    double StandardDeviation(IList<double> population)
+    static double StandardDeviation(ICollection<double> population)
     {
         if (population.Count < 2)
         {
             return 0;
         }
+        
         var mean = population.Sum() / population.Count;
         return Math.Sqrt(population.Select(e => Math.Pow(e - mean, 2)).Sum() / (population.Count - 1));
     }

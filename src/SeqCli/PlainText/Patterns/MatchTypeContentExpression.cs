@@ -1,14 +1,13 @@
 ﻿using System;
 
-namespace SeqCli.PlainText.Patterns
-{
-    class MatchTypeContentExpression : CaptureContentExpression
-    {
-        public string Type { get; }
+namespace SeqCli.PlainText.Patterns;
 
-        public MatchTypeContentExpression(string type)
-        {
-            Type = type ?? throw new ArgumentNullException(nameof(type));
-        }
+class MatchTypeContentExpression : CaptureContentExpression
+{
+    public string Type { get; }
+
+    public MatchTypeContentExpression(string type)
+    {
+        Type = type ?? throw new ArgumentNullException(nameof(type));
     }
 }

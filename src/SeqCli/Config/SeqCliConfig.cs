@@ -19,41 +19,40 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace SeqCli.Config
+namespace SeqCli.Config;
+
+class SeqCliConfig
 {
-    class SeqCliConfig
+    static readonly string DefaultConfigFilename =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
+
+    static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
     {
-        static readonly string DefaultConfigFilename =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
-
-        static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
+        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        Converters =
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            Converters =
-            {
-                new StringEnumConverter()
-            }
-        };
+            new StringEnumConverter()
+        }
+    };
 
-        public static SeqCliConfig Read()
-        {
-            if (!File.Exists(DefaultConfigFilename))
-                return new SeqCliConfig();
+    public static SeqCliConfig Read()
+    {
+        if (!File.Exists(DefaultConfigFilename))
+            return new SeqCliConfig();
             
-            var content = File.ReadAllText(DefaultConfigFilename);
-            return JsonConvert.DeserializeObject<SeqCliConfig>(content, SerializerSettings);
-        }
-
-        public static void Write(SeqCliConfig data)
-        {
-            if (data == null) throw new ArgumentNullException(nameof(data));
-            var content = JsonConvert.SerializeObject(data, Formatting.Indented, SerializerSettings);
-            File.WriteAllText(DefaultConfigFilename, content);
-        }
-
-        public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
-        public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
-        public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } =
-            new Dictionary<string, SeqCliConnectionConfig>(StringComparer.OrdinalIgnoreCase);
+        var content = File.ReadAllText(DefaultConfigFilename);
+        return JsonConvert.DeserializeObject<SeqCliConfig>(content, SerializerSettings)!;
     }
+
+    public static void Write(SeqCliConfig data)
+    {
+        if (data == null) throw new ArgumentNullException(nameof(data));
+        var content = JsonConvert.SerializeObject(data, Formatting.Indented, SerializerSettings);
+        File.WriteAllText(DefaultConfigFilename, content);
+    }
+
+    public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
+    public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
+    public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } =
+        new Dictionary<string, SeqCliConnectionConfig>(StringComparer.OrdinalIgnoreCase);
 }

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Levels
+namespace SeqCli.Levels;
+
+static class SurrogateLevelProperty
 {
-    static class SurrogateLevelProperty
-    {
-        public const string PropertyName = "@seqlevel";
-    }
+    public const string PropertyName = "@seqlevel";
 }

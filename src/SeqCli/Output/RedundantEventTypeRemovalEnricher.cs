@@ -15,13 +15,12 @@
 using Serilog.Core;
 using Serilog.Events;
 
-namespace SeqCli.Output
+namespace SeqCli.Output;
+
+public class RedundantEventTypeRemovalEnricher : ILogEventEnricher
 {
-    public class RedundantEventTypeRemovalEnricher : ILogEventEnricher
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            logEvent.RemovePropertyIfPresent("@i");
-        }
+        logEvent.RemovePropertyIfPresent("@i");
     }
 }

@@ -6,22 +6,21 @@ using Serilog;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Roastery.Api
+namespace Roastery.Api;
+
+class ProductsController : Controller
 {
-    class ProductsController : Controller
-    {
-        readonly Database _database;
+    readonly Database _database;
 
-        public ProductsController(ILogger logger, Database database)
+    public ProductsController(ILogger logger, Database database)
         : base(logger)
-        {
-            _database = database;
-        }
+    {
+        _database = database;
+    }
 
-        [Route("GET", "api/products")]
-        public async Task<HttpResponse> ListAsync(HttpRequest request)
-        {
-            return Json(await _database.SelectAsync<Product>());
-        }
+    [Route("GET", "api/products")]
+    public async Task<HttpResponse> ListAsync(HttpRequest request)
+    {
+        return Json(await _database.SelectAsync<Product>());
     }
 }

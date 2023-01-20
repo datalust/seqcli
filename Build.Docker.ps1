@@ -2,7 +2,7 @@ $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
 $version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
-$framework = "net6.0"
+$framework = "net7.0"
 $image = "datalust/seqcli"
 $archs = @(
     @{ rid = "x64"; platform = "linux/amd64" },
@@ -28,7 +28,7 @@ function Execute-Tests
 function Build-DockerImage($arch)
 {
     $rid = "linux-$($arch.rid)"
-    & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid --self-contained /p:VersionPrefix=$version
+    & dotnet publish src/SeqCli/SeqCli.csproj -c Release -f $framework -r $rid --self-contained /p:VersionPrefix=$version /p:PublishSingleFile=true
     if($LASTEXITCODE -ne 0) { exit 2 }
 
     & docker buildx build --platform "$($arch.platform)" -f dockerfiles/seqcli/$rid.Dockerfile -t "$image-ci:$version-$($arch.rid)" .

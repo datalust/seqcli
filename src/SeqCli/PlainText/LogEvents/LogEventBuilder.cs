@@ -22,84 +22,83 @@ using Serilog.Events;
 using Serilog.Parsing;
 using Superpower.Model;
 
-namespace SeqCli.PlainText.LogEvents
+namespace SeqCli.PlainText.LogEvents;
+
+static class LogEventBuilder
 {
-    static class LogEventBuilder
+    public static LogEvent FromProperties(IDictionary<string, object?> properties, string? remainder)
     {
-        public static LogEvent FromProperties(IDictionary<string, object> properties, string remainder)
-        {
-            var timestamp = GetTimestamp(properties);
-            var level = GetLevel(properties);          
-            var exception = TryGetException(properties);          
-            var messageTemplate = GetMessageTemplate(properties);          
-            var props = GetLogEventProperties(properties, remainder, level);
+        var timestamp = GetTimestamp(properties);
+        var level = GetLevel(properties);          
+        var exception = TryGetException(properties);          
+        var messageTemplate = GetMessageTemplate(properties);          
+        var props = GetLogEventProperties(properties, remainder, level);
 
-            return new LogEvent(
-                timestamp,
-                LogEventLevel.Information,
-                exception,
-                messageTemplate,
-                props);
-        }
+        return new LogEvent(
+            timestamp,
+            LogEventLevel.Information,
+            exception,
+            messageTemplate,
+            props);
+    }
         
-        static readonly MessageTemplate NoMessage = new MessageTemplateParser().Parse("");
+    static readonly MessageTemplate NoMessage = new MessageTemplateParser().Parse("");
 
-        static MessageTemplate GetMessageTemplate(IDictionary<string, object> properties)
+    static MessageTemplate GetMessageTemplate(IDictionary<string, object?> properties)
+    {
+        if (properties.TryGetValue(ReifiedProperties.Message, out var m) &&
+            m is TextSpan ts)
         {
-            if (properties.TryGetValue(ReifiedProperties.Message, out var m) &&
-                m is TextSpan ts)
+            var text = ts.ToStringValue();
+            return new MessageTemplate(new MessageTemplateToken[] {new TextToken(text) });
+        }
+
+        return NoMessage;
+    }
+
+    static string GetLevel(IDictionary<string, object?> properties)
+    {
+        if (properties.TryGetValue(ReifiedProperties.Level, out var l) &&
+            l is TextSpan ts)
+            return ts.ToStringValue();
+        return LogEventLevel.Information.ToString();
+    }
+
+    static Exception? TryGetException(IDictionary<string, object?> properties)
+    {
+        if (properties.TryGetValue(ReifiedProperties.Exception, out var x) &&
+            x is TextSpan ts)
+            return new TextOnlyException(ts.ToStringValue());
+        return null;
+    }
+
+    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder, string level)
+    {
+        var payload = properties
+            .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
+            .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object?)level) })
+            .Select(p => LogEventPropertyFactory.SafeCreate(p.Key, new ScalarValue(p.Value)));
+
+        if (remainder != null)
+            payload = payload.Concat(new[]
             {
-                var text = ts.ToStringValue();
-                return new MessageTemplate(new MessageTemplateToken[] {new TextToken(text) });
-            }
+                LogEventPropertyFactory.SafeCreate("@unmatched", new ScalarValue(remainder))
+            });
+        return payload;
+    }
 
-            return NoMessage;
-        }
-
-        static string GetLevel(IDictionary<string, object> properties)
+    static DateTimeOffset GetTimestamp(IDictionary<string, object?> properties)
+    {
+        if (properties.TryGetValue(ReifiedProperties.Timestamp, out var t))
         {
-            if (properties.TryGetValue(ReifiedProperties.Level, out var l) &&
-                l is TextSpan ts)
-                return ts.ToStringValue();
-            return LogEventLevel.Information.ToString();
+            if (t is TextSpan span && DateTimeOffset.TryParse(span.ToStringValue(),
+                    CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var ts))
+                return ts;
+
+            if (t is DateTimeOffset dto)
+                return dto;
         }
-
-        static Exception TryGetException(IDictionary<string, object> properties)
-        {
-            if (properties.TryGetValue(ReifiedProperties.Exception, out var x) &&
-                x is TextSpan ts)
-                return new TextOnlyException(ts.ToStringValue());
-            return null;
-        }
-
-        static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object> properties, string remainder, string level)
-        {
-            var payload = properties
-                .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
-                .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object)level) })
-                .Select(p => LogEventPropertyFactory.SafeCreate(p.Key, new ScalarValue(p.Value)));
-
-            if (remainder != null)
-                payload = payload.Concat(new[]
-                {
-                    LogEventPropertyFactory.SafeCreate("@unmatched", new ScalarValue(remainder))
-                });
-            return payload;
-        }
-
-        static DateTimeOffset GetTimestamp(IDictionary<string, object> properties)
-        {
-            if (properties.TryGetValue(ReifiedProperties.Timestamp, out var t))
-            {
-                if (t is TextSpan span && DateTimeOffset.TryParse(span.ToStringValue(),
-                        CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var ts))
-                    return ts;
-
-                if (t is DateTimeOffset dto)
-                    return dto;
-            }
             
-            return DateTimeOffset.Now;
-        }
+        return DateTimeOffset.Now;
     }
 }

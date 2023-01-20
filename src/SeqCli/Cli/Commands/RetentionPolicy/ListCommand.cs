@@ -19,50 +19,49 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.RetentionPolicy
+namespace SeqCli.Cli.Commands.RetentionPolicy;
+
+[Command("retention", "list", "List retention policies", Example="seqcli retention list")]
+class ListCommand : Command
 {
-    [Command("retention", "list", "List retention policies", Example="seqcli retention list")]
-    class ListCommand : Command
-    {
-        readonly SeqConnectionFactory _connectionFactory;
+    readonly SeqConnectionFactory _connectionFactory;
         
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
 
-        string _id;
+    string? _id;
 
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+            
+        Options.Add(
+            "i=|id=",
+            "The id of a single retention policy to list",
+            id => _id = id);
+            
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
+
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _id != null ?
+            new[] { await connection.RetentionPolicies.FindAsync(_id) } :
+            (await connection.RetentionPolicies.ListAsync())
+            .ToArray();
+
+        foreach (var policy in list)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            
-            Options.Add(
-                "i=|id=",
-                "The id of a single retention policy to list",
-                id => _id = id);
-            
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
+            if (_output.Json)
+                _output.WriteEntity(policy);
+            else
+                Console.WriteLine(policy.Id);
         }
-
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _id != null ?
-                new[] { await connection.RetentionPolicies.FindAsync(_id) } :
-                (await connection.RetentionPolicies.ListAsync())
-                    .ToArray();
-
-            foreach (var policy in list)
-            {
-                if (_output.Json)
-                    _output.WriteEntity(policy);
-                else
-                    Console.WriteLine(policy.Id);
-            }
             
-            return 0;
-        }
+        return 0;
     }
 }

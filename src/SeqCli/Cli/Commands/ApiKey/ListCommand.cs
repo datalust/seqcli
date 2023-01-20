@@ -19,43 +19,42 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.ApiKey
+namespace SeqCli.Cli.Commands.ApiKey;
+
+[Command("apikey", "list", "List available API keys", Example="seqcli apikey list")]
+class ListCommand : Command
 {
-    [Command("apikey", "list", "List available API keys", Example="seqcli apikey list")]
-    class ListCommand : Command
+    readonly SeqConnectionFactory _connectionFactory;
+
+    readonly EntityIdentityFeature _entityIdentity;
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        readonly SeqConnectionFactory _connectionFactory;
+        if (config == null) throw new ArgumentNullException(nameof(config));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        readonly EntityIdentityFeature _entityIdentity;
-        readonly ConnectionFeature _connection;
-        readonly OutputFormatFeature _output;
+        _entityIdentity = Enable(new EntityIdentityFeature("API key", "list"));
+        _output = Enable(new OutputFormatFeature(config.Output));
+        _connection = Enable<ConnectionFeature>();
+    }
 
-        public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    protected override async Task<int> Run()
+    {
+        var connection = _connectionFactory.Connect(_connection);
+
+        var list = _entityIdentity.Id != null ?
+            new[] { await connection.ApiKeys.FindAsync(_entityIdentity.Id) } :
+            (await connection.ApiKeys.ListAsync())
+            .Where(ak => _entityIdentity.Title == null || _entityIdentity.Title == ak.Title)
+            .ToArray();
+
+        foreach (var apiKey in list)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-            _entityIdentity = Enable(new EntityIdentityFeature("API key", "list"));
-            _output = Enable(new OutputFormatFeature(config.Output));
-            _connection = Enable<ConnectionFeature>();
+            _output.WriteEntity(apiKey);
         }
-
-        protected override async Task<int> Run()
-        {
-            var connection = _connectionFactory.Connect(_connection);
-
-            var list = _entityIdentity.Id != null ?
-                new[] { await connection.ApiKeys.FindAsync(_entityIdentity.Id) } :
-                (await connection.ApiKeys.ListAsync())
-                    .Where(ak => _entityIdentity.Title == null || _entityIdentity.Title == ak.Title)
-                    .ToArray();
-
-            foreach (var apiKey in list)
-            {
-                _output.WriteEntity(apiKey);
-            }
             
-            return 0;
-        }
+        return 0;
     }
 }

@@ -14,20 +14,19 @@
 
 using System;
 
-namespace SeqCli.PlainText.LogEvents
+namespace SeqCli.PlainText.LogEvents;
+
+class TextOnlyException : Exception
 {
-    class TextOnlyException : Exception
+    readonly string _toStringValue;
+
+    public TextOnlyException(string toStringValue)
     {
-        readonly string _toStringValue;
+        _toStringValue = toStringValue ?? throw new ArgumentNullException(nameof(toStringValue));
+    }
 
-        public TextOnlyException(string toStringValue)
-        {
-            _toStringValue = toStringValue ?? throw new ArgumentNullException(nameof(toStringValue));
-        }
-
-        public override string ToString()
-        {
-            return _toStringValue;
-        }
+    public override string ToString()
+    {
+        return _toStringValue;
     }
 }

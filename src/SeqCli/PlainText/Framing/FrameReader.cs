@@ -19,123 +19,122 @@ using System.Threading.Tasks;
 using Superpower;
 using Superpower.Model;
 
-namespace SeqCli.PlainText.Framing
+namespace SeqCli.PlainText.Framing;
+
+class FrameReader
 {
-    class FrameReader
+    readonly TextReader _source;
+    readonly TimeSpan _trailingLineArrivalDeadline;
+    readonly TextParser<TextSpan> _frameStart;
+
+    string? _unconsumedFirstLine;
+    Task<string?>? _unawaitedNextLine;
+
+    public FrameReader(TextReader source, TextParser<TextSpan> frameStart, TimeSpan trailingLineArrivalDeadline)
     {
-        readonly TextReader _source;
-        readonly TimeSpan _trailingLineArrivalDeadline;
-        readonly TextParser<TextSpan> _frameStart;
-
-        string _unconsumedFirstLine;
-        Task<string> _unawaitedNextLine;
-
-        public FrameReader(TextReader source, TextParser<TextSpan> frameStart, TimeSpan trailingLineArrivalDeadline)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _frameStart = frameStart ?? throw new ArgumentNullException(nameof(frameStart));
-            _trailingLineArrivalDeadline = trailingLineArrivalDeadline;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _frameStart = frameStart ?? throw new ArgumentNullException(nameof(frameStart));
+        _trailingLineArrivalDeadline = trailingLineArrivalDeadline;
 
 #if WINDOWS
-            // Somehow, PowerShell manages to send a UTF-8 BOM when piping a command's output to us
-            // via STDIN, regardless of how we set Console.InputEncoding. This hackily skips the BOM,
-            // while we all live in hope of some brighter future.
-            if (_source.Peek() == 65279)
-                _source.Read();
+        // Somehow, PowerShell manages to send a UTF-8 BOM when piping a command's output to us
+        // via STDIN, regardless of how we set Console.InputEncoding. This hackily skips the BOM,
+        // while we all live in hope of some brighter future.
+        if (_source.Peek() == 65279)
+            _source.Read();
 #endif
+    }
+
+    public async Task<Frame> TryReadAsync()
+    {
+        var valueBuilder = new StringBuilder();
+        var hasValue = false;
+
+        if (_unconsumedFirstLine != null)
+        {
+            valueBuilder.AppendLine(_unconsumedFirstLine);
+            _unconsumedFirstLine = null;
+            hasValue = true;
+        }
+        else if (_unawaitedNextLine != null)
+        {
+            var index = Task.WaitAny(new Task[] {_unawaitedNextLine}, _trailingLineArrivalDeadline);
+            if (index == -1)
+                return new Frame();
+                
+            var line = await _unawaitedNextLine;
+            if (line?.Length > 0 && line[0] == 65279)
+                line = line.Substring(1);
+
+            _unawaitedNextLine = null;
+            if (line == null)
+                return new Frame {IsAtEnd = true};
+
+            valueBuilder.AppendLine(line);
+            hasValue = true;
+
+            if (!IsFrameStart(line))
+                return new Frame {HasValue = true, IsOrphan = true, Value = valueBuilder.ToString()};
         }
 
-        public async Task<Frame> TryReadAsync()
+        Task<string?>? readLine = null;
+        while (true)
         {
-            var valueBuilder = new StringBuilder();
-            var hasValue = false;
-
-            if (_unconsumedFirstLine != null)
+            readLine = readLine ?? Task.Run(_source.ReadLineAsync);                
+            var index = Task.WaitAny(new Task[] {readLine}, _trailingLineArrivalDeadline);
+            if (index == -1)
             {
-                valueBuilder.AppendLine(_unconsumedFirstLine);
-                _unconsumedFirstLine = null;
-                hasValue = true;
+                if (hasValue)
+                {
+                    _unawaitedNextLine = readLine;
+                    return new Frame {HasValue = true, Value = valueBuilder.ToString()};
+                }
+
+                // else, around we go!
             }
-            else if (_unawaitedNextLine != null)
+            else
             {
-                var index = Task.WaitAny(new Task[] {_unawaitedNextLine}, _trailingLineArrivalDeadline);
-                if (index == -1)
-                    return new Frame();
-                
-                var line = await _unawaitedNextLine;
-                if (line?.Length > 0 && line[0] == 65279)
-                    line = line.Substring(1);
-
-                _unawaitedNextLine = null;
+                var line = await readLine;
+                readLine = null;
                 if (line == null)
-                    return new Frame {IsAtEnd = true};
-
-                valueBuilder.AppendLine(line);
-                hasValue = true;
-
-                if (!IsFrameStart(line))
-                    return new Frame {HasValue = true, IsOrphan = true, Value = valueBuilder.ToString()};
-            }
-
-            Task<string> readLine = null;
-            while (true)
-            {
-                readLine = readLine ?? Task.Run(_source.ReadLineAsync);                
-                var index = Task.WaitAny(new Task[] {readLine}, _trailingLineArrivalDeadline);
-                if (index == -1)
                 {
                     if (hasValue)
                     {
-                        _unawaitedNextLine = readLine;
+                        return new Frame {HasValue = true, Value = valueBuilder.ToString(), IsAtEnd = true};
+                    }
+
+                    return new Frame {IsAtEnd = true};
+                }
+
+                if (IsFrameStart(line))
+                {
+                    if (hasValue)
+                    {
+                        _unconsumedFirstLine = line;
                         return new Frame {HasValue = true, Value = valueBuilder.ToString()};
                     }
 
-                    // else, around we go!
+                    valueBuilder.AppendLine(line);
+                    hasValue = true;
                 }
                 else
                 {
-                    var line = await readLine;
-                    readLine = null;
-                    if (line == null)
+                    if (!hasValue)
                     {
-                        if (hasValue)
-                        {
-                            return new Frame {HasValue = true, Value = valueBuilder.ToString(), IsAtEnd = true};
-                        }
-
-                        return new Frame {IsAtEnd = true};
-                    }
-
-                    if (IsFrameStart(line))
-                    {
-                        if (hasValue)
-                        {
-                            _unconsumedFirstLine = line;
-                            return new Frame {HasValue = true, Value = valueBuilder.ToString()};
-                        }
-
                         valueBuilder.AppendLine(line);
-                        hasValue = true;
+                        return new Frame {HasValue = true, Value = valueBuilder.ToString(), IsOrphan = true};
                     }
-                    else
-                    {
-                        if (!hasValue)
-                        {
-                            valueBuilder.AppendLine(line);
-                            return new Frame {HasValue = true, Value = valueBuilder.ToString(), IsOrphan = true};
-                        }
 
-                        valueBuilder.AppendLine(line);
-                    }
+                    valueBuilder.AppendLine(line);
                 }
             }
+        }
 
-            bool IsFrameStart(string line)
-            {
-                if (line == null) throw new ArgumentNullException(nameof(line));
-                var result = _frameStart(new TextSpan(line));
-                return result.HasValue;
-            }
+        bool IsFrameStart(string line)
+        {
+            if (line == null) throw new ArgumentNullException(nameof(line));
+            var result = _frameStart(new TextSpan(line));
+            return result.HasValue;
         }
     }
 }

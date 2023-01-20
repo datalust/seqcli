@@ -15,32 +15,31 @@
 using System;
 using System.Net.Http;
 
-namespace SeqCli.Cli.Features
+namespace SeqCli.Cli.Features;
+
+class TimeoutFeature: CommandFeature
 {
-    class TimeoutFeature: CommandFeature
+    int? _timeoutMS;
+
+    public override void Enable(OptionSet options)
     {
-        int? _timeoutMS;
+        options.Add("timeout=", "The execution timeout in milliseconds", v => _timeoutMS = int.Parse(v?.Trim() ?? "0"));
+    }
 
-        public override void Enable(OptionSet options)
+    // Ensures we don't forget to configure the client whenever the server is given a longer timeout than
+    // the client's internal default.
+    public TimeSpan? ApplyTimeout(HttpClient httpClient)
+    {
+        if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
+
+        var timeout = _timeoutMS.HasValue ? TimeSpan.FromMilliseconds(_timeoutMS.Value) : (TimeSpan?)null;
+        if (timeout != null)
         {
-            options.Add("timeout=", "The execution timeout in milliseconds", v => _timeoutMS = int.Parse(v?.Trim() ?? "0"));
+            // The timeout is applied server-side; allowing an extra 10 seconds here means that the
+            // user experience will be consistent - the error message will be the server's message, etc.
+            httpClient.Timeout = timeout.Value.Add(TimeSpan.FromSeconds(10));
         }
 
-        // Ensures we don't forget to configure the client whenever the server is given a longer timeout than
-        // the client's internal default.
-        public TimeSpan? ApplyTimeout(HttpClient httpClient)
-        {
-            if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
-
-            var timeout = _timeoutMS.HasValue ? TimeSpan.FromMilliseconds(_timeoutMS.Value) : (TimeSpan?)null;
-            if (timeout != null)
-            {
-                // The timeout is applied server-side; allowing an extra 10 seconds here means that the
-                // user experience will be consistent - the error message will be the server's message, etc.
-                httpClient.Timeout = timeout.Value.Add(TimeSpan.FromSeconds(10));
-            }
-
-            return timeout;
-        }
+        return timeout;
     }
 }

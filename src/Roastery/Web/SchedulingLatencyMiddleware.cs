@@ -3,38 +3,37 @@ using System.Threading;
 using System.Threading.Tasks;
 using Roastery.Util;
 
-namespace Roastery.Web
+namespace Roastery.Web;
+
+class SchedulingLatencyMiddleware : HttpServer
 {
-    class SchedulingLatencyMiddleware : HttpServer
+    readonly HttpServer _next;
+
+    const int Capacity = 16; // 16 concurrent requests is just fine :-)
+    int _activeRequests;
+
+    public SchedulingLatencyMiddleware(HttpServer next)
     {
-        readonly HttpServer _next;
+        _next = next;
+    }
 
-        const int Capacity = 16; // 16 concurrent requests is just fine :-)
-        int _activeRequests;
-
-        public SchedulingLatencyMiddleware(HttpServer next)
+    public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
+    {
+        var current = Interlocked.Increment(ref _activeRequests);
+        try
         {
-            _next = next;
+            var delay = (int)(10 * Distribution.Uniform());
+            if (current > Capacity)
+            {
+                // One extra millisecond per concurrent request over capacity, ramping up
+                delay += (int) Math.Pow(current - Capacity, 1.6);
+            }
+            await Task.Delay(delay);
+            return await _next.InvokeAsync(request);
         }
-
-        public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
+        finally
         {
-            var current = Interlocked.Increment(ref _activeRequests);
-            try
-            {
-                var delay = (int)(10 * Distribution.Uniform());
-                if (current > Capacity)
-                {
-                    // One extra millisecond per concurrent request over capacity, ramping up
-                    delay += (int) Math.Pow(current - Capacity, 1.6);
-                }
-                await Task.Delay(delay);
-                return await _next.InvokeAsync(request);
-            }
-            finally
-            {
-                Interlocked.Decrement(ref _activeRequests);
-            }
+            Interlocked.Decrement(ref _activeRequests);
         }
     }
 }

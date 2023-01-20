@@ -18,44 +18,43 @@ using System.Text;
 
 #nullable enable
 
-namespace SeqCli.Util
+namespace SeqCli.Util;
+
+static class Presentation
 {
-    static class Presentation
+    /// <summary>
+    /// Formats <paramref name="ex"/> as its message, with any inner exception messages
+    /// listed following it in (parens).
+    /// </summary>
+    /// <param name="ex">The exception to format.</param>
+    /// <returns>A friendlier, but reasonably complete, rendering of the exception's message
+    /// and causal chain.</returns>
+    public static string FormattedMessage(Exception ex)
     {
-        /// <summary>
-        /// Formats <paramref name="ex"/> as its message, with any inner exception messages
-        /// listed following it in (parens).
-        /// </summary>
-        /// <param name="ex">The exception to format.</param>
-        /// <returns>A friendlier, but reasonably complete, rendering of the exception's message
-        /// and causal chain.</returns>
-        public static string FormattedMessage(Exception ex)
+        if (ex == null) throw new ArgumentNullException(nameof(ex));
+
+        static Exception Unwrap(Exception outer)
         {
-            if (ex == null) throw new ArgumentNullException(nameof(ex));
-
-            static Exception Unwrap(Exception outer)
-            {
-                return outer is AggregateException or TargetInvocationException ? outer.GetBaseException() : outer;
-            }
-
-            static string Describe(Exception toDescribe)
-            {
-                // :-)
-                return toDescribe.Message.Replace(", see inner exception", "");
-            }
-
-            var unwrapped = Unwrap(ex);
-            var message = new StringBuilder(Describe(unwrapped));
-
-            while (unwrapped.InnerException != null)
-            {
-                unwrapped = Unwrap(unwrapped.InnerException);
-                    
-                message.Append(' ');
-                message.Append(Describe(unwrapped));
-            }
-
-            return message.ToString();
+            return outer is AggregateException or TargetInvocationException ? outer.GetBaseException() : outer;
         }
+
+        static string Describe(Exception toDescribe)
+        {
+            // :-)
+            return toDescribe.Message.Replace(", see inner exception", "");
+        }
+
+        var unwrapped = Unwrap(ex);
+        var message = new StringBuilder(Describe(unwrapped));
+
+        while (unwrapped.InnerException != null)
+        {
+            unwrapped = Unwrap(unwrapped.InnerException);
+                    
+            message.Append(' ');
+            message.Append(Describe(unwrapped));
+        }
+
+        return message.ToString();
     }
 }

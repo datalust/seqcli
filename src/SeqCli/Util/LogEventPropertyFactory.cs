@@ -15,20 +15,19 @@
 using System;
 using Serilog.Events;
 
-namespace SeqCli.Util
+namespace SeqCli.Util;
+
+static class LogEventPropertyFactory
 {
-    static class LogEventPropertyFactory
-    {
-        const string InvalidPropertyNameSubstitute = "(unnamed)";
+    const string InvalidPropertyNameSubstitute = "(unnamed)";
         
-        public static LogEventProperty SafeCreate(string name, LogEventPropertyValue value)
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+    public static LogEventProperty SafeCreate(string name, LogEventPropertyValue value)
+    {
+        if (value == null) throw new ArgumentNullException(nameof(value));
             
-            if (!LogEventProperty.IsValidName(name))
-                name = InvalidPropertyNameSubstitute;
+        if (!LogEventProperty.IsValidName(name))
+            name = InvalidPropertyNameSubstitute;
             
-            return new LogEventProperty(name, value);
-        }
+        return new LogEventProperty(name, value);
     }
 }

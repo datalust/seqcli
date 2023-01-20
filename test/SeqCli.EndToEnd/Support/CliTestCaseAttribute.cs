@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace SeqCli.EndToEnd.Support
+namespace SeqCli.EndToEnd.Support;
+
+[AttributeUsage(AttributeTargets.Class)]
+public class CliTestCaseAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public class CliTestCaseAttribute : Attribute
-    {
-        public bool Multiuser { get; set; }
-        public string MinimumApiVersion { get; set; }
-    }
+    public bool Multiuser { get; set; }
+    public string MinimumApiVersion { get; set; }
 }

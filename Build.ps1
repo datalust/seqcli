@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$framework = 'net6.0'
+$framework = 'net7.0'
 $windowsTfmSuffix = '-windows'
 
 function Clean-Output
@@ -14,7 +14,7 @@ function Restore-Packages
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
-function Execute-Tests
+function Execute-Tests($version)
 {
     & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
@@ -85,7 +85,7 @@ Create-ArtifactDir
 Restore-Packages
 Publish-Archives($version)
 Publish-DotNetTool($version)
-Execute-Tests
+Execute-Tests($version)
 Publish-Docs($version)
 
 Pop-Location

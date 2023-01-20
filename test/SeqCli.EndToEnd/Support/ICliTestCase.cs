@@ -2,10 +2,9 @@
 using Seq.Api;
 using Serilog;
 
-namespace SeqCli.EndToEnd.Support
+namespace SeqCli.EndToEnd.Support;
+
+interface ICliTestCase
 {
-    interface ICliTestCase
-    {
-        Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner);
-    }
+    Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner);
 }

@@ -21,121 +21,120 @@ using Seq.Apps;
 
 #nullable  enable
 
-namespace SeqCli.Apps.Definitions
+namespace SeqCli.Apps.Definitions;
+
+static class AppMetadataReader
 {
-    static class AppMetadataReader
+    public static AppDefinition ReadFromSeqAppType(Type seqAppType)
     {
-        public static AppDefinition ReadFromSeqAppType(Type seqAppType)
+        if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
+
+        var declared = seqAppType.GetCustomAttribute<SeqAppAttribute>();
+        if (declared == null)
+            throw new ArgumentException($"The provided type '{seqAppType}' is not marked with [SeqApp].");
+
+        var app = new AppDefinition(declared.Name)
         {
-            if (seqAppType == null) throw new ArgumentNullException(nameof(seqAppType));
-
-            var declared = seqAppType.GetCustomAttribute<SeqAppAttribute>();
-            if (declared == null)
-                throw new ArgumentException($"The provided type '{seqAppType}' is not marked with [SeqApp].");
-
-            var app = new AppDefinition(declared.Name)
+            Description = declared.Description,
+            AllowReprocessing = declared.AllowReprocessing,
+            Settings = GetAvailableSettings(seqAppType),
+            Capabilities = GetCapabilities(seqAppType),
+            Platform = new Dictionary<string, AppPlatformDefinition>
             {
-                Description = declared.Description,
-                AllowReprocessing = declared.AllowReprocessing,
-                Settings = GetAvailableSettings(seqAppType),
-                Capabilities = GetCapabilities(seqAppType),
-                Platform = new Dictionary<string, AppPlatformDefinition>
+                ["hosted-dotnet"] = new()
                 {
-                    ["hosted-dotnet"] = new()
-                    {
-                        SeqAppTypeName = seqAppType.FullName
-                    }
+                    SeqAppTypeName = seqAppType.FullName
                 }
-            };
-
-            return app;
-        }
-
-        static List<string> GetCapabilities(Type mainReactorType)
-        {
-            var caps = new List<string>();
-            if (typeof(IPublishJson).IsAssignableFrom(mainReactorType))
-                caps.Add("input");
-            return caps;
-        }
-
-        static Dictionary<string, AppSettingDefinition> GetAvailableSettings(Type mainReactorType)
-        {
-            var properties = mainReactorType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            return properties
-                .Select(pi => new { pi, attr = pi.GetCustomAttribute<SeqAppSettingAttribute>() })
-                .Where(p => p.attr != null)
-                .ToDictionary(
-                    p => p.pi.Name,
-                    p => new AppSettingDefinition
-                    {
-                        DisplayName = Normalize(p.attr!.DisplayName),
-                        IsOptional = p.attr.IsOptional,
-                        HelpText = Normalize(p.attr.HelpText),
-                        InputType = p.attr.InputType == SettingInputType.Unspecified ?
-                            GetSettingType(p.pi.PropertyType) :
-                            (AppSettingType)Enum.Parse(typeof(AppSettingType), p.attr.InputType.ToString()),
-                        IsInvocationParameter = p.attr.IsInvocationParameter,
-                        AllowedValues = TryGetAllowedValues(p.pi.PropertyType),
-                        Syntax = Normalize(p.attr.Syntax)
-                    });
-        }
-
-        static readonly HashSet<Type> IntegerTypes = new()
-        {
-            typeof(short), typeof(ushort), typeof(int), typeof(uint),
-            typeof(long), typeof(ulong)
+            }
         };
 
-        static readonly HashSet<Type> DecimalTypes = new()
-        {
-            typeof(float), typeof(double), typeof(decimal)
-        };
+        return app;
+    }
 
-        static readonly HashSet<Type> BooleanTypes = new()
-        {
-            typeof(bool)
-        };
+    static List<string> GetCapabilities(Type mainReactorType)
+    {
+        var caps = new List<string>();
+        if (typeof(IPublishJson).IsAssignableFrom(mainReactorType))
+            caps.Add("input");
+        return caps;
+    }
 
-        internal static AppSettingType GetSettingType(Type type)
-        {
-            var targetType = Nullable.GetUnderlyingType(type) ?? type;
+    static Dictionary<string, AppSettingDefinition> GetAvailableSettings(Type mainReactorType)
+    {
+        var properties = mainReactorType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        return properties
+            .Select(pi => new { pi, attr = pi.GetCustomAttribute<SeqAppSettingAttribute>() })
+            .Where(p => p.attr != null)
+            .ToDictionary(
+                p => p.pi.Name,
+                p => new AppSettingDefinition
+                {
+                    DisplayName = Normalize(p.attr!.DisplayName),
+                    IsOptional = p.attr.IsOptional,
+                    HelpText = Normalize(p.attr.HelpText),
+                    InputType = p.attr.InputType == SettingInputType.Unspecified ?
+                        GetSettingType(p.pi.PropertyType) :
+                        (AppSettingType)Enum.Parse(typeof(AppSettingType), p.attr.InputType.ToString()),
+                    IsInvocationParameter = p.attr.IsInvocationParameter,
+                    AllowedValues = TryGetAllowedValues(p.pi.PropertyType),
+                    Syntax = Normalize(p.attr.Syntax)
+                });
+    }
+
+    static readonly HashSet<Type> IntegerTypes = new()
+    {
+        typeof(short), typeof(ushort), typeof(int), typeof(uint),
+        typeof(long), typeof(ulong)
+    };
+
+    static readonly HashSet<Type> DecimalTypes = new()
+    {
+        typeof(float), typeof(double), typeof(decimal)
+    };
+
+    static readonly HashSet<Type> BooleanTypes = new()
+    {
+        typeof(bool)
+    };
+
+    internal static AppSettingType GetSettingType(Type type)
+    {
+        var targetType = Nullable.GetUnderlyingType(type) ?? type;
             
-            if (IntegerTypes.Contains(targetType))
-                return AppSettingType.Integer;
+        if (IntegerTypes.Contains(targetType))
+            return AppSettingType.Integer;
 
-            if (DecimalTypes.Contains(targetType))
-                return AppSettingType.Decimal;
+        if (DecimalTypes.Contains(targetType))
+            return AppSettingType.Decimal;
 
-            if (BooleanTypes.Contains(targetType))
-                return AppSettingType.Checkbox;
+        if (BooleanTypes.Contains(targetType))
+            return AppSettingType.Checkbox;
 
-            if (targetType.IsEnum)
-                return AppSettingType.Select;
+        if (targetType.IsEnum)
+            return AppSettingType.Select;
 
-            return AppSettingType.Text;
-        }
+        return AppSettingType.Text;
+    }
 
-        internal static AppSettingValue[]? TryGetAllowedValues(Type type)
-        {
-            var targetType = Nullable.GetUnderlyingType(type) ?? type;
+    internal static AppSettingValue[]? TryGetAllowedValues(Type type)
+    {
+        var targetType = Nullable.GetUnderlyingType(type) ?? type;
             
-            if (!targetType.IsEnum)
-                return null;
+        if (!targetType.IsEnum)
+            return null;
 
-            // Preserve declaration order
-            var values =
-                from name in Enum.GetNames(targetType)
-                let member = targetType.GetField(name)
-                let description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description
-                select new AppSettingValue {Value = name, Description = description};
+        // Preserve declaration order
+        var values =
+            from name in Enum.GetNames(targetType)
+            let member = targetType.GetField(name)
+            let description = member?.GetCustomAttribute<DescriptionAttribute>()?.Description
+            select new AppSettingValue {Value = name, Description = description};
 
-            return values.ToArray();
-        }
+        return values.ToArray();
+    }
 
-        static string? Normalize(string? s)
-        {
-            return string.IsNullOrWhiteSpace(s) ? null : s;
-        }
+    static string? Normalize(string? s)
+    {
+        return string.IsNullOrWhiteSpace(s) ? null : s;
     }
 }

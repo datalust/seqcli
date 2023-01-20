@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Templates.Ast
+namespace SeqCli.Templates.Ast;
+
+class JsonTemplateNull : JsonTemplate
 {
-    class JsonTemplateNull : JsonTemplate
-    {
-    }
 }
