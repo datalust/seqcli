@@ -13,11 +13,13 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Destructurama;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
+using Seq.Api.Model.AppInstances;
 using SeqCli.Config;
 using SeqCli.Csv;
 using SeqCli.Levels;
@@ -136,6 +138,14 @@ class OutputFormatFeature : CommandFeature
         {
             var dyn = (dynamic) jo;
             Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name ?? dyn.Username}");
+        }
+    }
+
+    public void ListEntities(IEnumerable<Entity> list)
+    {
+        foreach (var entity in list)
+        {
+            WriteEntity(entity);
         }
     }
 }

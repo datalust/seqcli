@@ -35,13 +35,9 @@ class ListCommand : Command
         var list = _entityIdentity.Id != null ?
             new[] { await connection.Workspaces.FindAsync(_entityIdentity.Id) } :
             (await connection.Workspaces.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-            .Where(workspace => _entityIdentity.Title == null || _entityIdentity.Title == workspace.Title)
-            .ToArray();
+            .Where(workspace => _entityIdentity.Title == null || _entityIdentity.Title == workspace.Title);
 
-        foreach (var workspace in list)
-        {
-            _output.WriteEntity(workspace);
-        }
+        _output.ListEntities(list);
 
         return 0;
     }

@@ -49,13 +49,9 @@ class ListCommand : Command
         var list = _entityIdentity.Id != null ?
             new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
             (await connection.Dashboards.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-            .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title)
-            .ToArray();
+            .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title);
 
-        foreach (var dashboardEntity in list)
-        {
-            _output.WriteEntity(dashboardEntity);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }

@@ -11,7 +11,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.AppInstance;
 
-[Command("appinstance", "create", "Create a signal",
+[Command("appinstance", "create", "Create an instance of an installed app",
     Example = "seqcli appinstance create -t 'Email Ops' --app hostedapp-314159 -p To=ops@example.com")]
 class CreateCommand : Command
 {

@@ -51,13 +51,9 @@ class ListCommand : Command
         var list = Id != null ?
             new[] { await connection.Apps.FindAsync(Id) } :
             (await connection.Apps.ListAsync())
-            .Where(ak => PackageId == null || PackageId == ak.Name)
-            .ToArray();
+            .Where(ak => PackageId == null || PackageId == ak.Package.PackageId);
 
-        foreach (var app in list)
-        {
-            _output.WriteEntity(app);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }
