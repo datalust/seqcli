@@ -91,7 +91,7 @@ abstract class Command
 
     protected virtual Task<int> Run() { return Task.FromResult(0); }
 
-    protected virtual void ShowUsageErrors(IEnumerable<string> errors)
+    protected static void ShowUsageErrors(IEnumerable<string> errors)
     {
         foreach (var error in errors)
         {
