@@ -12,10 +12,12 @@ public class TestConfiguration
     {
         _args = args;
     }
-        
-    public int ServerListenPort { get; } = 9989;
 
+    static int ServerListenPort => 9989;
+
+#pragma warning disable CA1822
     public string ServerListenUrl => $"http://localhost:{ServerListenPort}";
+#pragma warning restore CA1822
 
     string EquivalentBaseDirectory { get; } = AppDomain.CurrentDomain.BaseDirectory
         .Replace(Path.Combine("test", "SeqCli.EndToEnd"), Path.Combine("src", "SeqCli"));
