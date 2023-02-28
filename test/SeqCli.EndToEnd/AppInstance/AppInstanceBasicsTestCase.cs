@@ -30,8 +30,8 @@ public class AppInstanceBasicsTestCase : ICliTestCase
         Assert.Equal(0, exit);
 
         var output = runner.LastRunProcess?.Output;
-        Assert.Equal(appInstance.Id, output?.Trim());
-        Assert.Equal(appInstance.Title, output?.Trim());
+        Assert.StartsWith(appInstance.Id, output?.Trim());
+        Assert.EndsWith(appInstance.Title, output?.Trim());
 
         exit = runner.Exec("appinstance remove", $"-t {title}");
         Assert.Equal(0, exit);
