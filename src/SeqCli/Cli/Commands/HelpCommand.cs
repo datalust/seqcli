@@ -179,13 +179,13 @@ class HelpCommand : Command
             {
                 if (!printedGroups.Contains(avail.Metadata.Name))
                 {
-                    Printing.Define($"  {avail.Metadata.Name}", "<sub-command>", 13, Console.Out);
+                    Printing.Define($"  {avail.Metadata.Name}", "<sub-command>", Console.Out);
                     printedGroups.Add(avail.Metadata.Name);
                 }
             }
             else
             {
-                Printing.Define($"  {avail.Metadata.Name}", avail.Metadata.HelpText, 13, Console.Out);
+                Printing.Define($"  {avail.Metadata.Name}", avail.Metadata.HelpText, Console.Out);
             }
         }
 
@@ -201,7 +201,7 @@ class HelpCommand : Command
 
         foreach (var avail in _orderedCommands.Where(c => c.Metadata.Name == topLevelCommand))
         {
-            Printing.Define($"  {avail.Metadata.SubCommand}", avail.Metadata.HelpText, 13, Console.Out);
+            Printing.Define($"  {avail.Metadata.SubCommand}", avail.Metadata.HelpText, Console.Out);
         }
 
         Console.WriteLine();

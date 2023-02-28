@@ -54,13 +54,7 @@ class ListCommand : Command
             (await connection.RetentionPolicies.ListAsync())
             .ToArray();
 
-        foreach (var policy in list)
-        {
-            if (_output.Json)
-                _output.WriteEntity(policy);
-            else
-                Console.WriteLine(policy.Id);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }

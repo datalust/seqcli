@@ -59,13 +59,9 @@ class ListCommand : Command
         var list = _id != null ?
             new[] { await connection.ClusterNodes.FindAsync(_id) } :
             (await connection.ClusterNodes.ListAsync())
-            .Where(n => _name == null || _name == n.Name)
-            .ToArray();
+            .Where(n => _name == null || _name == n.Name);
 
-        foreach (var clusterNode in list)
-        {
-            _output.WriteEntity(clusterNode);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }

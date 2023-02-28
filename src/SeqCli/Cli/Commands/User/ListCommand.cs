@@ -47,13 +47,9 @@ class ListCommand : Command
         var list = _userIdentity.Id != null ?
             new[] { await connection.Users.FindAsync(_userIdentity.Id) } :
             (await connection.Users.ListAsync())
-            .Where(u => _userIdentity.Name == null || _userIdentity.Name == u.Username)
-            .ToArray();
+            .Where(u => _userIdentity.Name == null || _userIdentity.Name == u.Username);
 
-        foreach (var user in list)
-        {
-            _output.WriteEntity(user);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }

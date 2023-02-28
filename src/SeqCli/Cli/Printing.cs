@@ -19,11 +19,11 @@ namespace SeqCli.Cli;
 
 static class Printing
 {
-    const int ConsoleWidth = 80;
+    const int ConsoleWidth = 82, TermColumnWidth = 14;
 
-    public static void Define(string term, string definition, int termColumnWidth, TextWriter output)
+    public static void Define(string term, string definition, TextWriter output)
     {
-        var header = term.PadRight(termColumnWidth);
+        var header = term.PadRight(TermColumnWidth);
         var right = ConsoleWidth - header.Length;
 
         var rest = definition.ToCharArray();
