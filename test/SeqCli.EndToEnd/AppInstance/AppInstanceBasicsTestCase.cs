@@ -21,7 +21,7 @@ public class AppInstanceBasicsTestCase : ICliTestCase
         var app = (await connection.Apps.ListAsync()).Single();
 
         var title = Guid.NewGuid().ToString("N");
-        exit = runner.Exec("appinstance create", $"-t {title} --app {app.Id} -p To=");
+        exit = runner.Exec("appinstance create", $"-t {title} --app {app.Id} -p To=example@example.com -p From=example@example.com");
         Assert.Equal(0, exit);
 
         var appInstance = (await connection.AppInstances.ListAsync()).Single();
