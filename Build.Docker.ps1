@@ -50,6 +50,21 @@ function Publish-DockerImage($arch)
     $ErrorActionPreference = "Stop"
 }
 
+function Publish-DockerManifest($archs)
+{
+    $images = ""
+    foreach ($arch in $archs) {
+        $images += "$image-ci:$version-$($arch.rid) "
+    }
+
+    # We use `invoke-expression` here so each tag is treated as a separate arg
+    invoke-expression "docker manifest create $image-ci:$version $images"
+    if ($LASTEXITCODE) { exit 4 }
+    
+    docker manifest push $image-ci:$version
+    if ($LASTEXITCODE) { exit 4 }
+}
+
 Push-Location $PSScriptRoot
 
 Execute-Tests
@@ -60,6 +75,10 @@ foreach ($arch in $archs) {
     if ($IsPublishedBuild) {
         Publish-DockerImage($arch)
     }
+}
+
+if ($IsPublishedBuild) {
+    Publish-DockerManifest($archs)
 }
 
 Pop-Location
