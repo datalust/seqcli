@@ -1,5 +1,10 @@
+Push-Location $PSScriptRoot
+
+. ./Build.Common.ps1
+
 $ErrorActionPreference = 'Stop'
 
+$version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
 $framework = 'net7.0'
 $windowsTfmSuffix = '-windows'
 
@@ -73,9 +78,6 @@ function Publish-Docs($version)
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
-Push-Location $PSScriptRoot
-
-$version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
 Write-Output "Building version $version"
 
 $env:Path = "$pwd/.dotnetcli;$env:Path"

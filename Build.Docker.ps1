@@ -1,7 +1,9 @@
+Push-Location $PSScriptRoot
+
 $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
-$version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
+$version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
 $framework = "net7.0"
 $image = "datalust/seqcli"
 $archs = @(
@@ -64,8 +66,6 @@ function Publish-DockerManifest($archs)
     docker manifest push $image-ci:$version
     if ($LASTEXITCODE) { exit 4 }
 }
-
-Push-Location $PSScriptRoot
 
 Execute-Tests
 
