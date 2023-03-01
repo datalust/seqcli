@@ -57,6 +57,7 @@ function Publish-DockerManifest($archs)
         $images += "$image-ci:$version-$($arch.rid) "
     }
 
+    # We use `invoke-expression` here so each tag is treated as a separate arg
     invoke-expression "docker manifest create $image-ci:$version $images"
     if ($LASTEXITCODE) { exit 4 }
     
