@@ -1,5 +1,7 @@
 Push-Location $PSScriptRoot
 
+. ./Build.Common.ps1
+
 $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
