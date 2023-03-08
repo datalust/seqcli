@@ -16,7 +16,6 @@ using System;
 using System.Threading.Tasks;
 using SeqCli.Apps;
 using SeqCli.Apps.Definitions;
-using SeqCli.Config;
 using SeqCli.Util;
 
 namespace SeqCli.Cli.Commands.App;

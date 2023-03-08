@@ -57,13 +57,9 @@ class ListCommand : Command
         var list = _id != null ?
             new[] { await connection.Feeds.FindAsync(_id) } :
             (await connection.Feeds.ListAsync())
-            .Where(f => _name == null || _name == f.Name)
-            .ToArray();
+            .Where(f => _name == null || _name == f.Name);
 
-        foreach (var feed in list)
-        {
-            _output.WriteEntity(feed);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }

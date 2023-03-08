@@ -1,7 +1,11 @@
+Push-Location $PSScriptRoot
+
+. ./Build.Common.ps1
+
 $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
-$version = @{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL];
+$version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
 $framework = "net7.0"
 $image = "datalust/seqcli"
 $archs = @(
@@ -50,7 +54,20 @@ function Publish-DockerImage($arch)
     $ErrorActionPreference = "Stop"
 }
 
-Push-Location $PSScriptRoot
+function Publish-DockerManifest($archs)
+{
+    $images = ""
+    foreach ($arch in $archs) {
+        $images += "$image-ci:$version-$($arch.rid) "
+    }
+
+    # We use `invoke-expression` here so each tag is treated as a separate arg
+    invoke-expression "docker manifest create $image-ci:$version $images"
+    if ($LASTEXITCODE) { exit 4 }
+    
+    docker manifest push $image-ci:$version
+    if ($LASTEXITCODE) { exit 4 }
+}
 
 Execute-Tests
 
@@ -60,6 +77,10 @@ foreach ($arch in $archs) {
     if ($IsPublishedBuild) {
         Publish-DockerImage($arch)
     }
+}
+
+if ($IsPublishedBuild) {
+    Publish-DockerManifest($archs)
 }
 
 Pop-Location

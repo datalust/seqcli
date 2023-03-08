@@ -19,8 +19,8 @@ public class SignalBasicsTestCase : ICliTestCase
         exit = runner.Exec("signal list", "-t Warnings");
         Assert.Equal(0, exit);
 
-        var output = runner.LastRunProcess.Output;
-        Assert.Equal("signal-m33302 Warnings", output.Trim());
+        var output = runner.LastRunProcess?.Output;
+        Assert.Equal("signal-m33302 Warnings", output?.Trim());
 
         exit = runner.Exec("signal remove", "-t Warnings");
         Assert.Equal(0, exit);

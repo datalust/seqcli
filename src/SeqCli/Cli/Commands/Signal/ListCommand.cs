@@ -49,13 +49,9 @@ class ListCommand : Command
         var list = _entityIdentity.Id != null ?
             new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
             (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-            .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title)
-            .ToArray();
+            .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title);
 
-        foreach (var signal in list)
-        {
-            _output.WriteEntity(signal);
-        }
+        _output.ListEntities(list);
 
         return 0;
     }

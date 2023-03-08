@@ -25,7 +25,7 @@ for:
   - pwsh: ./Setup.ps1
 
   build_script:
-    - pwsh: ./Build.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
+    - pwsh: ./Build.ps1
       
   deploy:
   
@@ -53,4 +53,4 @@ for:
   - pwsh: ./setup.sh
 
   build_script:
-  - pwsh: $env:PATH = "$env:HOME/.dotnetcli:$env:PATH"; ./Build.Docker.ps1 -shortver "$($env:APPVEYOR_BUILD_VERSION)"
+  - pwsh: $env:PATH = "$env:HOME/.dotnetcli:$env:PATH"; ./Build.Docker.ps1

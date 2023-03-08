@@ -17,6 +17,9 @@ public class AppBasicsTestCase: ICliTestCase
         exit = runner.Exec("app install", "--package-id Seq.App.EmailPlus");
         Assert.Equal(0, exit);
 
+        exit = runner.Exec("app list", "--package-id Seq.App.EmailPlus");
+        Assert.Equal(0, exit);
+
         exit = runner.Exec("app update", "--all");
         Assert.Equal(0, exit);
 

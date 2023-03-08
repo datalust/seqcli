@@ -47,13 +47,9 @@ class ListCommand : Command
         var list = _entityIdentity.Id != null ?
             new[] { await connection.ApiKeys.FindAsync(_entityIdentity.Id) } :
             (await connection.ApiKeys.ListAsync())
-            .Where(ak => _entityIdentity.Title == null || _entityIdentity.Title == ak.Title)
-            .ToArray();
+            .Where(ak => _entityIdentity.Title == null || _entityIdentity.Title == ak.Title);
 
-        foreach (var apiKey in list)
-        {
-            _output.WriteEntity(apiKey);
-        }
+        _output.ListEntities(list);
             
         return 0;
     }
