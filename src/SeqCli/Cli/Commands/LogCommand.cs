@@ -99,7 +99,7 @@ class LogCommand : Command
             payload.WriteTo(jsonWriter);
             jsonWriter.Flush();
             builder.WriteLine();
-            content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
+            content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
         var connection = _connectionFactory.Connect(_connection);
