@@ -159,7 +159,7 @@ static class LogShipper
             foreach (var evt in batch)
                 Formatter.Format(evt, builder);
 
-            content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediatType);
+            content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
         var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) { Content = content };

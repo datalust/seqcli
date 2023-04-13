@@ -34,9 +34,11 @@ static class LogEventBuilder
         var messageTemplate = GetMessageTemplate(properties);          
         var props = GetLogEventProperties(properties, remainder, level);
 
+        var fallbackMappedLevel = level != null ? LevelMapping.ToSerilogLevel(level) : LogEventLevel.Information;
+
         return new LogEvent(
             timestamp,
-            LogEventLevel.Information,
+            fallbackMappedLevel,
             exception,
             messageTemplate,
             props);
@@ -56,12 +58,13 @@ static class LogEventBuilder
         return NoMessage;
     }
 
-    static string GetLevel(IDictionary<string, object?> properties)
+    static string? GetLevel(IDictionary<string, object?> properties)
     {
         if (properties.TryGetValue(ReifiedProperties.Level, out var l) &&
             l is TextSpan ts)
             return ts.ToStringValue();
-        return LogEventLevel.Information.ToString();
+
+        return null;
     }
 
     static Exception? TryGetException(IDictionary<string, object?> properties)
@@ -72,7 +75,7 @@ static class LogEventBuilder
         return null;
     }
 
-    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder, string level)
+    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder, string? level)
     {
         var payload = properties
             .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
