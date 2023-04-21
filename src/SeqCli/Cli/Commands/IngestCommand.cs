@@ -23,7 +23,7 @@ using SeqCli.PlainText;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Filters.Expressions;
+using Serilog.Expressions;
 
 namespace SeqCli.Cli.Commands;
 
@@ -57,7 +57,7 @@ class IngestCommand : Command
 
         Options.Add("json",
             "Read the events as JSON (the default assumes plain text)",
-            v => _json = true);
+            _ => _json = true);
 
         Options.Add("f=|filter=",
             "Filter expression to select a subset of events",
@@ -92,9 +92,12 @@ class IngestCommand : Command
             Func<LogEvent, bool>? filter = null;
             if (_filter != null)
             {
-                var expr = _filter.Replace("@Level", SurrogateLevelProperty.PropertyName);
-                var eval = FilterLanguage.CreateFilter(expr);
-                filter = evt => true.Equals(eval(evt));
+                // Support non-Serilog level names (`@l` can't be overridden by the name resolver). At a later date,
+                // we hope to be able to use the Serilog.Expressions AST to do this reliably (at the moment, all occurrences
+                // of @l, whether referring to the property or not, will be replaced).
+                var expr = _filter.Replace("@l", "@Level").Replace("@Level", $"coalesce(@p['{SurrogateLevelProperty.PropertyName}'],@l)");
+                var eval = SerilogExpression.Compile(expr, nameResolver: new SeqBuiltInNameResolver());
+                filter = evt => ExpressionResult.IsTrue(eval(evt));
             }
 
             var connection = _connectionFactory.Connect(_connection);

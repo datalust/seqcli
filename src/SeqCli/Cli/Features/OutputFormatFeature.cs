@@ -19,7 +19,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
-using Seq.Api.Model.AppInstances;
 using SeqCli.Config;
 using SeqCli.Csv;
 using SeqCli.Levels;
@@ -49,7 +48,7 @@ class OutputFormatFeature : CommandFeature
 
     public bool Json => _json;
 
-    bool ApplyThemeToRedirectedOutput => _noColor == false && _forceColor == true;
+    bool ApplyThemeToRedirectedOutput => _noColor == false && _forceColor;
 
     ConsoleTheme Theme
         => _noColor                     ? ConsoleTheme.None
@@ -61,13 +60,13 @@ class OutputFormatFeature : CommandFeature
         options.Add(
             "json",
             "Print output in newline-delimited JSON (the default is plain text)",
-            v => _json = true);
+            _ => _json = true);
 
-        options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+        options.Add("no-color", "Don't colorize text output", _ => _noColor = true);
 
         options.Add("force-color",
             "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
-            v => _forceColor = true);
+            _ => _forceColor = true);
     }
 
     public Logger CreateOutputLogger()
