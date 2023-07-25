@@ -54,6 +54,12 @@ $token = (
 
 See `CONTRIBUTING.md`.
 
+## Permissions
+
+When connecting with an API key the allowed operations are determined by the [permissions assigned to that API key](https://docs.datalust.co/docs/api-keys#api-keys-and-permissions).
+
+To determine the permission required for a particular command check the 'Permission demand' column of the [equivalent server API operation](https://docs.datalust.co/docs/server-http-api). For example, the command `apikey create` uses the [`POST api/apikeys` endpoint](https://docs.datalust.co/docs/server-http-api#apiapikeys), which requires the `Write` permission.
+
 ## Commands
 
 Usage:
