@@ -20,6 +20,7 @@ using SeqCli.Connection;
 using SeqCli.Ingestion;
 using SeqCli.Levels;
 using SeqCli.PlainText;
+using SeqCli.Syntax;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -92,11 +93,7 @@ class IngestCommand : Command
             Func<LogEvent, bool>? filter = null;
             if (_filter != null)
             {
-                // Support non-Serilog level names (`@l` can't be overridden by the name resolver). At a later date,
-                // we hope to be able to use the Serilog.Expressions AST to do this reliably (at the moment, all occurrences
-                // of @l, whether referring to the property or not, will be replaced).
-                var expr = _filter.Replace("@l", "@Level").Replace("@Level", $"coalesce(@p['{SurrogateLevelProperty.PropertyName}'],@l)");
-                var eval = SerilogExpression.Compile(expr, nameResolver: new SeqBuiltInNameResolver());
+                var eval = SeqSyntax.CompileExpression(_filter);
                 filter = evt => ExpressionResult.IsTrue(eval(evt));
             }
 
