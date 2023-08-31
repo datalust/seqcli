@@ -33,13 +33,13 @@
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-    <PackageReference Include="Autofac" Version="7.0.1" />
+    <PackageReference Include="Autofac" Version="7.1.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
     <PackageReference Include="Superpower" Version="3.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="7.0.1" />
-    <PackageReference Include="Seq.Api" Version="2023.3.0" />
-    <PackageReference Include="Seq.Apps" Version="2021.4.0" />
+    <PackageReference Include="Seq.Api" Version="2023.4.0" />
+    <PackageReference Include="Seq.Apps" Version="2023.4.0" />
     <PackageReference Include="Tavis.UriTemplates" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
