@@ -15,9 +15,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Serilog.Expressions;
 
-#nullable enable
-
-namespace SeqCli.Ingestion;
+namespace SeqCli.Syntax;
 
 /// <summary>
 /// Extends Serilog.Expressions with support for commonly-used Seq property names.
@@ -30,26 +28,26 @@ public class SeqBuiltInNameResolver: NameResolver
     {
         switch (alias)
         {
-            case "@Properties":
-                target = "@p";
+            case "Properties":
+                target = "p";
                 return true;
-            case "@Timestamp":
-                target = "@t";
+            case "Timestamp":
+                target = "t";
                 return true;
-            case "@Level":
-                target = "@l";
+            case "Level":
+                target = "l";
                 return true;
-            case "@Message":
-                target = "@m";
+            case "Message":
+                target = "m";
                 return true;
-            case "@MessageTemplate":
-                target = "@mt";
+            case "MessageTemplate":
+                target = "mt";
                 return true;
-            case "@EventType":
-                target = "@i";
+            case "EventType":
+                target = "i";
                 return true;
-            case "@Exception":
-                target = "@x";
+            case "Exception":
+                target = "x";
                 return true;
             default:
                 target = null;
