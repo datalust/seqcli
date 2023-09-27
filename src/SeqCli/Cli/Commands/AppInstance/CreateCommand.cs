@@ -23,6 +23,7 @@ class CreateCommand : Command
     string? _title, _appId;
     readonly Dictionary<string, string> _settings = new();
     readonly List<string> _overridable = new();
+    bool _streamIncomingEvents;
 
     public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
@@ -49,11 +50,15 @@ class CreateCommand : Command
             });
 
         Options.Add(
+            "stream",
+            "Stream incoming events",
+            _ => _streamIncomingEvents = true
+        );
+
+        Options.Add(
             "overridable=",
             "Specify setting names that may be overridden by users when invoking the app",
             s => _overridable.Add(s));
-        
-        // The command doesn't yet implement "Stream incoming events".
 
         _connection = Enable<ConnectionFeature>();
         _output = Enable(new OutputFormatFeature(config.Output));
@@ -77,6 +82,7 @@ class CreateCommand : Command
         }
 
         instance.Title = _title;
+        instance.AcceptStreamedEvents = _streamIncomingEvents;
 
         foreach (var setting in _settings)
         {
