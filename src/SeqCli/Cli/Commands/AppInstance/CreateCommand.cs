@@ -6,6 +6,7 @@ using Seq.Api.Model.AppInstances;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Signals;
 using SeqCli.Util;
 using Serilog;
 
@@ -20,7 +21,7 @@ class CreateCommand : Command
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
 
-    string? _title, _appId;
+    string? _title, _appId, _streamIncomingEventsSignal;
     readonly Dictionary<string, string> _settings = new();
     readonly List<string> _overridable = new();
     bool _streamIncomingEvents;
@@ -50,9 +51,13 @@ class CreateCommand : Command
             });
 
         Options.Add(
-            "stream",
-            "Stream incoming events",
-            _ => _streamIncomingEvents = true
+            "stream|stream-signal=",
+            "Stream incoming events to this app instance as they're ingested. Specify a signal expression to limit the events streamed to those matching the expression",
+            s =>
+            {
+                _streamIncomingEvents = true;
+                _streamIncomingEventsSignal = string.IsNullOrWhiteSpace(s) ? null : s;
+            }
         );
 
         Options.Add(
@@ -83,6 +88,7 @@ class CreateCommand : Command
 
         instance.Title = _title;
         instance.AcceptStreamedEvents = _streamIncomingEvents;
+        instance.StreamedSignalExpression = !string.IsNullOrWhiteSpace(_streamIncomingEventsSignal) ? SignalExpressionParser.ParseExpression(_streamIncomingEventsSignal) : null;
 
         foreach (var setting in _settings)
         {
