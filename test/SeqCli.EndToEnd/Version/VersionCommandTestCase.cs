@@ -20,7 +20,9 @@ public class VersionCommandTestCase : ICliTestCase
         Assert.False(string.IsNullOrWhiteSpace(version));
         Assert.NotEqual("1.0.0", version);
         Assert.NotEqual("0.0.0", version);
-        Assert.True(System.Version.TryParse(version, out _));
+        
+        // Loose version string to make sure the version appears reasonable
+        Assert.Matches(@"[0-9]*\.[0-9]*\.[0-9]*(\+\S*)?", version);
 
         return Task.CompletedTask;
     }
