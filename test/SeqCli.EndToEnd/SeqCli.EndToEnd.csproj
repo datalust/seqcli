@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net7.0;net7.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Autofac" Version="7.1.0" />
