@@ -20,7 +20,7 @@ public class VersionCommandTestCase : ICliTestCase
         Assert.False(string.IsNullOrWhiteSpace(version));
         Assert.NotEqual("1.0.0", version);
         Assert.NotEqual("0.0.0", version);
-        Assert.True(System.Version.TryParse(version, out _));
+        Assert.True(System.Version.TryParse(version, out _), $"Failed to parse {version} as a version");
 
         return Task.CompletedTask;
     }
