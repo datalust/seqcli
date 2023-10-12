@@ -51,14 +51,22 @@ class CreateCommand : Command
             });
 
         Options.Add(
-            "stream|stream-signal=",
-            "Stream incoming events to this app instance as they're ingested. Specify a signal expression to limit the events streamed to those matching the expression",
+            "stream",
+            "Stream incoming events to this app instance as they're ingested",
+            _ =>
+            {
+                _streamIncomingEvents = true;
+            }
+        );
+
+        Options.Add(
+            "stream-signal=",
+            "Specify a signal expression to limit the events streamed to those matching the expression (implies --stream)",
             s =>
             {
                 _streamIncomingEvents = true;
-                _streamIncomingEventsSignal = string.IsNullOrWhiteSpace(s) ? null : s;
-            }
-        );
+                _streamIncomingEventsSignal = s;
+            });
 
         Options.Add(
             "overridable=",
