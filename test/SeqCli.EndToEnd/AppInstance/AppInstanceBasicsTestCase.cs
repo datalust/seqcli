@@ -43,7 +43,7 @@ public class AppInstanceBasicsTestCase : ICliTestCase
         Assert.Equal(0, exit);
 
         var streamSignal = "signal-m33303,(signal-m33301~signal-m33302)";
-        exit = runner.Exec("appinstance create", $"-t {Guid.NewGuid():N} --app {app.Id} --stream \"{streamSignal}\" -p To=example@example.com -p From=example@example.com -p Host=localhost");
+        exit = runner.Exec("appinstance create", $"-t {Guid.NewGuid():N} --app {app.Id} --stream=\"{streamSignal}\" -p To=example@example.com -p From=example@example.com -p Host=localhost");
         Assert.Equal(0, exit);
     }
 }
