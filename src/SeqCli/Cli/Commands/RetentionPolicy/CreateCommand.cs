@@ -14,9 +14,11 @@
 
 using System;
 using System.Threading.Tasks;
+using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Signals;
 using SeqCli.Syntax;
 using SeqCli.Util;
 using Serilog;
@@ -33,7 +35,8 @@ class CreateCommand : Command
     readonly OutputFormatFeature _output;
 
     string? _afterDuration;
-    bool _deleteAllEvents; // Currently the only supported option
+    bool _deleteAllEvents;
+    string? _deleteMatchingSignal;
 
     public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
@@ -48,6 +51,15 @@ class CreateCommand : Command
             "delete-all-events",
             "The policy should delete all events (currently the only supported option)",
             _ => _deleteAllEvents = true);
+        
+        Options.Add(
+            "delete=",
+            "Stream incoming events to this app instance as they're ingested; optionally accepts a signal expression limiting which events should be streamed",
+            s =>
+            {
+                _deleteMatchingSignal = s;
+            }
+        );
 
         _connection = Enable<ConnectionFeature>();
         _output = Enable(new OutputFormatFeature(config.Output));
@@ -57,12 +69,29 @@ class CreateCommand : Command
     {
         var connection = _connectionFactory.Connect(_connection);
 
-        if (!_deleteAllEvents)
+        SignalExpressionPart? removedSignalExpression;
+        
+        // Exactly one of `delete-all-events` or `delete` must be specified
+        if (_deleteAllEvents)
         {
-            Log.Error("The `delete-all-events` option must be specified");
+            if (!string.IsNullOrEmpty(_deleteMatchingSignal))
+            {
+                Log.Error("Only one of the `delete-all-events` or `delete` options may be specified");
+                return 1;
+            }
+
+            removedSignalExpression = null;
+        }
+        else if (string.IsNullOrEmpty(_deleteMatchingSignal))
+        {
+            Log.Error("Either the `delete-all-events` or `delete` options must be specified");
             return 1;
         }
-            
+        else
+        {
+            removedSignalExpression = SignalExpressionParser.ParseExpression(_deleteMatchingSignal!);
+        }
+        
         if (_afterDuration == null)
         {
             Log.Error("A duration must be specified using `after`");
@@ -73,6 +102,7 @@ class CreateCommand : Command
             
         var policy = await connection.RetentionPolicies.TemplateAsync();
         policy.RetentionTime = duration;
+        policy.RemovedSignalExpression = removedSignalExpression;
 
         policy = await connection.RetentionPolicies.AddAsync(policy);
 
