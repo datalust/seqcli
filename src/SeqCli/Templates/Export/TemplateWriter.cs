@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api.Model;
 
-#nullable enable
-
 namespace SeqCli.Templates.Export;
 
 static class TemplateWriter

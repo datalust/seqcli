@@ -21,8 +21,6 @@ using Autofac.Features.Metadata;
 using Serilog.Core;
 using Serilog.Events;
 
-#nullable enable
-
 namespace SeqCli.Cli;
 
 class CommandLineHost

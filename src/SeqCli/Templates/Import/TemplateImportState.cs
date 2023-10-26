@@ -5,8 +5,6 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace SeqCli.Templates.Import;
 
 class TemplateImportState

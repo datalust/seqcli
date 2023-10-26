@@ -17,8 +17,6 @@ using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 
-#nullable enable
-
 namespace SeqCli.Connection;
 
 class SeqConnectionFactory

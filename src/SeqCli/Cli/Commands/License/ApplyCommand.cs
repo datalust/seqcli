@@ -9,8 +9,6 @@ using Serilog;
 
 // ReSharper disable once UnusedType.Global
 
-#nullable enable
-
 namespace  SeqCli.Cli.Commands.License;
 
 [Command("license", "apply", "Apply a license to the Seq server",

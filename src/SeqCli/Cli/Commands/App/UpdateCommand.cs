@@ -21,8 +21,6 @@ using SeqCli.Connection;
 using SeqCli.Util;
 using Serilog;
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands.App;
 
 [Command("app", "update", "Update an installed app package",
