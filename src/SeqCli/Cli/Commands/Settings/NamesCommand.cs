@@ -29,6 +29,6 @@ class NamesCommand: Command
             Console.WriteLine(name);
         }
         
-        return Task.FromResult(1);
+        return Task.FromResult(0);
     }
 }
