@@ -13,8 +13,6 @@ using Serilog;
 
 // ReSharper disable once UnusedType.Global
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands.Template;
 
 // Uses an import directory rather than individual files, so that name resolution

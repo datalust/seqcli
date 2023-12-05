@@ -18,8 +18,6 @@ using SeqCli.Templates.Ast;
 using SeqCli.Templates.Export;
 using SeqCli.Templates.Parser;
 
-#nullable enable
-
 namespace SeqCli.Templates.Import;
 
 static class EntityTemplateLoader

@@ -1,4 +1,4 @@
-// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,24 +13,22 @@
 // limitations under the License.
 
 using System;
-using System.Reflection;
+using System.Linq;
 using System.Threading.Tasks;
+using Seq.Api.Model.Settings;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Settings;
 
-[Command("version", "Print the current executable version")]
-class VersionCommand : Command
+[Command("setting", "names", "Print the names of all supported settings")]
+class NamesCommand: Command
 {
-    protected override Task<int> Run()
+    protected override Task<int> Run(string[] unrecognized)
     {
-        var version = GetVersion();
-        Console.WriteLine(version);
+        foreach (var name in Enum.GetNames(typeof(SettingName)).Order())
+        {
+            Console.WriteLine(name);
+        }
+        
         return Task.FromResult(0);
-    }
-
-    public static string GetVersion()
-    {
-        return typeof(VersionCommand).GetTypeInfo().Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
     }
 }

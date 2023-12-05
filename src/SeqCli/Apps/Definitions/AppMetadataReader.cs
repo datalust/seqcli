@@ -19,8 +19,6 @@ using System.Linq;
 using System.Reflection;
 using Seq.Apps;
 
-#nullable  enable
-
 namespace SeqCli.Apps.Definitions;
 
 static class AppMetadataReader

@@ -10,8 +10,6 @@ using Serilog;
 
 // ReSharper disable once UnusedType.Global
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands.Template;
 
 [Command("template", "export", "Export entities into template files",

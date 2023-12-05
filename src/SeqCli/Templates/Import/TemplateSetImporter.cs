@@ -27,8 +27,6 @@ using Serilog;
 
 // ReSharper disable SuggestBaseTypeForParameter, CommentTypo
 
-#nullable enable
-
 namespace SeqCli.Templates.Import;
 
 static class TemplateSetImporter

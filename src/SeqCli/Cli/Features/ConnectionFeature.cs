@@ -14,8 +14,6 @@
 
 using SeqCli.Util;
 
-#nullable enable
-
 namespace SeqCli.Cli.Features;
 
 class ConnectionFeature : CommandFeature

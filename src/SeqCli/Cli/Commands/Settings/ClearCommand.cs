@@ -13,54 +13,36 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
-using SeqCli.Config;
 using SeqCli.Connection;
 
-namespace SeqCli.Cli.Commands.Node;
+namespace SeqCli.Cli.Commands.Settings;
 
-[Command("node", "list", "List nodes in the Seq cluster",
-    Example = "seqcli node list --json")]
-class ListCommand : Command
+[Command("setting", "clear", "Clear a runtime-configurable server setting")]
+class ClearCommand: Command
 {
     readonly SeqConnectionFactory _connectionFactory;
 
     readonly ConnectionFeature _connection;
-    readonly OutputFormatFeature _output;
+    readonly SettingNameFeature _name;
 
-    string? _name, _id;
-        
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    public ClearCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            
-        Options.Add(
-            "n=|name=",
-            "The name of the cluster node to list",
-            n => _name = n);
 
-        Options.Add(
-            "i=|id=",
-            "The id of a single cluster node to list",
-            id => _id = id);
-            
-        _output = Enable(new OutputFormatFeature(outputConfig));
+        _name = Enable<SettingNameFeature>();
         _connection = Enable<ConnectionFeature>();
     }
-        
+
     protected override async Task<int> Run()
     {
         var connection = _connectionFactory.Connect(_connection);
 
-        var list = _id != null ?
-            new[] { await connection.ClusterNodes.FindAsync(_id) } :
-            (await connection.ClusterNodes.ListAsync())
-            .Where(n => _name == null || _name == n.Name);
+        var setting = await connection.Settings.FindNamedAsync(_name.Name);
+        setting.Value = null;
+        await connection.Settings.UpdateAsync(setting);
 
-        _output.ListEntities(list);
-            
         return 0;
     }
 }

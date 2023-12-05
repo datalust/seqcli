@@ -4,8 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Newtonsoft.Json;
 
-#nullable enable
-
 namespace SeqCli.Templates.Export;
 
 class TemplateValueMap
