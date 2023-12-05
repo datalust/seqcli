@@ -44,7 +44,7 @@ class ShowCommand: Command
 
         if (setting.Value != null)
         {
-            Console.WriteLine(setting.Value is IFormattable f ? f.ToString(null, CultureInfo.InvariantCulture) : setting.Value.ToString());
+            Console.Write(setting.Value is IFormattable f ? f.ToString(null, CultureInfo.InvariantCulture) : setting.Value.ToString());
         }
 
         return 0;
