@@ -21,7 +21,7 @@ public class SettingBasicsTestCase : ICliTestCase
         Assert.Equal(0, exit);
         Assert.Empty(runner.LastRunProcess.Output);
 
-        exit = runner.Exec("setting set", "-n instancetitle -v 'Hello, world!'");
+        exit = runner.Exec("setting set", "-n instancetitle -v \"Hello, world!\"");
         Assert.Equal(0, exit);
 
         exit = runner.Exec("setting show", "-n instancetitle");
