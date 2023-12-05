@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
@@ -26,7 +27,7 @@ public class SettingBasicsTestCase : ICliTestCase
 
         exit = runner.Exec("setting show", "-n instancetitle");
         Assert.Equal(0, exit);
-        Assert.Equal("Hello, world!", runner.LastRunProcess.Output);
+        Assert.Equal("Hello, world!" + Environment.NewLine, runner.LastRunProcess.Output);
 
         exit = runner.Exec("setting clear", "-n instancetitle");
         Assert.Equal(0, exit);
