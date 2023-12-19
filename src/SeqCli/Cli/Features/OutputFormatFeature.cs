@@ -77,11 +77,10 @@ class OutputFormatFeature : CommandFeature
 
         if (_json)
         {
-            outputConfiguration.WriteTo.Console(new SurrogateLevelAwareCompactJsonFormatter());
+            outputConfiguration.WriteTo.Console(OutputFormatter.Json);
         }
         else
         {
-            outputConfiguration.Enrich.With<SurrogateLevelRemovalEnricher>();
             outputConfiguration.WriteTo.Console(
                 outputTemplate: DefaultOutputTemplate,
                 theme: Theme,

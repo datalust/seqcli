@@ -75,7 +75,6 @@ class PrintCommand : Command
         var outputConfiguration = new LoggerConfiguration()
             .MinimumLevel.Is(LevelAlias.Minimum)
             .Enrich.With<RedundantEventTypeRemovalEnricher>()
-            .Enrich.With<SurrogateLevelRemovalEnricher>()
             .WriteTo.Console(
                 outputTemplate: _template ?? OutputFormatFeature.DefaultOutputTemplate,
                 theme: theme,
