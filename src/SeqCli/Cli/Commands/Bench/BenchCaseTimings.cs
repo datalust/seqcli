@@ -18,11 +18,33 @@ using System.Linq;
 
 namespace SeqCli.Cli.Commands.Bench;
 
+class CollectedTimings
+{
+    List<BenchCaseTimings> _collectedTimings = new();
+
+    public static BenchCase FINAL_COUNT_CASE = new BenchCase()
+    {
+        Id = "final-count-star",
+        Query = "select count(*) from stream",
+    };
+
+    public void Add(BenchCaseTimings caseTimings)
+    {
+        _collectedTimings.Add(caseTimings);
+    }
+
+    public void LogSummary()
+    {
+        throw new NotImplementedException();
+    }
+}
+
 /*
  * Collects benchmarking elapsed time measurements and calculates statistics. 
  */
 class BenchCaseTimings
 {
+    readonly BenchCase _benchCase;
     readonly List<double> _timings = new();
     
     public double MeanElapsed => _timings.Sum() / _timings.Count;
@@ -32,6 +54,11 @@ class BenchCaseTimings
     public double StandardDeviationElapsed => StandardDeviation(_timings); 
     public double RelativeStandardDeviationElapsed => StandardDeviation(_timings) / MeanElapsed;
 
+    public BenchCaseTimings(BenchCase benchCase)
+    {
+        _benchCase = benchCase;
+    }
+    
     public void PushElapsed(double elapsed)
     {
         _timings.Add(elapsed);
