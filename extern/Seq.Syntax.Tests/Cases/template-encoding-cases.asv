@@ -1,0 +1,4 @@
+{'world'}!                        ⇶ (world)!
+{substring('world', 0, 2)}!       ⇶ (wo)!
+{unsafe('world')}!                ⇶ world!
+|{somethingnothere}|              ⇶ |()|

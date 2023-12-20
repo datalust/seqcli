@@ -30,7 +30,6 @@ public class LogEventBuilderTests
         Assert.Equal("2018-02-01T13:00:00.1230000+00:00", evt.Timestamp.ToString("o"));
         Assert.Equal("Hello, world", evt.RenderMessage());
         Assert.Equal(LogEventLevel.Warning, evt.Level);
-        Assert.Equal("WRN", ((ScalarValue)evt.Properties[SurrogateLevelProperty.PropertyName]).Value);
         Assert.Equal("EverythingFailedException", evt.Exception?.ToString());
         Assert.Equal(42, ((ScalarValue)evt.Properties["Count"]).Value);
         Assert.Equal("TP", ((ScalarValue)evt.Properties["MachineName"]).Value!.ToString());
@@ -46,7 +45,6 @@ public class LogEventBuilderTests
         Assert.Equal("", evt.RenderMessage());
         Assert.Equal(LogEventLevel.Information, evt.Level);
         Assert.Null(evt.Exception);
-        Assert.Equal(SurrogateLevelProperty.PropertyName, evt.Properties.Single().Key);
     }
 
     [Fact]

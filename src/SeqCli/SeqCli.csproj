@@ -43,6 +43,7 @@
     <PackageReference Include="Tavis.UriTemplates" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\extern\Seq.Syntax\Seq.Syntax.csproj" />
     <ProjectReference Include="..\Roastery\Roastery.csproj" />
   </ItemGroup>
 </Project>
