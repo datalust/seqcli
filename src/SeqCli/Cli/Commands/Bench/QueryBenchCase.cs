@@ -16,7 +16,7 @@ namespace SeqCli.Cli.Commands.Bench;
 
 // ReSharper disable ClassNeverInstantiated.Global AutoPropertyCanBeMadeGetOnly.Global UnusedAutoPropertyAccessor.Global
 
-class BenchCase
+class QueryBenchCase
 {
     public string Id { get; set; } = null!;
     public string Query { get; set; } = null!;

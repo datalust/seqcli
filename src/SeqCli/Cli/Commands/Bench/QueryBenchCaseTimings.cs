@@ -15,38 +15,68 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Serilog.Core;
 
 namespace SeqCli.Cli.Commands.Bench;
 
 class CollectedTimings
 {
-    List<BenchCaseTimings> _collectedTimings = new();
+    readonly Logger _reportingLogger;
+    List<QueryBenchCaseTimings> _collectedTimings = new();
 
-    public static BenchCase FINAL_COUNT_CASE = new BenchCase()
+    public static QueryBenchCase FINAL_COUNT_CASE = new QueryBenchCase()
     {
         Id = "final-count-star",
         Query = "select count(*) from stream",
     };
 
-    public void Add(BenchCaseTimings caseTimings)
+    public CollectedTimings(Logger reportingLogger)
+    {
+        _reportingLogger = reportingLogger;
+    }
+
+    public void Add(QueryBenchCaseTimings caseTimings)
     {
         _collectedTimings.Add(caseTimings);
     }
 
-    public void LogSummary()
+    public void LogSummary(string description)
     {
-        throw new NotImplementedException();
+        _reportingLogger.Information(
+            "Query benchmark {Description} complete in {TotalMeanElapsed:N0} ms with {MeanRelativeStandardDeviationPercentage:N1}% deviation, processed {FinalEventCount:N0} events at {EventsPerMs:N0} events/ms", 
+            description,
+            TotalMeanElapsed(),
+            MeanRelativeStandardDeviationPercentage(),
+            FinalEventCount(),
+            FinalEventCount() * _collectedTimings.Count / TotalMeanElapsed());
+    }
+
+    private double TotalMeanElapsed()
+    {
+        return _collectedTimings.Sum(c => c.MeanElapsed);
+    }
+
+    private double MeanRelativeStandardDeviationPercentage()
+    {
+        return _collectedTimings.Average(c => c.RelativeStandardDeviationElapsed) * 100;
+    }
+
+    private int FinalEventCount()
+    {
+        var benchCase = _collectedTimings.Single(c => c.Id == FINAL_COUNT_CASE.Id);
+        return Convert.ToInt32(benchCase.LastResult);
     }
 }
 
 /*
  * Collects benchmarking elapsed time measurements and calculates statistics. 
  */
-class BenchCaseTimings
+class QueryBenchCaseTimings
 {
-    readonly BenchCase _benchCase;
+    readonly QueryBenchCase _queryBenchCase;
     readonly List<double> _timings = new();
-    
+    object? _lastResult;
+
     public double MeanElapsed => _timings.Sum() / _timings.Count;
     public double MinElapsed => _timings.Min();
     public double MaxElapsed => _timings.Max();
@@ -54,9 +84,15 @@ class BenchCaseTimings
     public double StandardDeviationElapsed => StandardDeviation(_timings); 
     public double RelativeStandardDeviationElapsed => StandardDeviation(_timings) / MeanElapsed;
 
-    public BenchCaseTimings(BenchCase benchCase)
+    public object? LastResult
     {
-        _benchCase = benchCase;
+        get => _lastResult;
+        set => _lastResult = value;
+    }
+
+    public QueryBenchCaseTimings(QueryBenchCase queryBenchCase)
+    {
+        _queryBenchCase = queryBenchCase;
     }
     
     public void PushElapsed(double elapsed)
@@ -64,7 +100,7 @@ class BenchCaseTimings
         _timings.Add(elapsed);
     }
 
-    static double StandardDeviation(ICollection<double> population)
+    public static double StandardDeviation(ICollection<double> population)
     {
         if (population.Count < 2)
         {
@@ -74,4 +110,6 @@ class BenchCaseTimings
         var mean = population.Sum() / population.Count;
         return Math.Sqrt(population.Select(e => Math.Pow(e - mean, 2)).Sum() / (population.Count - 1));
     }
+
+    public string Id => _queryBenchCase.Id;
 }
