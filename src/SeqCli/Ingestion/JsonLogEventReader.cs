@@ -68,6 +68,18 @@ class JsonLogEventReader : ILogEventReader
         if (!jObject.TryGetValue("@t", out _))
             jObject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));
 
+        if (jObject.TryGetValue("@l", out var levelToken))
+        {
+            var originalLevel = levelToken.Value<string>()!;
+            jObject.Remove("@l");
+
+            var serilogLevel = LevelMapping.ToSerilogLevel(originalLevel);
+            if (serilogLevel != LogEventLevel.Information)
+                jObject.Add("@l", new JValue(serilogLevel.ToString()));
+            
+            jObject.Add("SeqCliOriginalLevel", originalLevel);
+        }
+
         return LogEventReader.ReadFromJObject(jObject);
     }
 }
