@@ -13,13 +13,16 @@ $archs = @(
     @{ rid = "arm64"; platform = "linux/arm64/v8" }
 )
 
+$endToEndVersion = "preview"
+
 function Execute-Tests
 {
     & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release -f $framework /p:Configuration=Release /p:VersionPrefix=$version
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     cd ./test/SeqCli.EndToEnd/
-    docker pull datalust/seq:latest
+    docker pull "datalust/seq:$endToEndVersion"
+    docker tag "datalust/seq:$endToEndVersion" latest
     & dotnet run -f $framework -- --docker-server
     if ($LASTEXITCODE -ne 0)
     { 
