@@ -14,8 +14,6 @@
 
 using System.Linq;
 
-#nullable enable
-
 namespace SeqCli.Util;
 
 static class ArgumentString

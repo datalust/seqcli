@@ -28,8 +28,6 @@ using Serilog.Events;
 using Serilog.Parsing;
 // ReSharper disable UnusedType.Global
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands;
 
 [Command("search", "Retrieve log events that match a given filter",

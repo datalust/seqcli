@@ -14,8 +14,6 @@ using Seq.Api.Model.SqlQueries;
 using Seq.Api.Model.Workspaces;
 using Serilog;
 
-#nullable enable
-
 namespace SeqCli.Templates.Export;
 
 class TemplateSetExporter

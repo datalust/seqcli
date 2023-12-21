@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright 2018 Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Cli.Commands.Bench;
+using Superpower.Display;
 
-// ReSharper disable ClassNeverInstantiated.Global AutoPropertyCanBeMadeGetOnly.Global UnusedAutoPropertyAccessor.Global
+namespace SeqCli.Signals;
 
-class BenchCase
+enum SignalExpressionToken
 {
-    public string Id { get; set; } = null!;
-    public string Query { get; set; } = null!;
-    public string? SignalExpression { get; set; }
-    
-    // Not used programmatically at this time.
-    // ReSharper disable once UnusedMember.Global
-    public string? Notes { get; set; }
+    Id,
+    [Token(Category = "operator", Example = ",")]
+    Comma,
+    [Token(Category = "operator", Example = "~")]
+    Tilde,
+    [Token(Example = "(")]
+    LParen,
+    [Token(Example = ")")]
+    RParen
 }

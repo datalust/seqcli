@@ -1,8 +1,6 @@
 ﻿using System;
 using Seq.Api.Model;
 
-#nullable enable
-
 namespace SeqCli.Templates.Export;
 
 static class EntityName

@@ -16,8 +16,6 @@ using System;
 using System.Reflection;
 using System.Text;
 
-#nullable enable
-
 namespace SeqCli.Util;
 
 static class Presentation

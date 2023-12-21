@@ -21,7 +21,7 @@ public class AppInstanceBasicsTestCase : ICliTestCase
         var app = (await connection.Apps.ListAsync()).Single();
 
         var title = Guid.NewGuid().ToString("N");
-        exit = runner.Exec("appinstance create", $"-t {title} --app {app.Id} -p To=example@example.com -p From=example@example.com -p Host=localhost");
+        exit = runner.Exec("appinstance create", $"-t {title} --app {app.Id} --stream -p To=example@example.com -p From=example@example.com -p Host=localhost");
         Assert.Equal(0, exit);
 
         var appInstance = (await connection.AppInstances.ListAsync()).Single();
@@ -40,6 +40,10 @@ public class AppInstanceBasicsTestCase : ICliTestCase
         Assert.Equal(1, exit);
 
         exit = runner.Exec("appinstance list", $"-t {title}");
+        Assert.Equal(0, exit);
+
+        var streamSignal = "signal-m33303,(signal-m33301~signal-m33302)";
+        exit = runner.Exec("appinstance create", $"-t {Guid.NewGuid():N} --app {app.Id} --stream=\"{streamSignal}\" -p To=example@example.com -p From=example@example.com -p Host=localhost");
         Assert.Equal(0, exit);
     }
 }

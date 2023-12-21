@@ -14,8 +14,6 @@
 
 using Newtonsoft.Json;
 
-#nullable enable
-
 namespace SeqCli.Apps.Definitions;
 
 // ReSharper disable all

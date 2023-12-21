@@ -3,8 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Evaluator;
 
-#nullable enable
-
 namespace SeqCli.Templates.Import;
 
 class EntityTemplateFunctions
