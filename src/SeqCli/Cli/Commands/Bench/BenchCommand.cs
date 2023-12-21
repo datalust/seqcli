@@ -125,10 +125,14 @@ class BenchCommand : Command
             var cancellationToken = cancellationTokenSource.Token;
             
             using (LogContext.PushProperty("RunId", runId))
+            using (LogContext.PushProperty("SeqVersion", seqVersion))
             using (LogContext.PushProperty("WithIngestion", _withIngestion))
             using (LogContext.PushProperty("WithQueries", _withQueries))
             using (LogContext.PushProperty("Start", _range.Start))
             using (LogContext.PushProperty("End", _range.End))
+            using (!string.IsNullOrWhiteSpace(_description)
+                       ? LogContext.PushProperty("Description", _description)
+                       : null)
             {
                 if (_withIngestion)
                 {
@@ -158,15 +162,19 @@ class BenchCommand : Command
                             throw new Exception("Failed to query ingestion benchmark results");
                         }
                                 
-                        var counts = response.Slices.Select(s => Convert.ToDouble(s.Rows[0][0])).Where(c => c > 1000).ToArray();
+                        var counts = response.Slices.Skip(30) // ignore the warmup
+                            .Select(s => Convert.ToDouble(s.Rows[0][0])) // extract per-second counts
+                            .Where(c => c > 10000) // ignore any very small values
+                            .ToArray();
+                        counts = counts.SkipLast(5).ToArray(); // ignore warmdown
                         var countsMean = counts.Sum() / counts.Length;
                         var countsRSD = QueryBenchCaseTimings.StandardDeviation(counts) / countsMean;
                                 
-                        using (LogContext.PushProperty("RunId", runId))
                         using (LogContext.PushProperty("EventsPerSecond", counts))
                         {
                             reportingLogger.Information(
-                                "Ingestion benchmark {Description} ran for {RunDuration:N0}ms; ingested {TotalIngested:N0} at {EventsPerMinute:N0}events/min; with RSD {RelativeStandardDeviationPercentage,4:N1}%",
+                                "Ingestion benchmark {Description} ran for {RunDuration:N0}ms; ingested {TotalIngested:N0} " 
+                                + "at {EventsPerMinute:N0}events/min; with RSD {RelativeStandardDeviationPercentage,4:N1}%",
                                 _description,
                                 benchDurationMs,
                                 counts.Sum(),
@@ -196,14 +204,9 @@ class BenchCommand : Command
     async Task IngestionBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string? apiKey, 
         string seqVersion, bool isQueryBench, CancellationToken cancellationToken = default)
     {
-        using (!string.IsNullOrWhiteSpace(_description)
-                   ? LogContext.PushProperty("Description", _description)
-                   : null)
-        {
-            reportingLogger.Information(
-                "Ingestion bench run {RunId} against {ServerUrl} ({SeqVersion})",
-                runId, connection.Client.ServerUrl, seqVersion);
-        }
+        reportingLogger.Information(
+            "Ingestion bench run {RunId} against {ServerUrl} ({SeqVersion})",
+            runId, connection.Client.ServerUrl, seqVersion);
 
         if (isQueryBench)
         {
@@ -224,14 +227,10 @@ class BenchCommand : Command
     {
         var cases = ReadCases(_cases);
         CollectedTimings collectedTimings = new(reportingLogger);
-        using (!string.IsNullOrWhiteSpace(_description)
-                   ? LogContext.PushProperty("Description", _description)
-                   : null)
-        {
-            reportingLogger.Information(
-                "Query bench run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
-                runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
-        }
+        reportingLogger.Information(
+            "Query benchmark run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
+            runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
+        
 
         foreach (var c in cases.Cases.OrderBy(c => c.Id)
                      .Concat(new [] { CollectedTimings.FINAL_COUNT_CASE }))
