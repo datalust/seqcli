@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Ingest;
 
-public class StrictClefIngestionTestCase : ICliTestCase
+public class  StrictClefIngestionTestCase : ICliTestCase
 {
     public async Task ExecuteAsync(
         SeqConnection connection,
