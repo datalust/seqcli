@@ -22,7 +22,7 @@ function Execute-Tests
 
     cd ./test/SeqCli.EndToEnd/
     docker pull "datalust/seq:$endToEndVersion"
-    docker tag "datalust/seq:$endToEndVersion" latest
+    docker tag "datalust/seq:$endToEndVersion" datalust/seq:latest
     & dotnet run -f $framework -- --docker-server
     if ($LASTEXITCODE -ne 0)
     { 
