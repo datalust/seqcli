@@ -1,3 +1,4 @@
+using SeqCli.Levels;
 using Serilog.Formatting;
 using Serilog.Templates;
 
@@ -6,6 +7,6 @@ namespace SeqCli.Output;
 static class OutputFormatter
 {
     internal static readonly ITextFormatter Json = new ExpressionTemplate(
-        "{ {@t, @mt, @l: coalesce(SeqCliOriginalLevel, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps, @st, ..rest()} }\n"
+        $"{{ {{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps, @st, ..rest()}} }}\n"
     );
 }

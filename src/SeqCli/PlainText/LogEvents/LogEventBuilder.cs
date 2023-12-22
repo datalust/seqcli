@@ -38,7 +38,7 @@ static class LogEventBuilder
         var props = GetLogEventProperties(properties, remainder, level);
 
         var fallbackMappedLevel = level != null ? LevelMapping.ToSerilogLevel(level) : LogEventLevel.Information;
-        properties["SeqCliOriginalLevel"] = level;
+        properties[LevelMapping.SurrogateLevelProperty] = level;
 
         return new LogEvent(
             timestamp,
