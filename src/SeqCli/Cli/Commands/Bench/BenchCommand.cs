@@ -113,6 +113,12 @@ class BenchCommand : Command
     
     protected override async Task<int> Run()
     {
+        if (!_withIngestion && !_withQueries)
+        {
+            Log.Error("Use at least one of --with-ingestion and --with-queries");
+            return 1;
+        }
+        
         try
         {
             var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
@@ -138,12 +144,14 @@ class BenchCommand : Command
                 {
                     var t = IngestionBenchmark(reportingLogger, runId, connection, apiKey, seqVersion,
                         isQueryBench: _withQueries, cancellationToken)
-                        .ContinueWith(async t =>
+                        .ContinueWith(t =>
                         {
                             if (t.Exception is not null)
                             {
-                                await Console.Error.WriteLineAsync(t.Exception.Message);
+                                return Console.Error.WriteLineAsync(t.Exception.Message);
                             }
+
+                            return Task.CompletedTask;
                         });
 
                     if (!_withQueries)
@@ -223,20 +231,20 @@ class BenchCommand : Command
         }
     }
 
-    async Task<CollectedTimings> QueryBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string seqVersion)
+    async Task<QueryBenchRunResults> QueryBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string seqVersion)
     {
         var cases = ReadCases(_cases);
-        CollectedTimings collectedTimings = new(reportingLogger);
+        QueryBenchRunResults queryBenchRunResults = new(reportingLogger);
         reportingLogger.Information(
             "Query benchmark run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
             runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
         
 
         foreach (var c in cases.Cases.OrderBy(c => c.Id)
-                     .Concat(new [] { CollectedTimings.FINAL_COUNT_CASE }))
+                     .Concat(new [] { QueryBenchRunResults.FINAL_COUNT_CASE }))
         {
             var timings = new QueryBenchCaseTimings(c);
-            collectedTimings.Add(timings);
+            queryBenchRunResults.Add(timings);
 
             foreach (var i in Enumerable.Range(1, _runs))
             {
@@ -274,7 +282,7 @@ class BenchCommand : Command
             }
         }
 
-        return collectedTimings;
+        return queryBenchRunResults;
     }
 
     /// <summary>
