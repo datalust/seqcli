@@ -27,5 +27,7 @@ public class LevelledTextIngestionTestCase : ICliTestCase
         // Since @l is a token, no level mapping is applied
         Assert.Equal(1, events.Count(e => e.Level == "INFO"));
         Assert.Equal(1, events.Count(e => e.Level == "WARN"));
+        
+        Assert.DoesNotContain(events, e => e.Properties.Any(p => p.Name.StartsWith("_Seqcli")));
     }
 }

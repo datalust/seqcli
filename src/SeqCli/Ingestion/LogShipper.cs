@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api;
 using SeqCli.Api;
-using SeqCli.Levels;
+using SeqCli.Output;
 using Serilog;
 using Serilog.Events;
 
@@ -29,8 +29,6 @@ namespace SeqCli.Ingestion;
 
 static class LogShipper
 {
-    static readonly SurrogateLevelAwareCompactJsonFormatter Formatter = new SurrogateLevelAwareCompactJsonFormatter();
-
     public static async Task<int> ShipEvents(
         SeqConnection connection,
         string? apiKey,
@@ -157,7 +155,7 @@ static class LogShipper
         using (var builder = new StringWriter())
         {
             foreach (var evt in batch)
-                Formatter.Format(evt, builder);
+                OutputFormatter.Json.Format(evt, builder);
 
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }

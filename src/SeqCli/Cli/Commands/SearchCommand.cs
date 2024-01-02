@@ -108,7 +108,7 @@ class SearchCommand : Command
             new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
             evt.Properties
                 .Select(p => CreateProperty(p.Name, p.Value))
-                .Concat(new[] { new LogEventProperty(SurrogateLevelProperty.PropertyName, new ScalarValue(evt.Level)) }));
+        );
     }
 
     static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
