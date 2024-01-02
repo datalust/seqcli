@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.Ingestion;
@@ -21,7 +22,7 @@ namespace SeqCli.Sample.Loader;
 
 static class Simulation
 {
-    public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout)
+    public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout, CancellationToken cancellationToken = default)
     {
         var buffer = new BufferingSink();
 
@@ -36,7 +37,7 @@ static class Simulation
         var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
             InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
 
-        await Roastery.Program.Main(logger);
+        await Roastery.Program.Main(logger, cancellationToken);
         await logger.DisposeAsync();
         await ship;
     }

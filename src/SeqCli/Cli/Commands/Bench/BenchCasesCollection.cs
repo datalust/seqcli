@@ -22,5 +22,5 @@ namespace SeqCli.Cli.Commands.Bench;
 class BenchCasesCollection
 {
     // ReSharper disable once CollectionNeverUpdated.Global
-    public IList<BenchCase> Cases { get; } = new List<BenchCase>();
+    public IList<QueryBenchCase> Cases { get; } = new List<QueryBenchCase>();
 }
