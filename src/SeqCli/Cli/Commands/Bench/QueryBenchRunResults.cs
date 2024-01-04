@@ -47,9 +47,9 @@ class QueryBenchRunResults
         return _collectedTimings.Average(c => c.RelativeStandardDeviationElapsed) * 100;
     }
 
-    private int FinalEventCount()
+    private long FinalEventCount()
     {
         var benchCase = _collectedTimings.Single(c => c.Id == FINAL_COUNT_CASE.Id);
-        return Convert.ToInt32(benchCase.LastResult);
+        return Convert.ToInt64(benchCase.LastResult);
     }
 }
