@@ -35,7 +35,7 @@ static class LogEventBuilder
         var messageTemplate = GetMessageTemplate(properties);
         var traceId = GetTraceId(properties);
         var spanId = GetSpanId(properties);
-        var props = GetLogEventProperties(properties, remainder, level);
+        var props = GetLogEventProperties(properties, remainder);
 
         var fallbackMappedLevel = level != null ? LevelMapping.ToSerilogLevel(level) : LogEventLevel.Information;
         properties[LevelMapping.SurrogateLevelProperty] = level;
@@ -100,7 +100,7 @@ static class LogEventBuilder
         return null;
     }
 
-    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder, string? level)
+    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder)
     {
         var payload = properties
             .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))

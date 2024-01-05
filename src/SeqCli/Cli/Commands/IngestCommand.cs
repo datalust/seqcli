@@ -84,6 +84,10 @@ class IngestCommand : Command
         try
         {
             var enrichers = new List<ILogEventEnricher>();
+            
+            if (_level != null)
+                enrichers.Add(new ScalarPropertyEnricher(LevelMapping.SurrogateLevelProperty, _level));
+            
             foreach (var (name, value) in _properties.Properties)
                 enrichers.Add(new ScalarPropertyEnricher(name, value));
 
