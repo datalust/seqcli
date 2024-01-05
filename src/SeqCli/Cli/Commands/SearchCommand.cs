@@ -72,7 +72,7 @@ class SearchCommand : Command
     {
         try
         {
-            using var output = _output.CreateOutputLogger();
+            await using var output = _output.CreateOutputLogger();
             var connection = _connectionFactory.Connect(_connection);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
