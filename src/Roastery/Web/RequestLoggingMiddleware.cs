@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Context;
 using Serilog.Events;
+using SerilogTracing;
+using SerilogTracing.Instrumentation;
 
 namespace Roastery.Web;
 
@@ -22,15 +23,16 @@ class RequestLoggingMiddleware : HttpServer
     public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
     {
         using var _ = LogContext.PushProperty("RequestId", request.RequestId);
-            
-        var sw = Stopwatch.StartNew();
+
+        using var activity = _logger.StartActivity("HTTP {RequestMethod} {RequestPath}", request.Method, request.Path);
+
         try
         {
             var response = await _next.InvokeAsync(request);
-            LogCompletion(null, request, sw, response.StatusCode);
+            LogCompletion(activity, null, response.StatusCode);
             return response;
         }
-        catch (Exception ex1) when (LogCompletion(ex1, request, sw, HttpStatusCode.InternalServerError))
+        catch (Exception ex1) when (LogCompletion(activity, ex1, HttpStatusCode.InternalServerError))
         {
             // We never hit this, because the exception filter always returns false.
             throw;
@@ -41,12 +43,25 @@ class RequestLoggingMiddleware : HttpServer
         }
     }
 
-    bool LogCompletion(Exception? exception, HttpRequest request, Stopwatch sw, HttpStatusCode statusCode)
+    bool LogCompletion(LoggerActivity? activity, Exception? exception, HttpStatusCode statusCode)
     {
         var level = (int)statusCode >= 500 ? LogEventLevel.Error : LogEventLevel.Information;
-        _logger.Write(level, exception,
-            "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.000} ms",
-            request.Method, request.Path, (int)statusCode, sw.Elapsed.TotalMilliseconds);
+        if (activity?.Activity != null)
+        {
+            if (_logger.BindProperty("StatusCode", (int)statusCode, false, out var statusCodeProperty))
+            {
+                ActivityInstrumentation.SetLogEventProperty(activity.Activity,
+                    statusCodeProperty);
+            }
+
+            if (exception != null)
+            {
+                ActivityInstrumentation.TrySetException(activity.Activity, exception);
+            }
+        }
+
+        activity?.Complete(level);
+        
         return false;
     }
 }

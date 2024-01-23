@@ -21,7 +21,7 @@ public static class Program
 
         var database = new Database(webApplicationLogger, "roastery");
         DatabaseMigrator.Populate(database);
-            
+
         var client = new HttpClient(
             "https://roastery.datalust.co",
             new NetworkLatencyMiddleware(
@@ -35,13 +35,13 @@ public static class Program
                             }, webApplicationLogger))))));
 
         var agents = new List<Agent>();
-            
+
         for (var i = 0; i < 100; ++i)
             agents.Add(new Customer(client, Person.Generate(), (int)Distribution.Uniform(60000, 180000)));
-            
+
         for (var i = 0; i < 3; ++i)
             agents.Add(new WarehouseStaff(client));
-            
+
         var batchApplicationLogger = logger.ForContext("Application", "Roastery Batch Processing");
         agents.Add(new CatalogBatch(client, batchApplicationLogger));
         agents.Add(new ArchivingBatch(client, batchApplicationLogger));
