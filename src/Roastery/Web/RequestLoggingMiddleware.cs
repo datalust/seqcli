@@ -43,24 +43,12 @@ class RequestLoggingMiddleware : HttpServer
         }
     }
 
-    bool LogCompletion(LoggerActivity? activity, Exception? exception, HttpStatusCode statusCode)
+    bool LogCompletion(LoggerActivity activity, Exception? exception, HttpStatusCode statusCode)
     {
         var level = (int)statusCode >= 500 ? LogEventLevel.Error : LogEventLevel.Information;
-        if (activity?.Activity != null)
-        {
-            if (_logger.BindProperty("StatusCode", (int)statusCode, false, out var statusCodeProperty))
-            {
-                ActivityInstrumentation.SetLogEventProperty(activity.Activity,
-                    statusCodeProperty);
-            }
 
-            if (exception != null)
-            {
-                ActivityInstrumentation.TrySetException(activity.Activity, exception);
-            }
-        }
-
-        activity?.Complete(level);
+        activity.AddProperty("StatusCode", (int)statusCode);
+        activity.Complete(level, exception);
         
         return false;
     }

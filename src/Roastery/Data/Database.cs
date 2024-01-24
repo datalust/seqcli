@@ -152,14 +152,8 @@ class Database
         
         var delay = 10 + (int)(Distribution.Uniform() * Math.Pow(rowCount, 1.6));
         await Task.Delay(delay);
-
-        if (activity?.Activity != null)
-        {
-            if (_logger.BindProperty("RowCount", rowCount, false, out var rowCountProperty))
-            {
-                ActivityInstrumentation.SetLogEventProperty(activity.Activity, rowCountProperty);
-            }
-        }
+        
+        activity.AddProperty("RowCount", rowCount);
     }
 
     static T Clone<T>(T value) where T: IIdentifiable, new()
