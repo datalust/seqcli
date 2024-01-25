@@ -4,9 +4,10 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Serilog" Version="3.1.1" />
+        <PackageReference Include="SerilogTracing" Version="1.0.0-dev-00088" />
     </ItemGroup>
 
 </Project>

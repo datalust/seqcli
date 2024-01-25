@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.Ingestion;
 using Serilog;
+using SerilogTracing;
 
 namespace SeqCli.Sample.Loader;
 
@@ -26,7 +27,7 @@ static class Simulation
     {
         var buffer = new BufferingSink();
 
-        await using var logger = new LoggerConfiguration()
+        var logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .Enrich.FromLogContext()
             .Enrich.WithProperty("Origin", "seqcli sample ingest")

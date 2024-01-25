@@ -7,6 +7,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Roastery.Util;
 using Serilog;
+using Serilog.Events;
+using SerilogTracing;
+using SerilogTracing.Instrumentation;
 
 namespace Roastery.Data;
 
@@ -134,17 +137,23 @@ class Database
 
     async Task LogExecAsync(string sql, int rowCount)
     {
+        using var activity = _logger.StartActivity("Execution of {Sql}", sql);
+
         if (Distribution.OnceIn(200))
         {
-            throw new OperationCanceledException(
+            var exception = new OperationCanceledException(
                 "A deadlock was detected and the transaction chosen as the deadlock victim.");
-        }
             
-        var sw = Stopwatch.StartNew();
+            activity.Complete(LogEventLevel.Error, exception);
+
+            throw exception;
+        }
+        
+        
         var delay = 10 + (int)(Distribution.Uniform() * Math.Pow(rowCount, 1.6));
         await Task.Delay(delay);
-        _logger.Debug("Execution of {Sql} affected {RowCount} rows in {Elapsed:0.000} ms",
-            sql, rowCount, sw.Elapsed.TotalMilliseconds);
+        
+        activity.AddProperty("RowCount", rowCount);
     }
 
     static T Clone<T>(T value) where T: IIdentifiable, new()
