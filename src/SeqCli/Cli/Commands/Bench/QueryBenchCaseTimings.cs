@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,12 +19,16 @@ using System.Linq;
 namespace SeqCli.Cli.Commands.Bench;
 
 /*
- * Collects benchmarking elapsed time measurements and calculates statistics. 
+ * Collects benchmarking elapsed time measurements and calculates statistics.
+ *
+ * The results for one bench case.
  */
-class BenchCaseTimings
+class QueryBenchCaseTimings
 {
+    readonly QueryBenchCase _queryBenchCase;
     readonly List<double> _timings = new();
-    
+    object? _lastResult;
+
     public double MeanElapsed => _timings.Sum() / _timings.Count;
     public double MinElapsed => _timings.Min();
     public double MaxElapsed => _timings.Max();
@@ -33,12 +36,23 @@ class BenchCaseTimings
     public double StandardDeviationElapsed => StandardDeviation(_timings); 
     public double RelativeStandardDeviationElapsed => StandardDeviation(_timings) / MeanElapsed;
 
+    public object? LastResult
+    {
+        get => _lastResult;
+        set => _lastResult = value;
+    }
+
+    public QueryBenchCaseTimings(QueryBenchCase queryBenchCase)
+    {
+        _queryBenchCase = queryBenchCase;
+    }
+    
     public void PushElapsed(double elapsed)
     {
         _timings.Add(elapsed);
     }
 
-    static double StandardDeviation(ICollection<double> population)
+    public static double StandardDeviation(ICollection<double> population)
     {
         if (population.Count < 2)
         {
@@ -48,4 +62,6 @@ class BenchCaseTimings
         var mean = population.Sum() / population.Count;
         return Math.Sqrt(population.Select(e => Math.Pow(e - mean, 2)).Sum() / (population.Count - 1));
     }
+
+    public string Id => _queryBenchCase.Id;
 }

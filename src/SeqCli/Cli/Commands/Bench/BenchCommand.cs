@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#nullable enable
-
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Seq.Api;
+using Seq.Api.Model.Data;
 using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
+using SeqCli.Sample.Loader;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Context;
@@ -72,6 +73,8 @@ class BenchCommand : Command
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
     string _description = "";
+    bool _withIngestion = false;
+    bool _withQueries = false;
     
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
@@ -98,70 +101,102 @@ class BenchCommand : Command
             "description=", 
             "Optional description of the bench test run", 
             a => _description = a);
+        Options.Add(
+            "with-ingestion",
+            "Should the benchmark include sending events to Seq",
+            _ => _withIngestion = true);
+        Options.Add(
+            "with-queries",
+            "Should the benchmark include querying Seq",
+            _ => _withQueries = true);
     }
     
     protected override async Task<int> Run()
     {
+        if (!_withIngestion && !_withQueries)
+        {
+            Log.Error("Use at least one of --with-ingestion and --with-queries");
+            return 1;
+        }
+        
         try
         {
+            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
             var connection = _connectionFactory.Connect(_connection);
             var seqVersion = (await connection.Client.GetRootAsync()).Version;
-
-            var cases = ReadCases(_cases);
-            var runId = Guid.NewGuid().ToString("N")[..16];
-            
             await using var reportingLogger = BuildReportingLogger();
 
+            var runId = Guid.NewGuid().ToString("N")[..16];
+            CancellationTokenSource cancellationTokenSource = new ();
+            var cancellationToken = cancellationTokenSource.Token;
+            
+            using (LogContext.PushProperty("RunId", runId))
+            using (LogContext.PushProperty("SeqVersion", seqVersion))
+            using (LogContext.PushProperty("WithIngestion", _withIngestion))
+            using (LogContext.PushProperty("WithQueries", _withQueries))
+            using (LogContext.PushProperty("Start", _range.Start))
+            using (LogContext.PushProperty("End", _range.End))
             using (!string.IsNullOrWhiteSpace(_description)
                        ? LogContext.PushProperty("Description", _description)
                        : null)
             {
-                reportingLogger.Information(
-                    "Bench run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
-                    runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
-            }
-
-            using (LogContext.PushProperty("RunId", runId))
-            using (LogContext.PushProperty("Start", _range.Start))
-            using (LogContext.PushProperty("End", _range.End))
-            {
-                foreach (var c in cases.Cases.OrderBy(c => c.Id))
+                if (_withIngestion)
                 {
-                    var timings = new BenchCaseTimings();
-                    object? lastResult = null;
-
-                    foreach (var i in Enumerable.Range(1, _runs))
-                    {
-                        var response = await connection.Data.QueryAsync(
-                            c.Query,
-                            _range.Start,
-                            _range.End,
-                            c.SignalExpression != null ? SignalExpressionPart.Signal(c.SignalExpression) : null
-                        );
-
-                        timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
-
-                        if (response.Rows != null)
+                    var t = IngestionBenchmark(reportingLogger, runId, connection, apiKey, seqVersion,
+                        isQueryBench: _withQueries, cancellationToken)
+                        .ContinueWith(t =>
                         {
-                            var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
-                            if (isScalarResult && i == _runs)
+                            if (t.Exception is not null)
                             {
-                                lastResult = response.Rows[0][0];
+                                return Console.Error.WriteLineAsync(t.Exception.Message);
                             }
+
+                            return Task.CompletedTask;
+                        });
+
+                    if (!_withQueries)
+                    {
+                        int benchDurationMs = 120_000;
+                        await Task.Delay(benchDurationMs);
+                        cancellationTokenSource.Cancel();
+                                
+                        var response = await connection.Data.QueryAsync(
+                            "select count(*) from stream group by time(1s)",
+                            DateTime.Now.Add(-1 * TimeSpan.FromMilliseconds(benchDurationMs))
+                        );
+                                
+                        if (response.Slices == null)
+                        {
+                            throw new Exception("Failed to query ingestion benchmark results");
+                        }
+                                
+                        var counts = response.Slices.Skip(30) // ignore the warmup
+                            .Select(s => Convert.ToDouble(s.Rows[0][0])) // extract per-second counts
+                            .Where(c => c > 10000) // ignore any very small values
+                            .ToArray();
+                        counts = counts.SkipLast(5).ToArray(); // ignore warmdown
+                        var countsMean = counts.Sum() / counts.Length;
+                        var countsRSD = QueryBenchCaseTimings.StandardDeviation(counts) / countsMean;
+                                
+                        using (LogContext.PushProperty("EventsPerSecond", counts))
+                        {
+                            reportingLogger.Information(
+                                "Ingestion benchmark {Description} ran for {RunDuration:N0}ms; ingested {TotalIngested:N0} " 
+                                + "at {EventsPerMinute:N0}events/min; with RSD {RelativeStandardDeviationPercentage,4:N1}%",
+                                _description,
+                                benchDurationMs,
+                                counts.Sum(),
+                                countsMean * 60,
+                                countsRSD * 100);
                         }
                     }
+                }
 
-                    using (lastResult != null ? LogContext.PushProperty("LastResult", lastResult) : null)
-                    using (!string.IsNullOrWhiteSpace(c.SignalExpression)
-                               ? LogContext.PushProperty("SignalExpression", c.SignalExpression)
-                               : null)
-                    using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
-                    using (LogContext.PushProperty("Query", c.Query))
-                    {
-                        reportingLogger.Information(
-                            "Case {Id,-40} mean {MeanElapsed,5:N0} ms (first {FirstElapsed,5:N0} ms, min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
-                            c.Id, timings.MeanElapsed, timings.FirstElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
-                    }
+                if (_withQueries)
+                {
+                    var collectedTimings = await QueryBenchmark(reportingLogger, runId, connection, seqVersion);
+                    collectedTimings.LogSummary(_description);
+                    cancellationTokenSource.Cancel();
                 }
             }
 
@@ -172,6 +207,82 @@ class BenchCommand : Command
             Log.Error(ex, "Benchmarking failed: {ErrorMessage}", ex.Message);
             return 1;
         }
+    }
+
+    async Task IngestionBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string? apiKey, 
+        string seqVersion, bool isQueryBench, CancellationToken cancellationToken = default)
+    {
+        reportingLogger.Information(
+            "Ingestion bench run {RunId} against {ServerUrl} ({SeqVersion})",
+            runId, connection.Client.ServerUrl, seqVersion);
+
+        if (isQueryBench)
+        {
+            var simulationTasks = Enumerable.Range(1, 500)
+                .Select(i => Simulation.RunAsync(connection, apiKey, 10000, echoToStdout: false, cancellationToken))
+                .ToArray();
+            await Task.Delay(20_000); // how long to ingest before beginning queries
+        }
+        else
+        {
+            var simulationTasks = Enumerable.Range(1, 2000)
+                .Select(i => Simulation.RunAsync(connection, apiKey, 10000, echoToStdout: false, cancellationToken))
+                .ToArray();
+        }
+    }
+
+    async Task<QueryBenchRunResults> QueryBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string seqVersion)
+    {
+        var cases = ReadCases(_cases);
+        QueryBenchRunResults queryBenchRunResults = new(reportingLogger);
+        reportingLogger.Information(
+            "Query benchmark run {RunId} against {ServerUrl} ({SeqVersion}); {CaseCount} cases, {Runs} runs, from {Start} to {End}",
+            runId, connection.Client.ServerUrl, seqVersion, cases.Cases.Count, _runs, _range.Start, _range.End);
+        
+
+        foreach (var c in cases.Cases.OrderBy(c => c.Id)
+                     .Concat(new [] { QueryBenchRunResults.FINAL_COUNT_CASE }))
+        {
+            var timings = new QueryBenchCaseTimings(c);
+            queryBenchRunResults.Add(timings);
+
+            foreach (var i in Enumerable.Range(1, _runs))
+            {
+                var response = await connection.Data.QueryAsync(
+                    c.Query,
+                    _range.Start,
+                    _range.End,
+                    c.SignalExpression != null ? SignalExpressionPart.Signal(c.SignalExpression) : null,
+                    null,
+                    TimeSpan.FromMinutes(4)
+                );
+        
+                timings.PushElapsed(response.Statistics.ElapsedMilliseconds);
+
+                if (response.Rows != null)
+                {
+                    var isScalarResult = response.Rows.Length == 1 && response.Rows[0].Length == 1;
+                    if (isScalarResult && i == _runs)
+                    {
+                        timings.LastResult = response.Rows[0][0];
+                    }
+                }
+            }
+
+            using (timings.LastResult != null ? LogContext.PushProperty("LastResult", timings.LastResult) : null)
+            using (!string.IsNullOrWhiteSpace(c.SignalExpression)
+                       ? LogContext.PushProperty("SignalExpression", c.SignalExpression)
+                       : null)
+            using (LogContext.PushProperty("StandardDeviationElapsed", timings.StandardDeviationElapsed))
+            using (LogContext.PushProperty("Query", c.Query))
+            {
+                reportingLogger.Information(
+                    "Case {Id,-40} ({LastResult}) mean {MeanElapsed,5:N0} ms (first {FirstElapsed,5:N0} ms, min {MinElapsed,5:N0} ms, max {MaxElapsed,5:N0} ms, RSD {RelativeStandardDeviationElapsed,4:N2})",
+                    c.Id, timings.LastResult, timings.MeanElapsed, timings.FirstElapsed, timings.MinElapsed, timings.MaxElapsed, timings.RelativeStandardDeviationElapsed);
+            }
+        }
+
+        return queryBenchRunResults;
     }
 
     /// <summary>

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#nullable enable
 using System.Collections.Generic;
 
 namespace SeqCli.Cli.Commands.Bench;
@@ -23,5 +22,5 @@ namespace SeqCli.Cli.Commands.Bench;
 class BenchCasesCollection
 {
     // ReSharper disable once CollectionNeverUpdated.Global
-    public IList<BenchCase> Cases { get; } = new List<BenchCase>();
+    public IList<QueryBenchCase> Cases { get; } = new List<QueryBenchCase>();
 }

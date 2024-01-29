@@ -14,8 +14,6 @@
 
 using Seq.Api.Model;
 
-#nullable enable
-
 namespace SeqCli.Templates.Import;
 
 // ReSharper disable once ClassNeverInstantiated.Global

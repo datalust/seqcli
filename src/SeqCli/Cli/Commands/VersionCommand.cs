@@ -16,8 +16,6 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands;
 
 [Command("version", "Print the current executable version")]

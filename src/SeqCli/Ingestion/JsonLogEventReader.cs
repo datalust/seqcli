@@ -70,17 +70,14 @@ class JsonLogEventReader : ILogEventReader
 
         if (jObject.TryGetValue("@l", out var levelToken))
         {
+            var originalLevel = levelToken.Value<string>()!;
             jObject.Remove("@l");
 
-            var serilogLevel = LevelMapping.ToSerilogLevel(levelToken.Value<string>()!);
+            var serilogLevel = LevelMapping.ToSerilogLevel(originalLevel);
             if (serilogLevel != LogEventLevel.Information)
                 jObject.Add("@l", new JValue(serilogLevel.ToString()));
-
-            jObject.Add(SurrogateLevelProperty.PropertyName, levelToken);
-        }
-        else
-        {
-            jObject.Add(SurrogateLevelProperty.PropertyName, new JValue("Information"));
+            
+            jObject.Add(LevelMapping.SurrogateLevelProperty, originalLevel);
         }
 
         return LogEventReader.ReadFromJObject(jObject);

@@ -35,6 +35,7 @@ class PlainTextLogEventReader : ILogEventReader
             throw new InvalidDataException($"A line arrived late or could not be parsed: `{frame.Value.Trim()}`.");
 
         var (properties, remainder) = _nameValueExtractor.ExtractValues(frame.Value);
+
         var evt = LogEventBuilder.FromProperties(properties, remainder);
         return new ReadResult(evt, frame.IsAtEnd);
     }

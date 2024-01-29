@@ -13,7 +13,7 @@ public class BenchTestCase : ICliTestCase
         ILogger logger,
         CliCommandRunner runner)
     {
-        var exit = runner.Exec("bench", "--runs 3");
+        var exit = runner.Exec("bench", "--runs 3 --with-queries");
         Assert.Equal(0, exit);
 
         return Task.CompletedTask;

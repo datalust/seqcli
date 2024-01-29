@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api.Model;
 
-#nullable enable
-
 namespace SeqCli.Templates.Export;
 
 static class TemplateWriter
@@ -19,13 +17,11 @@ static class TemplateWriter
         
     public static async Task WriteTemplateAsync(TextWriter writer, Entity entity, TemplateValueMap templateValueMap)
     {
-        using var jw = new JsonTextWriter(writer)
-        {
-            Formatting = Formatting.Indented,
-            FloatFormatHandling = FloatFormatHandling.String,
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            Culture = CultureInfo.InvariantCulture
-        };
+        await using var jw = new JsonTextWriter(writer);
+        jw.Formatting = Formatting.Indented;
+        jw.FloatFormatHandling = FloatFormatHandling.String;
+        jw.DateFormatHandling = DateFormatHandling.IsoDateFormat;
+        jw.Culture = CultureInfo.InvariantCulture;
 
         await WriteObjectAsync(jw, entity, templateValueMap, annotateAsResource: true);
     }

@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands.Bench;
 
 // ReSharper disable ClassNeverInstantiated.Global AutoPropertyCanBeMadeGetOnly.Global UnusedAutoPropertyAccessor.Global
 
-class BenchCase
+class QueryBenchCase
 {
     public string Id { get; set; } = null!;
     public string Query { get; set; } = null!;

@@ -12,9 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Levels;
+using Superpower.Display;
 
-static class SurrogateLevelProperty
+namespace SeqCli.Signals;
+
+enum SignalExpressionToken
 {
-    public const string PropertyName = "@seqlevel";
+    Id,
+    [Token(Category = "operator", Example = ",")]
+    Comma,
+    [Token(Category = "operator", Example = "~")]
+    Tilde,
+    [Token(Example = "(")]
+    LParen,
+    [Token(Example = ")")]
+    RParen
 }

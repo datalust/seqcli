@@ -14,8 +14,6 @@
 
 using System.Collections.Generic;
 
-#nullable enable
-
 namespace SeqCli.Cli.Features;
 
 class PropertiesFeature : CommandFeature

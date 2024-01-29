@@ -5,7 +5,7 @@ Push-Location $PSScriptRoot
 $ErrorActionPreference = 'Stop'
 
 $version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
-$framework = 'net7.0'
+$framework = 'net8.0'
 $windowsTfmSuffix = '-windows'
 
 function Clean-Output
@@ -86,7 +86,8 @@ Clean-Output
 Create-ArtifactDir
 Restore-Packages
 Publish-Archives($version)
-Publish-DotNetTool($version)
+# Temporarily disabled while SerilogTracing is in pre-release
+# Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
 

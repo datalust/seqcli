@@ -6,12 +6,14 @@ $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
 $version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
-$framework = "net7.0"
+$framework = "net8.0"
 $image = "datalust/seqcli"
 $archs = @(
     @{ rid = "x64"; platform = "linux/amd64" },
     @{ rid = "arm64"; platform = "linux/arm64/v8" }
 )
+
+$endToEndVersion = "preview"
 
 function Execute-Tests
 {
@@ -19,7 +21,8 @@ function Execute-Tests
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     cd ./test/SeqCli.EndToEnd/
-    docker pull datalust/seq:latest
+    docker pull "datalust/seq:$endToEndVersion"
+    docker tag "datalust/seq:$endToEndVersion" datalust/seq:latest
     & dotnet run -f $framework -- --docker-server
     if ($LASTEXITCODE -ne 0)
     { 

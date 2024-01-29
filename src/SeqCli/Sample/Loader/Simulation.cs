@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.Ingestion;
 using Serilog;
+using SerilogTracing;
 
 namespace SeqCli.Sample.Loader;
 
 static class Simulation
 {
-    public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout)
+    public static async Task RunAsync(SeqConnection connection, string? apiKey, int batchSize, bool echoToStdout, CancellationToken cancellationToken = default)
     {
         var buffer = new BufferingSink();
 
-        await using var logger = new LoggerConfiguration()
+        var logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .Enrich.FromLogContext()
             .Enrich.WithProperty("Origin", "seqcli sample ingest")
@@ -36,7 +38,7 @@ static class Simulation
         var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
             InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize));
 
-        await Roastery.Program.Main(logger);
+        await Roastery.Program.Main(logger, cancellationToken);
         await logger.DisposeAsync();
         await ship;
     }

@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using SeqCli.Levels;
-using Serilog.Core;
-using Serilog.Events;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Seq.Api.Model.Settings;
 
-namespace SeqCli.Output;
+namespace SeqCli.Cli.Commands.Settings;
 
-public class SurrogateLevelRemovalEnricher : ILogEventEnricher
+[Command("setting", "names", "Print the names of all supported settings")]
+class NamesCommand: Command
 {
-    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+    protected override Task<int> Run(string[] unrecognized)
     {
-        logEvent.RemovePropertyIfPresent(SurrogateLevelProperty.PropertyName);
+        foreach (var name in Enum.GetNames(typeof(SettingName)).Order())
+        {
+            Console.WriteLine(name);
+        }
+        
+        return Task.FromResult(0);
     }
 }

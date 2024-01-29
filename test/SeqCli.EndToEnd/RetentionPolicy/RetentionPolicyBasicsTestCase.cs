@@ -35,5 +35,15 @@ public class RetentionPolicyBasicsTestCase : ICliTestCase
             
         exit = runner.Exec("retention list", $"-i {id}");
         Assert.Equal(1, exit);
+        
+        var deleteSignal = "signal-m33303,(signal-m33301~signal-m33302)";
+        exit = runner.Exec("retention create", $"--after 10h --delete \"{deleteSignal}\"");
+        Assert.Equal(0, exit);
+
+        exit = runner.Exec("retention create", "--after 10h");
+        Assert.Equal(1, exit);
+        
+        exit = runner.Exec("retention create", $"--after 10h --delete-all-events --delete \"{deleteSignal}\"");
+        Assert.Equal(1, exit);
     }
 }

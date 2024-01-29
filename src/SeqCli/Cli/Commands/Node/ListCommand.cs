@@ -19,8 +19,6 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands.Node;
 
 [Command("node", "list", "List nodes in the Seq cluster",

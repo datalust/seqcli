@@ -28,8 +28,6 @@ using Serilog.Events;
 using Serilog.Parsing;
 // ReSharper disable UnusedType.Global
 
-#nullable enable
-
 namespace SeqCli.Cli.Commands;
 
 [Command("search", "Retrieve log events that match a given filter",
@@ -74,7 +72,7 @@ class SearchCommand : Command
     {
         try
         {
-            using var output = _output.CreateOutputLogger();
+            await using var output = _output.CreateOutputLogger();
             var connection = _connectionFactory.Connect(_connection);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
@@ -110,7 +108,7 @@ class SearchCommand : Command
             new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
             evt.Properties
                 .Select(p => CreateProperty(p.Name, p.Value))
-                .Concat(new[] { new LogEventProperty(SurrogateLevelProperty.PropertyName, new ScalarValue(evt.Level)) }));
+        );
     }
 
     static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using SeqCli.Levels;
@@ -31,17 +32,23 @@ static class LogEventBuilder
         var timestamp = GetTimestamp(properties);
         var level = GetLevel(properties);          
         var exception = TryGetException(properties);          
-        var messageTemplate = GetMessageTemplate(properties);          
-        var props = GetLogEventProperties(properties, remainder, level);
+        var messageTemplate = GetMessageTemplate(properties);
+        var traceId = GetTraceId(properties);
+        var spanId = GetSpanId(properties);
+        var props = GetLogEventProperties(properties, remainder);
 
         var fallbackMappedLevel = level != null ? LevelMapping.ToSerilogLevel(level) : LogEventLevel.Information;
+        properties[LevelMapping.SurrogateLevelProperty] = level;
 
         return new LogEvent(
             timestamp,
             fallbackMappedLevel,
             exception,
             messageTemplate,
-            props);
+            props,
+            traceId ?? default,
+            spanId ?? default
+        );
     }
         
     static readonly MessageTemplate NoMessage = new MessageTemplateParser().Parse("");
@@ -67,6 +74,24 @@ static class LogEventBuilder
         return null;
     }
 
+    static ActivityTraceId? GetTraceId(IDictionary<string, object?> properties)
+    {
+        if (properties.TryGetValue(ReifiedProperties.TraceId, out var tr) && 
+            tr is TextSpan ts)
+            return ActivityTraceId.CreateFromString(ts.ToStringValue());
+
+        return null;
+    }
+    
+    static ActivitySpanId? GetSpanId(IDictionary<string, object?> properties)
+    {
+        if (properties.TryGetValue(ReifiedProperties.SpanId, out var sp) && 
+            sp is TextSpan ts)
+            return ActivitySpanId.CreateFromString(ts.ToStringValue());
+
+        return null;
+    }
+
     static Exception? TryGetException(IDictionary<string, object?> properties)
     {
         if (properties.TryGetValue(ReifiedProperties.Exception, out var x) &&
@@ -75,11 +100,10 @@ static class LogEventBuilder
         return null;
     }
 
-    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder, string? level)
+    static IEnumerable<LogEventProperty> GetLogEventProperties(IDictionary<string, object?> properties, string? remainder)
     {
         var payload = properties
             .Where(p => !ReifiedProperties.IsReifiedProperty(p.Key))
-            .Concat(new[] { KeyValuePair.Create(SurrogateLevelProperty.PropertyName, (object?)level) })
             .Select(p => LogEventPropertyFactory.SafeCreate(p.Key, new ScalarValue(p.Value)));
 
         if (remainder != null)
