@@ -86,7 +86,7 @@ Clean-Output
 Create-ArtifactDir
 Restore-Packages
 Publish-Archives($version)
-Publish-DotNetTool($version)
+# Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
 
