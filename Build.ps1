@@ -86,6 +86,7 @@ Clean-Output
 Create-ArtifactDir
 Restore-Packages
 Publish-Archives($version)
+# Temporarily disabled while SerilogTracing is in pre-release
 # Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
