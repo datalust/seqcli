@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Seq.Syntax.Expressions;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Ingestion;
@@ -81,7 +82,15 @@ class PrintCommand : Command
                 applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
 
         if (_filter != null)
-            outputConfiguration.Filter.ByIncludingOnly(_filter);
+        {
+            if (!SerilogExpression.TryCompile(_filter, out var filter, out var error))
+            {
+                Log.Error("The specified filter could not be compiled: {Error}", error);
+                return 1;
+            }
+            
+            outputConfiguration.Filter.ByIncludingOnly(evt => ExpressionResult.IsTrue(filter(evt)));
+        }
 
         await using var logger = outputConfiguration.CreateLogger();
         foreach (var input in _fileInputFeature.OpenInputs())
