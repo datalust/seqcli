@@ -1,7 +1,7 @@
 using SeqCli.Ingestion;
 using SeqCli.Levels;
 using Serilog.Formatting;
-using Serilog.Templates;
+using Seq.Syntax.Templates;
 
 namespace SeqCli.Output;
 

@@ -24,7 +24,6 @@ using SeqCli.Syntax;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Expressions;
 
 namespace SeqCli.Cli.Commands;
 
@@ -95,7 +94,7 @@ class IngestCommand : Command
             if (_filter != null)
             {
                 var eval = SeqSyntax.CompileExpression(_filter);
-                filter = evt => ExpressionResult.IsTrue(eval(evt));
+                filter = evt => Seq.Syntax.Expressions.ExpressionResult.IsTrue(eval(evt));
             }
 
             var connection = _connectionFactory.Connect(_connection);

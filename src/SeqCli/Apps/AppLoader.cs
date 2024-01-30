@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Seq.Apps;
+using Seq.Syntax.Expressions;
 using Serilog;
 
 namespace SeqCli.Apps;
@@ -30,10 +31,11 @@ class AppLoader : IDisposable
     // These are used for interop between the host process and the app. The
     // app _must_ be able to load on the unified version.
     readonly Assembly[] _contracts =
-    {
+    [
         typeof(SeqApp).Assembly,
         typeof(Log).Assembly,
-    };
+        typeof(SerilogExpression).Assembly
+    ];
         
     public AppLoader(string packageBinaryPath)
     {
