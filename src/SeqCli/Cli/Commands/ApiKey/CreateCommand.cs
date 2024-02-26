@@ -80,7 +80,7 @@ class CreateCommand : Command
 
         Options.Add(
             "connect-username=",
-            "A username to connect with, useful primarily when setting up the first API key",
+            "A username to connect with, useful primarily when setting up the first API key; servers with an 'Individual' subscription only allow one simultaneous request with this option",
             v => _connectUsername = ArgumentString.Normalize(v));
 
         Options.Add(
