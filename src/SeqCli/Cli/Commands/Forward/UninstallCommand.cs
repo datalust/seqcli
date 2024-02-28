@@ -3,6 +3,8 @@ using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Forward;
 
+#if Windows
+
 [Command("forward", "uninstall", "Uninstall the Windows service",
     Example = "seqcli forward uninstall")]
 internal class UninstallCommand : Command
@@ -12,3 +14,4 @@ internal class UninstallCommand : Command
     }
 }
 
+#endif
