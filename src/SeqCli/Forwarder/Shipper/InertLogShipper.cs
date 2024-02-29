@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Forwarder.Shipper
+namespace SeqCli.Forwarder.Shipper;
+
+class InertLogShipper : LogShipper
 {
-    class InertLogShipper : LogShipper
+    public override void Start()
+    {            
+    }
+
+    public override void Stop()
     {
-        public override void Start()
-        {            
-        }
+    }
 
-        public override void Stop()
-        {
-        }
-
-        public override void Dispose()
-        {
-        }
+    public override void Dispose()
+    {
     }
 }

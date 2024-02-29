@@ -5,47 +5,46 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace SeqCli.Tests.Support
+namespace SeqCli.Tests.Support;
+
+class TempFolder : IDisposable
 {
-    class TempFolder : IDisposable
+    static readonly Guid Session = Guid.NewGuid();
+
+    public TempFolder(string name)
     {
-        static readonly Guid Session = Guid.NewGuid();
+        Path = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Seq.Forwarder.Tests",
+            Session.ToString("n"),
+            name);
 
-        public TempFolder(string name)
+        Directory.CreateDirectory(Path);
+    }
+
+    public string Path { get; }
+
+    public void Dispose()
+    {
+        try
         {
-            Path = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Seq.Forwarder.Tests",
-                Session.ToString("n"),
-                name);
-
-            Directory.CreateDirectory(Path);
+            if (Directory.Exists(Path))
+                Directory.Delete(Path, true);
         }
-
-        public string Path { get; }
-
-        public void Dispose()
+        catch (Exception ex)
         {
-            try
-            {
-                if (Directory.Exists(Path))
-                    Directory.Delete(Path, true);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
+            Debug.WriteLine(ex);
         }
+    }
 
-        public static TempFolder ForCaller([CallerMemberName] string? caller = null)
-        {
-            if (caller == null) throw new ArgumentNullException(nameof(caller));
-            return new TempFolder(caller);
-        }
+    public static TempFolder ForCaller([CallerMemberName] string? caller = null)
+    {
+        if (caller == null) throw new ArgumentNullException(nameof(caller));
+        return new TempFolder(caller);
+    }
 
-        public string AllocateFilename(string? ext = null)
-        {
-            return System.IO.Path.Combine(Path, Guid.NewGuid().ToString("n") + "." + (ext ?? "tmp"));
-        }
+    public string AllocateFilename(string? ext = null)
+    {
+        return System.IO.Path.Combine(Path, Guid.NewGuid().ToString("n") + "." + (ext ?? "tmp"));
     }
 }

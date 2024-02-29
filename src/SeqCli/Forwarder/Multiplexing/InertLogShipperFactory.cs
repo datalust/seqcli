@@ -15,13 +15,12 @@
 using SeqCli.Forwarder.Shipper;
 using SeqCli.Forwarder.Storage;
 
-namespace SeqCli.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing;
+
+class InertLogShipperFactory : ILogShipperFactory
 {
-    class InertLogShipperFactory : ILogShipperFactory
+    public LogShipper Create(LogBuffer logBuffer, string? apiKey)
     {
-        public LogShipper Create(LogBuffer logBuffer, string? apiKey)
-        {
-            return new InertLogShipper();
-        }
+        return new InertLogShipper();
     }
 }

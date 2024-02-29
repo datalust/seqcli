@@ -18,7 +18,7 @@ public class Args
         .ToArray();
 
     // Simple replacement so `Events.*` becomes `Events\..*`
-    static Regex ToArgRegex(string arg) => new Regex(arg.Replace(".", "\\.").Replace("*", ".*"));
+    static Regex ToArgRegex(string arg) => new(arg.Replace(".", "\\.").Replace("*", ".*"));
 
     public bool Multiuser() => _args.Any(a => a == "--license-certificate-stdin");
 

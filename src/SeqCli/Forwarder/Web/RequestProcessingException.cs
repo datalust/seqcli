@@ -15,16 +15,15 @@
 using System;
 using System.Net;
 
-namespace SeqCli.Forwarder.Web
-{
-    class RequestProcessingException : Exception
-    {
-        public RequestProcessingException(string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-            : base(message)
-        {
-            StatusCode = statusCode;
-        }
+namespace SeqCli.Forwarder.Web;
 
-        public HttpStatusCode StatusCode { get; }
+class RequestProcessingException : Exception
+{
+    public RequestProcessingException(string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+        : base(message)
+    {
+        StatusCode = statusCode;
     }
+
+    public HttpStatusCode StatusCode { get; }
 }

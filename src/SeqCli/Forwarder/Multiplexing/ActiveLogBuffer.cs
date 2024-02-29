@@ -16,23 +16,22 @@ using System;
 using SeqCli.Forwarder.Shipper;
 using SeqCli.Forwarder.Storage;
 
-namespace SeqCli.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing;
+
+sealed class ActiveLogBuffer : IDisposable
 {
-    sealed class ActiveLogBuffer : IDisposable
+    public LogShipper Shipper { get; }
+    public LogBuffer Buffer { get; }
+
+    public ActiveLogBuffer(LogBuffer logBuffer, LogShipper logShipper)
     {
-        public LogShipper Shipper { get; }
-        public LogBuffer Buffer { get; }
+        Buffer = logBuffer ?? throw new ArgumentNullException(nameof(logBuffer));
+        Shipper = logShipper ?? throw new ArgumentNullException(nameof(logShipper));
+    }
 
-        public ActiveLogBuffer(LogBuffer logBuffer, LogShipper logShipper)
-        {
-            Buffer = logBuffer ?? throw new ArgumentNullException(nameof(logBuffer));
-            Shipper = logShipper ?? throw new ArgumentNullException(nameof(logShipper));
-        }
-
-        public void Dispose()
-        {
-            Shipper.Dispose();
-            Buffer.Dispose();
-        }
+    public void Dispose()
+    {
+        Shipper.Dispose();
+        Buffer.Dispose();
     }
 }

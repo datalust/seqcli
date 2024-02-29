@@ -14,11 +14,10 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace SeqCli.Forwarder.Storage
+namespace SeqCli.Forwarder.Storage;
+
+public struct LogBufferEntry
 {
-    public struct LogBufferEntry
-    {
-        public ulong Key;
-        public byte[] Value;
-    }
+    public ulong Key;
+    public byte[] Value;
 }

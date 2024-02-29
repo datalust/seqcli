@@ -15,10 +15,9 @@
 using SeqCli.Forwarder.Shipper;
 using SeqCli.Forwarder.Storage;
 
-namespace SeqCli.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing;
+
+public interface ILogShipperFactory
 {
-    public interface ILogShipperFactory
-    {
-        LogShipper Create(LogBuffer logBuffer, string? apiKey);
-    }
+    LogShipper Create(LogBuffer logBuffer, string? apiKey);
 }

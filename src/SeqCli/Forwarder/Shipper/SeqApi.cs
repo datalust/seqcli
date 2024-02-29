@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace SeqCli.Forwarder.Shipper
+namespace SeqCli.Forwarder.Shipper;
+
+static class SeqApi
 {
-    static class SeqApi
-    {
-        public const string ApiKeyHeaderName = "X-Seq-ApiKey";
-    }
+    public const string ApiKeyHeaderName = "X-Seq-ApiKey";
 }

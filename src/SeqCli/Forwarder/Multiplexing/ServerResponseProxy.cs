@@ -14,39 +14,38 @@
 
 using System.Collections.Generic;
 
-namespace SeqCli.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing;
+
+public class ServerResponseProxy
 {
-    public class ServerResponseProxy
+    const string EmptyResponse = "{}";
+
+    readonly object _syncRoot = new();
+    readonly Dictionary<string, string> _lastResponseByApiKey = new();
+    string _lastNoApiKeyResponse = EmptyResponse;
+
+    public void SuccessResponseReturned(string? apiKey, string response)
     {
-        const string EmptyResponse = "{}";
-
-        readonly object _syncRoot = new object();
-        readonly Dictionary<string, string> _lastResponseByApiKey = new Dictionary<string, string>();
-        string _lastNoApiKeyResponse = EmptyResponse;
-
-        public void SuccessResponseReturned(string? apiKey, string response)
+        lock (_syncRoot)
         {
-            lock (_syncRoot)
-            {
-                if (apiKey == null)
-                    _lastNoApiKeyResponse = response;
-                else
-                    _lastResponseByApiKey[apiKey] = response;
-            }
+            if (apiKey == null)
+                _lastNoApiKeyResponse = response;
+            else
+                _lastResponseByApiKey[apiKey] = response;
         }
+    }
 
-        public string GetResponseText(string? apiKey)
+    public string GetResponseText(string? apiKey)
+    {
+        lock (_syncRoot)
         {
-            lock (_syncRoot)
-            {
-                if (apiKey == null)
-                    return _lastNoApiKeyResponse;
+            if (apiKey == null)
+                return _lastNoApiKeyResponse;
 
-                if (_lastResponseByApiKey.TryGetValue(apiKey, out var response))
-                    return response;
+            if (_lastResponseByApiKey.TryGetValue(apiKey, out var response))
+                return response;
 
-                return EmptyResponse;
-            }
+            return EmptyResponse;
         }
     }
 }

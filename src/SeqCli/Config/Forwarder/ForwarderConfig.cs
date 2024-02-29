@@ -1,5 +1,7 @@
 namespace SeqCli.Config.Forwarder;
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+
 class ForwarderConfig
 {
     public ForwarderStorageConfig Storage { get; set; } = new();

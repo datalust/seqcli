@@ -18,50 +18,49 @@ using SeqCli.Forwarder.Diagnostics;
 using SeqCli.Forwarder.Multiplexing;
 using Serilog;
 
-namespace SeqCli.Forwarder.Web.Host
+namespace SeqCli.Forwarder.Web.Host;
+
+class ServerService
 {
-    class ServerService
+    readonly ActiveLogBufferMap _logBufferMap;
+    readonly IHost _host;
+    readonly string _listenUri;
+
+    public ServerService(ActiveLogBufferMap logBufferMap, IHost host, string listenUri)
     {
-        readonly ActiveLogBufferMap _logBufferMap;
-        readonly IHost _host;
-        readonly string _listenUri;
+        _logBufferMap = logBufferMap;
+        _host = host;
+        _listenUri = listenUri;
+    }
 
-        public ServerService(ActiveLogBufferMap logBufferMap, IHost host, string listenUri)
+    public void Start()
+    {
+        try
         {
-            _logBufferMap = logBufferMap;
-            _host = host;
-            _listenUri = listenUri;
-        }
-
-        public void Start()
-        {
-            try
-            {
-                Log.Debug("Starting HTTP server...");
+            Log.Debug("Starting HTTP server...");
                 
-                _host.Start();
+            _host.Start();
 
-                Log.Information("Seq Forwarder listening on {ListenUri}", _listenUri);
-                IngestionLog.Log.Debug("Seq Forwarder is accepting events");
+            Log.Information("Seq Forwarder listening on {ListenUri}", _listenUri);
+            IngestionLog.Log.Debug("Seq Forwarder is accepting events");
 
-                _logBufferMap.Load();
-                _logBufferMap.Start();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Error running the server application");
-                throw;
-            }
+            _logBufferMap.Load();
+            _logBufferMap.Start();
         }
-
-        public void Stop()
+        catch (Exception ex)
         {
-            Log.Debug("Seq Forwarder stopping");
-
-            _host.StopAsync().Wait();
-            _logBufferMap.Stop();
-
-            Log.Information("Seq Forwarder stopped cleanly");
+            Log.Fatal(ex, "Error running the server application");
+            throw;
         }
+    }
+
+    public void Stop()
+    {
+        Log.Debug("Seq Forwarder stopping");
+
+        _host.StopAsync().Wait();
+        _logBufferMap.Stop();
+
+        Log.Information("Seq Forwarder stopped cleanly");
     }
 }

@@ -18,32 +18,31 @@ using SeqCli.Cli.Features;
 using SeqCli.Forwarder.Multiplexing;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Forwarder
+namespace SeqCli.Cli.Commands.Forwarder;
+
+[Command("forwarder", "truncate", "Clear the log buffer contents")]
+class TruncateCommand : Command
 {
-    [Command("forwarder", "truncate", "Clear the log buffer contents")]
-    class TruncateCommand : Command
+    readonly StoragePathFeature _storagePath;
+
+    public TruncateCommand()
     {
-        readonly StoragePathFeature _storagePath;
+        _storagePath = Enable<StoragePathFeature>();
+    }
 
-        public TruncateCommand()
+    protected override async Task<int> Run(string[] args)
+    {
+        try
         {
-            _storagePath = Enable<StoragePathFeature>();
+            ActiveLogBufferMap.Truncate(_storagePath.BufferPath);
+            return 0;
         }
-
-        protected override async Task<int> Run(string[] args)
+        catch (Exception ex)
         {
-            try
-            {
-                ActiveLogBufferMap.Truncate(_storagePath.BufferPath);
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                await using var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+            await using var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
-                logger.Fatal(ex, "Could not truncate log buffer");
-                return 1;
-            }
+            logger.Fatal(ex, "Could not truncate log buffer");
+            return 1;
         }
     }
 }

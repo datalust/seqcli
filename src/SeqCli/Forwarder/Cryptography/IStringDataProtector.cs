@@ -1,8 +1,7 @@
-﻿namespace SeqCli.Forwarder.Cryptography
+﻿namespace SeqCli.Forwarder.Cryptography;
+
+public interface IStringDataProtector
 {
-    public interface IStringDataProtector
-    {
-        string Protect(string value);
-        string Unprotect(string @protected);
-    }
+    string Protect(string value);
+    string Unprotect(string @protected);
 }

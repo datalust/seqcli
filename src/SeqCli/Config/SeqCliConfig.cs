@@ -19,6 +19,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using SeqCli.Config.Forwarder;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace SeqCli.Config;
 
@@ -27,7 +29,7 @@ class SeqCliConfig
     static readonly string DefaultConfigFilename =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
 
-    static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
+    static JsonSerializerSettings SerializerSettings { get; } = new()
     {
         ContractResolver = new CamelCasePropertyNamesContractResolver(),
         Converters =
@@ -52,11 +54,10 @@ class SeqCliConfig
         File.WriteAllText(DefaultConfigFilename, content);
     }
 
-    public ConnectionConfig Connection { get; set; } = new ConnectionConfig();
+    public ConnectionConfig Connection { get; set; } = new();
     public OutputConfig Output { get; set; } = new();
     public ForwarderConfig Forwarder { get; set; } = new();
     public SeqCliEncryptionProviderConfig EncryptionProviderProvider { get; set; } = new SeqCliEncryptionProviderConfig();
     
-    public Dictionary<string, ConnectionConfig> Profiles { get; } =
-        new Dictionary<string, ConnectionConfig>(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, ConnectionConfig> Profiles { get; } = new(StringComparer.OrdinalIgnoreCase);
 }

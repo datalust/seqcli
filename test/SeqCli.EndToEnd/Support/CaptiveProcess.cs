@@ -12,11 +12,11 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
     readonly string _stopCommandFullExePath;
     readonly string _stopCommandArgs;
     readonly Process _process;
-    readonly ManualResetEvent _outputComplete = new ManualResetEvent(false);
-    readonly ManualResetEvent _errorComplete = new ManualResetEvent(false);
+    readonly ManualResetEvent _outputComplete = new(false);
+    readonly ManualResetEvent _errorComplete = new(false);
 
-    readonly object _sync = new object();
-    readonly StringWriter _output = new StringWriter();
+    readonly object _sync = new();
+    readonly StringWriter _output = new();
 
     public CaptiveProcess(
         string fullExePath,
