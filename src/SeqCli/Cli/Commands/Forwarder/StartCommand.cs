@@ -24,7 +24,7 @@ using SeqCli.Cli;
 
 namespace Seq.Forwarder.Cli.Commands
 {
-    [Command("forwarder", "start", "Start the Windows service")]
+    [Command("forwarder", "start", "Start the forwarder Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class StartCommand : Command
     {

@@ -20,20 +20,25 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.Forwarder;
 
-[Command("forwarder", "truncate", "Clear the log buffer contents")]
+[Command("forwarder", "truncate", "Empty the forwarder's persistent log buffer")]
 class TruncateCommand : Command
 {
     readonly StoragePathFeature _storagePath;
+    readonly ConfirmFeature _confirm;
 
     public TruncateCommand()
     {
         _storagePath = Enable<StoragePathFeature>();
+        _confirm = Enable<ConfirmFeature>();
     }
 
     protected override async Task<int> Run(string[] args)
     {
         try
         {
+            if (!_confirm.TryConfirm("All data in the forwarder's log buffer will be deleted. This cannot be undone."))
+                return 1;
+                
             ActiveLogBufferMap.Truncate(_storagePath.BufferPath);
             return 0;
         }
