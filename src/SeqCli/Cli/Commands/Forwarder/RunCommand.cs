@@ -18,8 +18,10 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
@@ -198,6 +200,7 @@ namespace Seq.Forwarder.Cli.Commands
             return Path.Combine(internalLogPath, "seq-forwarder-.log");
         }
 
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
         static int RunService(ServerService service)
         {
 #if WINDOWS

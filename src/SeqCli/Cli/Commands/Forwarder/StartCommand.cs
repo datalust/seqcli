@@ -15,50 +15,54 @@
 #if WINDOWS
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using Seq.Forwarder.ServiceProcess;
+using SeqCli.Cli;
 
 namespace Seq.Forwarder.Cli.Commands
 {
     [Command("forwarder", "start", "Start the Windows service")]
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class StartCommand : Command
     {
-        protected override int Run(TextWriter cout)
+        protected override Task<int> Run()
         {
             try
             {
                 var controller = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
                 if (controller.Status != ServiceControllerStatus.Stopped)
                 {
-                    cout.WriteLine("Cannot start {0}, current status is: {1}", controller.ServiceName, controller.Status);
-                    return -1;
+                    Console.WriteLine("Cannot start {0}, current status is: {1}", controller.ServiceName, controller.Status);
+                    return Task.FromResult(-1);
                 }
 
-                cout.WriteLine("Starting {0}...", controller.ServiceName);
+                Console.WriteLine("Starting {0}...", controller.ServiceName);
                 controller.Start();
 
                 if (controller.Status != ServiceControllerStatus.Running)
                 {
-                    cout.WriteLine("Waiting up to 15 seconds for the service to start (currently: " + controller.Status + ")...");
+                    Console.WriteLine("Waiting up to 15 seconds for the service to start (currently: " + controller.Status + ")...");
                     controller.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
                 }
 
                 if (controller.Status == ServiceControllerStatus.Running)
                 {
-                    cout.WriteLine("Started.");
-                    return 0;
+                    Console.WriteLine("Started.");
+                    return Task.FromResult(0);
                 }
                 
-                cout.WriteLine("The service hasn't started successfully.");
-                return -1;
+                Console.WriteLine("The service hasn't started successfully.");
+                return Task.FromResult(-1);
             }
             catch (Exception ex)
             {
-                cout.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
                 if (ex.InnerException != null)
-                    cout.WriteLine(ex.InnerException.Message);
-                return -1;
+                    Console.WriteLine(ex.InnerException.Message);
+                return Task.FromResult(-1);
             }
         }
     }

@@ -15,20 +15,26 @@
 #if WINDOWS
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using Seq.Forwarder.Cli.Features;
 using Seq.Forwarder.Config;
 using Seq.Forwarder.ServiceProcess;
 using Seq.Forwarder.Util;
+using SeqCli;
+using SeqCli.Cli;
+using SeqCli.Cli.Features;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
 namespace Seq.Forwarder.Cli.Commands
 {
     [Command("forwarder", "install", "Install the Seq Forwarder as a Windows service")]
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class InstallCommand : Command
     {
         readonly StoragePathFeature _storagePath;
@@ -51,70 +57,70 @@ namespace Seq.Forwarder.Cli.Commands
 
         string ServiceUsername => _serviceCredentials.IsUsernameSpecified ? _serviceCredentials.Username : "NT AUTHORITY\\LocalService";
 
-        protected override int Run(TextWriter cout)
+        protected override Task<int> Run()
         {
             try
             {
                 if (!_setup)
                 {
-                    Install(cout);
-                    return 0;
+                    Install();
+                    return Task.FromResult(0);
                 }
 
-                var exit = Setup(cout);
+                var exit = Setup();
                 if (exit == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("Setup completed successfully.");
                     Console.ResetColor();
                 }
-                return exit;
+                return Task.FromResult(exit);
             }
             catch (DirectoryNotFoundException dex)
             {
-                cout.WriteLine("Could not install the service, directory not found: " + dex.Message);
-                return -1;
+                Console.WriteLine("Could not install the service, directory not found: " + dex.Message);
+                return Task.FromResult(-1);
             }
             catch (Exception ex)
             {
-                cout.WriteLine("Could not install the service: " + ex.Message);
-                return -1;
+                Console.WriteLine("Could not install the service: " + ex.Message);
+                return Task.FromResult(-1);
             }
         }
         
-        int Setup(TextWriter cout)
+        int Setup()
         {
             ServiceController controller;
             try
             {
-                cout.WriteLine("Checking the status of the Seq Forwarder service...");
+                Console.WriteLine("Checking the status of the Seq Forwarder service...");
 
                 controller = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
-                cout.WriteLine("Status is {0}", controller.Status);
+                Console.WriteLine("Status is {0}", controller.Status);
             }
             catch (InvalidOperationException)
             {
-                Install(cout);
+                Install();
                 var controller2 = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
-                return Start(controller2, cout);
+                return Start(controller2);
             }
 
-            cout.WriteLine("Service is installed; checking path and dependency configuration...");
-            Reconfigure(controller, cout);
+            Console.WriteLine("Service is installed; checking path and dependency configuration...");
+            Reconfigure(controller);
 
             if (controller.Status != ServiceControllerStatus.Running)
-                return Start(controller, cout);
+                return Start(controller);
 
             return 0;
         }
 
-        static void Reconfigure(ServiceController controller, TextWriter cout)
+        static void Reconfigure(ServiceController controller)
         {
             var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
-            if (0 != CaptiveProcess.Run(sc, "config \"" + controller.ServiceName + "\" depend= Winmgmt/Tcpip/CryptSvc", cout.WriteLine, cout.WriteLine))
-                cout.WriteLine("Could not reconfigure service dependencies; ignoring.");
+            if (0 != CaptiveProcess.Run(sc, "config \"" + controller.ServiceName + "\" depend= Winmgmt/Tcpip/CryptSvc", Console.WriteLine, Console.WriteLine))
+                Console.WriteLine("Could not reconfigure service dependencies; ignoring.");
 
-            if (!ServiceConfiguration.GetServiceBinaryPath(controller, cout, out var path))
+            if (!ServiceConfiguration.GetServiceBinaryPath(controller, out var path))
                 return;
 
             var current = "\"" + Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, Program.BinaryName) + "\"";
@@ -124,57 +130,57 @@ namespace Seq.Forwarder.Cli.Commands
             var seqRun = path.IndexOf(Program.BinaryName + "\" run", StringComparison.OrdinalIgnoreCase);
             if (seqRun == -1)
             {
-                cout.WriteLine("Current binary path is an unrecognized format.");
+                Console.WriteLine("Current binary path is an unrecognized format.");
                 return;
             }
 
-            cout.WriteLine("Existing service binary path is: {0}", path);
+            Console.WriteLine("Existing service binary path is: {0}", path);
 
             var trimmed = path.Substring((seqRun + Program.BinaryName + " ").Length);
             var newPath = current + trimmed;
-            cout.WriteLine("Updating service binary path configuration to: {0}", newPath);
+            Console.WriteLine("Updating service binary path configuration to: {0}", newPath);
 
             var escaped = newPath.Replace("\"", "\\\"");
-            if (0 != CaptiveProcess.Run(sc, "config \"" + controller.ServiceName + "\" binPath= \"" + escaped + "\"", cout.WriteLine, cout.WriteLine))
+            if (0 != CaptiveProcess.Run(sc, "config \"" + controller.ServiceName + "\" binPath= \"" + escaped + "\"", Console.WriteLine, Console.WriteLine))
             {
-                cout.WriteLine("Could not reconfigure service path; ignoring.");
+                Console.WriteLine("Could not reconfigure service path; ignoring.");
                 return;
             }
 
-            cout.WriteLine("Service binary path reconfigured successfully.");
+            Console.WriteLine("Service binary path reconfigured successfully.");
         }
 
-        static int Start(ServiceController controller, TextWriter cout)
+        static int Start(ServiceController controller)
         {
             controller.Start();
 
             if (controller.Status != ServiceControllerStatus.Running)
             {
-                cout.WriteLine("Waiting up to 60 seconds for the service to start (currently: " + controller.Status + ")...");
+                Console.WriteLine("Waiting up to 60 seconds for the service to start (currently: " + controller.Status + ")...");
                 controller.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(60));
             }
 
             if (controller.Status == ServiceControllerStatus.Running)
             {
-                cout.WriteLine("Started.");
+                Console.WriteLine("Started.");
                 return 0;
             }
 
-            cout.WriteLine("The service hasn't started successfully.");
+            Console.WriteLine("The service hasn't started successfully.");
             return -1;
         }
 
         [DllImport("shlwapi.dll")]
         static extern bool PathIsNetworkPath(string pszPath);
 
-        void Install(TextWriter cout)
+        void Install()
         {
-            cout.WriteLine("Installing service...");
+            Console.WriteLine("Installing service...");
 
             if (PathIsNetworkPath(_storagePath.StorageRootPath))
                 throw new ArgumentException("Seq requires a local (or SAN) storage location; network shares are not supported.");
 
-            cout.WriteLine($"Updating the configuration in {_storagePath.ConfigFilePath}...");
+            Console.WriteLine($"Updating the configuration in {_storagePath.ConfigFilePath}...");
             var config = SeqForwarderConfig.ReadOrInit(_storagePath.ConfigFilePath);
             
             if (!string.IsNullOrEmpty(_listenUri.ListenUri))
@@ -190,21 +196,21 @@ namespace Seq.Forwarder.Cli.Commands
                         "If a service user account is specified, a password for the account must also be specified.");
 
                 // https://technet.microsoft.com/en-us/library/cc794944(v=ws.10).aspx
-                cout.WriteLine($"Ensuring {_serviceCredentials.Username} is granted 'Log on as a Service' rights...");
+                Console.WriteLine($"Ensuring {_serviceCredentials.Username} is granted 'Log on as a Service' rights...");
                 AccountRightsHelper.EnsureServiceLogOnRights(_serviceCredentials.Username);
             }
 
-            cout.WriteLine($"Granting {ServiceUsername} rights to {_storagePath.StorageRootPath}...");
+            Console.WriteLine($"Granting {ServiceUsername} rights to {_storagePath.StorageRootPath}...");
             GiveFullControl(_storagePath.StorageRootPath);
 
-            cout.WriteLine($"Granting {ServiceUsername} rights to {config.Diagnostics.InternalLogPath}...");
+            Console.WriteLine($"Granting {ServiceUsername} rights to {config.Diagnostics.InternalLogPath}...");
             GiveFullControl(config.Diagnostics.InternalLogPath);
 
             var listenUri = MakeListenUriReservationPattern(config.Api.ListenUri);
-            cout.WriteLine($"Adding URL reservation at {listenUri} for {ServiceUsername}...");
-            var netshResult = CaptiveProcess.Run("netsh", $"http add urlacl url={listenUri} user=\"{ServiceUsername}\"", cout.WriteLine, cout.WriteLine);
+            Console.WriteLine($"Adding URL reservation at {listenUri} for {ServiceUsername}...");
+            var netshResult = CaptiveProcess.Run("netsh", $"http add urlacl url={listenUri} user=\"{ServiceUsername}\"", Console.WriteLine, Console.WriteLine);
             if (netshResult != 0)
-                cout.WriteLine($"Could not add URL reservation for {listenUri}: `netsh` returned {netshResult}; ignoring");
+                Console.WriteLine($"Could not add URL reservation for {listenUri}: `netsh` returned {netshResult}; ignoring");
 
             var exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, Program.BinaryName);
             var forwarderRunCmdline = $"\"{exePath}\" run --storage=\"{_storagePath.StorageRootPath}\"";
@@ -220,19 +226,19 @@ namespace Seq.Forwarder.Cli.Commands
                 scCmdline += $" obj= {_serviceCredentials.Username} password= {_serviceCredentials.Password}";
 
             var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
-            if (0 != CaptiveProcess.Run(sc, scCmdline, cout.WriteLine, cout.WriteLine))
+            if (0 != CaptiveProcess.Run(sc, scCmdline, Console.WriteLine, Console.WriteLine))
             {
                 throw new ArgumentException("Service setup failed");
             }
 
-            cout.WriteLine("Setting service restart policy...");
-            if (0 != CaptiveProcess.Run(sc, $"failure \"{SeqForwarderWindowsService.WindowsServiceName}\" actions= restart/60000/restart/60000/restart/60000// reset= 600000", cout.WriteLine, cout.WriteLine))
-                cout.WriteLine("Could not set service restart policy; ignoring");
-            cout.WriteLine("Setting service description...");
-            if (0 != CaptiveProcess.Run(sc, $"description \"{SeqForwarderWindowsService.WindowsServiceName}\" \"Durable storage and forwarding of application log events\"", cout.WriteLine, cout.WriteLine))
-                cout.WriteLine("Could not set service description; ignoring");
+            Console.WriteLine("Setting service restart policy...");
+            if (0 != CaptiveProcess.Run(sc, $"failure \"{SeqForwarderWindowsService.WindowsServiceName}\" actions= restart/60000/restart/60000/restart/60000// reset= 600000", Console.WriteLine, Console.WriteLine))
+                Console.WriteLine("Could not set service restart policy; ignoring");
+            Console.WriteLine("Setting service description...");
+            if (0 != CaptiveProcess.Run(sc, $"description \"{SeqForwarderWindowsService.WindowsServiceName}\" \"Durable storage and forwarding of application log events\"", Console.WriteLine, Console.WriteLine))
+                Console.WriteLine("Could not set service description; ignoring");
 
-            cout.WriteLine("Service installed successfully.");
+            Console.WriteLine("Service installed successfully.");
         }
 
         void GiveFullControl(string target)
