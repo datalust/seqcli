@@ -17,7 +17,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.ServiceProcess;
-using Seq.Forwarder.Web.Host;
+using SeqCli.Forwarder.Web.Host;
 
 namespace Seq.Forwarder.ServiceProcess
 {

@@ -16,11 +16,13 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Seq.Forwarder.ServiceProcess;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Config.Forwarder;
@@ -169,7 +171,7 @@ class RunCommand : Command
     {
 #if WINDOWS
             System.ServiceProcess.ServiceBase.Run([
-                new ServiceProcess.SeqForwarderWindowsService(service)
+                new SeqForwarderWindowsService(service)
             ]);
             return 0;
 #else

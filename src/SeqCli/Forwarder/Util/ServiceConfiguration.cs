@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
+using SeqCli.Forwarder.Util;
 
 namespace Seq.Forwarder.Util
 {
