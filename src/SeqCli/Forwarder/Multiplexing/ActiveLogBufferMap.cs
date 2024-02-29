@@ -16,10 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.Cryptography;
 using Seq.Forwarder.Storage;
 using Seq.Forwarder.Web;
+using SeqCli.Config;
 using Serilog;
 
 namespace Seq.Forwarder.Multiplexing
@@ -29,26 +29,26 @@ namespace Seq.Forwarder.Multiplexing
         const string DataFileName = "data.mdb", LockFileName = "lock.mdb", ApiKeyFileName = ".apikey";
 
         readonly ulong _bufferSizeBytes;
-        readonly SeqForwarderOutputConfig _outputConfig;
+        readonly ConnectionConfig _connectionConfig;
         readonly ILogShipperFactory _shipperFactory;
         readonly IStringDataProtector _dataProtector;
         readonly string _bufferPath;
         readonly ILogger _log = Log.ForContext<ActiveLogBufferMap>();
 
-        readonly object _sync = new object();
+        readonly object _sync = new();
         bool _loaded;
         ActiveLogBuffer? _noApiKeyLogBuffer;
         readonly Dictionary<string, ActiveLogBuffer> _buffersByApiKey = new Dictionary<string, ActiveLogBuffer>();
 
         public ActiveLogBufferMap(
             string bufferPath, 
-            SeqForwarderStorageConfig storageConfig, 
-            SeqForwarderOutputConfig outputConfig, 
+            ForwarderStorageConfig storageConfig, 
+            ConnectionConfig outputConfig, 
             ILogShipperFactory logShipperFactory,
             IStringDataProtector dataProtector)
         {
             _bufferSizeBytes = storageConfig.BufferSizeBytes;
-            _outputConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
+            _connectionConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
             _shipperFactory = logShipperFactory ?? throw new ArgumentNullException(nameof(logShipperFactory));
             _dataProtector = dataProtector ?? throw new ArgumentNullException(nameof(dataProtector));
             _bufferPath = bufferPath ?? throw new ArgumentNullException(nameof(bufferPath));
@@ -85,7 +85,7 @@ namespace Seq.Forwarder.Multiplexing
                     }
                     else
                     {
-                        _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _outputConfig.GetApiKey(_dataProtector)));
+                        _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _connectionConfig.GetApiKey(_dataProtector)));
                     }
                 }
 
@@ -158,7 +158,7 @@ namespace Seq.Forwarder.Multiplexing
                     {
                         _log.Information("Creating a new default log buffer in {Path}", _bufferPath);
                         var buffer = new LogBuffer(_bufferPath, _bufferSizeBytes);
-                        _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _outputConfig.GetApiKey(_dataProtector)));
+                        _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _connectionConfig.GetApiKey(_dataProtector)));
                         _noApiKeyLogBuffer.Shipper.Start();
                     }
                     return _noApiKeyLogBuffer.Buffer;
@@ -186,19 +186,6 @@ namespace Seq.Forwarder.Multiplexing
                 foreach (var buffer in OpenBuffers)
                 {
                     buffer.Dispose();
-                }
-            }
-        }
-
-        public void Enumerate(Action<ulong, byte[]> action)
-        {
-            if (action == null) throw new ArgumentNullException(nameof(action));
-
-            lock (_sync)
-            {
-                foreach (var buffer in OpenBuffers)
-                {
-                    buffer.Buffer.Enumerate(action);
                 }
             }
         }

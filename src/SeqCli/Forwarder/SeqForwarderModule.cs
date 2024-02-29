@@ -16,19 +16,19 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using Autofac;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.Cryptography;
 using Seq.Forwarder.Multiplexing;
 using Seq.Forwarder.Web.Host;
+using SeqCli.Config;
 
 namespace Seq.Forwarder
 {
     class SeqForwarderModule : Module
     {
         readonly string _bufferPath;
-        readonly SeqForwarderConfig _config;
+        readonly SeqCliConfig _config;
 
-        public SeqForwarderModule(string bufferPath, SeqForwarderConfig config)
+        public SeqForwarderModule(string bufferPath, SeqCliConfig config)
         {
             _bufferPath = bufferPath ?? throw new ArgumentNullException(nameof(bufferPath));
             _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -46,7 +46,7 @@ namespace Seq.Forwarder
 
             builder.Register(c =>
             {
-                var outputConfig = c.Resolve<SeqForwarderOutputConfig>();
+                var outputConfig = c.Resolve<ConnectionConfig>();
                 var baseUri = outputConfig.ServerUrl;
                 if (string.IsNullOrWhiteSpace(baseUri))
                     throw new ArgumentException("The destination Seq server URL must be configured in SeqForwarder.json.");
@@ -77,10 +77,9 @@ namespace Seq.Forwarder
             builder.RegisterInstance(StringDataProtector.CreatePlatformDefault());
 
             builder.RegisterInstance(_config);
-            builder.RegisterInstance(_config.Api);
-            builder.RegisterInstance(_config.Diagnostics);
-            builder.RegisterInstance(_config.Output);
-            builder.RegisterInstance(_config.Storage);
+            builder.RegisterInstance(_config.Forwarder.Api);
+            builder.RegisterInstance(_config.Forwarder.Diagnostics);
+            builder.RegisterInstance(_config.Forwarder.Storage);
         }
     }
 }

@@ -19,12 +19,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.Storage;
 using Serilog;
 using System.Threading.Tasks;
 using Seq.Forwarder.Multiplexing;
 using Seq.Forwarder.Util;
+using SeqCli.Config;
 
 namespace Seq.Forwarder.Shipper
 {
@@ -34,7 +34,7 @@ namespace Seq.Forwarder.Shipper
 
         readonly string? _apiKey;
         readonly LogBuffer _logBuffer;
-        readonly SeqForwarderOutputConfig _outputConfig;
+        readonly ConnectionConfig _outputConfig;
         readonly HttpClient _httpClient;
         readonly ExponentialBackoffConnectionSchedule _connectionSchedule;
         readonly ServerResponseProxy _serverResponseProxy;
@@ -48,7 +48,7 @@ namespace Seq.Forwarder.Shipper
 
         static readonly TimeSpan QuietWaitPeriod = TimeSpan.FromSeconds(2), MaximumConnectionInterval = TimeSpan.FromMinutes(2);
 
-        public HttpLogShipper(LogBuffer logBuffer, string? apiKey, SeqForwarderOutputConfig outputConfig, ServerResponseProxy serverResponseProxy, HttpClient outputHttpClient)
+        public HttpLogShipper(LogBuffer logBuffer, string? apiKey, ConnectionConfig outputConfig, ServerResponseProxy serverResponseProxy, HttpClient outputHttpClient)
         {
             _apiKey = apiKey;
             _httpClient = outputHttpClient ?? throw new ArgumentNullException(nameof(outputHttpClient));
@@ -117,7 +117,7 @@ namespace Seq.Forwarder.Shipper
                 var sendingSingles = 0;
                 do
                 {
-                    var available = _logBuffer.Peek((int)_outputConfig.RawPayloadLimitBytes);
+                    var available = _logBuffer.Peek((int)_outputConfig.PayloadLimitBytes);
                     if (available.Length == 0)
                     {
                         if (DateTime.UtcNow < _nextRequiredLevelCheck || _connectionSchedule.LastConnectionFailed)
@@ -212,7 +212,7 @@ namespace Seq.Forwarder.Shipper
             var content = new StreamWriter(raw, Encoding.UTF8);
             content.Write("{\"Events\":[");
             content.Flush();
-            var contentRemainingBytes = (int) _outputConfig.RawPayloadLimitBytes - 13; // Includes closing delims
+            var contentRemainingBytes = (int) _outputConfig.PayloadLimitBytes - 13; // Includes closing delims
 
             var delimStart = "";
             foreach (var logBufferEntry in entries)

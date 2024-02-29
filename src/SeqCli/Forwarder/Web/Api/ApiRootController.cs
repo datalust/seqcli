@@ -15,8 +15,8 @@
 using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.Diagnostics;
+using SeqCli.Config;
 using Serilog.Formatting.Display;
 
 namespace Seq.Forwarder.Web.Api
@@ -26,7 +26,7 @@ namespace Seq.Forwarder.Web.Api
         static readonly Encoding Encoding = new UTF8Encoding(false);
         readonly MessageTemplateTextFormatter _ingestionLogFormatter;
 
-        public ApiRootController(SeqForwarderDiagnosticConfig diagnosticConfig)
+        public ApiRootController(ForwarderDiagnosticConfig diagnosticConfig)
         {
             var template = "[{Timestamp:o} {Level:u3}] {Message}{NewLine}";
             if (diagnosticConfig.IngestionLogShowDetail)

@@ -24,11 +24,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.Diagnostics;
 using Seq.Forwarder.Multiplexing;
 using Seq.Forwarder.Schema;
 using Seq.Forwarder.Shipper;
+using SeqCli.Config;
 
 namespace Seq.Forwarder.Web.Api
 {
@@ -38,13 +38,13 @@ namespace Seq.Forwarder.Web.Api
         const string ClefMediaType = "application/vnd.serilog.clef";
 
         readonly ActiveLogBufferMap _logBufferMap;
-        readonly SeqForwarderOutputConfig _outputConfig;
+        readonly ConnectionConfig _outputConfig;
         readonly ServerResponseProxy _serverResponseProxy;
 
         readonly JsonSerializer _rawSerializer = JsonSerializer.Create(
             new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
 
-        public IngestionController(ActiveLogBufferMap logBufferMap, SeqForwarderOutputConfig outputConfig, ServerResponseProxy serverResponseProxy)
+        public IngestionController(ActiveLogBufferMap logBufferMap, ConnectionConfig outputConfig, ServerResponseProxy serverResponseProxy)
         {
             _logBufferMap = logBufferMap;
             _outputConfig = outputConfig;

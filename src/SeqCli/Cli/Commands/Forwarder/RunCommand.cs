@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using Autofac;
-using Seq.Forwarder.Config;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
@@ -30,6 +29,7 @@ using Seq.Forwarder.Util;
 using Seq.Forwarder.Web.Host;
 using SeqCli.Cli;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using Serilog.Core;
 
 // ReSharper disable UnusedType.Global
@@ -65,29 +65,29 @@ namespace Seq.Forwarder.Cli.Commands
                 Console.WriteLine();
             }
 
-            SeqForwarderConfig config;
+            SeqCliConfig config;
 
             try
             {
-                config = SeqForwarderConfig.ReadOrInit(_storagePath.ConfigFilePath);
+                config = SeqCliConfig.Read(); // _storagePath.ConfigFilePath);
             }
             catch (Exception ex)
             {
                 await using var logger = CreateLogger(
                     LogEventLevel.Information,
-                    SeqForwarderDiagnosticConfig.GetDefaultInternalLogPath());
+                    ForwarderDiagnosticConfig.GetDefaultInternalLogPath());
 
                 logger.Fatal(ex, "Failed to load configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
                 return 1;
             }
 
             Log.Logger = CreateLogger(
-                config.Diagnostics.InternalLoggingLevel,
-                config.Diagnostics.InternalLogPath,
-                config.Diagnostics.InternalLogServerUri,
-                config.Diagnostics.InternalLogServerApiKey);
+                config.Forwarder.Diagnostics.InternalLoggingLevel,
+                config.Forwarder.Diagnostics.InternalLogPath,
+                config.Forwarder.Diagnostics.InternalLogServerUri,
+                config.Forwarder.Diagnostics.InternalLogServerApiKey);
 
-            var listenUri = _listenUri.ListenUri ?? config.Api.ListenUri;
+            var listenUri = _listenUri.ListenUri ?? config.Forwarder.Api.ListenUri;
 
             try
             {

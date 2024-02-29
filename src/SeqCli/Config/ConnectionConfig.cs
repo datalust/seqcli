@@ -14,11 +14,12 @@
 
 using System;
 using Newtonsoft.Json;
+using Seq.Forwarder.Cryptography;
 using SeqCli.Util;
 
 namespace SeqCli.Config;
 
-class ConnectionConfig
+public class ConnectionConfig
 {
     const string ProtectedDataPrefix = "pd.";
 
@@ -57,4 +58,13 @@ class ConnectionConfig
                 EncodedApiKey = value;
         }
     }
+
+    public string? GetApiKey(IStringDataProtector dataProtector)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public uint? PooledConnectionLifetimeMilliseconds { get; set; } = null;
+    public ulong EventBodyLimitBytes { get; set; } = 256 * 1024;
+    public ulong PayloadLimitBytes { get; set; } = 10 * 1024 * 1024;
 }

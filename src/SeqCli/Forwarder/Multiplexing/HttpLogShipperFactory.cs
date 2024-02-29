@@ -14,9 +14,9 @@
 
 using System;
 using System.Net.Http;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.Shipper;
 using Seq.Forwarder.Storage;
+using SeqCli.Config;
 
 namespace Seq.Forwarder.Multiplexing
 {
@@ -24,9 +24,9 @@ namespace Seq.Forwarder.Multiplexing
     {
         readonly HttpClient _outputHttpClient;
         readonly ServerResponseProxy _serverResponseProxy;
-        readonly SeqForwarderOutputConfig _outputConfig;
+        readonly ConnectionConfig _outputConfig;
 
-        public HttpLogShipperFactory(ServerResponseProxy serverResponseProxy, SeqForwarderOutputConfig outputConfig, HttpClient outputHttpClient)
+        public HttpLogShipperFactory(ServerResponseProxy serverResponseProxy, ConnectionConfig outputConfig, HttpClient outputHttpClient)
         {
             _outputHttpClient = outputHttpClient;
             _serverResponseProxy = serverResponseProxy ?? throw new ArgumentNullException(nameof(serverResponseProxy));
