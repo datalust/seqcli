@@ -52,7 +52,11 @@ class SeqCliConfig
     }
 
     public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
-    public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
+    public SeqCliOutputConfig Output { get; set; } = new();
+    public SeqCliStorageConfig Storage { get; set; } = new();
+    public SeqCliDiagnosticConfig Diagnostics { get; set; } = new();
+    public SeqCliApiConfig Api { get; set; } = new();
+    
     public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } =
         new Dictionary<string, SeqCliConnectionConfig>(StringComparer.OrdinalIgnoreCase);
 }

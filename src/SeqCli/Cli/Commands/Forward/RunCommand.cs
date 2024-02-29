@@ -1,3 +1,4 @@
+using System;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
