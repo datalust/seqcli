@@ -1,4 +1,6 @@
-﻿namespace SeqCli.Forwarder.Cryptography;
+﻿using Seq.Forwarder.Cryptography;
+
+namespace SeqCli.Forwarder.Cryptography;
 
 static class StringDataProtector
 {

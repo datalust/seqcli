@@ -22,12 +22,14 @@ using System.Security.AccessControl;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using Seq.Forwarder.Cli.Features;
-using Seq.Forwarder.Config;
 using Seq.Forwarder.ServiceProcess;
 using Seq.Forwarder.Util;
 using SeqCli;
 using SeqCli.Cli;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
+using SeqCli.Config.Forwarder;
+using SeqCli.Forwarder.Util;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
@@ -181,12 +183,12 @@ namespace Seq.Forwarder.Cli.Commands
                 throw new ArgumentException("Seq requires a local (or SAN) storage location; network shares are not supported.");
 
             Console.WriteLine($"Updating the configuration in {_storagePath.ConfigFilePath}...");
-            var config = SeqForwarderConfig.ReadOrInit(_storagePath.ConfigFilePath);
+            var config = SeqCliConfig.Read();
             
             if (!string.IsNullOrEmpty(_listenUri.ListenUri))
             {
-                config.Api.ListenUri = _listenUri.ListenUri;
-                SeqForwarderConfig.Write(_storagePath.ConfigFilePath, config);
+                config.Forwarder.Api.ListenUri = _listenUri.ListenUri;
+                SeqCliConfig.Write(config);
             }
 
             if (_serviceCredentials.IsUsernameSpecified)
@@ -203,10 +205,10 @@ namespace Seq.Forwarder.Cli.Commands
             Console.WriteLine($"Granting {ServiceUsername} rights to {_storagePath.StorageRootPath}...");
             GiveFullControl(_storagePath.StorageRootPath);
 
-            Console.WriteLine($"Granting {ServiceUsername} rights to {config.Diagnostics.InternalLogPath}...");
-            GiveFullControl(config.Diagnostics.InternalLogPath);
+            Console.WriteLine($"Granting {ServiceUsername} rights to {config.Forwarder.Diagnostics.InternalLogPath}...");
+            GiveFullControl(config.Forwarder.Diagnostics.InternalLogPath);
 
-            var listenUri = MakeListenUriReservationPattern(config.Api.ListenUri);
+            var listenUri = MakeListenUriReservationPattern(config.Forwarder.Api.ListenUri);
             Console.WriteLine($"Adding URL reservation at {listenUri} for {ServiceUsername}...");
             var netshResult = CaptiveProcess.Run("netsh", $"http add urlacl url={listenUri} user=\"{ServiceUsername}\"", Console.WriteLine, Console.WriteLine);
             if (netshResult != 0)
