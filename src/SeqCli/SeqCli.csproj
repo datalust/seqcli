@@ -60,18 +60,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Roastery\Roastery.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Util\ExecutionEnvironment.cs" />
-    <Compile Remove="Web\Api\ApiRootController.cs" />
-    <Compile Remove="Util\EnumerableExtensions.cs" />
-    <Compile Remove="Forwarder\Diagnostics\IngestionLog.cs" />
-    <Compile Remove="Web\RequestProcessingException.cs" />
-    <Compile Remove="Web\Host\ServerService.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Forwarder\Diagnostics\" />
-    <Folder Include="Forwarder\Schema\" />
-    <Folder Include="Web\Api\" />
-    <Folder Include="Web\Host\" />
-  </ItemGroup>
 </Project>
