@@ -18,13 +18,13 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsWindows)'=='true'">
-    <DefineConstants>Windows</DefineConstants>
+    <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsOSX)'=='true'">
     <DefineConstants>OSX</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsLinux)'=='true'">
-    <DefineConstants>Linux</DefineConstants>
+    <DefineConstants>LINUX</DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>

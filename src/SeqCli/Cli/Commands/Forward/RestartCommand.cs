@@ -3,7 +3,7 @@ using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Forward;
 
-#if Windows
+#if WINDOWS
 
 [Command("forward", "restart", "Restart the Seq Forwarder Windows service",
     Example = "seqcli forward restart")]
