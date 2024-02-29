@@ -12,13 +12,11 @@ class RunCommand : Command
 #pragma warning disable CS0414 // Field is assigned but its value is never used
     bool _noLogo;
 #pragma warning restore CS0414 // Field is assigned but its value is never used
-    readonly StoragePathFeature _storagePath;
     readonly ListenUriFeature _listenUri;
 
     public RunCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
         Options.Add("nologo", _ => _noLogo = true);
-        _storagePath = Enable<StoragePathFeature>();
         _listenUri = Enable<ListenUriFeature>();
     }
 }

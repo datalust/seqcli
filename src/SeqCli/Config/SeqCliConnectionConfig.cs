@@ -23,9 +23,6 @@ class SeqCliConnectionConfig
     const string ProtectedDataPrefix = "pd.";
 
     public string ServerUrl { get; set; } = "http://localhost:5341";
-    public ulong EventBodyLimitBytes { get; set; } = 256 * 1024;
-    public ulong RawPayloadLimitBytes { get; set; } = 10 * 1024 * 1024;
-    public uint? PooledConnectionLifetimeMilliseconds { get; set; } = null;
 
     [JsonProperty("apiKey")]
     public string? EncodedApiKey { get; set; }

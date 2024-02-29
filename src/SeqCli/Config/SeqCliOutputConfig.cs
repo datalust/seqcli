@@ -14,7 +14,7 @@
 
 namespace SeqCli.Config;
 
-class SeqCliOutputConfig
+public class SeqCliOutputConfig
 {
     public bool DisableColor { get; set; }
     public bool ForceColor   { get; set; }
