@@ -47,6 +47,7 @@
     <PackageReference Include="Seq.Apps" Version="2023.4.0" />
     <PackageReference Include="Seq.Syntax" Version="1.0.0" />
     <PackageReference Include="Tavis.UriTemplates" Version="2.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Roastery\Roastery.csproj" />

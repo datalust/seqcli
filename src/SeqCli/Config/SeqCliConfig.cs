@@ -54,6 +54,7 @@ class SeqCliConfig
     public ConnectionConfig Connection { get; set; } = new ConnectionConfig();
     public OutputConfig Output { get; set; } = new();
     public ForwarderConfig Forwarder { get; set; } = new();
+    public SeqCliEncryptionProviderConfig EncryptionProviderProvider { get; set; } = new SeqCliEncryptionProviderConfig();
     
     public Dictionary<string, ConnectionConfig> Profiles { get; } =
         new Dictionary<string, ConnectionConfig>(StringComparer.OrdinalIgnoreCase);
