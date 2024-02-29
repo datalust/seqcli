@@ -12,29 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Autofac;
-using Serilog;
-using Serilog.Events;
-using Serilog.Formatting.Compact;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Seq.Forwarder.Util;
-using Seq.Forwarder.Web.Host;
-using SeqCli.Cli;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Config.Forwarder;
+using SeqCli.Forwarder;
+using SeqCli.Forwarder.Util;
+using SeqCli.Forwarder.Web.Host;
+using Serilog;
 using Serilog.Core;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 // ReSharper disable UnusedType.Global
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Cli.Commands.Forwarder
 {
     [Command("forwarder", "run", "Run the server interactively")]
     class RunCommand : Command

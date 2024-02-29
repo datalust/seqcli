@@ -16,7 +16,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Seq.Forwarder.Util
+namespace SeqCli.Forwarder.Util
 {
     public static class CaptiveProcess
     {

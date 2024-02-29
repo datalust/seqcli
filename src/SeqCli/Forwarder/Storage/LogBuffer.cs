@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using Serilog;
 
-namespace Seq.Forwarder.Storage
+namespace SeqCli.Forwarder.Storage
 {
     public class LogBuffer : IDisposable
     {

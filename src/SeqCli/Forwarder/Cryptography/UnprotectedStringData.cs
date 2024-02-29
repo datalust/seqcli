@@ -2,7 +2,7 @@
 
 using Serilog;
 
-namespace Seq.Forwarder.Cryptography
+namespace SeqCli.Forwarder.Cryptography
 {
     public class UnprotectedStringData : IStringDataProtector
     {

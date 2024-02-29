@@ -15,11 +15,11 @@
 using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Seq.Forwarder.Diagnostics;
-using SeqCli.Config;
+using SeqCli.Config.Forwarder;
+using SeqCli.Forwarder.Diagnostics;
 using Serilog.Formatting.Display;
 
-namespace Seq.Forwarder.Web.Api
+namespace SeqCli.Forwarder.Web.Api
 {
     public class ApiRootController : Controller
     {

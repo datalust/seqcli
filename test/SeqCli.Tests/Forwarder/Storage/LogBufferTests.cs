@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using Seq.Forwarder.Storage;
-using Seq.Forwarder.Tests.Support;
+using SeqCli.Forwarder.Storage;
 using SeqCli.Tests.Support;
 using Xunit;
 
-namespace Seq.Forwarder.Tests.Storage
+namespace SeqCli.Tests.Forwarder.Storage
 {
     public class LogBufferTests
     {

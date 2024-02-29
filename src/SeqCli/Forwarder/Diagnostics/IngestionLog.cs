@@ -18,7 +18,7 @@ using System.Net;
 using Serilog;
 using Serilog.Events;
 
-namespace Seq.Forwarder.Diagnostics
+namespace SeqCli.Forwarder.Diagnostics
 {
     static class IngestionLog
     {

@@ -1,4 +1,4 @@
-﻿namespace Seq.Forwarder.Cryptography
+﻿namespace SeqCli.Forwarder.Cryptography
 {
     public interface IStringDataProtector
     {

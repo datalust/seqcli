@@ -14,7 +14,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace Seq.Forwarder.Storage
+namespace SeqCli.Forwarder.Storage
 {
     public struct LogBufferEntry
     {

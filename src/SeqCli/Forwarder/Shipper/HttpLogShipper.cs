@@ -19,14 +19,14 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
-using Seq.Forwarder.Storage;
-using Serilog;
 using System.Threading.Tasks;
-using Seq.Forwarder.Multiplexing;
-using Seq.Forwarder.Util;
 using SeqCli.Config;
+using SeqCli.Forwarder.Multiplexing;
+using SeqCli.Forwarder.Storage;
+using SeqCli.Forwarder.Util;
+using Serilog;
 
-namespace Seq.Forwarder.Shipper
+namespace SeqCli.Forwarder.Shipper
 {
     sealed class HttpLogShipper : LogShipper
     {

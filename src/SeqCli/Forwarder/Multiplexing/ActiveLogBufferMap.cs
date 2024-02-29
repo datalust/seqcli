@@ -16,13 +16,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using Seq.Forwarder.Cryptography;
-using Seq.Forwarder.Storage;
-using Seq.Forwarder.Web;
 using SeqCli.Config;
+using SeqCli.Config.Forwarder;
+using SeqCli.Forwarder.Cryptography;
+using SeqCli.Forwarder.Storage;
+using SeqCli.Forwarder.Web;
 using Serilog;
 
-namespace Seq.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing
 {
     public class ActiveLogBufferMap : IDisposable
     {

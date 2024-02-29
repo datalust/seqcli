@@ -24,13 +24,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Seq.Forwarder.Diagnostics;
-using Seq.Forwarder.Multiplexing;
-using Seq.Forwarder.Schema;
-using Seq.Forwarder.Shipper;
 using SeqCli.Config;
+using SeqCli.Forwarder.Diagnostics;
+using SeqCli.Forwarder.Multiplexing;
+using SeqCli.Forwarder.Schema;
+using SeqCli.Forwarder.Shipper;
 
-namespace Seq.Forwarder.Web.Api
+namespace SeqCli.Forwarder.Web.Api
 {
     public class IngestionController : Controller
     {

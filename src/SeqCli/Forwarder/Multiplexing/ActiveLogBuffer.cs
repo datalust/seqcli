@@ -13,10 +13,10 @@
 // limitations under the License.
 
 using System;
-using Seq.Forwarder.Shipper;
-using Seq.Forwarder.Storage;
+using SeqCli.Forwarder.Shipper;
+using SeqCli.Forwarder.Storage;
 
-namespace Seq.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing
 {
     sealed class ActiveLogBuffer : IDisposable
     {

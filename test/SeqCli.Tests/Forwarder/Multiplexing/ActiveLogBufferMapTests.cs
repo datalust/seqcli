@@ -1,13 +1,12 @@
 ﻿using System.IO;
 using System.Linq;
-using Seq.Forwarder.Cryptography;
-using Seq.Forwarder.Multiplexing;
-using Seq.Forwarder.Tests.Support;
 using SeqCli.Config;
+using SeqCli.Forwarder.Cryptography;
+using SeqCli.Forwarder.Multiplexing;
 using SeqCli.Tests.Support;
 using Xunit;
 
-namespace Seq.Forwarder.Tests.Multiplexing
+namespace SeqCli.Tests.Forwarder.Multiplexing
 {    
     public class ActiveLogBufferMapTests
     {

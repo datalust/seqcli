@@ -14,7 +14,7 @@
 
 using System;
 using Newtonsoft.Json;
-using Seq.Forwarder.Cryptography;
+using SeqCli.Forwarder.Cryptography;
 using SeqCli.Util;
 
 namespace SeqCli.Config;

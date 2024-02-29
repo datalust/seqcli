@@ -16,12 +16,12 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using Autofac;
-using Seq.Forwarder.Cryptography;
-using Seq.Forwarder.Multiplexing;
-using Seq.Forwarder.Web.Host;
 using SeqCli.Config;
+using SeqCli.Forwarder.Cryptography;
+using SeqCli.Forwarder.Multiplexing;
+using SeqCli.Forwarder.Web.Host;
 
-namespace Seq.Forwarder
+namespace SeqCli.Forwarder
 {
     class SeqForwarderModule : Module
     {

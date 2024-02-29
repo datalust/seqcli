@@ -1,4 +1,4 @@
-﻿namespace Seq.Forwarder.Util
+﻿namespace SeqCli.Forwarder.Util
 {
     static class ExecutionEnvironment
     {

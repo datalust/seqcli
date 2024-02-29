@@ -14,11 +14,11 @@
 
 using System;
 using Microsoft.Extensions.Hosting;
-using Seq.Forwarder.Diagnostics;
-using Seq.Forwarder.Multiplexing;
+using SeqCli.Forwarder.Diagnostics;
+using SeqCli.Forwarder.Multiplexing;
 using Serilog;
 
-namespace Seq.Forwarder.Web.Host
+namespace SeqCli.Forwarder.Web.Host
 {
     class ServerService
     {

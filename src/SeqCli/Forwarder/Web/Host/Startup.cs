@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Seq.Forwarder.Web.Host
+namespace SeqCli.Forwarder.Web.Host
 {
     class Startup
     {

@@ -1,10 +1,8 @@
-﻿using Seq.Forwarder.Multiplexing;
-using Seq.Forwarder.Shipper;
-using Seq.Forwarder.Tests.Support;
+﻿using SeqCli.Forwarder.Multiplexing;
 using SeqCli.Tests.Support;
 using Xunit;
 
-namespace Seq.Forwarder.Tests.Shipper
+namespace SeqCli.Tests.Forwarder.Shipper
 {
     public class ServerResponseProxyTests
     {

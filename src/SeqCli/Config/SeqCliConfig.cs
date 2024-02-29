@@ -18,6 +18,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using SeqCli.Config.Forwarder;
 
 namespace SeqCli.Config;
 

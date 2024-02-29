@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Seq.Forwarder.Shipper
+namespace SeqCli.Forwarder.Shipper
 {
     class ExponentialBackoffConnectionSchedule
     {

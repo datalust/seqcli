@@ -13,14 +13,12 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using Seq.Forwarder.Multiplexing;
-using SeqCli.Cli;
 using SeqCli.Cli.Features;
+using SeqCli.Forwarder.Multiplexing;
 using Serilog;
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Cli.Commands.Forwarder
 {
     [Command("forwarder", "truncate", "Clear the log buffer contents")]
     class TruncateCommand : Command

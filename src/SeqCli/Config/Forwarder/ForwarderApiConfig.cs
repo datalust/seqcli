@@ -1,4 +1,4 @@
-namespace SeqCli.Config;
+namespace SeqCli.Config.Forwarder;
 
 class ForwarderApiConfig
 {

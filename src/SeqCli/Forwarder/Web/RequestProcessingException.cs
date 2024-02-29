@@ -15,7 +15,7 @@
 using System;
 using System.Net;
 
-namespace Seq.Forwarder.Web
+namespace SeqCli.Forwarder.Web
 {
     class RequestProcessingException : Exception
     {

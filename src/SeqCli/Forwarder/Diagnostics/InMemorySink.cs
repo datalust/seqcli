@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Seq.Forwarder.Diagnostics
+namespace SeqCli.Forwarder.Diagnostics
 {
     public class InMemorySink : ILogEventSink
     {

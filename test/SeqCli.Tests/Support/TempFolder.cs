@@ -1,11 +1,11 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-#nullable enable
-
-namespace Seq.Forwarder.Tests.Support
+namespace SeqCli.Tests.Support
 {
     class TempFolder : IDisposable
     {

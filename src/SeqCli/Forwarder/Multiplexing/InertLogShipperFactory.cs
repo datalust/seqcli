@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Seq.Forwarder.Shipper;
-using Seq.Forwarder.Storage;
+using SeqCli.Forwarder.Shipper;
+using SeqCli.Forwarder.Storage;
 
-namespace Seq.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing
 {
     class InertLogShipperFactory : ILogShipperFactory
     {

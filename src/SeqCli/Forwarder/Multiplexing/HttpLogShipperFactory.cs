@@ -14,11 +14,11 @@
 
 using System;
 using System.Net.Http;
-using Seq.Forwarder.Shipper;
-using Seq.Forwarder.Storage;
 using SeqCli.Config;
+using SeqCli.Forwarder.Shipper;
+using SeqCli.Forwarder.Storage;
 
-namespace Seq.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing
 {
     class HttpLogShipperFactory : ILogShipperFactory
     {

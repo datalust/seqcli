@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Seq.Forwarder.Util
+namespace SeqCli.Forwarder.Util
 {
     static class EnumerableExtensions
     {

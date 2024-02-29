@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Seq.Forwarder.Schema;
+using SeqCli.Forwarder.Schema;
 using Xunit;
 
-namespace Seq.Forwarder.Tests.Schema
+namespace SeqCli.Tests.Forwarder.Schema
 {
     public class EventSchemaTests
     {

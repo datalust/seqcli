@@ -15,7 +15,7 @@
 using System;
 using System.IO;
 
-namespace Seq.Forwarder.Util
+namespace SeqCli.Forwarder.Util
 {
     class UnclosableStreamWrapper : Stream
     {

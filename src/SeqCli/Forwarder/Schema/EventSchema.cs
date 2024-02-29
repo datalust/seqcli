@@ -4,10 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using SeqCli.Forwarder.Util;
 using Serilog.Parsing;
-using Seq.Forwarder.Util;
 
-namespace Seq.Forwarder.Schema
+namespace SeqCli.Forwarder.Schema
 {
     static class EventSchema
     {
