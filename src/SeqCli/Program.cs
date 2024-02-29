@@ -26,6 +26,10 @@ namespace SeqCli;
 
 class Program
 {
+#if WINDOWS
+    public const string BinaryName = "seqcli.exe";
+#endif   
+    
     static async Task<int> Main(string[] args)
     {
         var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Error);

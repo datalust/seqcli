@@ -14,12 +14,14 @@
 
 #if WINDOWS
 
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.ServiceProcess;
 using Seq.Forwarder.Web.Host;
 
 namespace Seq.Forwarder.ServiceProcess
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class SeqForwarderWindowsService : ServiceBase
     {
         readonly ServerService _serverService;

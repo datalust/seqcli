@@ -23,16 +23,17 @@ using System.Text;
 
 namespace Seq.Forwarder.Util
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public static class ServiceConfiguration
     {
-        public static bool GetServiceBinaryPath(ServiceController controller, TextWriter cout, [MaybeNullWhen(false)] out string path)
+        public static bool GetServiceBinaryPath(ServiceController controller, [MaybeNullWhen(false)] out string path)
         {
             var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
 
             var config = new StringBuilder();
-            if (0 != CaptiveProcess.Run(sc, "qc \"" + controller.ServiceName + "\"", l => config.AppendLine(l), cout.WriteLine))
+            if (0 != CaptiveProcess.Run(sc, "qc \"" + controller.ServiceName + "\"", l => config.AppendLine(l), Console.WriteLine))
             {
-                cout.WriteLine("Could not query service path; ignoring.");
+                Console.WriteLine("Could not query service path; ignoring.");
                 path = null;
                 return false;
             }
@@ -46,7 +47,7 @@ namespace Seq.Forwarder.Util
 
             if (line == null)
             {
-                cout.WriteLine("No existing binary path could be determined.");
+                Console.WriteLine("No existing binary path could be determined.");
                 path = null;
                 return false;
             }
@@ -55,17 +56,16 @@ namespace Seq.Forwarder.Util
             return true;
         }
 
-        static bool GetServiceCommandLine(string serviceName, TextWriter cout, [MaybeNullWhen(false)] out string path)
+        static bool GetServiceCommandLine(string serviceName, [MaybeNullWhen(false)] out string path)
         {
             if (serviceName == null) throw new ArgumentNullException(nameof(serviceName));
-            if (cout == null) throw new ArgumentNullException(nameof(cout));
 
             var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
 
             var config = new StringBuilder();
-            if (0 != CaptiveProcess.Run(sc, "qc \"" + serviceName + "\"", l => config.AppendLine(l), cout.WriteLine))
+            if (0 != CaptiveProcess.Run(sc, "qc \"" + serviceName + "\"", l => config.AppendLine(l), Console.WriteLine))
             {
-                cout.WriteLine("Could not query service path; ignoring.");
+                Console.WriteLine("Could not query service path; ignoring.");
                 path = null;
                 return false;
             }
@@ -79,7 +79,7 @@ namespace Seq.Forwarder.Util
 
             if (line == null)
             {
-                cout.WriteLine("No existing binary path could be determined.");
+                Console.WriteLine("No existing binary path could be determined.");
                 path = null;
                 return false;
             }
@@ -92,7 +92,7 @@ namespace Seq.Forwarder.Util
         {
             if (serviceName == null) throw new ArgumentNullException(nameof(serviceName));
 
-            if (GetServiceCommandLine(serviceName, new StringWriter(), out var binpath) &&
+            if (GetServiceCommandLine(serviceName, out var binpath) &&
                 binpath.Contains("--storage=\""))
             {
                 var start = binpath.IndexOf("--storage=\"", StringComparison.Ordinal) + 11;

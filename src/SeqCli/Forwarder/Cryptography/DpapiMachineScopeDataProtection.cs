@@ -15,11 +15,13 @@
 #if WINDOWS
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Seq.Forwarder.Cryptography
 {
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class DpapiMachineScopeDataProtect : IStringDataProtector
     {
         public string Unprotect(string @protected)

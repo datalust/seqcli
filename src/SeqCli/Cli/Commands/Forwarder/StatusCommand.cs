@@ -15,35 +15,39 @@
 #if WINDOWS
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using Seq.Forwarder.ServiceProcess;
+using SeqCli.Cli;
 
 namespace Seq.Forwarder.Cli.Commands
 {
     [Command("forwarder", "status", "Show the status of the Seq Forwarder service")]
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class StatusCommand : Command
     {
-        protected override int Run(TextWriter cout)
+        protected override Task<int> Run()
         {
             try
             {
                 var controller = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
-                cout.WriteLine("The Seq Forwarder service is installed and {0}.", controller.Status.ToString().ToLowerInvariant());
+                Console.WriteLine("The Seq Forwarder service is installed and {0}.", controller.Status.ToString().ToLowerInvariant());
             }
             catch (InvalidOperationException)
             {
-                cout.WriteLine("The Seq Forwarder service is not installed.");
+                Console.WriteLine("The Seq Forwarder service is not installed.");
             }
             catch (Exception ex)
             {
-                cout.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
                 if (ex.InnerException != null)
-                    cout.WriteLine(ex.InnerException.Message);
-                return 1;
+                    Console.WriteLine(ex.InnerException.Message);
+                return Task.FromResult(1);
             }
 
-            return 0;
+            return Task.FromResult(1);
         }
     }
 }
