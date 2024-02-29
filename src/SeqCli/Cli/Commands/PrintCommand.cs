@@ -38,7 +38,7 @@ class PrintCommand : Command
     string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
     bool _noColor, _forceColor;
 
-    public PrintCommand(SeqCliOutputConfig outputConfig)
+    public PrintCommand(OutputConfig outputConfig)
     {
         if (outputConfig == null) throw new ArgumentNullException(nameof(outputConfig));
         _noColor = outputConfig.DisableColor;

@@ -51,8 +51,10 @@ class SeqCliConfig
         File.WriteAllText(DefaultConfigFilename, content);
     }
 
-    public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
-    public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
-    public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } =
-        new Dictionary<string, SeqCliConnectionConfig>(StringComparer.OrdinalIgnoreCase);
+    public ConnectionConfig Connection { get; set; } = new ConnectionConfig();
+    public OutputConfig Output { get; set; } = new();
+    public ForwarderConfig Forwarder { get; set; } = new();
+    
+    public Dictionary<string, ConnectionConfig> Profiles { get; } =
+        new Dictionary<string, ConnectionConfig>(StringComparer.OrdinalIgnoreCase);
 }

@@ -32,7 +32,7 @@ class ListCommand : Command
 
     string? _name, _id;
         
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    public ListCommand(SeqConnectionFactory connectionFactory, OutputConfig outputConfig)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             

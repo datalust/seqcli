@@ -40,7 +40,7 @@ class OutputFormatFeature : CommandFeature
 
     bool _json, _noColor, _forceColor;
 
-    public OutputFormatFeature(SeqCliOutputConfig outputConfig)
+    public OutputFormatFeature(OutputConfig outputConfig)
     {
         _noColor = outputConfig.DisableColor;
         _forceColor = outputConfig.ForceColor;

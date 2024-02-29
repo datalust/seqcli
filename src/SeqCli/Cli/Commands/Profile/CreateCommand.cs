@@ -49,7 +49,7 @@ class CreateCommand : Command
         try
         {
             var config = SeqCliConfig.Read();
-            config.Profiles[_name] = new SeqCliConnectionConfig { ServerUrl = _url, ApiKey = _apiKey };
+            config.Profiles[_name] = new ConnectionConfig { ServerUrl = _url, ApiKey = _apiKey };
             SeqCliConfig.Write(config);
             return 0;
         }
