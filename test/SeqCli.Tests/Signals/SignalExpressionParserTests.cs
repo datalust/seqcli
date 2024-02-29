@@ -17,15 +17,15 @@ public class SignalExpressionParserTests
     }
         
     public static IEnumerable<object[]> _sources = new []{
-        new object[] { ("signal-1 ", "signal-1") },
-            
-        new object[] { ("(signal-1)", "signal-1") },
-            
-        new object[] { ("signal-1 ,signal-2", "signal-1,signal-2") },
-            
-        new object[] { (" signal-1,signal-2~ signal-3", "(signal-1,signal-2)~signal-3") },
-            
-        new object[] { ("signal-1,signal-2,(signal-3~signal-4)", "(signal-1,signal-2),(signal-3~signal-4)") },
+        [("signal-1 ", "signal-1")],
+
+        [("(signal-1)", "signal-1")],
+
+        [("signal-1 ,signal-2", "signal-1,signal-2")],
+
+        [(" signal-1,signal-2~ signal-3", "(signal-1,signal-2)~signal-3")],
+
+        [("signal-1,signal-2,(signal-3~signal-4)", "(signal-1,signal-2),(signal-3~signal-4)")],
             
         new object[] { ("signal-1~( (signal-2~signal-3) ,signal-4)", "signal-1~((signal-2~signal-3),signal-4)") }
     };

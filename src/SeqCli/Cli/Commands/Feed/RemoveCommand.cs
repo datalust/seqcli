@@ -58,8 +58,8 @@ class RemoveCommand : Command
 
         var connection = _connectionFactory.Connect(_connection);
 
-        var toRemove = _id != null ?
-            new[] {await connection.Feeds.FindAsync(_id)} :
+        var toRemove = _id != null ? [await connection.Feeds.FindAsync(_id)]
+            :
             (await connection.Feeds.ListAsync())
             .Where(f => _name == f.Name) 
             .ToArray();

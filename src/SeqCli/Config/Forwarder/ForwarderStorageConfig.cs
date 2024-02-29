@@ -1,6 +1,8 @@
-namespace SeqCli.Config;
+namespace SeqCli.Config.Forwarder;
+
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 public class ForwarderStorageConfig
 {
-    public int BufferSizeBytes { get; set; } = 67_108_864;
+    public ulong BufferSizeBytes { get; set; } = 67_108_864;
 }

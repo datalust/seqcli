@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using Serilog.Events;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
-namespace SeqCli.Config;
+namespace SeqCli.Config.Forwarder;
 
 public class ForwarderDiagnosticConfig
 {

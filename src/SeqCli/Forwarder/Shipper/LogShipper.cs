@@ -14,12 +14,11 @@
 
 using System;
 
-namespace Seq.Forwarder.Shipper
+namespace SeqCli.Forwarder.Shipper;
+
+public abstract class LogShipper : IDisposable
 {
-    public abstract class LogShipper : IDisposable
-    {
-        public abstract void Start();
-        public abstract void Stop();
-        public abstract void Dispose();
-    }
+    public abstract void Start();
+    public abstract void Stop();
+    public abstract void Dispose();
 }

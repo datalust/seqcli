@@ -14,28 +14,27 @@
 
 using System;
 using System.Net.Http;
-using Seq.Forwarder.Config;
-using Seq.Forwarder.Shipper;
-using Seq.Forwarder.Storage;
+using SeqCli.Config;
+using SeqCli.Forwarder.Shipper;
+using SeqCli.Forwarder.Storage;
 
-namespace Seq.Forwarder.Multiplexing
+namespace SeqCli.Forwarder.Multiplexing;
+
+class HttpLogShipperFactory : ILogShipperFactory
 {
-    class HttpLogShipperFactory : ILogShipperFactory
+    readonly HttpClient _outputHttpClient;
+    readonly ServerResponseProxy _serverResponseProxy;
+    readonly ConnectionConfig _outputConfig;
+
+    public HttpLogShipperFactory(ServerResponseProxy serverResponseProxy, ConnectionConfig outputConfig, HttpClient outputHttpClient)
     {
-        readonly HttpClient _outputHttpClient;
-        readonly ServerResponseProxy _serverResponseProxy;
-        readonly SeqForwarderOutputConfig _outputConfig;
+        _outputHttpClient = outputHttpClient;
+        _serverResponseProxy = serverResponseProxy ?? throw new ArgumentNullException(nameof(serverResponseProxy));
+        _outputConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
+    }
 
-        public HttpLogShipperFactory(ServerResponseProxy serverResponseProxy, SeqForwarderOutputConfig outputConfig, HttpClient outputHttpClient)
-        {
-            _outputHttpClient = outputHttpClient;
-            _serverResponseProxy = serverResponseProxy ?? throw new ArgumentNullException(nameof(serverResponseProxy));
-            _outputConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
-        }
-
-        public LogShipper Create(LogBuffer logBuffer, string? apiKey)
-        {
-            return new HttpLogShipper(logBuffer, apiKey, _outputConfig, _serverResponseProxy, _outputHttpClient);
-        }
+    public LogShipper Create(LogBuffer logBuffer, string? apiKey)
+    {
+        return new HttpLogShipper(logBuffer, apiKey, _outputConfig, _serverResponseProxy, _outputHttpClient);
     }
 }

@@ -1,14 +1,13 @@
-﻿namespace Seq.Forwarder.Cryptography
+﻿namespace SeqCli.Forwarder.Cryptography;
+
+static class StringDataProtector
 {
-    static class StringDataProtector
+    public static IStringDataProtector CreatePlatformDefault()
     {
-        public static IStringDataProtector CreatePlatformDefault()
-        {
 #if WINDOWS
             return new DpapiMachineScopeDataProtect();
 #else
-            return new UnprotectedStringData();
+        return new UnprotectedStringData();
 #endif
-        }
     }
 }

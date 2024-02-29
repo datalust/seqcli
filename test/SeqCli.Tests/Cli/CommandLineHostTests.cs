@@ -26,7 +26,7 @@ public class CommandLineHostTests
                 new CommandMetadata {Name = "test2"})
         };
         var commandLineHost = new CommandLineHost(availableCommands);
-        await commandLineHost.Run(new []{ "test"},new LoggingLevelSwitch());
+        await commandLineHost.Run(["test"],new LoggingLevelSwitch());
 
         Assert.Equal("test", executed.First());
     }
@@ -46,7 +46,7 @@ public class CommandLineHostTests
                     new CommandMetadata {Name = "test", SubCommand = "subcommand2"})
             };
         var commandLineHost = new CommandLineHost(availableCommands);
-        await commandLineHost.Run(new[] { "test", "subcommand2" }, new LoggingLevelSwitch());
+        await commandLineHost.Run(["test", "subcommand2"], new LoggingLevelSwitch());
 
         Assert.Equal("test-subcommand2", commandsRan.First());
     }
@@ -66,7 +66,7 @@ public class CommandLineHostTests
             
         var commandLineHost = new CommandLineHost(availableCommands);
             
-        await commandLineHost.Run(new[] { "test", "--verbose" }, levelSwitch);
+        await commandLineHost.Run(["test", "--verbose"], levelSwitch);
             
         Assert.Equal(LogEventLevel.Information, levelSwitch.MinimumLevel);
     }

@@ -79,21 +79,15 @@ static class AppMetadataReader
                 });
     }
 
-    static readonly HashSet<Type> IntegerTypes = new()
-    {
+    static readonly HashSet<Type> IntegerTypes =
+    [
         typeof(short), typeof(ushort), typeof(int), typeof(uint),
         typeof(long), typeof(ulong)
-    };
+    ];
 
-    static readonly HashSet<Type> DecimalTypes = new()
-    {
-        typeof(float), typeof(double), typeof(decimal)
-    };
+    static readonly HashSet<Type> DecimalTypes = [typeof(float), typeof(double), typeof(decimal)];
 
-    static readonly HashSet<Type> BooleanTypes = new()
-    {
-        typeof(bool)
-    };
+    static readonly HashSet<Type> BooleanTypes = [typeof(bool)];
 
     internal static AppSettingType GetSettingType(Type type)
     {

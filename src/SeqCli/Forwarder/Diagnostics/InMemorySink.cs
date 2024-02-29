@@ -18,32 +18,31 @@ using System.Collections.Generic;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Seq.Forwarder.Diagnostics
+namespace SeqCli.Forwarder.Diagnostics;
+
+public class InMemorySink : ILogEventSink
 {
-    public class InMemorySink : ILogEventSink
-    {
-        readonly int _queueLength;
-        readonly ConcurrentQueue<LogEvent> _queue = new ConcurrentQueue<LogEvent>();
+    readonly int _queueLength;
+    readonly ConcurrentQueue<LogEvent> _queue = new();
          
-        public InMemorySink(int queueLength)
-        {
-            _queueLength = queueLength;
-        }
+    public InMemorySink(int queueLength)
+    {
+        _queueLength = queueLength;
+    }
 
-        public IEnumerable<LogEvent> Read()
-        {
-            return _queue.ToArray();
-        }
+    public IEnumerable<LogEvent> Read()
+    {
+        return _queue.ToArray();
+    }
 
-        public void Emit(LogEvent logEvent)
-        {
-            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
-            _queue.Enqueue(logEvent);
+    public void Emit(LogEvent logEvent)
+    {
+        if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
+        _queue.Enqueue(logEvent);
 
-            while (_queue.Count > _queueLength)
-            {
-                _queue.TryDequeue(out _);
-            }
+        while (_queue.Count > _queueLength)
+        {
+            _queue.TryDequeue(out _);
         }
     }
 }
