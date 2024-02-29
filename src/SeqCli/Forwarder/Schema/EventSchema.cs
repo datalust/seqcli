@@ -13,10 +13,7 @@ namespace SeqCli.Forwarder.Schema
     {
         static readonly MessageTemplateParser MessageTemplateParser = new MessageTemplateParser();
         
-        static readonly HashSet<string> ClefReifiedProperties = new HashSet<string>
-        {
-            "@t", "@m", "@mt", "@l", "@x", "@i", "@r"
-        };
+        static readonly HashSet<string> ClefReifiedProperties = ["@t", "@m", "@mt", "@l", "@x", "@i", "@r"];
         
         public static bool FromClefFormat(in int lineNumber, JObject compactFormat, [MaybeNullWhen(false)] out JObject rawFormat, [MaybeNullWhen(true)] out string error)
         {

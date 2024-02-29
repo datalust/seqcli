@@ -49,8 +49,8 @@ class ListCommand : Command
     {
         var connection = _connectionFactory.Connect(_connection);
 
-        var list = _id != null ?
-            new[] { await connection.RetentionPolicies.FindAsync(_id) } :
+        var list = _id != null ? [await connection.RetentionPolicies.FindAsync(_id)]
+            :
             (await connection.RetentionPolicies.ListAsync())
             .ToArray();
 

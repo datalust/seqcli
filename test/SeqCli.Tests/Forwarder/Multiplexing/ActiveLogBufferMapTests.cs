@@ -58,8 +58,8 @@ namespace SeqCli.Tests.Forwarder.Multiplexing
             using var tmp = new TempFolder("Buffer");
             using (var map = CreateActiveLogBufferMap(tmp))
             {
-                map.GetLogBuffer(null).Enqueue(new[] {value});
-                map.GetLogBuffer(apiKey).Enqueue(new[] {value});
+                map.GetLogBuffer(null).Enqueue([value]);
+                map.GetLogBuffer(apiKey).Enqueue([value]);
             }
 
             using (var map = CreateActiveLogBufferMap(tmp))

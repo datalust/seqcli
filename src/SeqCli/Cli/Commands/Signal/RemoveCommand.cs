@@ -50,8 +50,8 @@ class RemoveCommand : Command
 
         var connection = _connectionFactory.Connect(_connection);
 
-        var toRemove = _entityIdentity.Id != null ?
-            new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
+        var toRemove = _entityIdentity.Id != null ? [await connection.Signals.FindAsync(_entityIdentity.Id)]
+            :
             (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
             .Where(signal => _entityIdentity.Title == signal.Title)
             .ToArray();

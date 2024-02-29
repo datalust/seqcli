@@ -36,8 +36,8 @@ class RemoveCommand : Command
 
         var connection = _connectionFactory.Connect(_connection);
 
-        var toRemove = _entityIdentity.Id != null ?
-            new[] { await connection.Workspaces.FindAsync(_entityIdentity.Id) } :
+        var toRemove = _entityIdentity.Id != null ? [await connection.Workspaces.FindAsync(_entityIdentity.Id)]
+            :
             (await connection.Workspaces.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
             .Where(workspace => _entityIdentity.Title == workspace.Title)
             .ToArray();

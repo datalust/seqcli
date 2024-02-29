@@ -239,7 +239,7 @@ namespace SeqCli.Cli
 
 	class OptionValueCollection : IList, IList<string> {
 
-		List<string> values = new List<string> ();
+		List<string> values = [];
 		OptionContext c;
 
 		internal OptionValueCollection (OptionContext c)
@@ -313,7 +313,7 @@ namespace SeqCli.Cli
 
 		public List<string> ToList ()
 		{
-			return new List<string> (values);
+			return [..values];
 		}
 
 		public string[] ToArray ()
@@ -403,7 +403,7 @@ namespace SeqCli.Cli
 			this.names       = (this is OptionSet.Category)
 				// append GetHashCode() so that "duplicate" categories have distinct
 				// names, e.g. adding multiple "" categories should be valid.
-				? new[]{prototype + this.GetHashCode ()}
+				? [prototype + this.GetHashCode ()]
 				: prototype.Split ('|');
 
 			if (this is OptionSet.Category)
@@ -472,12 +472,12 @@ namespace SeqCli.Cli
 		internal string[] Names           {get {return names;}}
 		internal string[] ValueSeparators {get {return separators;}}
 
-		static readonly char[] NameTerminator = new char[]{'=', ':'};
+		static readonly char[] NameTerminator = ['=', ':'];
 
 		private OptionValueType ParsePrototype ()
 		{
 			char type = '\0';
-			List<string> seps = new List<string> ();
+			List<string> seps = [];
 			for (int i = 0; i < names.Length; ++i) {
 				string name = names [i];
 				if (name.Length == 0)
@@ -505,7 +505,7 @@ namespace SeqCli.Cli
 						"prototype");
 			if (count > 1) {
 				if (seps.Count == 0)
-					this.separators = new string[]{":", "="};
+					this.separators = [":", "="];
 				else if (seps.Count == 1 && seps [0].Length == 0)
 					this.separators = null;
 				else
@@ -631,7 +631,7 @@ namespace SeqCli.Cli
 
 		public override string[] GetNames ()
 		{
-			return new string[]{"@file"};
+			return ["@file"];
 		}
 
 		public override string Description {
@@ -694,7 +694,7 @@ namespace SeqCli.Cli
 			get {return localizer;}
 		}
 
-		List<ArgumentSource> sources = new List<ArgumentSource> ();
+		List<ArgumentSource> sources = [];
 		ReadOnlyCollection<ArgumentSource> roSources;
 
 		public ReadOnlyCollection<ArgumentSource> ArgumentSources {
@@ -936,7 +936,7 @@ namespace SeqCli.Cli
 			OptionContext c = CreateOptionContext ();
 			c.OptionIndex = -1;
 			bool process = true;
-			List<string> unprocessed = new List<string> ();
+			List<string> unprocessed = [];
 			Option def = Contains ("<>") ? this ["<>"] : null;
 			ArgumentEnumerator ae = new ArgumentEnumerator (arguments);
 			foreach (string argument in ae) {
@@ -960,7 +960,7 @@ namespace SeqCli.Cli
 		}
 
 		class ArgumentEnumerator : IEnumerable<string> {
-			List<IEnumerator<string>> sources = new List<IEnumerator<string>> ();
+			List<IEnumerator<string>> sources = [];
 
 			public ArgumentEnumerator (IEnumerable<string> arguments)
 			{
@@ -1080,7 +1080,7 @@ namespace SeqCli.Cli
 			if (option != null)
 				foreach (string o in c.Option.ValueSeparators != null 
 						? option.Split (c.Option.ValueSeparators, c.Option.MaxValueCount - c.OptionValues.Count, StringSplitOptions.None)
-						: new string[]{option}) {
+						: [option]) {
 					c.OptionValues.Add (o);
 				}
 			if (c.OptionValues.Count == c.Option.MaxValueCount || 
@@ -1298,9 +1298,9 @@ namespace SeqCli.Cli
 				return maxIndex == 1 ? "VALUE" : index == 0 ? "NAME" : "VALUE";
 			string[] nameStart;
 			if (maxIndex == 1)
-				nameStart = new string[]{"{0:", "{"};
+				nameStart = ["{0:", "{"];
 			else
-				nameStart = new string[]{"{" + index + ":"};
+				nameStart = ["{" + index + ":"];
 			for (int i = 0; i < nameStart.Length; ++i) {
 				int start, j = 0;
 				do {

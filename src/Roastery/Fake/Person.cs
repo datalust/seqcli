@@ -14,7 +14,7 @@ class Person
     }
 
     static readonly string[] Forenames =
-    {
+    [
         "Akeem",
         "Alice",
         "Alok",
@@ -40,10 +40,10 @@ class Person
         "Yoshi",
         "Zach",
         "Zeynep"
-    };
+    ];
         
     static readonly string[] Surnames =
-    {
+    [
         "Anderson",
         "Alvarez",
         "Brookes",
@@ -60,10 +60,10 @@ class Person
         "Smith",
         "Xia",
         "Zheng"
-    };
+    ];
         
     static readonly string[] Streets =
-    {
+    [
         "Lilac Road",
         "Lilly Street",
         "Carnation Street",
@@ -78,7 +78,7 @@ class Person
         "Trillium Creek Parkway",
         "Grevillea Street",
         "Kurrajong Street"
-    };
+    ];
 
     public static Person Generate()
     {

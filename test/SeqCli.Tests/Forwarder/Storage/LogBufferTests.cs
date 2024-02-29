@@ -23,7 +23,7 @@ namespace SeqCli.Tests.Forwarder.Storage
         {
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
-            buffer.Enqueue(new[] { Some.Bytes(140) });
+            buffer.Enqueue([Some.Bytes(140)]);
 
             var contents = buffer.Peek((int)DefaultBufferSize);
             Assert.Single(contents);
@@ -38,8 +38,8 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2 });
-            buffer.Enqueue(new[] { a3 });
+            buffer.Enqueue([a1, a2]);
+            buffer.Enqueue([a3]);
 
             var contents = buffer.Peek((int)DefaultBufferSize);
 
@@ -55,7 +55,7 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), 4096);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2, a3 });
+            buffer.Enqueue([a1, a2, a3]);
 
             var contents = buffer.Peek((int)DefaultBufferSize);
 
@@ -70,7 +70,7 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2, a3 });
+            buffer.Enqueue([a1, a2, a3]);
 
             var contents = buffer.Peek(300);
 
@@ -85,7 +85,7 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2, a3 });
+            buffer.Enqueue([a1, a2, a3]);
 
             var contents = buffer.Peek(30);
 
@@ -99,7 +99,7 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2, a3 });
+            buffer.Enqueue([a1, a2, a3]);
 
             var contents = buffer.Peek(420);
             Assert.Equal(3, contents.Length);
@@ -116,12 +116,12 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2, a3 });
+            buffer.Enqueue([a1, a2, a3]);
 
             var contents = buffer.Peek(30);
             Assert.Single(contents);
 
-            buffer.Enqueue(new [] { Some.Bytes(140) });
+            buffer.Enqueue([Some.Bytes(140)]);
 
             buffer.Dequeue(contents[0].Key);
 
@@ -135,7 +135,7 @@ namespace SeqCli.Tests.Forwarder.Storage
             using var temp = TempFolder.ForCaller();
             using var buffer = new LogBuffer(temp.AllocateFilename("mdb"), DefaultBufferSize);
             byte[] a1 = Some.Bytes(140), a2 = Some.Bytes(140), a3 = Some.Bytes(140);
-            buffer.Enqueue(new[] { a1, a2, a3 });
+            buffer.Enqueue([a1, a2, a3]);
 
             var contents = new List<byte[]>();
             buffer.Enumerate((k, v) =>
