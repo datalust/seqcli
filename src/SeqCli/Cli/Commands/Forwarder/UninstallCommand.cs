@@ -23,7 +23,7 @@ using SeqCli.Cli;
 
 namespace Seq.Forwarder.Cli.Commands
 {
-    [Command("forwarder", "uninstall", "Uninstall the Windows service")]
+    [Command("forwarder", "uninstall", "Uninstall the forwarder Windows service")]
     class UninstallCommand : Command
     {
         protected override Task<int> Run()

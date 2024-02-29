@@ -24,7 +24,7 @@ using SeqCli.Cli;
 
 namespace Seq.Forwarder.Cli.Commands
 {
-    [Command("forwarder", "stop", "Stop the Windows service")]
+    [Command("forwarder", "stop", "Stop the forwarder Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class StopCommand : Command
     {

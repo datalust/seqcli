@@ -24,7 +24,7 @@ using SeqCli.Cli;
 
 namespace Seq.Forwarder.Cli.Commands
 {
-    [Command("forwarder", "status", "Show the status of the Seq Forwarder service")]
+    [Command("forwarder", "status", "Show the status of the forwarder Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class StatusCommand : Command
     {
