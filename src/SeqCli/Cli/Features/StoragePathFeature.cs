@@ -48,9 +48,9 @@ class StoragePathFeature : CommandFeature
     static string? TryQueryInstalledStorageRoot()
     {
 #if WINDOWS
-            // if (Seq.Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
-            //     Seq.Forwarder.ServiceProcess.SeqForwarderWindowsService.WindowsServiceName, out var storage))
-            //     return storage;
+        if (Seq.Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
+            Seq.Forwarder.ServiceProcess.SeqForwarderWindowsService.WindowsServiceName, out var storage))
+            return storage;
 #endif
             
         return null;

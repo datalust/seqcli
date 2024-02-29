@@ -7,7 +7,7 @@ class ListenUriFeature : CommandFeature
     public override void Enable(OptionSet options)
     {
         options.Add("l=|listen=",
-            "Set the listen Uri; http://localhost:15341/ is used by default.",
+            "Set the address `seqcli forwarder` will listen at; http://127.0.0.1:15341/ is used by default.",
             v => ListenUri = v);
     }
 }
