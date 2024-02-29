@@ -4,7 +4,7 @@ using Serilog.Events;
 
 namespace SeqCli.Config;
 
-public class SeqCliForwarderDiagnosticConfig
+public class ForwarderDiagnosticConfig
 {
     public string InternalLogPath { get; set; } = GetDefaultInternalLogPath();
     public LogEventLevel InternalLoggingLevel { get; set; } = LogEventLevel.Information;

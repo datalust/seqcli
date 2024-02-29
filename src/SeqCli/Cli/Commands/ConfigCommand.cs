@@ -107,7 +107,7 @@ class ConfigCommand : Command
         if (first == null)
             throw new ArgumentException("The key could not be found; run the command without any arguments to view all keys.");
 
-        if (first.PropertyType == typeof(Dictionary<string, SeqCliConnectionConfig>))
+        if (first.PropertyType == typeof(Dictionary<string, ConnectionConfig>))
             throw new NotSupportedException("Use `seqcli profile create` to configure connection profiles.");
 
         var second = first.PropertyType.GetTypeInfo().DeclaredProperties

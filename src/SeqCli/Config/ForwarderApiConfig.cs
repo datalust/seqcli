@@ -1,6 +1,6 @@
 namespace SeqCli.Config;
 
-class SeqCliApiConfig
+class ForwarderApiConfig
 {
     public string ListenUri { get; set; } = "http://localhost:15341";
 }
