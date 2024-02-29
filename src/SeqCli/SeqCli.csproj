@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>seqcli</AssemblyName>
     <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;linux-musl-x64;osx-x64;linux-arm64;linux-musl-arm64;osx-arm64</RuntimeIdentifiers>
@@ -12,21 +12,10 @@
     <ToolCommandName>seqcli</ToolCommandName>
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
-    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
-    <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(IsWindows)'=='true'">
-    <DefineConstants>WINDOWS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsOSX)'=='true'">
-    <DefineConstants>OSX</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsLinux)'=='true'">
-    <DefineConstants>LINUX</DefineConstants>
-  </PropertyGroup>
-  
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
     <Content Include="Attribution\*.txt;..\..\LICENSE">
@@ -47,7 +36,9 @@
     <PackageReference Include="Serilog.Formatting.Compact" Version="2.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Autofac" Version="8.0.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="6.0.0" />
     <PackageReference Include="Superpower" Version="3.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
