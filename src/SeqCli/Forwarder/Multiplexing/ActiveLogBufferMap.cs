@@ -18,7 +18,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using SeqCli.Config;
-using SeqCli.Config.Forwarder;
 using SeqCli.Encryptor;
 using SeqCli.Forwarder.Storage;
 using SeqCli.Forwarder.Web;
@@ -26,11 +25,11 @@ using Serilog;
 
 namespace SeqCli.Forwarder.Multiplexing;
 
-public class ActiveLogBufferMap : IDisposable
+class ActiveLogBufferMap : IDisposable
 {
     const string DataFileName = "data.mdb", LockFileName = "lock.mdb", ApiKeyFileName = ".apikey";
 
-    static Encoding ApiKeyEncoding = new UTF8Encoding(false);
+    static readonly Encoding ApiKeyEncoding = new UTF8Encoding(false);
 
     readonly ulong _bufferSizeBytes;
     readonly ConnectionConfig _connectionConfig;
@@ -46,15 +45,14 @@ public class ActiveLogBufferMap : IDisposable
 
     public ActiveLogBufferMap(
         string bufferPath, 
-        ForwarderStorageConfig storageConfig, 
-        ConnectionConfig outputConfig, 
-        ILogShipperFactory logShipperFactory,
-        IDataProtector dataProtector)
+        SeqCliConfig config,
+        ILogShipperFactory logShipperFactory)
     {
-        _bufferSizeBytes = storageConfig.BufferSizeBytes;
-        _connectionConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
+        ArgumentNullException.ThrowIfNull(config, nameof(config));
+        _bufferSizeBytes = config.Forwarder.Storage.BufferSizeBytes;
+        _connectionConfig = config.Connection;
         _shipperFactory = logShipperFactory ?? throw new ArgumentNullException(nameof(logShipperFactory));
-        _dataProtector = dataProtector ?? throw new ArgumentNullException(nameof(dataProtector));
+        _dataProtector = config.Encryption.DataProtector();
         _bufferPath = bufferPath ?? throw new ArgumentNullException(nameof(bufferPath));
     }
 
