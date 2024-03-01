@@ -16,6 +16,7 @@ using System;
 using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Encryptor;
 
 namespace SeqCli.Connection;
 
@@ -50,12 +51,12 @@ class SeqConnectionFactory
                 throw new ArgumentException($"A profile named `{connection.ProfileName}` was not found; see `seqcli profile list` for available profiles.");
                 
             url = profile.ServerUrl;
-            apiKey = profile.ApiKey;
+            apiKey = profile.DecodeApiKey(_config.Encryption.DataProtector());
         }
         else
         {
             url = _config.Connection.ServerUrl;
-            apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.ApiKey;
+            apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.DecodeApiKey(_config.Encryption.DataProtector());
         }
 
         return (url, apiKey);

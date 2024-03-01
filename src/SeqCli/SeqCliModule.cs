@@ -17,6 +17,7 @@ using Autofac;
 using SeqCli.Cli;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Encryptor;
 
 namespace SeqCli;
 
@@ -32,5 +33,6 @@ class SeqCliModule : Autofac.Module
         builder.Register(c => SeqCliConfig.Read()).SingleInstance();
         builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
         builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
+        builder.Register(c => c.Resolve<SeqCliConfig>().Encryption.DataProtector()).As<IDataProtector>();
     }
 }

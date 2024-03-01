@@ -26,11 +26,13 @@ class HttpLogShipperFactory : ILogShipperFactory
     readonly ServerResponseProxy _serverResponseProxy;
     readonly ConnectionConfig _outputConfig;
 
-    public HttpLogShipperFactory(ServerResponseProxy serverResponseProxy, ConnectionConfig outputConfig, HttpClient outputHttpClient)
+    public HttpLogShipperFactory(SeqCliConfig config, ServerResponseProxy serverResponseProxy, HttpClient outputHttpClient)
     {
+        ArgumentNullException.ThrowIfNull(config, nameof(config));
+        
         _outputHttpClient = outputHttpClient;
         _serverResponseProxy = serverResponseProxy ?? throw new ArgumentNullException(nameof(serverResponseProxy));
-        _outputConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
+        _outputConfig = config.Connection;
     }
 
     public LogShipper Create(LogBuffer logBuffer, string? apiKey)

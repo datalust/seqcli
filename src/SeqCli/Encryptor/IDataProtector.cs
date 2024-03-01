@@ -1,6 +1,6 @@
 ﻿namespace SeqCli.Encryptor;
 
-public interface IEncryption
+public interface IDataProtector
 {
     public byte[] Encrypt(byte[] unencrypted);
     public byte[] Decrypt(byte[] encrypted);

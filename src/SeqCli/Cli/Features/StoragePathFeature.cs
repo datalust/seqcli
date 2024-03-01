@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SeqCli.Forwarder.ServiceProcess;
 
 namespace SeqCli.Cli.Features;
 
@@ -49,7 +50,7 @@ class StoragePathFeature : CommandFeature
     {
 #if WINDOWS
         if (Seq.Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
-            Seq.Forwarder.ServiceProcess.SeqForwarderWindowsService.WindowsServiceName, out var storage))
+            SeqCliForwarderWindowsService.WindowsServiceName, out var storage))
             return storage;
 #endif
             

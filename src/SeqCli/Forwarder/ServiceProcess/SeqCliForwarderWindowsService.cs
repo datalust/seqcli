@@ -19,16 +19,16 @@ using System.Net;
 using System.ServiceProcess;
 using SeqCli.Forwarder.Web.Host;
 
-namespace Seq.Forwarder.ServiceProcess
+namespace SeqCli.Forwarder.ServiceProcess
 {
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
-    class SeqForwarderWindowsService : ServiceBase
+    class SeqCliForwarderWindowsService : ServiceBase
     {
         readonly ServerService _serverService;
 
         public static string WindowsServiceName { get; } = "Seq Forwarder";
 
-        public SeqForwarderWindowsService(ServerService serverService)
+        public SeqCliForwarderWindowsService(ServerService serverService)
         {
             // Enable TLS 1.2 Support.
             // .NET Framework 4.5.2 does not have it enabled by default
