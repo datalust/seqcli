@@ -22,7 +22,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Seq.Forwarder.ServiceProcess;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Config.Forwarder;
@@ -33,6 +32,10 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+
+#if WINDOWS
+using SeqCli.Forwarder.ServiceProcess;
+#endif
 
 // ReSharper disable UnusedType.Global
 
@@ -171,7 +174,7 @@ class RunCommand : Command
     {
 #if WINDOWS
             System.ServiceProcess.ServiceBase.Run([
-                new SeqForwarderWindowsService(service)
+                new SeqCliForwarderWindowsService(service)
             ]);
             return 0;
 #else

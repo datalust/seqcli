@@ -17,9 +17,9 @@
 using System; 
 using System.IO;
 using System.Threading.Tasks;
-using Seq.Forwarder.ServiceProcess;
 using Seq.Forwarder.Util;
 using SeqCli.Cli;
+using SeqCli.Forwarder.ServiceProcess;
 using SeqCli.Forwarder.Util;
 
 namespace Seq.Forwarder.Cli.Commands
@@ -34,7 +34,7 @@ namespace Seq.Forwarder.Cli.Commands
                 Console.WriteLine("Uninstalling service...");
 
                 var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
-                var exitCode = CaptiveProcess.Run(sc, $"delete \"{SeqForwarderWindowsService.WindowsServiceName}\"", Console.WriteLine, Console.WriteLine);
+                var exitCode = CaptiveProcess.Run(sc, $"delete \"{SeqCliForwarderWindowsService.WindowsServiceName}\"", Console.WriteLine, Console.WriteLine);
                 if (exitCode != 0)
                     throw new InvalidOperationException($"The `sc.exe delete` call failed with exit code {exitCode}.");
 
