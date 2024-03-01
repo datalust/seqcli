@@ -20,6 +20,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using SeqCli.Cli.Features;
@@ -93,54 +94,51 @@ class RunCommand : Command
         try
         {
             ILifetimeScope? container = null;
-            using var host = new HostBuilder()
-                .UseSerilog()
+            var builder = WebApplication.CreateBuilder();
+            builder.WebHost.UseKestrel(options =>
+            {
+                options.AddServerHeader = false;
+                options.AllowSynchronousIO = true;
+            }).ConfigureKestrel((context, options) =>
+            {
+                var apiListenUri = new Uri(listenUri);
+
+                var ipAddress = apiListenUri.HostNameType switch
+                {
+                    UriHostNameType.Basic => IPAddress.Any,
+                    UriHostNameType.Dns => IPAddress.Any,
+                    UriHostNameType.IPv4 => IPAddress.Parse(apiListenUri.Host),
+                    UriHostNameType.IPv6 => IPAddress.Parse(apiListenUri.Host),
+                    _ => throw new NotSupportedException($"Listen URI type `{apiListenUri.HostNameType}` is not supported.")
+                };
+                            
+                if (apiListenUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+                {
+                    options.Listen(ipAddress, apiListenUri.Port, listenOptions =>
+                    {
+#if WINDOWS
+                                    listenOptions.UseHttps(StoreName.My, apiListenUri.Host,
+                                        location: StoreLocation.LocalMachine, allowInvalid: true);
+#else
+                        listenOptions.UseHttps();
+#endif
+                    });
+                }
+                else
+                {
+                    options.Listen(ipAddress, apiListenUri.Port);
+                }
+            });
+            
+            builder
+                .Host.UseSerilog()
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                 .ConfigureContainer<ContainerBuilder>(builder =>
                 {
                     builder.RegisterBuildCallback(ls => container = ls);
                     builder.RegisterModule(new ForwarderModule(_storagePath.BufferPath, config));
-                })
-                .ConfigureWebHostDefaults(web =>
-                {
-                    web.UseStartup<Startup>();
-                    web.UseKestrel(options =>
-                        {
-                            options.AddServerHeader = false;
-                            options.AllowSynchronousIO = true;
-                        })
-                        .ConfigureKestrel(options =>
-                        {
-                            var apiListenUri = new Uri(listenUri);
-
-                            var ipAddress = apiListenUri.HostNameType switch
-                            {
-                                UriHostNameType.Basic => IPAddress.Any,
-                                UriHostNameType.Dns => IPAddress.Any,
-                                UriHostNameType.IPv4 => IPAddress.Parse(apiListenUri.Host),
-                                UriHostNameType.IPv6 => IPAddress.Parse(apiListenUri.Host),
-                                _ => throw new NotSupportedException($"Listen URI type `{apiListenUri.HostNameType}` is not supported.")
-                            };
-                            
-                            if (apiListenUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
-                            {
-                                options.Listen(ipAddress, apiListenUri.Port, listenOptions =>
-                                {
-#if WINDOWS
-                                    listenOptions.UseHttps(StoreName.My, apiListenUri.Host,
-                                        location: StoreLocation.LocalMachine, allowInvalid: true);
-#else
-                                    listenOptions.UseHttps();
-#endif
-                                });
-                            }
-                            else
-                            {
-                                options.Listen(ipAddress, apiListenUri.Port);
-                            }
-                        });
-                })
-                .Build();
+                });
+            using var host = builder.Build();
 
             if (container == null) throw new Exception("Host did not build container.");
                 
