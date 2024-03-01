@@ -32,7 +32,7 @@ using SeqCli.Forwarder.Shipper;
 
 namespace SeqCli.Forwarder.Web.Api;
 
-public class IngestionController : Controller
+class IngestionController : Controller
 {
     static readonly Encoding Encoding = new UTF8Encoding(false);
     const string ClefMediaType = "application/vnd.serilog.clef";

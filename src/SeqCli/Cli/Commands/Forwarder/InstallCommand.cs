@@ -22,13 +22,13 @@ using System.Security.AccessControl;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using Seq.Forwarder.Cli.Features;
-using Seq.Forwarder.ServiceProcess;
 using Seq.Forwarder.Util;
 using SeqCli;
 using SeqCli.Cli;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Config.Forwarder;
+using SeqCli.Forwarder.ServiceProcess;
 using SeqCli.Forwarder.Util;
 
 // ReSharper disable once ClassNeverInstantiated.Global
@@ -97,13 +97,13 @@ namespace Seq.Forwarder.Cli.Commands
             {
                 Console.WriteLine("Checking the status of the Seq Forwarder service...");
 
-                controller = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
+                controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
                 Console.WriteLine("Status is {0}", controller.Status);
             }
             catch (InvalidOperationException)
             {
                 Install();
-                var controller2 = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
+                var controller2 = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
                 return Start(controller2);
             }
 
@@ -219,7 +219,7 @@ namespace Seq.Forwarder.Cli.Commands
 
             var binPath = forwarderRunCmdline.Replace("\"", "\\\"");
 
-            var scCmdline = "create \"" + SeqForwarderWindowsService.WindowsServiceName + "\"" +
+            var scCmdline = "create \"" + SeqCliForwarderWindowsService.WindowsServiceName + "\"" +
                             " binPath= \"" + binPath + "\"" +
                             " start= auto" +
                             " depend= Winmgmt/Tcpip/CryptSvc";
@@ -234,10 +234,10 @@ namespace Seq.Forwarder.Cli.Commands
             }
 
             Console.WriteLine("Setting service restart policy...");
-            if (0 != CaptiveProcess.Run(sc, $"failure \"{SeqForwarderWindowsService.WindowsServiceName}\" actions= restart/60000/restart/60000/restart/60000// reset= 600000", Console.WriteLine, Console.WriteLine))
+            if (0 != CaptiveProcess.Run(sc, $"failure \"{SeqCliForwarderWindowsService.WindowsServiceName}\" actions= restart/60000/restart/60000/restart/60000// reset= 600000", Console.WriteLine, Console.WriteLine))
                 Console.WriteLine("Could not set service restart policy; ignoring");
             Console.WriteLine("Setting service description...");
-            if (0 != CaptiveProcess.Run(sc, $"description \"{SeqForwarderWindowsService.WindowsServiceName}\" \"Durable storage and forwarding of application log events\"", Console.WriteLine, Console.WriteLine))
+            if (0 != CaptiveProcess.Run(sc, $"description \"{SeqCliForwarderWindowsService.WindowsServiceName}\" \"Durable storage and forwarding of application log events\"", Console.WriteLine, Console.WriteLine))
                 Console.WriteLine("Could not set service description; ignoring");
 
             Console.WriteLine("Service installed successfully.");

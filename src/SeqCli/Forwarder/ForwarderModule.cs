@@ -17,7 +17,7 @@ using System.Net.Http;
 using System.Threading;
 using Autofac;
 using SeqCli.Config;
-using SeqCli.Forwarder.Cryptography;
+using SeqCli.Encryptor;
 using SeqCli.Forwarder.Multiplexing;
 using SeqCli.Forwarder.Web.Host;
 
@@ -46,8 +46,8 @@ class ForwarderModule : Module
 
         builder.Register(c =>
         {
-            var outputConfig = c.Resolve<ConnectionConfig>();
-            var baseUri = outputConfig.ServerUrl;
+            var config = c.Resolve<SeqCliConfig>();
+            var baseUri = config.Connection.ServerUrl;
             if (string.IsNullOrWhiteSpace(baseUri))
                 throw new ArgumentException("The destination Seq server URL must be configured in SeqForwarder.json.");
 
@@ -58,13 +58,13 @@ class ForwarderModule : Module
             // this expression, using an "or" operator.
 
             var hasSocketHandlerOption =
-                outputConfig.PooledConnectionLifetimeMilliseconds.HasValue;
+                config.Connection.PooledConnectionLifetimeMilliseconds.HasValue;
 
             if (hasSocketHandlerOption)
             {
                 var httpMessageHandler = new SocketsHttpHandler
                 {
-                    PooledConnectionLifetime = outputConfig.PooledConnectionLifetimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(outputConfig.PooledConnectionLifetimeMilliseconds.Value) : Timeout.InfiniteTimeSpan,
+                    PooledConnectionLifetime = config.Connection.PooledConnectionLifetimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(config.Connection.PooledConnectionLifetimeMilliseconds.Value) : Timeout.InfiniteTimeSpan,
                 };
 
                 return new HttpClient(httpMessageHandler) { BaseAddress = new Uri(baseUri) };
@@ -74,11 +74,6 @@ class ForwarderModule : Module
 
         }).SingleInstance();
 
-        builder.RegisterInstance(StringDataProtector.CreatePlatformDefault());
-
         builder.RegisterInstance(_config);
-        builder.RegisterInstance(_config.Forwarder.Api);
-        builder.RegisterInstance(_config.Forwarder.Diagnostics);
-        builder.RegisterInstance(_config.Forwarder.Storage);
     }
 }

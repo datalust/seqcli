@@ -19,8 +19,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.ServiceProcess;
 using System.Threading.Tasks;
-using Seq.Forwarder.ServiceProcess;
 using SeqCli.Cli;
+using SeqCli.Forwarder.ServiceProcess;
 
 namespace Seq.Forwarder.Cli.Commands
 {
@@ -32,7 +32,7 @@ namespace Seq.Forwarder.Cli.Commands
         {
             try
             {
-                var controller = new ServiceController(SeqForwarderWindowsService.WindowsServiceName);
+                var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
                 if (controller.Status != ServiceControllerStatus.Stopped)
                 {
                     Console.WriteLine("Cannot start {0}, current status is: {1}", controller.ServiceName, controller.Status);

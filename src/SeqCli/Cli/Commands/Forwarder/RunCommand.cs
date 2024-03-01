@@ -33,6 +33,10 @@ using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 
+#if WINDOWS
+using SeqCli.Forwarder.ServiceProcess;
+#endif
+
 // ReSharper disable UnusedType.Global
 
 namespace SeqCli.Cli.Commands.Forwarder;
@@ -170,7 +174,7 @@ class RunCommand : Command
     {
 #if WINDOWS
             System.ServiceProcess.ServiceBase.Run([
-                new SeqForwarderWindowsService(service)
+                new SeqCliForwarderWindowsService(service)
             ]);
             return 0;
 #else

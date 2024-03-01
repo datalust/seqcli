@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
 using SeqCli.Config;
-using SeqCli.Forwarder.Cryptography;
 using SeqCli.Forwarder.Multiplexing;
 using SeqCli.Tests.Support;
 using Xunit;
@@ -74,7 +73,7 @@ public class ActiveLogBufferMapTests
     static ActiveLogBufferMap CreateActiveLogBufferMap(TempFolder tmp)
     {
         var config = new SeqCliConfig();
-        var map = new ActiveLogBufferMap(tmp.Path, config.Forwarder.Storage, config.Connection, new InertLogShipperFactory(), StringDataProtector.CreatePlatformDefault());
+        var map = new ActiveLogBufferMap(tmp.Path, config, new InertLogShipperFactory());
         map.Load();
         return map;
     }

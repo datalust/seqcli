@@ -7,9 +7,9 @@ using SeqCli.Config;
 
 namespace SeqCli.Encryptor;
 
-public class ExternalEncryption : IEncryption
+public class ExternalDataProtector : IDataProtector
 {
-    public ExternalEncryption(SeqCliEncryptionProviderConfig providerConfig)
+    public ExternalDataProtector(SeqCliEncryptionProviderConfig providerConfig)
     {
         _encryptor = providerConfig.Encryptor!;
         _encryptorArgs = providerConfig.EncryptorArgs;
