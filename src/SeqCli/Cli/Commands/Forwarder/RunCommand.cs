@@ -28,11 +28,13 @@ using SeqCli.Config;
 using SeqCli.Config.Forwarder;
 using SeqCli.Forwarder;
 using SeqCli.Forwarder.Util;
+using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+using Serilog.Formatting.Display;
 
 #if WINDOWS
 using SeqCli.Forwarder.ServiceProcess;
@@ -142,10 +144,13 @@ class RunCommand : Command
                     builder.RegisterBuildCallback(ls => container = ls);
                     builder.RegisterModule(new ForwarderModule(_storagePath.BufferPath, config));
                 });
+            
             using var host = builder.Build();
-
+            
             if (container == null) throw new Exception("Host did not build container.");
-                
+            
+            ApiRoot.Map(host, container.Resolve<MessageTemplateTextFormatter>());
+
             var service = container.Resolve<ServerService>(
                 new TypedParameter(typeof(IHost), host),
                 new NamedParameter("listenUri", listenUri));

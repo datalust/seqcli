@@ -19,7 +19,9 @@ using Autofac;
 using SeqCli.Config;
 using SeqCli.Encryptor;
 using SeqCli.Forwarder.Multiplexing;
+using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
+using Serilog.Formatting.Display;
 
 namespace SeqCli.Forwarder;
 
@@ -43,6 +45,11 @@ class ForwarderModule : Module
 
         builder.RegisterType<HttpLogShipperFactory>().As<ILogShipperFactory>();
         builder.RegisterType<ServerResponseProxy>().SingleInstance();
+        builder.RegisterType<ApiRoot>();
+        builder.RegisterInstance(new MessageTemplateTextFormatter(
+            "[{Timestamp:o} {Level:u3}] {Message}{NewLine}" + (_config.Forwarder.Diagnostics.IngestionLogShowDetail
+                ? ""
+                : "Client IP address: {ClientHostIP}{NewLine}First {StartToLog} characters of payload: {DocumentStart:l}{NewLine}{Exception}{NewLine}"))).SingleInstance();
 
         builder.Register(c =>
         {

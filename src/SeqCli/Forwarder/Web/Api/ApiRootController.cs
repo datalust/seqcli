@@ -14,43 +14,36 @@
 
 using System.IO;
 using System.Text;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using SeqCli.Config.Forwarder;
 using SeqCli.Forwarder.Diagnostics;
 using Serilog.Formatting.Display;
 
 namespace SeqCli.Forwarder.Web.Api;
 
-public class ApiRootController : Controller
-{
+public class ApiRoot
+{    
     static readonly Encoding Encoding = new UTF8Encoding(false);
-    readonly MessageTemplateTextFormatter _ingestionLogFormatter;
 
-    public ApiRootController(ForwarderDiagnosticConfig diagnosticConfig)
+    public static void Map(WebApplication app, MessageTemplateTextFormatter formatter)
     {
-        var template = "[{Timestamp:o} {Level:u3}] {Message}{NewLine}";
-        if (diagnosticConfig.IngestionLogShowDetail)
-            template += "Client IP address: {ClientHostIP}{NewLine}First {StartToLog} characters of payload: {DocumentStart:l}{NewLine}{Exception}{NewLine}";
-            
-        _ingestionLogFormatter = new MessageTemplateTextFormatter(template);
-    }
-        
-    [HttpGet, Route("")]
-    public IActionResult Index()
-    {
-        var events = IngestionLog.Read();
-        using var log = new StringWriter();
-        foreach (var logEvent in events)
+        app.MapGet("/", () =>
         {
-            _ingestionLogFormatter.Format(logEvent, log);
-        }
+            var events = IngestionLog.Read();
+            using var log = new StringWriter();
+            foreach (var logEvent in events)
+            {
+                formatter.Format(logEvent, log);
+            }
 
-        return Content(log.ToString(), "text/plain", Encoding);
+            return Results.Content(log.ToString(), "text/plain", Encoding);
+        });
+
+        app.MapGet("/api",
+            () => Results.Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", Encoding));
+
     }
-
-    [HttpGet, Route("api")]
-    public IActionResult Resources()
-    {
-        return Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", Encoding);
-    }        
 }
