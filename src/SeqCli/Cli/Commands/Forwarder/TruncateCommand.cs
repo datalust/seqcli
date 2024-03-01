@@ -15,7 +15,6 @@
 using System;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
-using SeqCli.Forwarder.Multiplexing;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Forwarder;
@@ -39,7 +38,6 @@ class TruncateCommand : Command
             if (!_confirm.TryConfirm("All data in the forwarder's log buffer will be deleted. This cannot be undone."))
                 return 1;
                 
-            ActiveLogBufferMap.Truncate(_storagePath.BufferPath);
             return 0;
         }
         catch (Exception ex)

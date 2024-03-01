@@ -15,20 +15,17 @@
 using System;
 using Microsoft.Extensions.Hosting;
 using SeqCli.Forwarder.Diagnostics;
-using SeqCli.Forwarder.Multiplexing;
 using Serilog;
 
 namespace SeqCli.Forwarder.Web.Host;
 
 class ServerService
 {
-    readonly ActiveLogBufferMap _logBufferMap;
     readonly IHost _host;
     readonly string _listenUri;
 
-    public ServerService(ActiveLogBufferMap logBufferMap, IHost host, string listenUri)
+    public ServerService(IHost host, string listenUri)
     {
-        _logBufferMap = logBufferMap;
         _host = host;
         _listenUri = listenUri;
     }
@@ -43,9 +40,6 @@ class ServerService
 
             Log.Information("Seq Forwarder listening on {ListenUri}", _listenUri);
             IngestionLog.Log.Debug("Seq Forwarder is accepting events");
-
-            _logBufferMap.Load();
-            _logBufferMap.Start();
         }
         catch (Exception ex)
         {
@@ -59,7 +53,6 @@ class ServerService
         Log.Debug("Seq Forwarder stopping");
 
         _host.StopAsync().Wait();
-        _logBufferMap.Stop();
 
         Log.Information("Seq Forwarder stopped cleanly");
     }
