@@ -16,19 +16,22 @@ using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using SeqCli.Config.Forwarder;
 using SeqCli.Forwarder.Diagnostics;
 using Serilog.Formatting.Display;
 
 namespace SeqCli.Forwarder.Web.Api;
 
-public class ApiRoot
-{    
-    static readonly Encoding Encoding = new UTF8Encoding(false);
+class ApiRootEndpoints : IMapEndpoints
+{
+    readonly MessageTemplateTextFormatter _formatter;
+    readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    public static void Map(WebApplication app, MessageTemplateTextFormatter formatter)
+    public ApiRootEndpoints(MessageTemplateTextFormatter formatter)
+    {
+        _formatter = formatter;
+    }
+
+    public void Map(WebApplication app)
     {
         app.MapGet("/", () =>
         {
@@ -36,14 +39,14 @@ public class ApiRoot
             using var log = new StringWriter();
             foreach (var logEvent in events)
             {
-                formatter.Format(logEvent, log);
+                _formatter.Format(logEvent, log);
             }
 
-            return Results.Content(log.ToString(), "text/plain", Encoding);
+            return Results.Content(log.ToString(), "text/plain", Utf8);
         });
 
         app.MapGet("/api",
-            () => Results.Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", Encoding));
+            () => Results.Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", Utf8));
 
     }
 }

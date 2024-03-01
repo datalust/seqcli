@@ -8,7 +8,6 @@ class Startup
 {
     public void ConfigureServices(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddMvc();
     }
 
     public void Configure(IApplicationBuilder app)

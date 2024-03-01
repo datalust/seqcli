@@ -17,7 +17,6 @@ using System.Net.Http;
 using System.Threading;
 using Autofac;
 using SeqCli.Config;
-using SeqCli.Encryptor;
 using SeqCli.Forwarder.Multiplexing;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
@@ -45,7 +44,9 @@ class ForwarderModule : Module
 
         builder.RegisterType<HttpLogShipperFactory>().As<ILogShipperFactory>();
         builder.RegisterType<ServerResponseProxy>().SingleInstance();
-        builder.RegisterType<ApiRoot>();
+        builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
+        builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();
+        builder.RegisterInstance(_config.Connection);
         builder.RegisterInstance(new MessageTemplateTextFormatter(
             "[{Timestamp:o} {Level:u3}] {Message}{NewLine}" + (_config.Forwarder.Diagnostics.IngestionLogShowDetail
                 ? ""

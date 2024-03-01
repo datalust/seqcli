@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
@@ -148,8 +150,11 @@ class RunCommand : Command
             using var host = builder.Build();
             
             if (container == null) throw new Exception("Host did not build container.");
-            
-            ApiRoot.Map(host, container.Resolve<MessageTemplateTextFormatter>());
+
+            foreach (var mapper in container.Resolve<IEnumerable<IMapEndpoints>>())
+            {
+                mapper.Map(host);
+            }
 
             var service = container.Resolve<ServerService>(
                 new TypedParameter(typeof(IHost), host),
