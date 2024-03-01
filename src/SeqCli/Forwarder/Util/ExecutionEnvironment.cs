@@ -1,4 +1,6 @@
-﻿using Seq.Forwarder.Util;
+﻿#if WINDOWS
+using Seq.Forwarder.Util;
+#endif
 
 namespace SeqCli.Forwarder.Util;
 

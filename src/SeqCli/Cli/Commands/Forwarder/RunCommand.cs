@@ -22,7 +22,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Seq.Forwarder.ServiceProcess;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Config.Forwarder;
