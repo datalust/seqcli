@@ -16,9 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Text;
 using SeqCli.Config;
 using SeqCli.Config.Forwarder;
-using SeqCli.Forwarder.Cryptography;
+using SeqCli.Encryptor;
 using SeqCli.Forwarder.Storage;
 using SeqCli.Forwarder.Web;
 using Serilog;
@@ -29,10 +30,12 @@ public class ActiveLogBufferMap : IDisposable
 {
     const string DataFileName = "data.mdb", LockFileName = "lock.mdb", ApiKeyFileName = ".apikey";
 
+    static Encoding ApiKeyEncoding = new UTF8Encoding(false);
+
     readonly ulong _bufferSizeBytes;
     readonly ConnectionConfig _connectionConfig;
     readonly ILogShipperFactory _shipperFactory;
-    readonly IStringDataProtector _dataProtector;
+    readonly IDataProtector _dataProtector;
     readonly string _bufferPath;
     readonly ILogger _log = Log.ForContext<ActiveLogBufferMap>();
 
@@ -46,7 +49,7 @@ public class ActiveLogBufferMap : IDisposable
         ForwarderStorageConfig storageConfig, 
         ConnectionConfig outputConfig, 
         ILogShipperFactory logShipperFactory,
-        IStringDataProtector dataProtector)
+        IDataProtector dataProtector)
     {
         _bufferSizeBytes = storageConfig.BufferSizeBytes;
         _connectionConfig = outputConfig ?? throw new ArgumentNullException(nameof(outputConfig));
@@ -86,7 +89,7 @@ public class ActiveLogBufferMap : IDisposable
                 }
                 else
                 {
-                    _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _connectionConfig.GetApiKey(_dataProtector)));
+                    _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _connectionConfig.DecodeApiKey(_dataProtector)));
                 }
             }
 
@@ -100,7 +103,7 @@ public class ActiveLogBufferMap : IDisposable
                 }
 
                 _log.Information("Loading an API-key specific buffer in {Path}", subfolder);
-                var apiKey = _dataProtector.Unprotect(File.ReadAllText(encodedApiKeyFilePath));
+                var apiKey = ApiKeyEncoding.GetString(_dataProtector.Decrypt(File.ReadAllBytes(encodedApiKeyFilePath)));
 
                 var buffer = new LogBuffer(subfolder, _bufferSizeBytes);
                 if (buffer.Peek(0).Length == 0)
@@ -159,7 +162,7 @@ public class ActiveLogBufferMap : IDisposable
                 {
                     _log.Information("Creating a new default log buffer in {Path}", _bufferPath);
                     var buffer = new LogBuffer(_bufferPath, _bufferSizeBytes);
-                    _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _connectionConfig.GetApiKey(_dataProtector)));
+                    _noApiKeyLogBuffer = new ActiveLogBuffer(buffer, _shipperFactory.Create(buffer, _connectionConfig.DecodeApiKey(_dataProtector)));
                     _noApiKeyLogBuffer.Shipper.Start();
                 }
                 return _noApiKeyLogBuffer.Buffer;
@@ -171,7 +174,7 @@ public class ActiveLogBufferMap : IDisposable
             var subfolder = Path.Combine(_bufferPath, Guid.NewGuid().ToString("n"));
             _log.Information("Creating a new API key-specific log buffer in {Path}", subfolder);
             Directory.CreateDirectory(subfolder);
-            File.WriteAllText(Path.Combine(subfolder, ".apikey"), _dataProtector.Protect(apiKey));
+            File.WriteAllBytes(Path.Combine(subfolder, ".apikey"), _dataProtector.Encrypt(ApiKeyEncoding.GetBytes(apiKey)));
             var newBuffer = new LogBuffer(subfolder, _bufferSizeBytes);
             var newActiveBuffer = new ActiveLogBuffer(newBuffer, _shipperFactory.Create(newBuffer, apiKey));
             _buffersByApiKey.Add(apiKey, newActiveBuffer);

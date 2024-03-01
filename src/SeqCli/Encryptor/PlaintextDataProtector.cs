@@ -1,6 +1,6 @@
 ﻿namespace SeqCli.Encryptor;
 
-class PlaintextEncryption : IEncryption
+class PlaintextDataProtector : IDataProtector
 {
     public byte[] Encrypt(byte[] unencrypted)
     {
