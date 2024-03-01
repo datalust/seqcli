@@ -1,4 +1,6 @@
-﻿using Seq.Forwarder.Cryptography;
+﻿#if WINDOWS
+using Seq.Forwarder.Cryptography;
+#endif
 
 namespace SeqCli.Forwarder.Cryptography;
 
