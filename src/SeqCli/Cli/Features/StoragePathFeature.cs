@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using SeqCli.Forwarder.ServiceProcess;
 
 namespace SeqCli.Cli.Features;
 
