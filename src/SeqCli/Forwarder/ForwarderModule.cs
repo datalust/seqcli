@@ -46,7 +46,7 @@ class ForwarderModule : Module
         builder.RegisterType<ServerResponseProxy>().SingleInstance();
         builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();
-        builder.RegisterInstance(_config.Connection);
+        builder.Register(c => _config.Connection);
         builder.RegisterInstance(new MessageTemplateTextFormatter(
             "[{Timestamp:o} {Level:u3}] {Message}{NewLine}" + (_config.Forwarder.Diagnostics.IngestionLogShowDetail
                 ? ""
