@@ -17,6 +17,7 @@ using System.Net.Http;
 using System.Threading;
 using Autofac;
 using SeqCli.Config;
+using SeqCli.Forwarder.Storage;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
 using Serilog.Formatting.Display;
@@ -37,10 +38,10 @@ class ForwarderModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<ServerService>().SingleInstance();
+        builder.RegisterType<LogBufferMap>().SingleInstance();
 
         builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();
-        builder.Register(c => _config.Connection);
         builder.RegisterInstance(new MessageTemplateTextFormatter(
             "[{Timestamp:o} {Level:u3}] {Message}{NewLine}" + (_config.Forwarder.Diagnostics.IngestionLogShowDetail
                 ? ""
@@ -73,7 +74,6 @@ class ForwarderModule : Module
             }
 
             return new HttpClient { BaseAddress = new Uri(baseUri) };
-
         }).SingleInstance();
 
         builder.RegisterInstance(_config);

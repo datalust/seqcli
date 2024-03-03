@@ -15,9 +15,11 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +29,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Config;
 using SeqCli.Forwarder.Diagnostics;
+using SeqCli.Forwarder.Storage;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
@@ -37,14 +40,17 @@ class IngestionEndpoints : IMapEndpoints
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
     readonly ConnectionConfig _connectionConfig;
+    readonly LogBufferMap _logBuffers;
 
     readonly JsonSerializer _rawSerializer = JsonSerializer.Create(
         new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
 
     public IngestionEndpoints(
-        ConnectionConfig connectionConfig)
+        SeqCliConfig config,
+        LogBufferMap logBuffers)
     {
-        _connectionConfig = connectionConfig;
+        _connectionConfig = config.Connection;
+        _logBuffers = logBuffers;
     }
     
     public void Map(WebApplication app)
@@ -138,6 +144,17 @@ class IngestionEndpoints : IMapEndpoints
 
         return "true".Equals(value, StringComparison.OrdinalIgnoreCase) || value == "" || value == queryParameterName;
     }
+
+    static string? ApiKey(HttpRequest request)
+    {
+        var apiKeyHeader = request.Headers["X-SeqApiKey"];
+
+        if (apiKeyHeader.Count > 0) return apiKeyHeader.Last();
+        if (request.Query.TryGetValue("apiKey", out var apiKey)) return apiKey.Last();
+
+        return null;
+    }
+    
     
     IResult IngestRawFormat(HttpContext context)
     {
@@ -147,6 +164,11 @@ class IngestionEndpoints : IMapEndpoints
     
     async Task<ContentHttpResult> IngestCompactFormat(HttpContext context)
     {
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
+
+        var log = _logBuffers.Get(ApiKey(context.Request));
+
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;
         var readHead = 0;
@@ -203,7 +225,7 @@ class IngestionEndpoints : IMapEndpoints
 
                     if (!ValidateClef(payload.AsSpan()[eventStart..batchEnd]))
                     {
-                        Enqueue(payload.AsSpan()[batchStart..eventStart]);
+                        await Write(log, ArrayPool<byte>.Shared, payload, batchStart..eventStart, cts.Token);
                         batchStart = batchEnd;
                     }
                 }
@@ -211,7 +233,7 @@ class IngestionEndpoints : IMapEndpoints
 
             if (batchStart != batchEnd)
             {
-                Enqueue(payload.AsSpan()[batchStart..batchEnd]);
+                await Write(log, ArrayPool<byte>.Shared, payload, batchStart..batchEnd, cts.Token);
             }
             else if (batchStart == 0)
             {
@@ -229,8 +251,9 @@ class IngestionEndpoints : IMapEndpoints
             }
         }
         
+        // Exception cases are handled by `Write`
         ArrayPool<byte>.Shared.Return(payload);
-
+        
         return TypedResults.Content(
             null, 
             "application/json", 
@@ -274,8 +297,16 @@ class IngestionEndpoints : IMapEndpoints
         return true;
     }
 
-    void Enqueue(Span<byte> payload)
+    async Task Write(LogBuffer log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
     {
-       // Do the thing
+        try
+        {
+            await log.WriteAsync(storage, range, cancellationToken);
+        }
+        catch
+        {
+            pool.Return(storage);
+            throw;
+        }
     }
 }
