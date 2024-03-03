@@ -13,24 +13,25 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Config;
 using SeqCli.Forwarder.Diagnostics;
-using SeqCli.Forwarder.Multiplexing;
-using SeqCli.Forwarder.Schema;
-using SeqCli.Forwarder.Shipper;
+using SeqCli.Forwarder.Storage;
+using JsonException = System.Text.Json.JsonException;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace SeqCli.Forwarder.Web.Api;
 
@@ -38,21 +39,18 @@ class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly ActiveLogBufferMap _logBufferMap;
     readonly ConnectionConfig _connectionConfig;
-    readonly ServerResponseProxy _serverResponseProxy;
+    readonly LogBufferMap _logBuffers;
 
     readonly JsonSerializer _rawSerializer = JsonSerializer.Create(
         new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
 
     public IngestionEndpoints(
-        ActiveLogBufferMap logBufferMap,
-        ServerResponseProxy serverResponseProxy, 
-        ConnectionConfig connectionConfig)
+        SeqCliConfig config,
+        LogBufferMap logBuffers)
     {
-        _logBufferMap = logBufferMap;
-        _connectionConfig = connectionConfig;
-        _serverResponseProxy = serverResponseProxy;
+        _connectionConfig = config.Connection;
+        _logBuffers = logBuffers;
     }
     
     public void Map(WebApplication app)
@@ -77,7 +75,7 @@ class IngestionEndpoints : IMapEndpoints
         }));
     }
     
-    byte[][] EncodeRawEvents(ICollection<JToken> events, IPAddress remoteIpAddress)
+    IEnumerable<byte[]> EncodeRawEvents(ICollection<JToken> events, IPAddress remoteIpAddress)
     {
         var encoded = new byte[events.Count][];
         var i = 0;
@@ -146,101 +144,169 @@ class IngestionEndpoints : IMapEndpoints
 
         return "true".Equals(value, StringComparison.OrdinalIgnoreCase) || value == "" || value == queryParameterName;
     }
+
+    static string? ApiKey(HttpRequest request)
+    {
+        var apiKeyHeader = request.Headers["X-SeqApiKey"];
+
+        if (apiKeyHeader.Count > 0) return apiKeyHeader.Last();
+        if (request.Query.TryGetValue("apiKey", out var apiKey)) return apiKey.Last();
+
+        return null;
+    }
+    
     
     IResult IngestRawFormat(HttpContext context)
     {
-        // The compact format ingestion path works with async IO.
-        context.Features.Get<IHttpBodyControlFeature>()!.AllowSynchronousIO = true;
-
-        JObject posted;
-        try
-        {
-            posted = _rawSerializer.Deserialize<JObject>(new JsonTextReader(new StreamReader(context.Request.Body))) ??
-                     throw new RequestProcessingException("Request body payload is JSON `null`.");
-        }
-        catch (Exception ex)
-        {
-            IngestionLog.ForClient(context.Connection.RemoteIpAddress!).Debug(ex,"Rejecting payload due to invalid JSON, request body could not be parsed");
-            throw new RequestProcessingException("Invalid raw event JSON, body could not be parsed.");
-        }
-
-        if (!(posted.TryGetValue("events", StringComparison.Ordinal, out var eventsToken) ||
-              posted.TryGetValue("Events", StringComparison.Ordinal, out eventsToken)))
-        {
-            IngestionLog.ForClient(context.Connection.RemoteIpAddress!).Debug("Rejecting payload due to invalid JSON structure");
-            throw new RequestProcessingException("Invalid raw event JSON, body must contain an 'Events' array.");
-        }
-
-        if (!(eventsToken is JArray events))
-        {
-            IngestionLog.ForClient(context.Connection.RemoteIpAddress!).Debug("Rejecting payload due to invalid Events property structure");
-            throw new RequestProcessingException("Invalid raw event JSON, the 'Events' property must be an array.");
-        }
-
-        var encoded = EncodeRawEvents(events, context.Connection.RemoteIpAddress!);
-        return Enqueue(context.Request, encoded);
+        // Convert legacy format to CLEF
+        throw new NotImplementedException();
     }
     
     async Task<ContentHttpResult> IngestCompactFormat(HttpContext context)
     {
-        var rawFormat = new List<JToken>();
-        var reader = new StreamReader(context.Request.Body);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var line = await reader.ReadLineAsync();
-        var lineNumber = 1;
+        var log = _logBuffers.Get(ApiKey(context.Request));
 
-        while (line != null)
+        var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
+        var writeHead = 0;
+        var readHead = 0;
+        var discarding = false;
+
+        var done = false;
+        while (!done)
         {
-            if (!string.IsNullOrWhiteSpace(line))
+            // Fill our buffer
+            while (!done)
             {
-                JObject item;
-                try
+                var remaining = payload.Length - writeHead;
+                if (remaining == 0)
                 {
-                    item = _rawSerializer.Deserialize<JObject>(new JsonTextReader(new StringReader(line))) ??
-                           throw new RequestProcessingException("Request body payload is JSON `null`.");
+                    break;
                 }
-                catch (Exception ex)
+                
+                var read = await context.Request.Body.ReadAsync(payload.AsMemory(writeHead, remaining), context.RequestAborted);
+                if (read == 0)
                 {
-                    IngestionLog.ForPayload(context.Connection.RemoteIpAddress!, line).Debug(ex, "Rejecting CLEF payload due to invalid JSON, item could not be parsed");
-                    throw new RequestProcessingException($"Invalid raw event JSON, item on line {lineNumber} could not be parsed.");
-                }
-
-                if (!EventSchema.FromClefFormat(lineNumber, item, out var evt, out var err))
-                {
-                    IngestionLog.ForPayload(context.Connection.RemoteIpAddress!, line).Debug("Rejecting CLEF payload due to invalid event JSON structure: {NormalizationError}", err);
-                    throw new RequestProcessingException(err);
+                    done = true;
                 }
 
-                rawFormat.Add(evt);
+                writeHead += read;
             }
 
-            line = await reader.ReadLineAsync();
-            ++lineNumber;
+            // Process events
+            var batchStart = readHead;
+            var batchEnd = readHead;
+            while (batchEnd < writeHead)
+            {
+                var eventStart = batchEnd;
+                var nlIndex = payload.AsSpan()[eventStart..].IndexOf((byte)'\n');
+            
+                if (nlIndex == -1)
+                {
+                    break;
+                }
+
+                var eventEnd = eventStart + nlIndex + 1;
+
+                if (discarding)
+                {
+                    batchStart = eventEnd;
+                    batchEnd = eventEnd;
+                    readHead = batchEnd;
+
+                    discarding = false;
+                }
+                else
+                {
+                    batchEnd = eventEnd;
+                    readHead = batchEnd;
+
+                    if (!ValidateClef(payload.AsSpan()[eventStart..batchEnd]))
+                    {
+                        await Write(log, ArrayPool<byte>.Shared, payload, batchStart..eventStart, cts.Token);
+                        batchStart = batchEnd;
+                    }
+                }
+            }
+
+            if (batchStart != batchEnd)
+            {
+                await Write(log, ArrayPool<byte>.Shared, payload, batchStart..batchEnd, cts.Token);
+            }
+            else if (batchStart == 0)
+            {
+                readHead = payload.Length;
+                discarding = true;
+            }
+
+            // Copy any unprocessed data into our buffer and continue
+            if (!done)
+            {
+                var retain = payload.Length - readHead;
+                payload.AsSpan()[retain..].CopyTo(payload.AsSpan()[..retain]);
+                readHead = retain;
+                writeHead = retain;
+            }
         }
-
-        return Enqueue(
-            context.Request, 
-            EncodeRawEvents(rawFormat, context.Connection.RemoteIpAddress!));
-    }
-    
-    ContentHttpResult Enqueue(HttpRequest request, byte[][] encodedEvents)
-    {
-        var apiKeyToken = request.Headers[SeqApi.ApiKeyHeaderName].FirstOrDefault();
-
-        if (string.IsNullOrWhiteSpace(apiKeyToken))
-            apiKeyToken = request.Query["apiKey"];
-
-        var apiKey = string.IsNullOrWhiteSpace(apiKeyToken) 
-            ? null 
-            : apiKeyToken.Trim();
         
-        _logBufferMap.GetLogBuffer(apiKey).Enqueue(encodedEvents);
-
+        // Exception cases are handled by `Write`
+        ArrayPool<byte>.Shared.Return(payload);
+        
         return TypedResults.Content(
-            _serverResponseProxy.GetResponseText(apiKey), 
+            null, 
             "application/json", 
             Utf8, 
             StatusCodes.Status201Created);
-        
+    }
+
+    bool ValidateClef(Span<byte> evt)
+    {
+        var reader = new Utf8JsonReader(evt);
+
+        try
+        {
+            reader.Read();
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                return false;
+            }
+
+            while (reader.Read())
+            {
+                if (reader.CurrentDepth == 1)
+                {
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var name = reader.GetString();
+
+                        if (name != null & name!.StartsWith("@"))
+                        {
+                            // Validate @ property
+                        }
+                    }
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    async Task Write(LogBuffer log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await log.WriteAsync(storage, range, cancellationToken);
+        }
+        catch
+        {
+            pool.Return(storage);
+            throw;
+        }
     }
 }
