@@ -21,7 +21,6 @@ using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
 using SeqCli.Config;
 using SeqCli.Csv;
-using SeqCli.Levels;
 using SeqCli.Output;
 using Serilog;
 using Serilog.Core;
