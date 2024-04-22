@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Seq.Api.Model.Indexes;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -35,7 +36,7 @@ class SuppressCommand : Command
 
         Options.Add(
             "i=|id=",
-            "The id of an entity with an index to suppress",
+            "The id of a signal index to suppress",
             id => _id = id);
         
         _connection = Enable<ConnectionFeature>();
@@ -49,9 +50,14 @@ class SuppressCommand : Command
             return 1;
         }
 
-        // var connection = _connectionFactory.Connect(_connection);
-        // var toRemove = await connection.RetentionPolicies.FindAsync(_id);
-        // await connection.RetentionPolicies.RemoveAsync(toRemove);
+        var connection = _connectionFactory.Connect(_connection);
+        var toSuppress = await connection.Indexes.FindAsync(_id);
+        if (toSuppress.IndexedEntityType != IndexedEntityType.Signal)
+        {
+            Log.Error("Only Signal indexes may be suppressed; to delete an expression index or an alert index remove the expression index or alert");
+            return 1;
+        }
+        await connection.Indexes.SuppressAsync(toSuppress);
 
         await Task.Delay(1);
         return 0;
