@@ -15,14 +15,16 @@ static class EntityName
 
     public static string ToResourceGroup(string resource)
     {
-        if (resource.Equals("expressionindex"))
+        if (resource.EndsWith('y'))
         {
-            return "expressionindexes";
+            return resource.TrimEnd('y') + "ies";
         }
-        
-        if (!resource.EndsWith("y"))
-            return resource + "s";
 
-        return resource.TrimEnd('y') + "ies";
+        if (resource.EndsWith('x'))
+        {
+            return resource + "es";
+        }
+
+        return resource + "s";
     }
 }

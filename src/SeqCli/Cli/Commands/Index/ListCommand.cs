@@ -56,7 +56,6 @@ class ListCommand : Command
         
         _output.ListEntities(list);
         
-        await Task.Delay(1);
         return 0;
     }
 }

@@ -83,11 +83,12 @@ class TemplateSetExporter
         await ExportTemplates<ExpressionIndexEntity>(
             id => _connection.ExpressionIndexes.FindAsync(id),
             () => _connection.ExpressionIndexes.ListAsync(),
-            expressionIndex => expressionIndex.Id.Replace("expressionindex-", ""),
+            expressionIndex => expressionIndex.Expression.All(char.IsLetterOrDigit) 
+                ? expressionIndex.Expression 
+                : expressionIndex.Id.Replace("expressionindex-", ""),
             templateValueMap);
-
     }
-        
+
     async Task ExportTemplates<TEntity>(
         Func<string, Task<TEntity>> findEntity,
         Func<Task<List<TEntity>>> listEntities,

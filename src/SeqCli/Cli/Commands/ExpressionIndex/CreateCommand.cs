@@ -41,7 +41,7 @@ class CreateCommand : Command
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         Options.Add(
-            "expression=",
+            "e=|expression=",
             "The expression to index",
             v => _expression = ArgumentString.Normalize(v));
 
