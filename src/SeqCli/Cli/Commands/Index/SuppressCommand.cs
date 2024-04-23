@@ -22,7 +22,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.Index;
 
-[Command("index", "suppress", "Suppress index", Example="seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748")]
+[Command("index", "suppress", "Suppress an index", Example="seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748")]
 class SuppressCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
