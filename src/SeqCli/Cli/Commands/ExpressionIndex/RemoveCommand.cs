@@ -1,4 +1,4 @@
-// Copyright 2018 Datalust Pty Ltd and Contributors
+﻿// Copyright 2018 Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,30 +13,30 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Seq.Api.Model.Indexes;
 using SeqCli.Cli.Features;
-using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Index;
+namespace SeqCli.Cli.Commands.ExpressionIndex;
 
-[Command("index", "suppress", "Suppress index", Example="seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748")]
-class SuppressCommand : Command
+[Command("expressionindex", "remove", "Remove an expression index from the server",
+    Example = "seqcli expressionindex -i expressionindex-2529")]
+class RemoveCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
+
     readonly ConnectionFeature _connection;
     string? _id;
 
-    public SuppressCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         Options.Add(
             "i=|id=",
-            "The id of an index of a signal to suppress",
+            "The id of an expression index to remove",
             id => _id = id);
         
         _connection = Enable<ConnectionFeature>();
@@ -51,15 +51,9 @@ class SuppressCommand : Command
         }
 
         var connection = _connectionFactory.Connect(_connection);
-        var toSuppress = await connection.Indexes.FindAsync(_id);
-        if (toSuppress.IndexedEntityType != IndexedEntityType.Signal)
-        {
-            Log.Error("Only Signal indexes may be suppressed; to delete an expression index or an alert index remove the expression index or alert");
-            return 1;
-        }
-        await connection.Indexes.SuppressAsync(toSuppress);
+        var toRemove = await connection.ExpressionIndexes.FindAsync(_id);
+        await connection.ExpressionIndexes.RemoveAsync(toRemove);
 
-        await Task.Delay(1);
         return 0;
     }
 }

@@ -15,6 +15,11 @@ static class EntityName
 
     public static string ToResourceGroup(string resource)
     {
+        if (resource.Equals("expressionindex"))
+        {
+            return "expressionindexes";
+        }
+        
         if (!resource.EndsWith("y"))
             return resource + "s";
 

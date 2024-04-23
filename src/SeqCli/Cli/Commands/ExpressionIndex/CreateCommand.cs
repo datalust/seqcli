@@ -1,4 +1,4 @@
-// Copyright 2018 Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,52 +14,57 @@
 
 using System;
 using System.Threading.Tasks;
-using Seq.Api.Model.Indexes;
+using Seq.Api.Model.Signals;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Signals;
+using SeqCli.Syntax;
+using SeqCli.Util;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Index;
+namespace SeqCli.Cli.Commands.ExpressionIndex;
 
-[Command("index", "suppress", "Suppress index", Example="seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748")]
-class SuppressCommand : Command
+[Command("expressionindex", "create", "Create an expression index",
+    Example = "seqcli expressionindex create --expression \"ServerName\"")]
+class CreateCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
-    readonly ConnectionFeature _connection;
-    string? _id;
 
-    public SuppressCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
+
+    string? _expression;
+
+    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         Options.Add(
-            "i=|id=",
-            "The id of an index of a signal to suppress",
-            id => _id = id);
-        
+            "expression=",
+            "The expression to index",
+            v => _expression = ArgumentString.Normalize(v));
+
         _connection = Enable<ConnectionFeature>();
+        _output = Enable(new OutputFormatFeature(config.Output));
     }
 
     protected override async Task<int> Run()
     {
-        if (_id == null)
-        {
-            Log.Error("An `id` must be specified");
-            return 1;
-        }
-
         var connection = _connectionFactory.Connect(_connection);
-        var toSuppress = await connection.Indexes.FindAsync(_id);
-        if (toSuppress.IndexedEntityType != IndexedEntityType.Signal)
+
+        if (string.IsNullOrEmpty(_expression))
         {
-            Log.Error("Only Signal indexes may be suppressed; to delete an expression index or an alert index remove the expression index or alert");
+            Log.Error("An `expression` must be specified");
             return 1;
         }
-        await connection.Indexes.SuppressAsync(toSuppress);
 
-        await Task.Delay(1);
+        var index = await connection.ExpressionIndexes.TemplateAsync();
+        index.Expression = _expression;
+        index = await connection.ExpressionIndexes.AddAsync(index);
+
+        _output.WriteEntity(index);
+
         return 0;
     }
 }
