@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="newtonsoft.json" Version="13.0.3" />
+    <PackageReference Include="Seq.Api" Version="2024.3.0-dev-00239" />
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Serilog.Expressions" Version="4.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="2.0.0" />
@@ -38,7 +39,6 @@
     <PackageReference Include="Superpower" Version="3.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
-    <PackageReference Include="Seq.Api" Version="2024.2.0" />
     <PackageReference Include="Seq.Apps" Version="2023.4.0" />
     <PackageReference Include="Seq.Syntax" Version="1.0.0" />
     <PackageReference Include="Tavis.UriTemplates" Version="2.0.0" />

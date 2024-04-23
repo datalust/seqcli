@@ -8,6 +8,7 @@ using Seq.Api;
 using Seq.Api.Model;
 using Seq.Api.Model.Alerting;
 using Seq.Api.Model.Dashboarding;
+using Seq.Api.Model.Indexing;
 using Seq.Api.Model.Retention;
 using Seq.Api.Model.Signals;
 using Seq.Api.Model.SqlQueries;
@@ -78,8 +79,16 @@ class TemplateSetExporter
             () => _connection.RetentionPolicies.ListAsync(),
             retentionPolicy => retentionPolicy.Id.Replace("retentionpolicy-", ""),
             templateValueMap);
-    }
         
+        await ExportTemplates<ExpressionIndexEntity>(
+            id => _connection.ExpressionIndexes.FindAsync(id),
+            () => _connection.ExpressionIndexes.ListAsync(),
+            expressionIndex => expressionIndex.Expression.All(char.IsLetterOrDigit) 
+                ? expressionIndex.Expression 
+                : expressionIndex.Id.Replace("expressionindex-", ""),
+            templateValueMap);
+    }
+
     async Task ExportTemplates<TEntity>(
         Func<string, Task<TEntity>> findEntity,
         Func<Task<List<TEntity>>> listEntities,

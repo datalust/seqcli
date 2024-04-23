@@ -39,7 +39,7 @@ static class TemplateSetImporter
         bool merge)
     {
         var ordering = new[] {"users", "signals", "apps", "appinstances",
-            "dashboards", "sqlqueries", "workspaces", "retentionpolicies", "alerts"}.ToList();
+            "dashboards", "sqlqueries", "workspaces", "retentionpolicies", "alerts", "expressionindexes"}.ToList();
 
         var sorted = templates.OrderBy(t => ordering.IndexOf(t.ResourceGroup));
             

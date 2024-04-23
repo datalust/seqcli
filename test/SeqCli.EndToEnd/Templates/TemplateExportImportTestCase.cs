@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Templates;
 
-[CliTestCase(MinimumApiVersion = "2021.3.6336")]
+[CliTestCase(MinimumApiVersion = "2024.3.0")]
 public class TemplateExportImportTestCase : ICliTestCase
 {
     readonly TestDataFolder _testDataFolder;
