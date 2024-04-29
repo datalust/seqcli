@@ -18,8 +18,8 @@ namespace SeqCli.Cli.Commands.Bench;
 
 class QueryBenchCase
 {
-    public string Id { get; set; } = null!;
-    public string Query { get; set; } = null!;
+    public required string Id { get; set; }
+    public required string Query { get; set; }
     public string? SignalExpression { get; set; }
     
     // Not used programmatically at this time.
