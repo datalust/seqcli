@@ -21,4 +21,5 @@ class GenericEntity : Entity
 {
     public string? Title { get; set; }
     public string? Name { get; set; }
+    public string? Expression { get; set; }
 }

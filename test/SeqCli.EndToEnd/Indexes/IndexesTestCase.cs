@@ -17,10 +17,10 @@ public class IndexesTestCase: ICliTestCase
         Assert.Equal(0, exit);
 
         var expressionIndex = (await connection.ExpressionIndexes.ListAsync()).Single(e => e.Expression == expr);
-        var signal = (await connection.Signals.ListAsync()).First(s => !s.IsIndexSuppressed);
+        var signal = (await connection.Signals.ListAsync(shared: true)).First(s => !s.IsIndexSuppressed);
         var indexForSignal = (await connection.Indexes.ListAsync()).First(i => i.IndexedEntityId == signal.Id);
 
-        exit = runner.Exec("index list");
+        exit = runner.Exec("index list --json");
         Assert.Equal(0, exit);
         Assert.Contains(expressionIndex.Id, runner.LastRunProcess!.Output);
         Assert.Contains(signal.Id, runner.LastRunProcess!.Output);
