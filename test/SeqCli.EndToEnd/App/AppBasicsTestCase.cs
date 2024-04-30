@@ -23,6 +23,9 @@ public class AppBasicsTestCase: ICliTestCase
         exit = runner.Exec("app update", "--all");
         Assert.Equal(0, exit);
 
+        exit = runner.Exec("app uninstall", "--package-id Seq.App.EmailPlus");
+        Assert.Equal(0, exit);
+
         return Task.CompletedTask;
     }
 }
