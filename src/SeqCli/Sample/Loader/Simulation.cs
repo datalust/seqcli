@@ -17,7 +17,6 @@ using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.Ingestion;
 using Serilog;
-using SerilogTracing;
 
 namespace SeqCli.Sample.Loader;
 

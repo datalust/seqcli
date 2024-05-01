@@ -20,10 +20,10 @@ public class CommandLineHostTests
         {
             new(
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test"))),
-                new CommandMetadata {Name = "test"}),
+                new CommandMetadata {Name = "test", HelpText = "help"}),
             new(
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test2"))),
-                new CommandMetadata {Name = "test2"})
+                new CommandMetadata {Name = "test2", HelpText = "help"})
         };
         var commandLineHost = new CommandLineHost(availableCommands);
         await commandLineHost.Run(new []{ "test"},new LoggingLevelSwitch());
@@ -40,10 +40,10 @@ public class CommandLineHostTests
             {
                 new(
                     new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand1"))),
-                    new CommandMetadata {Name = "test", SubCommand = "subcommand1"}),
+                    new CommandMetadata {Name = "test", SubCommand = "subcommand1", HelpText = "help"}),
                 new(
                     new Lazy<Command>(() => new ActionCommand(() => commandsRan.Add("test-subcommand2"))),
-                    new CommandMetadata {Name = "test", SubCommand = "subcommand2"})
+                    new CommandMetadata {Name = "test", SubCommand = "subcommand2", HelpText = "help"})
             };
         var commandLineHost = new CommandLineHost(availableCommands);
         await commandLineHost.Run(new[] { "test", "subcommand2" }, new LoggingLevelSwitch());
@@ -61,12 +61,12 @@ public class CommandLineHostTests
             {
                 new(
                     new Lazy<Command>(() => new ActionCommand(() => { })),
-                    new CommandMetadata {Name = "test"})
+                    new CommandMetadata {Name = "test", HelpText = "help"})
             };
             
         var commandLineHost = new CommandLineHost(availableCommands);
             
-        await commandLineHost.Run(new[] { "test", "--verbose" }, levelSwitch);
+        await commandLineHost.Run(["test", "--verbose"], levelSwitch);
             
         Assert.Equal(LogEventLevel.Information, levelSwitch.MinimumLevel);
     }

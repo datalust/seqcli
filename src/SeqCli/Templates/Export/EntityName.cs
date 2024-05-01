@@ -15,9 +15,16 @@ static class EntityName
 
     public static string ToResourceGroup(string resource)
     {
-        if (!resource.EndsWith("y"))
-            return resource + "s";
+        if (resource.EndsWith('y'))
+        {
+            return resource.TrimEnd('y') + "ies";
+        }
 
-        return resource.TrimEnd('y') + "ies";
+        if (resource.EndsWith('x'))
+        {
+            return resource + "es";
+        }
+
+        return resource + "s";
     }
 }

@@ -50,7 +50,7 @@ static class DurationMoniker
 
         // This is not at all robust; we could use a decent duration parser for use here in `seqcli`.
 
-        if (duration.EndsWith("ms"))
+        if (duration.EndsWith("ms", StringComparison.Ordinal))
             return TimeSpan.FromMilliseconds(int.Parse(duration[..^2]));
 
         var value = int.Parse(duration[..^1], CultureInfo.InvariantCulture);

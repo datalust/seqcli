@@ -134,7 +134,7 @@ class OutputFormatFeature : CommandFeature
         else
         {
             var dyn = (dynamic) jo;
-            Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name ?? dyn.Username}");
+            Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name ?? dyn.Username ?? dyn.Expression}");
         }
     }
 
