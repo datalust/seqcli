@@ -77,7 +77,7 @@ static class TemplateSetImporter
         var resourceGroup = await connection.Client.GetAsync<ResourceGroup>(apiRoot, link.Key);
         
         // ExpressionIndexes with mapped ids or identical expressions are assumed to be equivalent.
-        var immutableTarget = template.ResourceGroup != "ExpressionIndexes";
+        var immutableTarget = template.ResourceGroup == "ExpressionIndexes";
 
         if (state.TryGetCreatedEntityId(template.Name, out var existingId) &&
             await CheckEntityExistenceAsync(connection, resourceGroup, existingId))

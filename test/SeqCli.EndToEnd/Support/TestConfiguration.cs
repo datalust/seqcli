@@ -40,7 +40,8 @@ public class TestConfiguration(Args args)
         if (args.UseDockerSeq(out var imageTag))
         {
             var containerName = Guid.NewGuid().ToString("n");
-            return new CaptiveProcess("podman", $"run --name {containerName} -it --rm -e ACCEPT_EULA=Y -p {_serverListenPort}:80 datalust/seq:{imageTag}", stopCommandFullExePath: "podman", stopCommandArgs: $"stop {containerName}");
+            const string containerRuntime = "docker";
+            return new CaptiveProcess(containerRuntime, $"run --name {containerName} -it --rm -e ACCEPT_EULA=Y -p {_serverListenPort}:80 datalust/seq:{imageTag}", stopCommandFullExePath: containerRuntime, stopCommandArgs: $"stop {containerName}");
         }
         
         return new CaptiveProcess("seq", commandWithArgs);
