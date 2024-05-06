@@ -38,9 +38,9 @@ static class TemplateSetImporter
         TemplateImportState state,
         bool merge)
     {
-        var ordering = new[] {"users", "signals", "apps", "appinstances",
+        var ordering = new List<string> {"users", "signals", "apps", "appinstances",
             "dashboards", "sqlqueries", "workspaces", "retentionpolicies",
-            "alerts", "expressionindexes"}.ToList();
+            "alerts", "expressionindexes"};
 
         var sorted = templates.OrderBy(t => ordering.IndexOf(t.ResourceGroup));
             
@@ -77,7 +77,7 @@ static class TemplateSetImporter
         var resourceGroup = await connection.Client.GetAsync<ResourceGroup>(apiRoot, link.Key);
         
         // ExpressionIndexes with mapped ids or identical expressions are assumed to be equivalent.
-        var immutableTarget = template.ResourceGroup != "ExpressionIndexes";
+        var immutableTarget = template.ResourceGroup.Equals("ExpressionIndexes", StringComparison.OrdinalIgnoreCase);
 
         if (state.TryGetCreatedEntityId(template.Name, out var existingId) &&
             await CheckEntityExistenceAsync(connection, resourceGroup, existingId))

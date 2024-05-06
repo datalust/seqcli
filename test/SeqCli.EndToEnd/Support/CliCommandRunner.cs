@@ -6,7 +6,7 @@ namespace SeqCli.EndToEnd.Support;
 
 public class CliCommandRunner(TestConfiguration configuration)
 {
-    static readonly TimeSpan DefaultExecTimeout = TimeSpan.FromSeconds(10);
+    public static readonly TimeSpan DefaultExecTimeout = TimeSpan.FromSeconds(10);
         
     public ITestProcess? LastRunProcess { get; private set; }
 

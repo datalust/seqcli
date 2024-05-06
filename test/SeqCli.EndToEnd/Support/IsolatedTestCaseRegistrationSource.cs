@@ -32,7 +32,8 @@ class IsolatedTestCaseRegistrationSource : IRegistrationSource
                         ctx.Resolve<Lazy<ILogger>>(),
                         ctx.Resolve<CliCommandRunner>(),
                         ctx.Resolve<Lazy<LicenseSetup>>(),
-                        tc);
+                        tc,
+                        ctx.Resolve<TestConfiguration>());
                 }),
                 new CurrentScopeLifetime(),
                 InstanceSharing.None,
