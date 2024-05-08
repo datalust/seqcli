@@ -52,7 +52,7 @@ class CreateCommand : Command
 
         Options.Add(
             "stream:",
-            "Stream incoming events to this app instance as they're ingested; optionally accepts a signal expression limiting which events should be streamed",
+            "Stream incoming events to this app instance as they're ingested; optionally accepts a signal expression limiting which events should be streamed, for example `signal-1,signal-2`",
             s =>
             {
                 _streamIncomingEvents = true;

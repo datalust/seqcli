@@ -151,25 +151,6 @@ class RunCommand : Command
             
             if (container == null) throw new Exception("Host did not build container.");
 
-            app.Use(async (context, next) =>
-            {
-                try
-                {
-                    await next();
-                }
-                // ISSUE: this exception type isn't currently used.
-                catch (RequestProcessingException rex)
-                {
-                    if (context.Response.HasStarted)
-                        throw;
-
-                    context.Response.StatusCode = (int)rex.StatusCode;
-                    context.Response.ContentType = "text/plain; charset=UTF-8";
-                    await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(rex.Message));
-                    await context.Response.CompleteAsync();
-                }
-            });
-            
             foreach (var mapper in container.Resolve<IEnumerable<IMapEndpoints>>())
             {
                 mapper.MapEndpoints(app);

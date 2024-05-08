@@ -5,7 +5,6 @@ using Serilog;
 using Serilog.Context;
 using Serilog.Events;
 using SerilogTracing;
-using SerilogTracing.Instrumentation;
 
 namespace Roastery.Web;
 

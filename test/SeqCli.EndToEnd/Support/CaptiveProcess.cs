@@ -23,6 +23,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
         string args = null,
         IDictionary<string, string> environment = null,
         bool captureOutput = true,
+        bool supplyInput = false,
         string stopCommandFullExePath = null,
         string stopCommandArgs = null)
     {
@@ -36,6 +37,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
             UseShellExecute = false,
             RedirectStandardError = captureOutput,
             RedirectStandardOutput = captureOutput,
+            RedirectStandardInput = supplyInput,
             WindowStyle = ProcessWindowStyle.Hidden,
             CreateNoWindow = true,
             ErrorDialog = false,
@@ -45,9 +47,9 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
             
         if (environment != null)
         {
-            foreach (var kvp in environment)
+            foreach (var (name, value) in environment)
             {
-                startInfo.Environment.Add(kvp.Key, kvp.Value);
+                startInfo.Environment.Add(name, value);
             }
         }
 
@@ -57,7 +59,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
 
         if (captureOutput)
         {
-            _process.OutputDataReceived += (o, e) =>
+            _process.OutputDataReceived += (_, e) =>
             {
                 if (e.Data == null)
                     _outputComplete.Set(); 
@@ -66,7 +68,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
             };
             _process.BeginOutputReadLine();
 
-            _process.ErrorDataReceived += (o, e) =>
+            _process.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data == null)
                     _errorComplete.Set();
@@ -75,6 +77,16 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
             };
             _process.BeginErrorReadLine();
         }
+    }
+
+    public void WriteLineStdin(string s)
+    {
+        _process.StandardInput.WriteLine(s);
+    }
+
+    public void CompleteStdin()
+    {
+        _process.StandardInput.Close();
     }
 
     void WriteOutput(string o)

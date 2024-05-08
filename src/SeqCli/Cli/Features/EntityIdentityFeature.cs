@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using SeqCli.Util;
 
 namespace SeqCli.Cli.Features;
 
@@ -21,8 +22,6 @@ class EntityIdentityFeature : CommandFeature
 {
     readonly string _entityName;
     readonly string _verb;
-
-    string? _title, _id;
 
     public EntityIdentityFeature(string entityName, string verb)
     {
@@ -35,12 +34,12 @@ class EntityIdentityFeature : CommandFeature
         options.Add(
             "t=|title=",
             $"The title of the {_entityName}(s) to {_verb}",
-            t => _title = t);
+            t => Title = ArgumentString.Normalize(t));
 
         options.Add(
             "i=|id=",
             $"The id of a single {_entityName} to {_verb}",
-            t => _id = t);
+            t => Id = ArgumentString.Normalize(t));
     }
 
     public override IEnumerable<string> GetUsageErrors()
@@ -49,7 +48,7 @@ class EntityIdentityFeature : CommandFeature
             yield return "Only one of either `title` or `id` can be specified";
     }
 
-    public string? Title => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
+    public string? Title { get; private set; }
 
-    public string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
+    public string? Id { get; private set; }
 }
