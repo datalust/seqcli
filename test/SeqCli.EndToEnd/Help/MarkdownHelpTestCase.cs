@@ -24,6 +24,8 @@ public class MarkdownHelpTestCase : ICliTestCase
         var indexOfTemplateImport = markdown.IndexOf("### `template import`", StringComparison.Ordinal);
         Assert.NotEqual(indexOfTemplateExport, indexOfTemplateImport);
         Assert.True(indexOfTemplateExport < indexOfTemplateImport);
+        
+        Assert.DoesNotContain("### `forwarder run`", markdown);
 
         return Task.CompletedTask;
     }

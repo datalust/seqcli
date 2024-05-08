@@ -35,7 +35,7 @@ using SeqCli.Forwarder.Util;
 
 namespace SeqCli.Forwarder.Cli.Commands
 {
-    [Command("forwarder", "install", "Install the forwarder as a Windows service")]
+    [Command("forwarder", "install", "Install the forwarder as a Windows service", IsPreview = true)]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     class InstallCommand : Command
     {

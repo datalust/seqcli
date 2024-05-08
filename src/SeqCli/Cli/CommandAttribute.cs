@@ -22,8 +22,8 @@ public class CommandAttribute : Attribute, ICommandMetadata
     public string Name { get; }
     public string? SubCommand { get; }
     public string HelpText { get; }
-
     public string? Example { get; set; }
+    public bool IsPreview { get; set; }
 
     public CommandAttribute(string name, string helpText)
     {
