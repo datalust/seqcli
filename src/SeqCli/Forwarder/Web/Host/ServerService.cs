@@ -13,8 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using SeqCli.Forwarder.Diagnostics;
+using SeqCli.Forwarder.Storage;
 using Serilog;
 
 namespace SeqCli.Forwarder.Web.Host;
@@ -22,11 +24,13 @@ namespace SeqCli.Forwarder.Web.Host;
 class ServerService
 {
     readonly IHost _host;
+    readonly LogBufferMap _logBufferMap;
     readonly string _listenUri;
 
-    public ServerService(IHost host, string listenUri)
+    public ServerService(IHost host, LogBufferMap logBufferMap, string listenUri)
     {
         _host = host;
+        _logBufferMap = logBufferMap;
         _listenUri = listenUri;
     }
 
@@ -38,8 +42,8 @@ class ServerService
                 
             _host.Start();
 
-            Log.Information("Seq Forwarder listening on {ListenUri}", _listenUri);
-            IngestionLog.Log.Debug("Seq Forwarder is accepting events");
+            Log.Information("SeqCli Forwarder listening on {ListenUri}", _listenUri);
+            IngestionLog.Log.Debug("SeqCli Forwarder is accepting events");
         }
         catch (Exception ex)
         {
@@ -48,12 +52,14 @@ class ServerService
         }
     }
 
-    public void Stop()
+    public async Task StopAsync()
     {
-        Log.Debug("Seq Forwarder stopping");
+        Log.Debug("Stopping HTTP server...");
 
-        _host.StopAsync().Wait();
+        await _host.StopAsync();
 
-        Log.Information("Seq Forwarder stopped cleanly");
+        Log.Information("HTTP server stopped; flushing buffers...");
+
+        await _logBufferMap.StopAsync();
     }
 }

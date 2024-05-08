@@ -17,12 +17,12 @@
 using System; 
 using System.IO;
 using System.Threading.Tasks;
-using Seq.Forwarder.Util;
+using SeqCli.Forwarder.Util;
 using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
 using SeqCli.Forwarder.Util;
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Forwarder.Cli.Commands
 {
     [Command("forwarder", "uninstall", "Uninstall the forwarder Windows service")]
     class UninstallCommand : Command

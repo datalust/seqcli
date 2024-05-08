@@ -22,7 +22,7 @@ using System.ServiceProcess;
 using System.Text;
 using SeqCli.Forwarder.Util;
 
-namespace Seq.Forwarder.Util
+namespace SeqCli.Forwarder.Util
 {
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     public static class ServiceConfiguration

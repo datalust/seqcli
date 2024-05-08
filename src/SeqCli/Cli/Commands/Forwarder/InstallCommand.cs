@@ -21,8 +21,8 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.ServiceProcess;
 using System.Threading.Tasks;
-using Seq.Forwarder.Cli.Features;
-using Seq.Forwarder.Util;
+using SeqCli.Forwarder.Cli.Features;
+using SeqCli.Forwarder.Util;
 using SeqCli;
 using SeqCli.Cli;
 using SeqCli.Cli.Features;
@@ -33,7 +33,7 @@ using SeqCli.Forwarder.Util;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Forwarder.Cli.Commands
 {
     [Command("forwarder", "install", "Install the forwarder as a Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
@@ -95,7 +95,7 @@ namespace Seq.Forwarder.Cli.Commands
             ServiceController controller;
             try
             {
-                Console.WriteLine("Checking the status of the Seq Forwarder service...");
+                Console.WriteLine($"Checking the status of the {SeqCliForwarderWindowsService.WindowsServiceName} service...");
 
                 controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
                 Console.WriteLine("Status is {0}", controller.Status);

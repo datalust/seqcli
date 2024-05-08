@@ -13,12 +13,11 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -30,13 +29,13 @@ using SeqCli.Config;
 using SeqCli.Config.Forwarder;
 using SeqCli.Forwarder;
 using SeqCli.Forwarder.Util;
+using SeqCli.Forwarder.Web;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
-using Serilog.Formatting.Display;
 
 #if WINDOWS
 using SeqCli.Forwarder.ServiceProcess;
@@ -79,6 +78,7 @@ class RunCommand : Command
 
         try
         {
+            // ISSUE: we can't really rely on the default `SeqCliConfig` path being readable when running as a service.
             config = SeqCliConfig.Read(); // _storagePath.ConfigFilePath);
         }
         catch (Exception ex)
@@ -107,7 +107,7 @@ class RunCommand : Command
             {
                 options.AddServerHeader = false;
                 options.AllowSynchronousIO = true;
-            }).ConfigureKestrel((context, options) =>
+            }).ConfigureKestrel((_, options) =>
             {
                 var apiListenUri = new Uri(listenUri);
 
@@ -125,8 +125,8 @@ class RunCommand : Command
                     options.Listen(ipAddress, apiListenUri.Port, listenOptions =>
                     {
 #if WINDOWS
-                                    listenOptions.UseHttps(StoreName.My, apiListenUri.Host,
-                                        location: StoreLocation.LocalMachine, allowInvalid: true);
+                        listenOptions.UseHttps(StoreName.My, apiListenUri.Host,
+                            location: StoreLocation.LocalMachine, allowInvalid: true);
 #else
                         listenOptions.UseHttps();
 #endif
@@ -138,31 +138,52 @@ class RunCommand : Command
                 }
             });
             
-            builder
-                .Host.UseSerilog()
-                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                .ConfigureContainer<ContainerBuilder>(builder =>
+            builder.Services.AddSerilog();
+                
+            builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureContainer<ContainerBuilder>(containerBuilder =>
                 {
-                    builder.RegisterBuildCallback(ls => container = ls);
-                    builder.RegisterModule(new ForwarderModule(_storagePath.BufferPath, config));
+                    containerBuilder.RegisterBuildCallback(ls => container = ls);
+                    containerBuilder.RegisterModule(new ForwarderModule(_storagePath.BufferPath, config));
                 });
             
-            using var host = builder.Build();
+            await using var app = builder.Build();
             
             if (container == null) throw new Exception("Host did not build container.");
 
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next();
+                }
+                // ISSUE: this exception type isn't currently used.
+                catch (RequestProcessingException rex)
+                {
+                    if (context.Response.HasStarted)
+                        throw;
+
+                    context.Response.StatusCode = (int)rex.StatusCode;
+                    context.Response.ContentType = "text/plain; charset=UTF-8";
+                    await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(rex.Message));
+                    await context.Response.CompleteAsync();
+                }
+            });
+            
             foreach (var mapper in container.Resolve<IEnumerable<IMapEndpoints>>())
             {
-                mapper.Map(host);
+                mapper.MapEndpoints(app);
             }
 
             var service = container.Resolve<ServerService>(
-                new TypedParameter(typeof(IHost), host),
+                new TypedParameter(typeof(IHost), app),
                 new NamedParameter("listenUri", listenUri));
                 
             var exit = ExecutionEnvironment.SupportsStandardIO
-                ? RunStandardIO(service, Console.Out)
+                ? await RunStandardIOAsync(service, Console.Out)
                 : RunService(service);
+            
+            Log.Information("Exiting with status code {StatusCode}", exit);
 
             return exit;
         }
@@ -178,6 +199,7 @@ class RunCommand : Command
     }
 
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+    // ReSharper disable once UnusedParameter.Local
     static int RunService(ServerService service)
     {
 #if WINDOWS
@@ -190,7 +212,7 @@ class RunCommand : Command
 #endif
     }
         
-    static int RunStandardIO(ServerService service, TextWriter cout)
+    static async Task<int> RunStandardIOAsync(ServerService service, TextWriter cout)
     {
         service.Start();
 
@@ -210,7 +232,7 @@ class RunCommand : Command
             Console.Read();
         }
 
-        service.Stop();
+        await service.StopAsync();
 
         return 0;
     }
@@ -219,9 +241,9 @@ class RunCommand : Command
     {
         Write("─", ConsoleColor.DarkGray, 47);
         Console.WriteLine();
-        Write(" Seq Forwarder", ConsoleColor.White);
+        Write(" SeqCli Forwarder", ConsoleColor.White);
         Write(" ──", ConsoleColor.DarkGray);
-        Write(" © 2024 Datalust Pty Ltd", ConsoleColor.Gray);
+        Write(" © Datalust Pty Ltd and Contributors", ConsoleColor.Gray);
         Console.WriteLine();
         Write("─", ConsoleColor.DarkGray, 47);
         Console.WriteLine();
@@ -244,7 +266,7 @@ class RunCommand : Command
         var loggerConfiguration = new LoggerConfiguration()
             .Enrich.FromLogContext()
             .Enrich.WithProperty("MachineName", Environment.MachineName)
-            .Enrich.WithProperty("Application", "Seq Forwarder")
+            .Enrich.WithProperty("Application", "SeqCli Forwarder")
             .MinimumLevel.Is(internalLoggingLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .WriteTo.File(

@@ -42,7 +42,7 @@ static class IngestionLog
         return Sink.Read();
     }
 
-    public static ILogger ForClient(IPAddress clientHostIP)
+    public static ILogger ForClient(IPAddress? clientHostIP)
     {
         return Log.ForContext("ClientHostIP", clientHostIP);
     }

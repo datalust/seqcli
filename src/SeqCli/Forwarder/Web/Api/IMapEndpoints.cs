@@ -4,5 +4,5 @@ namespace SeqCli.Forwarder.Web.Api;
 
 interface IMapEndpoints
 {
-    void Map(WebApplication app);
+    void MapEndpoints(WebApplication app);
 }

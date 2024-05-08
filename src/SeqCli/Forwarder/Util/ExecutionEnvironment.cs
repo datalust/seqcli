@@ -1,5 +1,5 @@
 ﻿#if WINDOWS
-using Seq.Forwarder.Util;
+using SeqCli.Forwarder.Util;
 #endif
 
 namespace SeqCli.Forwarder.Util;

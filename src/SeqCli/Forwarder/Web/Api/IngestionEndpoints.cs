@@ -53,11 +53,8 @@ class IngestionEndpoints : IMapEndpoints
         _logBuffers = logBuffers;
     }
     
-    public void Map(WebApplication app)
+    public void MapEndpoints(WebApplication app)
     {
-        app.MapGet("/api",
-            () => Results.Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", Utf8));
-
         app.MapPost("api/events/raw", new Func<HttpContext, Task<IResult>>(async (context) =>
         {
             var clef = DefaultedBoolQuery(context.Request, "clef");
@@ -66,65 +63,15 @@ class IngestionEndpoints : IMapEndpoints
                 return await IngestCompactFormat(context);
 
             var contentType = (string?) context.Request.Headers[HeaderNames.ContentType];
-            var clefMediaType = "application/vnd.serilog.clef";
+            const string clefMediaType = "application/vnd.serilog.clef";
 
             if (contentType != null && contentType.StartsWith(clefMediaType))
                 return await IngestCompactFormat(context);
 
-            return IngestRawFormat(context);
+            IngestionLog.ForClient(context.Connection.RemoteIpAddress)
+                .Error("Client supplied a legacy raw-format (non-CLEF) payload");
+            return Results.BadRequest("Only newline-delimited JSON (CLEF) payloads are supported.");
         }));
-    }
-    
-    IEnumerable<byte[]> EncodeRawEvents(ICollection<JToken> events, IPAddress remoteIpAddress)
-    {
-        var encoded = new byte[events.Count][];
-        var i = 0;
-        foreach (var e in events)
-        {
-            var s = e.ToString(Formatting.None);
-            var payload = Utf8.GetBytes(s);
-
-            if (payload.Length > (int) _connectionConfig.EventBodyLimitBytes)
-            {
-                IngestionLog.ForPayload(remoteIpAddress, s).Debug("An oversized event was dropped");
-
-                var jo = e as JObject;
-                // ReSharper disable SuspiciousTypeConversion.Global
-                var timestamp = (string?) (dynamic?) jo?.GetValue("Timestamp") ?? DateTime.UtcNow.ToString("o");
-                var level = (string?) (dynamic?) jo?.GetValue("Level") ?? "Warning";
-
-                if (jo != null)
-                {
-                    jo.Remove("Timestamp");
-                    jo.Remove("Level");
-                }
-
-                var startToLog = (int) Math.Min(_connectionConfig.EventBodyLimitBytes / 2, 1024);
-                var compactPrefix = e.ToString(Formatting.None).Substring(0, startToLog);
-
-                encoded[i] = Utf8.GetBytes(JsonConvert.SerializeObject(new
-                {
-                    Timestamp = timestamp,
-                    MessageTemplate = "Seq Forwarder received and dropped an oversized event",
-                    Level = level,
-                    Properties = new
-                    {
-                        Partial = compactPrefix,
-                        Environment.MachineName,
-                        _connectionConfig.EventBodyLimitBytes,
-                        PayloadBytes = payload.Length
-                    }
-                }));
-            }
-            else
-            {
-                encoded[i] = payload;
-            }
-
-            i++;
-        }
-
-        return encoded;
     }
     
     static bool DefaultedBoolQuery(HttpRequest request, string queryParameterName)
@@ -150,16 +97,7 @@ class IngestionEndpoints : IMapEndpoints
         var apiKeyHeader = request.Headers["X-SeqApiKey"];
 
         if (apiKeyHeader.Count > 0) return apiKeyHeader.Last();
-        if (request.Query.TryGetValue("apiKey", out var apiKey)) return apiKey.Last();
-
-        return null;
-    }
-    
-    
-    IResult IngestRawFormat(HttpContext context)
-    {
-        // Convert legacy format to CLEF
-        throw new NotImplementedException();
+        return request.Query.TryGetValue("apiKey", out var apiKey) ? apiKey.Last() : null;
     }
     
     async Task<ContentHttpResult> IngestCompactFormat(HttpContext context)
@@ -261,7 +199,7 @@ class IngestionEndpoints : IMapEndpoints
             StatusCodes.Status201Created);
     }
 
-    bool ValidateClef(Span<byte> evt)
+    static bool ValidateClef(Span<byte> evt)
     {
         var reader = new Utf8JsonReader(evt);
 
@@ -281,7 +219,7 @@ class IngestionEndpoints : IMapEndpoints
                     {
                         var name = reader.GetString();
 
-                        if (name != null & name!.StartsWith("@"))
+                        if (name != null & name!.StartsWith($"@"))
                         {
                             // Validate @ property
                         }
@@ -297,7 +235,7 @@ class IngestionEndpoints : IMapEndpoints
         return true;
     }
 
-    async Task Write(LogBuffer log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
+    static async Task Write(LogBuffer log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
     {
         try
         {

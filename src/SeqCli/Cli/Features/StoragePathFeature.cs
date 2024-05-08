@@ -41,14 +41,14 @@ class StoragePathFeature : CommandFeature
             // Specific to and writable by the current user.
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
 #endif
-            "Seq",
+            "SeqCli",
             "Forwarder"));
     }
 
     static string? TryQueryInstalledStorageRoot()
     {
 #if WINDOWS
-        if (Seq.Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
+        if (SeqCli.Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
             SeqCliForwarderWindowsService.WindowsServiceName, out var storage))
             return storage;
 #endif

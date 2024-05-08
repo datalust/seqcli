@@ -26,7 +26,7 @@ namespace SeqCli.Forwarder.ServiceProcess
     {
         readonly ServerService _serverService;
 
-        public static string WindowsServiceName { get; } = "Seq Forwarder";
+        public static string WindowsServiceName { get; } = "SeqCli Forwarder";
 
         public SeqCliForwarderWindowsService(ServerService serverService)
         {
@@ -46,7 +46,7 @@ namespace SeqCli.Forwarder.ServiceProcess
 
         protected override void OnStop()
         {
-            _serverService.Stop();
+            _serverService.StopAsync().Wait();
         }
     }
 }

@@ -16,7 +16,7 @@
 
 using SeqCli.Cli;
 
-namespace Seq.Forwarder.Cli.Features
+namespace SeqCli.Forwarder.Cli.Features
 {
     class ServiceCredentialsFeature : CommandFeature
     {

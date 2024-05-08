@@ -11,7 +11,7 @@ using System.Text;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
-namespace Seq.Forwarder.Util
+namespace SeqCli.Forwarder.Util
 {
     public static class AccountRightsHelper
     {

@@ -24,7 +24,7 @@ using SeqCli.Forwarder.ServiceProcess;
 
 // ReSharper disable UnusedType.Global
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Forwarder.Cli.Commands
 {
     [Command("forwarder", "restart", "Restart the forwarder Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]

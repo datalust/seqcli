@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Forwarder.Cli.Commands
 {
     [Command("forwarder", "status", "Show the status of the forwarder Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
@@ -33,11 +33,11 @@ namespace Seq.Forwarder.Cli.Commands
             try
             {
                 var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
-                Console.WriteLine("The Seq Forwarder service is installed and {0}.", controller.Status.ToString().ToLowerInvariant());
+                Console.WriteLine($"The {SeqCliForwarderWindowsService.WindowsServiceName} service is installed and {controller.Status.ToString().ToLowerInvariant()}.");
             }
             catch (InvalidOperationException)
             {
-                Console.WriteLine("The Seq Forwarder service is not installed.");
+                Console.WriteLine($"The {SeqCliForwarderWindowsService.WindowsServiceName} service is not installed.");
             }
             catch (Exception ex)
             {
