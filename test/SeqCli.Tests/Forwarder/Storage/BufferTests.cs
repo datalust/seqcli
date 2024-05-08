@@ -15,11 +15,11 @@ public class BufferTests
         using var writer = BufferAppender.Open(directory);
         var reader = BufferReader.Open(directory);
 
-        Assert.Equal(0, directory.Files.Count);
+        Assert.Empty(directory.Files);
 
         // Append a payload
         Assert.True(writer.TryAppend("{\"id\":1}\n"u8.ToArray(), long.MaxValue));
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
 
         // Read the payload
         Assert.False(reader.TryFillBatch(10, out _));
@@ -34,7 +34,7 @@ public class BufferTests
 
         // Append another payload
         Assert.True(writer.TryAppend("{\"id\":2}\n"u8.ToArray(), long.MaxValue));
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
 
         // Read the payload
         Assert.True(reader.TryFillBatch(10, out batch));
@@ -90,7 +90,7 @@ public class BufferTests
 
         reader.AdvanceTo(batchBuffer.ReaderHead);
 
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
 
         directory.Create(new ChunkName(1).ToString(), "{\"id\":1}\n"u8.ToArray());
         directory.Create(new ChunkName(3).ToString(), "{\"id\":3}\n"u8.ToArray());
@@ -105,7 +105,7 @@ public class BufferTests
 
         reader.AdvanceTo(batchBuffer.ReaderHead);
 
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
     }
 
     [Fact]
@@ -193,12 +193,12 @@ public class BufferTests
         using var writer = BufferAppender.Open(directory);
         var reader = BufferReader.Open(directory);
 
-        Assert.Equal(0, directory.Files.Count);
+        Assert.Empty(directory.Files);
 
         Assert.True(writer.TryAppend("{\"id\":1}\n"u8.ToArray(), 17));
         Assert.True(writer.TryAppend("{\"id\":2}\n"u8.ToArray(), 17));
 
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
 
         Assert.True(writer.TryAppend("{\"id\":3}\n"u8.ToArray(), 17));
 
@@ -213,7 +213,7 @@ public class BufferTests
 
         reader.AdvanceTo(batchBuffer.ReaderHead);
 
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
     }
 
     [Fact]
@@ -226,7 +226,7 @@ public class BufferTests
         using var writer = BufferAppender.Open(directory);
         var reader = BufferReader.Open(directory);
 
-        Assert.Equal(1, directory.Files.Count);
+        Assert.Single(directory.Files);
 
         Assert.True(writer.TryAppend("{\"id\":1}\n"u8.ToArray(), long.MaxValue));
 

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using SeqCli.Forwarder.Filesystem;
