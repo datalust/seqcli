@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Apps\HealthCheckBinaries\" />
+    <Folder Include="Forwarder\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Apps\HealthCheckBinaries\*">

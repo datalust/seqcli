@@ -17,7 +17,7 @@ using System.Net.Http;
 using System.Threading;
 using Autofac;
 using SeqCli.Config;
-using SeqCli.Forwarder.Storage;
+using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
 using Serilog.Formatting.Display;
@@ -38,7 +38,7 @@ class ForwarderModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<ServerService>().SingleInstance();
-        builder.RegisterType<LogBufferMap>().SingleInstance();
+        builder.RegisterType<LogChannelMap>().SingleInstance();
 
         builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();

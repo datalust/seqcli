@@ -2,18 +2,18 @@ using System;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace SeqCli.Forwarder.Storage;
+namespace SeqCli.Forwarder.Channel;
 
-class LogBufferMap
+class LogChannelMap
 {
-    public LogBufferMap()
+    public LogChannelMap()
     {
         
     }
     
-    public LogBuffer Get(string? apiKey)
+    public LogChannel Get(string? apiKey)
     {
-        return new LogBuffer(async (c) => await Task.Delay(TimeSpan.FromSeconds(1), c), default);
+        return new LogChannel(async (c) => await Task.Delay(TimeSpan.FromSeconds(1), c), default);
     }
 
     public Task StopAsync()

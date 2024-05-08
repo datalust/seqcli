@@ -28,8 +28,8 @@ using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Config;
+using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
-using SeqCli.Forwarder.Storage;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
@@ -40,17 +40,17 @@ class IngestionEndpoints : IMapEndpoints
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
     readonly ConnectionConfig _connectionConfig;
-    readonly LogBufferMap _logBuffers;
+    readonly LogChannelMap _logChannels;
 
     readonly JsonSerializer _rawSerializer = JsonSerializer.Create(
         new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
 
     public IngestionEndpoints(
         SeqCliConfig config,
-        LogBufferMap logBuffers)
+        LogChannelMap logChannels)
     {
         _connectionConfig = config.Connection;
-        _logBuffers = logBuffers;
+        _logChannels = logChannels;
     }
     
     public void MapEndpoints(WebApplication app)
@@ -105,7 +105,7 @@ class IngestionEndpoints : IMapEndpoints
         var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var log = _logBuffers.Get(ApiKey(context.Request));
+        var log = _logChannels.Get(ApiKey(context.Request));
 
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;
@@ -235,7 +235,7 @@ class IngestionEndpoints : IMapEndpoints
         return true;
     }
 
-    static async Task Write(LogBuffer log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
+    static async Task Write(LogChannel log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
     {
         try
         {
