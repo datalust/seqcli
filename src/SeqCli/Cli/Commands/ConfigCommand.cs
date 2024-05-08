@@ -19,6 +19,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using SeqCli.Config;
 using SeqCli.Util;
 using Serilog;
@@ -142,11 +143,12 @@ class ConfigCommand : Command
     static IEnumerable<KeyValuePair<string, object?>> ReadPairs(object config)
     {
         foreach (var property in config.GetType().GetTypeInfo().DeclaredProperties
-                     .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && !p.Name.StartsWith("Encoded"))
+                     .Select(p => new { Property = p, Name = GetConfigPropertyName(p)})
+                     .Where(p => p.Property.CanRead && p.Property.GetMethod!.IsPublic && !p.Property.GetMethod.IsStatic && !p.Name.StartsWith("encoded", StringComparison.OrdinalIgnoreCase))
                      .OrderBy(p => p.Name))
         {
             var propertyName = Camelize(property.Name);
-            var propertyValue = property.GetValue(config);
+            var propertyValue = property.Property.GetValue(config);
 
             if (propertyValue is IDictionary dict)
             {
@@ -175,11 +177,16 @@ class ConfigCommand : Command
         }
     }
 
+    static string GetConfigPropertyName(PropertyInfo property)
+    {
+        return property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? property.Name;
+    }
+
     static string Camelize(string s)
     {
         if (s.Length < 2)
             throw new NotSupportedException("No camel-case support for short names");
-        return char.ToLowerInvariant(s[0]) + s.Substring(1);
+        return char.ToLowerInvariant(s[0]) + s[1..];
     }
 
     static string Format(object? value)
