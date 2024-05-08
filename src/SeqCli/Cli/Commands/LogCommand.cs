@@ -86,7 +86,7 @@ class LogCommand : Command
                 continue;
 
             var name = key.Trim();
-            if (name.StartsWith("@"))
+            if (name.StartsWith('@'))
                 name = $"@{name}";
 
             payload[name] = new JValue(value);

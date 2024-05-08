@@ -42,6 +42,7 @@ static class EntityTemplateLoader
         if (root is not JsonTemplateObject rootDictionary ||
             !rootDictionary.Members.TryGetValue("$entity", out var resourceToken) ||
             resourceToken is not JsonTemplateString resource ||
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             resource.Value is null)
         {
             template = null;

@@ -38,8 +38,9 @@ static class TemplateSetImporter
         TemplateImportState state,
         bool merge)
     {
-        var ordering = new[] {"users", "signals", "apps", "appinstances",
-            "dashboards", "sqlqueries", "workspaces", "retentionpolicies", "alerts"}.ToList();
+        var ordering = new List<string> {"users", "signals", "apps", "appinstances",
+            "dashboards", "sqlqueries", "workspaces", "retentionpolicies",
+            "alerts", "expressionindexes"};
 
         var sorted = templates.OrderBy(t => ordering.IndexOf(t.ResourceGroup));
             
@@ -74,21 +75,40 @@ static class TemplateSetImporter
         var resourceGroupLink = template.ResourceGroup + "Resources";
         var link = apiRoot.Links.Single(l => resourceGroupLink.Equals(l.Key, StringComparison.OrdinalIgnoreCase));
         var resourceGroup = await connection.Client.GetAsync<ResourceGroup>(apiRoot, link.Key);
+        
+        // ExpressionIndexes with mapped ids or identical expressions are assumed to be equivalent.
+        var immutableTarget = template.ResourceGroup.Equals("ExpressionIndexes", StringComparison.OrdinalIgnoreCase);
 
         if (state.TryGetCreatedEntityId(template.Name, out var existingId) &&
             await CheckEntityExistenceAsync(connection, resourceGroup, existingId))
         {
             asObject["Id"] = existingId;
-            await UpdateEntityAsync(connection, resourceGroup, asObject, existingId);
-            Log.Information("Updated existing entity {EntityId} from {TemplateName}", existingId, template.Name);
+            if (immutableTarget)
+            {
+                Log.Information("No work required for existing immutable entity {EntityId} from {TemplateName}", existingId, template.Name);
+            }
+            else
+            {
+                await UpdateEntityAsync(connection, resourceGroup, asObject, existingId);
+                Log.Information("Updated existing entity {EntityId} from {TemplateName}", existingId, template.Name);
+            }
         }
         else if (merge && !state.TryGetCreatedEntityId(template.Name, out _) &&
                  await TryFindMergeTargetAsync(connection, resourceGroup, asObject) is { } mergedId)
         {
             asObject["Id"] = mergedId;
-            await UpdateEntityAsync(connection, resourceGroup, asObject, mergedId);
-            state.AddOrUpdateCreatedEntityId(template.Name, mergedId);
-            Log.Information("Merged and updated existing entity {EntityId} from {TemplateName}", existingId, template.Name);
+
+            if (immutableTarget)
+            {
+                Log.Information("Adding merge entry for existing immutable entity {EntityId} from {TemplateName}", existingId, template.Name);
+                state.AddOrUpdateCreatedEntityId(template.Name, mergedId);
+            }
+            else
+            {
+                await UpdateEntityAsync(connection, resourceGroup, asObject, mergedId);
+                state.AddOrUpdateCreatedEntityId(template.Name, mergedId);
+                Log.Information("Merged and updated existing entity {EntityId} from {TemplateName}", existingId, template.Name);
+            }
         }
         else
         {
@@ -103,20 +123,24 @@ static class TemplateSetImporter
     static async Task<string?> TryFindMergeTargetAsync(SeqConnection connection, ResourceGroup resourceGroup, IDictionary<string, object> entity)
     {
         if (!entity.TryGetValue("Title", out var nameOrTitleValue) &&
-            !entity.TryGetValue("Name", out nameOrTitleValue) ||
+            !entity.TryGetValue("Name", out nameOrTitleValue) &&
+            !entity.TryGetValue("Expression", out nameOrTitleValue)||
             nameOrTitleValue is not string nameOrTitle)
         {
             return null;
         }
 
-        // O(Ntemplates*Nentities) - easy target for optimization with some caching.
-        var candidates = await connection.Client.GetAsync<List<GenericEntity>>(resourceGroup, "Items",
-            new Dictionary<string, object>
+        var parameters = resourceGroup.Links["Items"].Template.Contains("shared")
+            ? new Dictionary<string, object>
             {
                 ["shared"] = true
-            });
+            }
+            : null;
+            
+        // O(Ntemplates*Nentities) - easy target for optimization with some caching.
+        var candidates = await connection.Client.GetAsync<List<GenericEntity>>(resourceGroup, "Items", parameters);
 
-        return candidates.FirstOrDefault(e => e.Title == nameOrTitle || e.Name == nameOrTitle)?.Id;
+        return candidates.FirstOrDefault(e => e.Title == nameOrTitle || e.Name == nameOrTitle || e.Expression == nameOrTitle)?.Id;
     }
 
     static async Task<string> CreateEntityAsync(SeqConnection connection, ResourceGroup resourceGroup, object entity)

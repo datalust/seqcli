@@ -5,18 +5,13 @@ using Serilog;
 
 namespace SeqCli.EndToEnd.Support;
 
-public class LicenseSetup
+public class LicenseSetup(Args args)
 {
-    readonly bool _enabled;
+    readonly bool _enabled = args.Multiuser();
 
     bool _attempted;
     string _certificate;
 
-    public LicenseSetup(Args args)
-    {
-        _enabled = args.Multiuser();
-    }
-        
     public async Task SetupAsync(
         SeqConnection connection,
         ILogger logger)

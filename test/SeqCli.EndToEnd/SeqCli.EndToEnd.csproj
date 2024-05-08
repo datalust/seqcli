@@ -5,9 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="8.0.0" />
-    <PackageReference Include="xunit" Version="2.6.2" />
-    <PackageReference Include="Serilog.Sinks.Seq" Version="6.0.0" />
+    <PackageReference Include="xunit" Version="2.7.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Data\*">

@@ -9,39 +9,36 @@ namespace SeqCli.EndToEnd.Support;
 
 class TestDriver
 {
-    readonly TestConfiguration _configuration;
     readonly IEnumerable<Meta<Func<Owned<IsolatedTestCase>>>> _cases;
 
     public TestDriver(
-        TestConfiguration configuration,
         IEnumerable<Meta<Func<Owned<IsolatedTestCase>>>> cases)
     {
-        _configuration = configuration;
         _cases = cases;
     }
 
     public async Task<int> Run()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"TESTING {_configuration.TestedBinary}");
+        Console.WriteLine($"TESTING {TestConfiguration.TestedBinary}");
         Console.ResetColor();
 
         int count = 0, passedCount = 0, skippedCount = 0;
         var failed = new List<string>();
 
-        foreach (var testCaseFactory in _cases.OrderBy(c => Guid.NewGuid()))
+        foreach (var testCaseFactory in _cases.OrderBy(_ => Guid.NewGuid()))
         {
             count++;
 
             await using var testCase = testCaseFactory.Value();
                 
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"RUNNING {testCase.Value.Description.PadRight(50)}");
+            Console.WriteLine($"RUNNING {testCase.Value.Description,-50}");
             Console.ResetColor();
 
             var isMultiuser = testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser);
             testCaseFactory.Metadata.TryGetValue("MinimumApiVersion", out var minSeqVersion);
-            if (isMultiuser != _configuration.IsMultiuser || minSeqVersion != null &&
+            if (isMultiuser != testCase.Value.Configuration.IsMultiuser || minSeqVersion != null &&
                 !await testCase.Value.IsSupportedApiVersion((string)minSeqVersion))
             {
                 skippedCount++;

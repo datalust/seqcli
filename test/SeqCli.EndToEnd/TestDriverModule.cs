@@ -43,9 +43,9 @@ class TestDriverModule : Module
                 return m;
             });
 
-        builder.RegisterType<LicenseSetup>().SingleInstance();
+        builder.RegisterType<LicenseSetup>().InstancePerOwned<IsolatedTestCase>();
 
-        builder.RegisterType<TestConfiguration>().SingleInstance();
+        builder.RegisterType<TestConfiguration>().InstancePerOwned<IsolatedTestCase>();
         builder.RegisterType<TestDataFolder>().InstancePerOwned<IsolatedTestCase>();
         builder.RegisterType<TestDriver>();
         builder.RegisterType<CliCommandRunner>();
