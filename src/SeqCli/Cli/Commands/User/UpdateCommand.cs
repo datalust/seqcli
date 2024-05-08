@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Seq.Api.Model;
+using Seq.Api;
+using SeqCli.Connection;
 
-namespace SeqCli.Templates.Import;
+namespace SeqCli.Cli.Commands.User;
 
-// ReSharper disable once ClassNeverInstantiated.Global
-class GenericEntity : Entity
-{
-    public string? Title { get; set; }
-    public string? Name { get; set; }
-    public string? Expression { get; set; }
-}
+[Command("user", "update",
+    "Update an existing user",
+    Example="seqcli user update --json '{...}'")]
+class UpdateCommand(SeqConnectionFactory connectionFactory):
+    Shared.UpdateCommand(connectionFactory, "user", nameof(SeqConnection.Users));
+    

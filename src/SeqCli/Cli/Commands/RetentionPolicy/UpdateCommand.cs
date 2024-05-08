@@ -1,4 +1,4 @@
-﻿// Copyright © Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Net;
+using Seq.Api;
+using SeqCli.Connection;
 
-namespace SeqCli.Forwarder.Web;
+namespace SeqCli.Cli.Commands.RetentionPolicy;
 
-class RequestProcessingException : Exception
-{
-    public RequestProcessingException(string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-        : base(message)
-    {
-        StatusCode = statusCode;
-    }
-
-    public HttpStatusCode StatusCode { get; }
-}
+[Command("retention", "update",
+    "Update an existing retention policy",
+    Example="seqcli retention update --json '{...}'")]
+class UpdateCommand(SeqConnectionFactory connectionFactory):
+    Shared.UpdateCommand(connectionFactory, "retention", nameof(SeqConnection.RetentionPolicies), "retention policy");
+    

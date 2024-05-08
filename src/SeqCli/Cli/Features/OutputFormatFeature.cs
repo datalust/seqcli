@@ -14,15 +14,14 @@
 
 using System;
 using System.Collections.Generic;
-using Destructurama;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
 using SeqCli.Config;
 using SeqCli.Csv;
-using SeqCli.Levels;
 using SeqCli.Output;
+using SeqCli.Util;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -123,7 +122,7 @@ class OutputFormatFeature : CommandFeature
             // way to write colorized JSON ;)
                 
             var writer = new LoggerConfiguration()
-                .Destructure.JsonNetTypes()
+                .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
                 .WriteTo.Console(
                     outputTemplate: "{@Message:j}{NewLine}",
@@ -135,7 +134,7 @@ class OutputFormatFeature : CommandFeature
         else
         {
             var dyn = (dynamic) jo;
-            Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name ?? dyn.Username}");
+            Console.WriteLine($"{entity.Id} {dyn.Title ?? dyn.Name ?? dyn.Username ?? dyn.Expression}");
         }
     }
 

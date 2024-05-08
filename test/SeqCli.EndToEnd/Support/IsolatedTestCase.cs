@@ -22,7 +22,8 @@ class IsolatedTestCase
         Lazy<ILogger> logger,
         CliCommandRunner commandRunner,
         Lazy<LicenseSetup> licenseSetup,
-        ICliTestCase testCase)
+        ICliTestCase testCase,
+        TestConfiguration configuration)
     {
         _serverProcess = serverProcess;
         _connection = connection;
@@ -30,10 +31,12 @@ class IsolatedTestCase
         _commandRunner = commandRunner;
         _licenseSetup = licenseSetup;
         _testCase = testCase ?? throw new ArgumentNullException(nameof(testCase));
+        Configuration = configuration;
     }
 
     public string Description => _testCase.GetType().Name;
     public string Output => _commandRunner.LastRunProcess?.Output ??_lastRunProcess?.Output ?? "<no process was run>";
+    public TestConfiguration Configuration { get; }
 
     void ForceStartup()
     {

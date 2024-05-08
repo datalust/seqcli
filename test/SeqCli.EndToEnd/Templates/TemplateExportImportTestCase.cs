@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Templates;
 
-[CliTestCase(MinimumApiVersion = "2021.3.6336")]
+[CliTestCase(MinimumApiVersion = "2024.3.0")]
 public class TemplateExportImportTestCase : ICliTestCase
 {
     readonly TestDataFolder _testDataFolder;
@@ -43,7 +43,7 @@ public class TemplateExportImportTestCase : ICliTestCase
 
         await File.WriteAllTextAsync(exportedFilename, content);
 
-        exit = runner.Exec("template import", $"-i \"{_testDataFolder.Path}\"");
+        exit = runner.Exec("template import", $"-i \"{_testDataFolder.Path}\" --merge");
         Assert.Equal(0, exit);
 
         var created = Assert.Single(await connection.Signals.ListAsync(shared: true), s => s.Title == newTitle);

@@ -9,7 +9,6 @@ using Roastery.Util;
 using Serilog;
 using Serilog.Events;
 using SerilogTracing;
-using SerilogTracing.Instrumentation;
 
 namespace Roastery.Data;
 
