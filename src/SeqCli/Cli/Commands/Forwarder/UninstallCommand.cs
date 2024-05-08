@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using SeqCli.Forwarder.Util;
 using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
-using SeqCli.Forwarder.Util;
 
 namespace SeqCli.Forwarder.Cli.Commands
 {

@@ -23,13 +23,10 @@ using System.ServiceProcess;
 using System.Threading.Tasks;
 using SeqCli.Forwarder.Cli.Features;
 using SeqCli.Forwarder.Util;
-using SeqCli;
 using SeqCli.Cli;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Config.Forwarder;
 using SeqCli.Forwarder.ServiceProcess;
-using SeqCli.Forwarder.Util;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
