@@ -18,23 +18,31 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
+using CommandList = System.Collections.Generic.List<Autofac.Features.Metadata.Meta<System.Lazy<SeqCli.Cli.Command>, SeqCli.Cli.CommandMetadata>>;
 
 namespace SeqCli.Cli.Commands;
 
 [Command("help", "Show information about available commands", Example = "seqcli help search")]
 class HelpCommand : Command
 {
-    readonly List<Meta<Lazy<Command>, CommandMetadata>> _orderedCommands;
-    bool _markdown;
+    readonly IEnumerable<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
+    bool _markdown, _pre;
 
     public HelpCommand(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
     {
+        _availableCommands = availableCommands;
+        Options.Add("pre", "Show preview commands", _ => _pre = true);
         Options.Add("m|markdown", "Generate markdown for use in documentation", _ => _markdown = true);
-        _orderedCommands = availableCommands.OrderBy(c => c.Metadata.Name).ThenBy(c => c.Metadata.SubCommand).ToList();
     }
 
     protected override Task<int> Run(string[] unrecognized)
     {
+        var orderedCommands = _availableCommands
+            .Where(c => !c.Metadata.IsPreview || _pre)
+            .OrderBy(c => c.Metadata.Name)
+            .ThenBy(c => c.Metadata.SubCommand)
+            .ToList();
+        
         var ea = Assembly.GetEntryAssembly();
         // ReSharper disable once PossibleNullReferenceException
         var name = ea!.GetName().Name!;
@@ -44,7 +52,7 @@ class HelpCommand : Command
             if (unrecognized.Length != 0)
                 return base.Run(unrecognized);
                 
-            PrintMarkdownHelp(name);
+            PrintMarkdownHelp(name, orderedCommands);
             return Task.FromResult(0);
         }
             
@@ -53,7 +61,7 @@ class HelpCommand : Command
         {
             topLevelCommand = unrecognized[0].ToLowerInvariant();
             var subCommand = unrecognized.Length > 1 && !unrecognized[1].Contains("-") ? unrecognized[1] : null;
-            var cmds = _orderedCommands.Where(c => c.Metadata.Name == topLevelCommand &&
+            var cmds = orderedCommands.Where(c => c.Metadata.Name == topLevelCommand &&
                                                    (subCommand == null || subCommand == c.Metadata.SubCommand)).ToArray();
 
             if (cmds.Length == 1 && cmds[0].Metadata.SubCommand == subCommand)
@@ -79,15 +87,15 @@ class HelpCommand : Command
             }
         }
 
-        if (topLevelCommand != null && _orderedCommands.Any(a => a.Metadata.Name == topLevelCommand))
-            PrintHelp(name, topLevelCommand);
+        if (topLevelCommand != null && orderedCommands.Any(a => a.Metadata.Name == topLevelCommand))
+            PrintHelp(name, topLevelCommand, orderedCommands);
         else
-            PrintHelp(name);
+            PrintHelp(name, orderedCommands);
             
         return Task.FromResult(0);
     }
 
-    void PrintMarkdownHelp(string executableName)
+    static void PrintMarkdownHelp(string executableName, CommandList orderedCommands)
     {
         Console.WriteLine("## Commands");
         Console.WriteLine();
@@ -101,7 +109,7 @@ class HelpCommand : Command
         Console.WriteLine("Available commands:");
         Console.WriteLine();
 
-        foreach (var cmd in _orderedCommands.GroupBy(cmd => cmd.Metadata.Name).OrderBy(c => c.Key))
+        foreach (var cmd in orderedCommands.GroupBy(cmd => cmd.Metadata.Name).OrderBy(c => c.Key))
         {
             if (cmd.Count() == 1)
             {
@@ -122,7 +130,7 @@ class HelpCommand : Command
         }
         Console.WriteLine();
 
-        foreach (var cmd in _orderedCommands)
+        foreach (var cmd in orderedCommands)
         {
             if (cmd.Metadata.SubCommand != null)
                 Console.WriteLine($"### `{cmd.Metadata.Name} {cmd.Metadata.SubCommand}`");
@@ -166,14 +174,14 @@ class HelpCommand : Command
         }
     }
 
-    void PrintHelp(string executableName)
+    static void PrintHelp(string executableName, CommandList orderedCommands)
     {
         Console.WriteLine($"Usage: {executableName} <command> [<args>]");
         Console.WriteLine();
         Console.WriteLine("Available commands are:");
 
         var printedGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var avail in _orderedCommands)
+        foreach (var avail in orderedCommands)
         {
             if (avail.Metadata.SubCommand != null)
             {
@@ -193,13 +201,13 @@ class HelpCommand : Command
         Console.WriteLine($"Type `{executableName} help <command>` for detailed help");
     }
 
-    void PrintHelp(string executableName, string topLevelCommand)
+    static void PrintHelp(string executableName, string topLevelCommand, CommandList orderedCommands)
     {
         Console.WriteLine($"Usage: {executableName} {topLevelCommand} <sub-command> [<args>]");
         Console.WriteLine();
         Console.WriteLine("Available sub-commands are:");
 
-        foreach (var avail in _orderedCommands.Where(c => c.Metadata.Name == topLevelCommand))
+        foreach (var avail in orderedCommands.Where(c => c.Metadata.Name == topLevelCommand))
         {
             Printing.Define($"  {avail.Metadata.SubCommand}", avail.Metadata.HelpText, Console.Out);
         }
