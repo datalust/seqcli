@@ -8,7 +8,7 @@ using Serilog;
 
 // ReSharper disable once InconsistentNaming
 
-namespace Seq.Forwarder.Util
+namespace SeqCli.Forwarder.Util
 {
     static class WindowsProcess
     {

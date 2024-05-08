@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SeqCli.Forwarder.Storage;
 
-record LogBuffer
+class LogBuffer
 {
     public LogBuffer(Func<CancellationToken, Task> write, CancellationToken cancellationToken)
     {
@@ -42,7 +42,7 @@ record LogBuffer
     public async Task WriteAsync(byte[] storage, Range range, CancellationToken cancellationToken)
     {
         var tcs = new TaskCompletionSource();
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _shutdownTokenSource.Token);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _shutdownTokenSource.Token);
 
         await _writer.WriteAsync(new LogBufferEntry(storage, range, tcs), cts.Token);
         await tcs.Task;

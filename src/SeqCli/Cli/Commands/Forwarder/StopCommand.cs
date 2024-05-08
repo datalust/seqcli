@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
 
-namespace Seq.Forwarder.Cli.Commands
+namespace SeqCli.Forwarder.Cli.Commands
 {
     [Command("forwarder", "stop", "Stop the forwarder Windows service")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]

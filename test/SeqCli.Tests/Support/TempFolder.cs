@@ -15,7 +15,7 @@ class TempFolder : IDisposable
     {
         Path = System.IO.Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Seq.Forwarder.Tests",
+            "SeqCli.Forwarder.Tests",
             Session.ToString("n"),
             name);
 

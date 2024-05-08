@@ -12,19 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using SeqCli.Forwarder.Diagnostics;
+using Serilog.Formatting.Display;
 
 namespace SeqCli.Forwarder.Web.Api;
 
-class ApiRootEndpoints : IMapEndpoints
+class IngestionLogEndpoints : IMapEndpoints
 {
+    readonly MessageTemplateTextFormatter _formatter;
     readonly Encoding _utf8 = new UTF8Encoding(false);
+
+    public IngestionLogEndpoints(MessageTemplateTextFormatter formatter)
+    {
+        _formatter = formatter;
+    }
 
     public void MapEndpoints(WebApplication app)
     {
-        app.MapGet("/api",
-            () => Results.Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", _utf8));
+        // ISSUE: this route should probably only be mapped when some kind of --unsafe-debug flag
+        // is set.
+        
+        app.MapGet("/", () =>
+        {
+            var events = IngestionLog.Read();
+            using var log = new StringWriter();
+            foreach (var logEvent in events)
+            {
+                _formatter.Format(logEvent, log);
+            }
+
+            return Results.Content(log.ToString(), "text/plain", _utf8);
+        });
     }
 }

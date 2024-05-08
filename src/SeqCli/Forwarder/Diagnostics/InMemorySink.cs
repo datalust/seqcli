@@ -37,7 +37,7 @@ public class InMemorySink : ILogEventSink
 
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
+        ArgumentNullException.ThrowIfNull(logEvent);
         _queue.Enqueue(logEvent);
 
         while (_queue.Count > _queueLength)
