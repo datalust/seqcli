@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using SeqCli.Forwarder.Util;
 using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
-using SeqCli.Forwarder.Util;
 
 namespace SeqCli.Forwarder.Cli.Commands
 {

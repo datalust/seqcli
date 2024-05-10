@@ -3,13 +3,13 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace SeqCli.Forwarder.Storage;
+namespace SeqCli.Forwarder.Channel;
 
-class LogBuffer
+class LogChannel
 {
-    public LogBuffer(Func<CancellationToken, Task> write, CancellationToken cancellationToken)
+    public LogChannel(Func<CancellationToken, Task> write, CancellationToken cancellationToken)
     {
-        var channel = Channel.CreateBounded<LogBufferEntry>(new BoundedChannelOptions(5)
+        var channel = System.Threading.Channels.Channel.CreateBounded<LogChannelEntry>(new BoundedChannelOptions(5)
         {
             SingleReader = false,
             SingleWriter = true,
@@ -35,7 +35,7 @@ class LogBuffer
         }, cancellationToken: _shutdownTokenSource.Token);
     }
     
-    readonly ChannelWriter<LogBufferEntry> _writer;
+    readonly ChannelWriter<LogChannelEntry> _writer;
     readonly Task _worker;
     readonly CancellationTokenSource _shutdownTokenSource;
     
@@ -44,7 +44,7 @@ class LogBuffer
         var tcs = new TaskCompletionSource();
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _shutdownTokenSource.Token);
 
-        await _writer.WriteAsync(new LogBufferEntry(storage, range, tcs), cts.Token);
+        await _writer.WriteAsync(new LogChannelEntry(storage, range, tcs), cts.Token);
         await tcs.Task;
     }
 

@@ -38,6 +38,7 @@ using Serilog.Events;
 using Serilog.Formatting.Compact;
 
 #if WINDOWS
+using System.Security.Cryptography.X509Certificates;
 using SeqCli.Forwarder.ServiceProcess;
 #endif
 

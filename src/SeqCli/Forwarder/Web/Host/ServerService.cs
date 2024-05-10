@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
-using SeqCli.Forwarder.Storage;
 using Serilog;
 
 namespace SeqCli.Forwarder.Web.Host;
@@ -24,13 +24,13 @@ namespace SeqCli.Forwarder.Web.Host;
 class ServerService
 {
     readonly IHost _host;
-    readonly LogBufferMap _logBufferMap;
+    readonly LogChannelMap _logChannelMap;
     readonly string _listenUri;
 
-    public ServerService(IHost host, LogBufferMap logBufferMap, string listenUri)
+    public ServerService(IHost host, LogChannelMap logChannelMap, string listenUri)
     {
         _host = host;
-        _logBufferMap = logBufferMap;
+        _logChannelMap = logChannelMap;
         _listenUri = listenUri;
     }
 
@@ -60,6 +60,6 @@ class ServerService
 
         Log.Information("HTTP server stopped; flushing buffers...");
 
-        await _logBufferMap.StopAsync();
+        await _logChannelMap.StopAsync();
     }
 }
