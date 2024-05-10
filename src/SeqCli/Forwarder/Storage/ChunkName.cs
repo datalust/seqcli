@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     A chunk file name with its incrementing identifier.
 /// </summary>
-public readonly record struct ChunkName
+readonly record struct ChunkName
 {
     readonly string _name;
 

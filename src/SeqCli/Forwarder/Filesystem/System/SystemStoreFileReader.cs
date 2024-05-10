@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using System.IO.MemoryMappedFiles;
 
 namespace SeqCli.Forwarder.Filesystem.System;
 
-public sealed class SystemStoreFileReader : StoreFileReader
+sealed class SystemStoreFileReader : StoreFileReader
 {
     readonly MemoryMappedViewAccessor _accessor;
     readonly MemoryMappedFile _file;

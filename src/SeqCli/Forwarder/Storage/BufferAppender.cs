@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     The write-side of a buffer.
 /// </summary>
-public sealed class BufferAppender : IDisposable
+sealed class BufferAppender : IDisposable
 {
     readonly StoreDirectory _storeDirectory;
     BufferAppenderChunk? _currentChunk;
@@ -69,19 +69,30 @@ public sealed class BufferAppender : IDisposable
     {
         if (batch.Length == 0) return true;
 
-        if (batch[^1] != (byte)'\n') throw new Exception("Batches must end with a newline character (\\n)");
+        if (batch[^1] != (byte)'\n') throw new Exception("Batches must end with a newline character (\\n).");
 
         if (_currentChunk != null)
+        {
             // Only use the existing chunk if it's writable and shouldn't be rolled over
             if (_currentChunk.WriteHead > targetChunkLength)
             {
                 // Run a sync before moving to a new file, just to make sure any
                 // buffered data makes its way to disk
-                _currentChunk.Appender.Sync();
-
-                _currentChunk.Dispose();
-                _currentChunk = null;
+                try
+                {
+                    _currentChunk.Appender.Sync();
+                }
+                catch (IOException)
+                {
+                    // Ignored
+                }
+                finally
+                {
+                    _currentChunk.Dispose();
+                    _currentChunk = null;
+                }
             }
+        }
 
         // If there's no suitable candidate chunk then create a new one
         if (_currentChunk == null)

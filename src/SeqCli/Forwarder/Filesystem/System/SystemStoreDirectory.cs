@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+
+#if UNIX
 using SeqCli.Forwarder.Filesystem.System.Unix;
+#endif
 
 namespace SeqCli.Forwarder.Filesystem.System;
 
-public sealed class SystemStoreDirectory : StoreDirectory
+sealed class SystemStoreDirectory : StoreDirectory
 {
     readonly string _directoryPath;
 
@@ -110,8 +113,7 @@ public sealed class SystemStoreDirectory : StoreDirectory
 
     static void Dirsync(string directoryPath)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
-
+#if UNIX
         var dir = Libc.open(directoryPath, 0);
         if (dir == -1) return;
 
@@ -121,5 +123,6 @@ public sealed class SystemStoreDirectory : StoreDirectory
         Libc.fsync(dir);
         Libc.close(dir);
 #pragma warning restore CA1806
+#endif
     }
 }

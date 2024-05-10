@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ using System;
 
 namespace SeqCli.Forwarder.Filesystem;
 
-public sealed class EmptyStoreFileReader : StoreFileReader
+sealed class EmptyStoreFileReader : StoreFileReader
 {
     public override void Dispose()
     {

@@ -6,7 +6,7 @@ using SeqCli.Forwarder.Filesystem;
 
 namespace SeqCli.Tests.Forwarder.Filesystem;
 
-public class InMemoryStoreFile : StoreFile
+class InMemoryStoreFile : StoreFile
 {
     public byte[] Contents { get; private set; } = Array.Empty<byte>();
 

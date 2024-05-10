@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace SeqCli.Forwarder.Filesystem;
 
-public abstract class StoreFile
+abstract class StoreFile
 {
     /// <summary>
     ///     Get the length of this file.

@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,17 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     An active chunk in a <see cref="BufferReader" />.
 /// </summary>
-record BufferReaderChunk(ChunkName Name, StoreFile Chunk) : IDisposable
+class BufferReaderChunk : IDisposable
 {
+    public BufferReaderChunk(ChunkName name, StoreFile chunk)
+    {
+        Name = name;
+        Chunk = chunk;
+    }
+
+    public ChunkName Name { get; }
+    public StoreFile Chunk { get; }
+
     (long, StoreFileReader)? _reader;
 
     public void Dispose()

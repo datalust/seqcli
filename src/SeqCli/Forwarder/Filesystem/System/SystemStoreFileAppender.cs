@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using System.IO;
 
 namespace SeqCli.Forwarder.Filesystem.System;
 
-public sealed class SystemStoreFileAppender : StoreFileAppender
+sealed class SystemStoreFileAppender : StoreFileAppender
 {
     readonly FileStream _file;
     long _initialLength;

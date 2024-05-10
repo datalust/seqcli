@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     A durable bookmark of progress processing buffers.
 /// </summary>
-public sealed class Bookmark
+sealed class Bookmark
 {
     readonly StoreDirectory _storeDirectory;
 

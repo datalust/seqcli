@@ -3,7 +3,7 @@ using SeqCli.Forwarder.Filesystem;
 
 namespace SeqCli.Tests.Forwarder.Filesystem;
 
-public class InMemoryStoreFileReader : StoreFileReader
+class InMemoryStoreFileReader : StoreFileReader
 {
     readonly int _length;
 

@@ -5,7 +5,7 @@ using SeqCli.Forwarder.Filesystem;
 
 namespace SeqCli.Tests.Forwarder.Filesystem;
 
-public class InMemoryStoreDirectory : StoreDirectory
+class InMemoryStoreDirectory : StoreDirectory
 {
     readonly Dictionary<string, InMemoryStoreFile> _files = new();
 
@@ -13,7 +13,7 @@ public class InMemoryStoreDirectory : StoreDirectory
 
     public override InMemoryStoreFile Create(string name)
     {
-        if (_files.ContainsKey(name)) throw new Exception($"The file {name} already exists");
+        if (_files.ContainsKey(name)) throw new Exception($"The file {name} already exists.");
 
         _files.Add(name, new InMemoryStoreFile());
 

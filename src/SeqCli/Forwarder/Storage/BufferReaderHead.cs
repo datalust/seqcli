@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,4 +17,4 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     A position in a <see cref="BufferReader" />.
 /// </summary>
-public readonly record struct BufferReaderHead(ulong Chunk, long CommitHead);
+readonly record struct BufferReaderHead(ulong Chunk, long CommitHead);

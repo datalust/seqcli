@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     The current position in a <see cref="BufferReaderChunk" />.
 /// </summary>
-public readonly record struct BufferReaderChunkHead(long CommitHead, long WriteHead)
+readonly record struct BufferReaderChunkHead(long CommitHead, long WriteHead)
 {
     public long Unadvanced => WriteHead - CommitHead;
 }

@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd
+﻿// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,14 @@ using SeqCli.Forwarder.Filesystem;
 
 namespace SeqCli.Forwarder.Storage;
 
-sealed record BufferAppenderChunk(StoreFileAppender Appender) : IDisposable
+class BufferAppenderChunk : IDisposable
 {
+    public BufferAppenderChunk(StoreFileAppender appender)
+    {
+        Appender = appender;
+    }
+
+    public StoreFileAppender Appender { get; }
     public long WriteHead { get; set; }
 
     public void Dispose()

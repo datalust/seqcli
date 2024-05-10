@@ -4,7 +4,7 @@ using SeqCli.Forwarder.Filesystem;
 
 namespace SeqCli.Tests.Forwarder.Filesystem;
 
-public class InMemoryStoreFileAppender : StoreFileAppender
+class InMemoryStoreFileAppender : StoreFileAppender
 {
     readonly List<byte> _incoming;
 

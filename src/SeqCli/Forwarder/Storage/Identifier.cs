@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     Utilities for parsing and formatting file names with sortable identifiers.
 /// </summary>
-public static class Identifier
+static class Identifier
 {
     /// <summary>
     ///     Try parse the identifier from the given name with the given extension.
