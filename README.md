@@ -44,7 +44,7 @@ $token = (
   echo $pw |
   seqcli apikey create `
     -t CLI `
-    --permissions="read,write,project,organization,system" `
+    --permissions="Read,Write,Project,Organization,System" `
     --connect-username $user --connect-password-stdin
 )
 ```
