@@ -133,7 +133,7 @@ class CreateCommand : Command
         {
             foreach (var permission in _permissions)
             {
-                if (!Enum.TryParse<Permission>(permission, out var p))
+                if (!Enum.TryParse<Permission>(permission, true, out var p))
                 {
                     Log.Error("Unrecognized permission {Permission}", permission);
                     return 1;
