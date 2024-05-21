@@ -22,9 +22,12 @@ using Newtonsoft.Json.Linq;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
+using SeqCli.Output;
 using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact.Reader;
 
-// ReSharper disable UseAwaitUsing, MethodHasAsyncOverload
+// ReSharper disable UnusedType.Global, UseAwaitUsing, MethodHasAsyncOverload
 
 namespace SeqCli.Cli.Commands;
 
@@ -35,6 +38,7 @@ class LogCommand : Command
     readonly PropertiesFeature _properties;
     readonly ConnectionFeature _connection;
     string? _message, _level, _timestamp, _exception;
+    readonly PropertiesExpressionFeature _propertiesExpression;
 
     public LogCommand(SeqConnectionFactory connectionFactory)
     {
@@ -61,6 +65,7 @@ class LogCommand : Command
             v => _exception = v);
 
         _properties = Enable<PropertiesFeature>();
+        _propertiesExpression = Enable<PropertiesExpressionFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -80,26 +85,47 @@ class LogCommand : Command
         if (!string.IsNullOrWhiteSpace(_exception))
             payload["@x"] = _exception;
 
-        foreach (var (key, value) in _properties.Properties)
-        {
-            if (string.IsNullOrWhiteSpace(key))
-                continue;
-
-            var name = key.Trim();
-            if (name.StartsWith('@'))
-                name = $"@{name}";
-
-            payload[name] = new JValue(value);
-        }
-
         StringContent content;
-        using (var builder = new StringWriter())
-        using (var jsonWriter = new JsonTextWriter(builder))
+        if (_propertiesExpression.GetEnricher() is { } enricher)
         {
+            var jo = JObject.FromObject(payload);
+            var evt = LogEventReader.ReadFromJObject(jo);
+            // We're breaking the nullability contract of `ILogEventEnricher.Enrich()`, here.
+            enricher.Enrich(evt, null!);
+            foreach (var (key, value) in _properties.Properties)
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+
+                var name = key.Trim();
+                evt.AddOrUpdateProperty(new LogEventProperty(name, new ScalarValue(value)));
+            }
+
+            var sw = new StringWriter();
+            OutputFormatter.Json.Format(evt, sw);
+            content = new StringContent(sw.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
+        }
+        else
+        {
+            // Explicit properties override computed ones.
+            foreach (var (key, value) in _properties.Properties)
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+
+                var name = key.Trim();
+                if (name.StartsWith('@'))
+                    name = $"@{name}";
+
+                payload[name] = new JValue(value);
+            }
+
+            using var sw = new StringWriter();
+            using var jsonWriter = new JsonTextWriter(sw);
             payload.WriteTo(jsonWriter);
             jsonWriter.Flush();
-            builder.WriteLine();
-            content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
+            sw.WriteLine();
+            content = new StringContent(sw.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
         var connection = _connectionFactory.Connect(_connection);
