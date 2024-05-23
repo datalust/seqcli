@@ -1583,3 +1583,26 @@ seqcli ingest -i http.log --invalid-data=ignore -x "{@t:w3cdt} {ServerIP} {@m:={
 ```
 
 A nested `{@m:=` pattern is used to collect a substring of the log line for display as the event's message.
+
+## Updating entities
+
+The `seqcli * update` family of commands make it possible to perform arbitrary updates to many complex entity types.
+
+The `update` commands, like `seqcli signal update` shown in the example below, receive an updated JSON representation of an
+entity via `STDIN`.
+
+This works particularly well with tools like `jq` and modern shells with native JSON support, such as PowerShell:
+
+```
+PS > $warnings = (seqcli signal list -i signal-m33302 --json | ConvertFrom-Json)
+
+PS > $warnings.Title                                                                                                                
+Warnings
+
+PS > $warnings.Title = "Alarms"
+
+PS > (echo $warnings | ConvertTo-Json) | seqcli signal update --json-stdin        
+
+PS > seqcli signal list -i signal-m33302 --json                                 
+{"Title": "Alarms", "Description": "Automatically created", "Filters": [{"De...
+```
