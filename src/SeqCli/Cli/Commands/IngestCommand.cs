@@ -40,6 +40,7 @@ class IngestCommand : Command
     readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
     readonly ConnectionFeature _connection;
     readonly BatchSizeFeature _batchSize;
+    readonly PropertiesExpressionFeature _propertiesExpression;
     string? _filter, _level, _message;
     string _pattern = DefaultPattern;
     bool _json;
@@ -50,6 +51,7 @@ class IngestCommand : Command
         _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", supportsWildcard: true));
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
         _properties = Enable<PropertiesFeature>();
+        _propertiesExpression = Enable<PropertiesExpressionFeature>();
 
         Options.Add("x=|extract=",
             "An extraction pattern to apply to plain-text logs (ignored when `--json` is specified)",
@@ -87,6 +89,9 @@ class IngestCommand : Command
             if (_level != null)
                 enrichers.Add(new ScalarPropertyEnricher(LevelMapping.SurrogateLevelProperty, _level));
             
+            if (_propertiesExpression.GetEnricher() is {} enricher)
+                enrichers.Add(enricher);
+            
             foreach (var (name, value) in _properties.Properties)
                 enrichers.Add(new ScalarPropertyEnricher(name, value));
 
@@ -109,10 +114,10 @@ class IngestCommand : Command
                         ? (ILogEventReader) new JsonLogEventReader(input)
                         : new PlainTextLogEventReader(input, _pattern);
 
-                    reader = new EnrichingReader(reader, enrichers);
-
                     if (_message != null)
                         reader = new StaticMessageTemplateReader(reader, _message);
+
+                    reader = new EnrichingReader(reader, enrichers);
 
                     var exit = await LogShipper.ShipEvents(
                         connection,

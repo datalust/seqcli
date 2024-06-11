@@ -3,7 +3,7 @@
   "profiles": {
     "SeqCli": {
       "commandName": "Project",
-      "commandLineArgs": "signal update --json-stdin"
+      "commandLineArgs": "log -m test -p Name=World"
     }
   }
 }
