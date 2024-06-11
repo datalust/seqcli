@@ -31,6 +31,12 @@ To connect to Seq in a docker container on the local machine use the machine's I
 
 Use Docker networks and volumes to make local files and other containers accessible to `seqcli` within its container.
 
+### Environment variable overrides
+
+Each setting value can be overridden at runtime by specifying an environment variable of the form `SEQCLI_<setting path>`, where <setting path> contains one element for each dotted segment of the setting name, separated by underscores.
+
+For example the setting `connection.serverUrl` can overridden with the `SEQCLI_CONNECTION_SERVERURL` variable.
+
 ### Connecting without an API key
 
 If you're automating Seq setup, chances are you won't have an API key yet for `seqcli` to use. During the initial Seq server configuration, you can specify `firstRun.adminUsername` and `firstRun.adminPasswordHash` (or the equivalent environment variables `SEQ_FIRSTRUN_ADMINUSERNAME` and `SEQ_FIRSTRUN_ADMINPASSWORDHASH`) to set an initial username and password for the administrator account. You can use these to create an API key, and then use the API key token with the remaining `seqcli` commands.
