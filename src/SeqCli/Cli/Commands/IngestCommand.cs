@@ -47,7 +47,7 @@ class IngestCommand : Command
     public IngestCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
-        _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", supportsWildcard: true));
+        _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", allowMultiple: true));
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
         _properties = Enable<PropertiesFeature>();
 

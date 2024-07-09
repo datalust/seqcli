@@ -44,7 +44,7 @@ class PrintCommand : Command
         _noColor = outputConfig.DisableColor;
         _forceColor = outputConfig.ForceColor;
 
-        _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", supportsWildcard: true));
+        _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", allowMultiple: true));
 
         Options.Add("f=|filter=",
             "Filter expression to select a subset of events",
