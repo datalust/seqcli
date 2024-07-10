@@ -75,7 +75,7 @@ class CreateCommand : Command
 
         Options.Add(
             "permissions=",
-            "A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project` and `System`",
+            "A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project`, `Organization`, and `System`",
             v => _permissions = ArgumentString.NormalizeList(v));
 
         Options.Add(
