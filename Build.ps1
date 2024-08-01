@@ -78,16 +78,32 @@ function Publish-Docs($version)
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
+function Remove-GlobalJson
+{
+    if(Test-Path ./global.json) { rm ./global.json }    
+}
+
+function Create-GlobalJson
+{
+    # It's very important that SeqCli use the same .NET SDK version as its matching Seq version, to avoid
+    # container and installer bloat. But, highly-restrictive global.json files are annoying during development. So,
+    # we create a temporary global.json from ci.global.json to use during CI builds.
+    Remove-GlobalJson
+    cp ./ci.global.json global.json
+}
+
 Write-Output "Building version $version"
 
 $env:Path = "$pwd/.dotnetcli;$env:Path"
 
 Clean-Output
 Create-ArtifactDir
+Create-GlobalJson
 Restore-Packages
 Publish-Archives($version)
 Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
+Remove-GlobalJson
 
 Pop-Location

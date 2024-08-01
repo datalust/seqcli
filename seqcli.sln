@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{2EA56595-519
 		.gitignore = .gitignore
 		appveyor.yml = appveyor.yml
 		Build.ps1 = Build.ps1
-		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
 		setup.sh = setup.sh
@@ -18,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{2EA56595-519
 		docker-publish.ps1 = docker-publish.ps1
 		Setup.ps1 = Setup.ps1
 		CONTRIBUTING.md = CONTRIBUTING.md
+		ci.global.json = ci.global.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3587B633-0C03-4235-8903-6226900328F1}"
