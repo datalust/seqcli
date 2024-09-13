@@ -7,7 +7,7 @@ set -o pipefail
 sudo apt-get update || true
 sudo apt-get install -y --no-install-recommends jq
 
-RequiredDotnetVersion=$(jq -r '.sdk.version' global.json)
+RequiredDotnetVersion=$(jq -r '.sdk.version' ci.global.json)
 
 curl https://dot.net/v1/dotnet-install.sh -sSfL --output dotnet-install.sh
 chmod +x dotnet-install.sh

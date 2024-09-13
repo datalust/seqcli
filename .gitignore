@@ -287,3 +287,6 @@ __pycache__/
 *.xsd.cs
 
 .DS_Store
+
+# ci.global.json is used in CI; local builds are unconstrained
+global.json

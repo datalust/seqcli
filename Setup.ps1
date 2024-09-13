@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$RequiredDotnetVersion =  $(cat ./global.json | convertfrom-json).sdk.version
+$RequiredDotnetVersion =  $(cat ./ci.global.json | convertfrom-json).sdk.version
 
 New-Item -ItemType Directory -Force "./build/" | Out-Null
 
