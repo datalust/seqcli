@@ -38,7 +38,7 @@ static class KeyValueSettings
         for (var i = 0; i < steps.Length - 1; ++i)
         {
             var nextStep = receiver.GetType().GetTypeInfo().DeclaredProperties
-                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null && p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
                 .SingleOrDefault(p => Camelize(GetUserFacingName(p)) == steps[i]);
 
             if (nextStep == null)
@@ -56,8 +56,7 @@ static class KeyValueSettings
         // intercept writes through hidden properties, triggering encoding where supported. A type-based solution
         // would be more robust.
         var targetProperty = receiver.GetType().GetTypeInfo().DeclaredProperties
-            .Where(p => p is { CanRead: true, CanWrite: true } && p.GetMethod!.IsPublic && p.SetMethod!.IsPublic &&
-                        !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null)
+            .Where(p => p is { CanRead: true, CanWrite: true } && p.GetMethod!.IsPublic && p.SetMethod!.IsPublic && !p.GetMethod.IsStatic)
             .SingleOrDefault(p => Camelize(p.Name) == steps[^1]);
 
         if (targetProperty == null)
