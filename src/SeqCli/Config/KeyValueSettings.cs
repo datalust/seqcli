@@ -1,3 +1,17 @@
+// Copyright © Datalust Pty Ltd
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,7 +38,7 @@ static class KeyValueSettings
         for (var i = 0; i < steps.Length - 1; ++i)
         {
             var nextStep = receiver.GetType().GetTypeInfo().DeclaredProperties
-                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null)
+                .Where(p => p.CanRead && p.GetMethod!.IsPublic && !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null && p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
                 .SingleOrDefault(p => Camelize(GetUserFacingName(p)) == steps[i]);
 
             if (nextStep == null)
@@ -38,10 +52,13 @@ static class KeyValueSettings
                 throw new InvalidOperationException("Intermediate configuration object is null.");
         }
 
+        // FUTURE: the use of `p.Name` and lack of `JsonIgnoreAttribute` checks here mean that sensitive values can
+        // intercept writes through hidden properties, triggering encoding where supported. A type-based solution
+        // would be more robust.
         var targetProperty = receiver.GetType().GetTypeInfo().DeclaredProperties
             .Where(p => p is { CanRead: true, CanWrite: true } && p.GetMethod!.IsPublic && p.SetMethod!.IsPublic &&
                         !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null)
-            .SingleOrDefault(p => Camelize(GetUserFacingName(p)) == steps[^1]);
+            .SingleOrDefault(p => Camelize(p.Name) == steps[^1]);
 
         if (targetProperty == null)
             throw new ArgumentException("The key could not be found; run `seqcli config list` to view all keys.");
@@ -56,7 +73,7 @@ static class KeyValueSettings
             return value?.Split(',').Select(e => e.Trim()).ToArray() ?? [];
 
         if (propertyType == typeof(int[]))
-            return value?.Split(',').Select(e => int.Parse(e.Trim(), CultureInfo.InvariantCulture)).ToArray() ?? Array.Empty<int>();
+            return value?.Split(',').Select(e => int.Parse(e.Trim(), CultureInfo.InvariantCulture)).ToArray() ?? [];
 
         if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
@@ -98,7 +115,7 @@ static class KeyValueSettings
     {
         foreach (var nextStep in receiver.GetType().GetTypeInfo().DeclaredProperties
             .Where(p => p.CanRead && p.GetMethod!.IsPublic && 
-                        !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null)
+                        !p.GetMethod.IsStatic && p.GetCustomAttribute<ObsoleteAttribute>() == null && p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
             .OrderBy(GetUserFacingName))
         {
             var camel = Camelize(GetUserFacingName(nextStep));
@@ -131,6 +148,7 @@ static class KeyValueSettings
             else if (nextStep.CanRead && nextStep.GetMethod!.IsPublic && 
                      nextStep.CanWrite && nextStep.SetMethod!.IsPublic && 
                      !nextStep.SetMethod.IsStatic &&
+                     nextStep.GetCustomAttribute<ObsoleteAttribute>() == null &&
                      nextStep.GetCustomAttribute<JsonIgnoreAttribute>() == null)
             {
                 var value = nextStep.GetValue(receiver);

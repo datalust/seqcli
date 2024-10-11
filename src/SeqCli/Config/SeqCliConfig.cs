@@ -54,7 +54,7 @@ class SeqCliConfig
     {
         if (!data._exportable)
             throw new InvalidOperationException("The provided configuration is not exportable.");
-
+        
         var content = JsonConvert.SerializeObject(data, Formatting.Indented, SerializerSettings);
         File.WriteAllText(filename, content);
     }
