@@ -18,15 +18,15 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace SeqCli.Config;
 
 class SeqCliConfig
 {
-    static readonly string DefaultConfigFilename =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
-
-    static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
+    bool _exportable = true;
+        
+    static JsonSerializerSettings SerializerSettings { get; } = new()
     {
         ContractResolver = new CamelCasePropertyNamesContractResolver(),
         Converters =
@@ -35,24 +35,32 @@ class SeqCliConfig
         }
     };
 
-    public static SeqCliConfig Read()
+    public static SeqCliConfig ReadFromFile(string filename)
     {
-        if (!File.Exists(DefaultConfigFilename))
-            return new SeqCliConfig();
-            
-        var content = File.ReadAllText(DefaultConfigFilename);
+        var content = File.ReadAllText(filename);
         return JsonConvert.DeserializeObject<SeqCliConfig>(content, SerializerSettings)!;
     }
 
-    public static void Write(SeqCliConfig data)
+    public static void Write(SeqCliConfig data, string filename)
     {
         if (data == null) throw new ArgumentNullException(nameof(data));
+        if (!data._exportable)
+            throw new InvalidOperationException("The provided configuration is not exportable.");
+
         var content = JsonConvert.SerializeObject(data, Formatting.Indented, SerializerSettings);
-        File.WriteAllText(DefaultConfigFilename, content);
+        File.WriteAllText(filename, content);
     }
 
-    public SeqCliConnectionConfig Connection { get; set; } = new SeqCliConnectionConfig();
-    public SeqCliOutputConfig Output { get; set; } = new SeqCliOutputConfig();
-    public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } =
-        new Dictionary<string, SeqCliConnectionConfig>(StringComparer.OrdinalIgnoreCase);
+    public SeqCliConnectionConfig Connection { get; set; } = new();
+    public SeqCliOutputConfig Output { get; set; } = new();
+    public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } = new(StringComparer.OrdinalIgnoreCase);
+    
+    /// <summary>
+    /// Some configuration objects, for example those with environment overrides, should not be exported
+    /// back to JSON files. Call this method to mark the current configuration as non-exportable.
+    /// </summary>
+    public void DisallowExport()
+    {
+        _exportable = false;
+    }
 }
