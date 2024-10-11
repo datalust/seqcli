@@ -11,8 +11,8 @@ static class RuntimeConfigurationLoader
     const string DefaultEnvironmentVariablePrefix = "SEQCLI_";
     
     /// <summary>
-    /// This is the method to use when loading configuration for runtime use. It will apply overrides from the
-    /// secret store and environment, and validate the configuration.
+    /// This is the method to use when loading configuration for runtime use. It will read the default configuration
+    /// file, if any, and apply overrides from the environment.
     /// </summary>
     public static SeqCliConfig Load()
     {

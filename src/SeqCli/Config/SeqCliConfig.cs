@@ -35,6 +35,11 @@ class SeqCliConfig
         }
     };
 
+    /// <summary>
+    /// Loads <paramref name="filename"/> without considering any environment overrides, nor performing any validation.
+    /// This method is typically used when editing/manipulating the configuration file itself. To read and use the
+    /// configuration at runtime, see <see cref="RuntimeConfigurationLoader.Load"/>.
+    /// </summary>
     public static SeqCliConfig ReadFromFile(string filename)
     {
         var content = File.ReadAllText(filename);
