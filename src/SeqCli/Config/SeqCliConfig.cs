@@ -40,15 +40,18 @@ class SeqCliConfig
     /// This method is typically used when editing/manipulating the configuration file itself. To read and use the
     /// configuration at runtime, see <see cref="RuntimeConfigurationLoader.Load"/>.
     /// </summary>
+    /// <remarks>If <paramref name="filename"/> does not exist, a new default configuration will be returned.</remarks>
     public static SeqCliConfig ReadFromFile(string filename)
     {
+        if (!File.Exists(filename))
+            return new SeqCliConfig();
+
         var content = File.ReadAllText(filename);
         return JsonConvert.DeserializeObject<SeqCliConfig>(content, SerializerSettings)!;
     }
 
-    public static void Write(SeqCliConfig data, string filename)
+    public static void WriteToFile(SeqCliConfig data, string filename)
     {
-        if (data == null) throw new ArgumentNullException(nameof(data));
         if (!data._exportable)
             throw new InvalidOperationException("The provided configuration is not exportable.");
 

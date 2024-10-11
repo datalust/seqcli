@@ -52,13 +52,13 @@ class ConfigCommand : Command
                 {
                     verb = "clear";
                     KeyValueSettings.Clear(config, _key);
-                    SeqCliConfig.Write(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
                 }
                 else if (_value != null)
                 {
                     verb = "update";
                     KeyValueSettings.Set(config, _key, _value);
-                    SeqCliConfig.Write(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
                 }
                 else
                 {

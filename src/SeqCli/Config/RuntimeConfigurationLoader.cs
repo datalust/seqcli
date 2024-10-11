@@ -16,9 +16,7 @@ static class RuntimeConfigurationLoader
     /// </summary>
     public static SeqCliConfig Load()
     {
-        var config = File.Exists(DefaultConfigFilename) ?
-            SeqCliConfig.ReadFromFile(DefaultConfigFilename) :
-            new SeqCliConfig();
+        var config = SeqCliConfig.ReadFromFile(DefaultConfigFilename);
         
         EnvironmentOverrides.Apply(DefaultEnvironmentVariablePrefix, config);
             

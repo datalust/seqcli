@@ -41,7 +41,7 @@ class RemoveCommand : Command
                 return 1;
             }
 
-            SeqCliConfig.Write(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+            SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
 
             return 0;
         }

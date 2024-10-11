@@ -50,7 +50,7 @@ class CreateCommand : Command
         {
             var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.DefaultConfigFilename);
             config.Profiles[_name] = new SeqCliConnectionConfig { ServerUrl = _url, ApiKey = _apiKey };
-            SeqCliConfig.Write(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+            SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
             return 0;
         }
         catch (Exception ex)
