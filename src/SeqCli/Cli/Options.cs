@@ -239,7 +239,7 @@ namespace SeqCli.Cli
 
 	class OptionValueCollection : IList, IList<string> {
 
-		List<string> values = new List<string> ();
+		List<string> values = new();
 		OptionContext c;
 
 		internal OptionValueCollection (OptionContext c)
@@ -694,7 +694,7 @@ namespace SeqCli.Cli
 			get {return localizer;}
 		}
 
-		List<ArgumentSource> sources = new List<ArgumentSource> ();
+		List<ArgumentSource> sources = new();
 		ReadOnlyCollection<ArgumentSource> roSources;
 
 		public ReadOnlyCollection<ArgumentSource> ArgumentSources {
@@ -960,7 +960,7 @@ namespace SeqCli.Cli
 		}
 
 		class ArgumentEnumerator : IEnumerable<string> {
-			List<IEnumerator<string>> sources = new List<IEnumerator<string>> ();
+			List<IEnumerator<string>> sources = new();
 
 			public ArgumentEnumerator (IEnumerable<string> arguments)
 			{
@@ -1015,7 +1015,7 @@ namespace SeqCli.Cli
 			return false;
 		}
 
-		private readonly Regex ValueOption = new Regex (
+		private readonly Regex ValueOption = new(
 			@"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
 		protected bool GetOptionParts (string argument, out string flag, out string name, out string sep, out string value)

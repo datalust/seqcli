@@ -11,7 +11,7 @@ class ListCommand : Command
 {
     protected override Task<int> Run()
     {
-        var config = SeqCliConfig.Read();
+        var config = RuntimeConfigurationLoader.Load();
 
         foreach (var profile in config.Profiles.OrderBy(p => p.Key))
         {
