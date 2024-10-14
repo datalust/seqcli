@@ -35,7 +35,7 @@ public class NameValueExtractorTests
         Assert.Equal(frame, remainder);
     }
 
-    static NameValueExtractor ClassMethodPattern { get; } = new NameValueExtractor(new[]
+    static NameValueExtractor ClassMethodPattern { get; } = new(new[]
     {
         new SimplePatternElement(Matchers.Identifier, "class"),
         new SimplePatternElement(Matchers.LiteralText(".")),

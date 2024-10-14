@@ -54,13 +54,16 @@ class HealthCommand : Command
         try
         {
             var response = await connection.Client.HttpClient.GetAsync("health");
-            Console.WriteLine($"HTTP {response.Version} {((int)response.StatusCode).ToString(CultureInfo.InvariantCulture)} {response.ReasonPhrase}");
+            Log.Information("HTTP {HttpVersion} {StatusCode} {ReasonPhrase}", response.Version, (int)response.StatusCode, response.ReasonPhrase);
+            
             foreach (var (key, values) in response.Headers.Concat(response.Content.Headers))
             foreach (var value in values)
             {
-                Console.WriteLine($"{key}: {value}");
+                Log.Information("{HeaderName}: {HeaderValue}", key, value);
             }
+            
             Console.WriteLine(await response.Content.ReadAsStringAsync());
+            
             return response.IsSuccessStatusCode ? 0 : 1;
         }
         catch (Exception ex)

@@ -21,10 +21,10 @@ namespace SeqCli.Syntax;
 
 class QueryBuilder
 {
-    readonly List<(string, string)> _columns = new List<(string, string)>();
-    readonly List<string> _where = new List<string>();
-    readonly List<string> _groupBy = new List<string>();
-    readonly List<string> _having = new List<string>();
+    readonly List<(string, string)> _columns = new();
+    readonly List<string> _where = new();
+    readonly List<string> _groupBy = new();
+    readonly List<string> _having = new();
 
     public void Select(string value, string label)
     {

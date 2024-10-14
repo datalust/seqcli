@@ -59,7 +59,7 @@ class ImportCommand : Command
     {
         var connection = _connectionFactory.Connect(_connection);
 
-        using var input = _fileInputFeature.OpenInput();
+        using var input = _fileInputFeature.OpenSingleInput();
         var line = await input.ReadLineAsync();
         while (line != null)
         {
