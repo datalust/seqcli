@@ -74,6 +74,7 @@ public static class LevelMapping
             ["crit"] = ("Critical", LogEventLevel.Fatal),
             ["critical"] = ("Critical", LogEventLevel.Fatal),
             ["emerg"] = ("Emergency", LogEventLevel.Fatal),
+            ["alert"] = ("Alert", LogEventLevel.Fatal),
             ["panic"] = ("Panic", LogEventLevel.Fatal)
         };
 
