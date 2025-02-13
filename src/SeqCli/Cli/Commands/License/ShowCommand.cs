@@ -2,6 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Seq.Api.Model;
+using Seq.Api.Model.License;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -10,7 +12,7 @@ using Serilog;
 
 // ReSharper disable once UnusedType.Global
 
-namespace  SeqCli.Cli.Commands.License;
+namespace SeqCli.Cli.Commands.License;
 
 [Command("license", "show", "Shows license applied to the Seq server",
     Example = "seqcli license show")]
@@ -40,9 +42,22 @@ class ShowCommand : Command
             return 2;
         }
 
-        // this shows good data if --json, but `license-server` else
-        _output.WriteEntity(license);
+        _output.WriteEntity(_output.Json ? license : new OutputWrapperLicenseEntity(license));
 
         return 0;
+    }
+
+    /// <summary>
+    /// Wraps the license entity for none json output.
+    /// </summary>
+    class OutputWrapperLicenseEntity : Entity
+    {
+        public string Title { get; set; }
+
+        public OutputWrapperLicenseEntity(LicenseEntity license)
+        {
+            this.Id = license.SubscriptionId;
+            this.Title = $"IsValid: {license.IsValid}";
+        }
     }
 }
