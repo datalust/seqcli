@@ -18,14 +18,13 @@ class ShowCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
-    private readonly OutputFormatFeature _output;
+    readonly OutputFormatFeature _output;
 
     public ShowCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _connection = Enable<ConnectionFeature>();
         _output = Enable(new OutputFormatFeature(config.Output));
-        
     }
 
     protected override async Task<int> Run()
