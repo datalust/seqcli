@@ -37,8 +37,6 @@ class ShowCommand : Command
         if (license == null)
         {
             Log.Warning("No license is currently applied to the server.");
-
-            // should we return an error code here?
             return 2;
         }
 
@@ -52,12 +50,9 @@ class ShowCommand : Command
     /// </summary>
     class OutputWrapperLicenseEntity : Entity
     {
-        public string Title { get; set; }
-
         public OutputWrapperLicenseEntity(LicenseEntity license)
         {
-            this.Id = license.SubscriptionId;
-            this.Title = $"IsValid: {license.IsValid}";
+            this.Id = license.LicenseText;
         }
     }
 }
