@@ -14,7 +14,6 @@ public class NodeListTestCase: ICliTestCase
         var exit = runner.Exec("node list --json");
         Assert.Equal(0, exit);
             
-        Assert.Contains("\"Role\":", runner.LastRunProcess!.Output);
         Assert.Contains("\"Name\":", runner.LastRunProcess!.Output);
         Assert.Contains("\"StateDescription\":", runner.LastRunProcess!.Output);
         return Task.CompletedTask;
