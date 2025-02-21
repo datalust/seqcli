@@ -138,6 +138,39 @@ class OutputFormatFeature : CommandFeature
         }
     }
 
+    public void WriteObject(object value)
+    {
+        if (value == null) throw new ArgumentNullException(nameof(value));
+            
+        if (_json)
+        {
+            var jo = JObject.FromObject(
+            value,
+            JsonSerializer.CreateDefault(new JsonSerializerSettings {
+                DateParseHandling = DateParseHandling.None,
+                Converters = {
+                    new StringEnumConverter()
+                }
+            }));
+
+            // Using the same method of JSON colorization as above
+
+            var writer = new LoggerConfiguration()
+                .Destructure.With<JsonNetDestructuringPolicy>()
+                .Enrich.With<StripStructureTypeEnricher>()
+                .WriteTo.Console(
+                    outputTemplate: "{@Message:j}{NewLine}",
+                    theme: Theme,
+                    applyThemeToRedirectedOutput: ApplyThemeToRedirectedOutput)
+                .CreateLogger();
+            writer.Information("{@Entity}", jo);
+        }
+        else
+        {
+            Console.WriteLine(value.ToString());
+        }
+    }
+
     public void ListEntities(IEnumerable<Entity> list)
     {
         foreach (var entity in list)

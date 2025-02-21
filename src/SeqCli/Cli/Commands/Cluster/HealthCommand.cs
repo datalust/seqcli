@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+// Copyright Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,39 +13,32 @@
 // limitations under the License.
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
+using SeqCli.Util;
+using Seq.Api.Model.Cluster;
+using Serilog;
 
-namespace SeqCli.Cli.Commands.Node;
+namespace SeqCli.Cli.Commands.Cluster;
 
-[Command("node", "list", "List nodes in the Seq cluster",
-    Example = "seqcli node list --json")]
-class ListCommand : Command
+[Command("cluster", "health",
+    "Probe a Seq node's `/health/cluster` endpoint, and print the returned status",
+    Example = "seqcli cluster health -s https://seq.example.com")]
+class HealthCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
 
-    string? _name, _id;
-        
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            
-        Options.Add(
-            "n=|name=",
-            "The name of the cluster node to list",
-            n => _name = n);
 
-        Options.Add(
-            "i=|id=",
-            "The id of a single cluster node to list",
-            id => _id = id);
-            
         _output = Enable(new OutputFormatFeature(outputConfig));
         _connection = Enable<ConnectionFeature>();
     }
@@ -54,13 +47,25 @@ class ListCommand : Command
     {
         var connection = _connectionFactory.Connect(_connection);
 
-        var list = _id != null ?
-            new[] { await connection.Cluster.FindAsync(_id) } :
-            (await connection.Cluster.ListAsync())
-            .Where(n => _name == null || _name == n.Name);
+        var health = await connection.Cluster.CheckHealthAsync();
 
-        _output.ListEntities(list);
-            
-        return 0;
+        if (_output.Json)
+        {
+            _output.WriteObject(health);
+        } else if (!string.IsNullOrWhiteSpace(health.Description)) {
+            Console.WriteLine($"{health.Status}: {health.Description}");
+        } else {
+            Console.WriteLine($"{health.Status}");
+        }
+
+        return (health.Status) switch
+        {
+            HealthStatus.Healthy => 0,
+            HealthStatus.Degraded => 101,
+            HealthStatus.Unhealthy => 102,
+            // Catch-all for any future statuses
+            // We give the main ones well-defined exit codes
+            _ => (int)health.Status
+        };
     }
 }
