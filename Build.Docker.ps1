@@ -6,7 +6,7 @@ $IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
 $IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
 
 $version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
-$framework = "net8.0"
+$framework = "net9.0"
 $image = "datalust/seqcli"
 $archs = @(
     @{ rid = "x64"; platform = "linux/amd64" },
