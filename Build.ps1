@@ -5,7 +5,7 @@ Push-Location $PSScriptRoot
 $ErrorActionPreference = 'Stop'
 
 $version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
-$framework = 'net8.0'
+$framework = 'net9.0'
 $windowsTfmSuffix = '-windows'
 
 function Clean-Output
