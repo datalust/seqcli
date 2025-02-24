@@ -15,7 +15,9 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -26,19 +28,29 @@ using Serilog;
 namespace SeqCli.Cli.Commands.Cluster;
 
 [Command("cluster", "health",
-    "Probe a Seq node's `/health/cluster` endpoint, and print the returned status",
-    Example = "seqcli cluster health -s https://seq.example.com")]
+    "Probe a Seq node's `/health/cluster` endpoint, and print the returned status. This command can also be used " +
+    "to wait on a timeout until the cluster is healthy.",
+    Example = "seqcli cluster health -s https://seq.example.com --wait-until-healthy")]
 class HealthCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
+    readonly TimeoutFeature _timeout;
 
+    bool _waitUntilHealthy;
+    
     public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        
+        Options.Add("wait-until-healthy", "Wait until the cluster returns a status of healthy", _ =>
+        {
+            _waitUntilHealthy = true;
+        });
 
+        _timeout = Enable(new TimeoutFeature());
         _output = Enable(new OutputFormatFeature(outputConfig));
         _connection = Enable<ConnectionFeature>();
     }
@@ -47,6 +59,54 @@ class HealthCommand : Command
     {
         var connection = _connectionFactory.Connect(_connection);
 
+        var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
+
+        if (_waitUntilHealthy)
+        {
+            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30));
+        }
+
+        return await RunOnce(connection);
+    }
+
+    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout)
+    {
+        using var ct = new CancellationTokenSource(timeout);
+        
+        var tick = TimeSpan.FromSeconds(1);
+
+        connection.Client.HttpClient.Timeout = tick;
+
+        try
+        {
+            return await Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        if (await RunOnce(connection) == 0)
+                        {
+                            return 0;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("{UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
+                    }
+
+                    await Task.Delay(tick, ct.Token);
+                }
+            }, ct.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return 1;
+        }
+    }
+
+    async Task<int> RunOnce(SeqConnection connection)
+    {
         var health = await connection.Cluster.CheckHealthAsync();
 
         if (_output.Json)
@@ -58,14 +118,12 @@ class HealthCommand : Command
             Console.WriteLine($"{health.Status}");
         }
 
-        return (health.Status) switch
+        return health.Status switch
         {
             HealthStatus.Healthy => 0,
             HealthStatus.Degraded => 101,
             HealthStatus.Unhealthy => 102,
-            // Catch-all for any future statuses
-            // We give the main ones well-defined exit codes
-            _ => (int)health.Status
+            _ => 103
         };
     }
 }
