@@ -36,7 +36,7 @@ class RemoveCommand : Command
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
-        _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", _entityIdentity));
+        _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
     }
 

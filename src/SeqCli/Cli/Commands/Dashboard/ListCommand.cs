@@ -37,7 +37,7 @@ class ListCommand : Command
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "list"));
-        _entityOwner = Enable(new EntityOwnerFeature("dashboard", "list", _entityIdentity));
+        _entityOwner = Enable(new EntityOwnerFeature("dashboard", "list", "listed", _entityIdentity));
         _output = Enable(new OutputFormatFeature(config.Output));
         _connection = Enable<ConnectionFeature>();
     }

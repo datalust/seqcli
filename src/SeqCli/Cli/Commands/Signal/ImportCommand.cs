@@ -51,7 +51,7 @@ class ImportCommand : Command
             _ => _merge = true);
 
         _fileInputFeature = Enable(new FileInputFeature("File to import"));
-        _entityOwner = Enable(new EntityOwnerFeature("signal", "import"));
+        _entityOwner = Enable(new EntityOwnerFeature("signal", "import", "imported"));
         _connection = Enable<ConnectionFeature>();
     }
 
