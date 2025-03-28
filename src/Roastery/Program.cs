@@ -28,11 +28,10 @@ public static class Program
                 new RequestLoggingMiddleware(webApplicationLogger,
                     new SchedulingLatencyMiddleware(
                         new FaultInjectionMiddleware(webApplicationLogger,
-                            new Router(new Controller[]
-                            {
+                            new Router([
                                 new OrdersController(logger, database),
                                 new ProductsController(logger, database)
-                            }, webApplicationLogger))))));
+                            ], webApplicationLogger))))));
 
         var agents = new List<Agent>();
 
