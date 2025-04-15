@@ -123,6 +123,7 @@ class BenchCommand : Command
         {
             var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
             var connection = _connectionFactory.Connect(_connection);
+            connection.Client.HttpClient.Timeout = TimeSpan.FromMinutes(4);
             var seqVersion = (await connection.Client.GetRootAsync()).Version;
             await using var reportingLogger = BuildReportingLogger();
 
