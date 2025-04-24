@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
@@ -38,18 +36,13 @@ class HealthCommand : Command
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly TimeoutFeature _timeout;
-
-    bool _waitUntilHealthy;
+    readonly WaitUntilHealthyFeature _waitUntilHealthy;
     
     public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         
-        Options.Add("wait-until-healthy", "Wait until the cluster returns a status of healthy", _ =>
-        {
-            _waitUntilHealthy = true;
-        });
-
+        _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("cluster"));
         _timeout = Enable(new TimeoutFeature());
         _output = Enable(new OutputFormatFeature(outputConfig));
         _connection = Enable<ConnectionFeature>();
@@ -61,7 +54,7 @@ class HealthCommand : Command
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
-        if (_waitUntilHealthy)
+        if (_waitUntilHealthy.ShouldWait)
         {
             return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30));
         }
