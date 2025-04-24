@@ -13,44 +13,86 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Seq.Api;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
-using SeqCli.Util;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Node;
 
 [Command("node", "health",
-    "Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried",
+    "Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried; note that no API key is required",
     Example = "seqcli node health -s https://seq-2.example.com")]
 class HealthCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
 
-    string? _profileName, _serverUrl;
+    readonly ConnectionFeature _connection;
+    readonly WaitUntilHealthyFeature _waitUntilHealthy;
+    readonly TimeoutFeature _timeout;
+    readonly OutputFormatFeature _output;
 
-    public HealthCommand(SeqConnectionFactory connectionFactory)
+    public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
     {
         _connectionFactory = connectionFactory;
-            
-        Options.Add("s=|server=",
-            "The URL of the Seq server; by default the `connection.serverUrl` config value will be used",
-            v => _serverUrl = ArgumentString.Normalize(v));
 
-        Options.Add("profile=",
-            "A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used",
-            v => _profileName = ArgumentString.Normalize(v));
+        _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("node"));
+        _timeout = Enable(new TimeoutFeature());
+        _connection = Enable<ConnectionFeature>();
+        _output = Enable(new OutputFormatFeature(outputConfig));
     }
 
     protected override async Task<int> Run()
     {
-        // An API key is not accepted; we don't want to imply that /health requires authentication.
-        var surrogateConnectionFeature = new ConnectionFeature { ProfileName = _profileName, Url = _serverUrl };
-        var connection = _connectionFactory.Connect(surrogateConnectionFeature);
+        var connection = _connectionFactory.Connect(_connection);
 
+        var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
+
+        if (_waitUntilHealthy.ShouldWait)
+        {
+            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30));
+        }
+
+        return await RunOnce(connection);
+    }
+
+    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout)
+    {
+        using var ct = new CancellationTokenSource(timeout);
+        
+        var tick = TimeSpan.FromSeconds(1);
+
+        connection.Client.HttpClient.Timeout = tick;
+
+        try
+        {
+            return await Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (await RunOnce(connection) == 0)
+                    {
+                        return 0;
+                    }
+
+                    await Task.Delay(tick, ct.Token);
+                }
+            }, ct.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return 1;
+        }
+    }
+
+    async Task<int> RunOnce(SeqConnection connection)
+    {
         try
         {
             var response = await connection.Client.HttpClient.GetAsync("health");
@@ -61,17 +103,32 @@ class HealthCommand : Command
             {
                 Log.Information("{HeaderName}: {HeaderValue}", key, value);
             }
-            
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
+
+            if (_output.Json)
+            {
+                var shouldBeJson = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    var obj = JsonConvert.DeserializeObject(shouldBeJson) ?? throw new InvalidDataException();
+                    _output.WriteObject(obj);
+                }
+                catch
+                {
+                    _output.WriteObject(new { Response = shouldBeJson });
+                }
+            }
+            else
+            {
+                Console.WriteLine((int)response.StatusCode);
+            }
             
             return response.IsSuccessStatusCode ? 0 : 1;
         }
         catch (Exception ex)
         {
             Log.Information(ex, "Exception thrown when calling health endpoint");
-                
+
             Console.WriteLine("Unreachable");
-            Console.WriteLine(Presentation.FormattedMessage(ex));
             return 1;
         }
     }
