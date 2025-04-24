@@ -13,7 +13,12 @@ public class NodeHealthTestCase: ICliTestCase
     {
         var exit = runner.Exec("node health");
         Assert.Equal(0, exit);
+        Assert.Equal("200", runner.LastRunProcess!.Output.Trim());
+        
+        exit = runner.Exec("node health --no-color --json");
+        Assert.Equal(0, exit);
         Assert.StartsWith("{\"status\":", runner.LastRunProcess!.Output);
+        
         return Task.CompletedTask;
     }
 }
