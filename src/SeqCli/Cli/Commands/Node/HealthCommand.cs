@@ -22,7 +22,6 @@ using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
-using SeqCli.Util;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Node;
@@ -77,16 +76,9 @@ class HealthCommand : Command
             {
                 while (true)
                 {
-                    try
+                    if (await RunOnce(connection) == 0)
                     {
-                        if (await RunOnce(connection) == 0)
-                        {
-                            return 0;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("{UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
+                        return 0;
                     }
 
                     await Task.Delay(tick, ct.Token);
