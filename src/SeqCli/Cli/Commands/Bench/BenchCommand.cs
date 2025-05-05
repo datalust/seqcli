@@ -204,7 +204,7 @@ class BenchCommand : Command
             }
 
             return 0;
-        } 
+        }
         catch (Exception ex)
         {
             Log.Error(ex, "Benchmarking failed: {ErrorMessage}", ex.Message);
