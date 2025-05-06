@@ -204,7 +204,7 @@ class BenchCommand : Command
             }
 
             return 0;
-        } 
+        }
         catch (Exception ex)
         {
             Log.Error(ex, "Benchmarking failed: {ErrorMessage}", ex.Message);
@@ -228,7 +228,7 @@ class BenchCommand : Command
         }
         else
         {
-            var simulationTasks = Enumerable.Range(1, 2000)
+            var simulationTasks = Enumerable.Range(1, 1000)
                 .Select(i => Simulation.RunAsync(connection, apiKey, 10000, echoToStdout: false, cancellationToken))
                 .ToArray();
         }
