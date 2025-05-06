@@ -57,12 +57,12 @@
     },
     {
       "id": "order-by-message-limit-10",
-      "query": "select @Message from stream where @Timestamp >= now() - 2d order by @Message limit 10",
+      "query": "select @Message from stream where @Timestamp >= now() - 3d order by @Message limit 10",
       "notes": "Adds character collation to limited sort."
     },
     {
       "id": "order-by-message-limit-10-ci",
-      "query": "select @Message from stream where @Timestamp >= now() - 2d order by @Message ci limit 10",
+      "query": "select @Message from stream where @Timestamp >= now() - 3d order by @Message ci limit 10",
       "notes": "Adds case insensitive character collation to limited sort."
     },
     {
