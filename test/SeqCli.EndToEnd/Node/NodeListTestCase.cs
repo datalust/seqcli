@@ -15,7 +15,7 @@ public class NodeListTestCase: ICliTestCase
         Assert.Equal(0, exit);
             
         Assert.Contains("\"Name\":", runner.LastRunProcess!.Output);
-        Assert.Contains("\"StateDescription\":", runner.LastRunProcess!.Output);
+        Assert.Contains("\"ClusterListenUri\":", runner.LastRunProcess!.Output);
         return Task.CompletedTask;
     }
 }
