@@ -26,6 +26,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Templates.Themes;
 
 namespace SeqCli.Cli.Features;
 
@@ -36,6 +37,7 @@ class OutputFormatFeature : CommandFeature
 
     public static readonly ConsoleTheme DefaultTheme     = SystemConsoleTheme.Literate;
     public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Code;
+    static readonly TemplateTheme DefaultTemplateTheme = TemplateTheme.Literate;
 
     bool _json, _noColor, _forceColor;
 
@@ -53,6 +55,11 @@ class OutputFormatFeature : CommandFeature
         => _noColor                     ? ConsoleTheme.None
             :  ApplyThemeToRedirectedOutput ? DefaultAnsiTheme
             :                                 DefaultTheme;
+
+    TemplateTheme? TemplateTheme
+        => _noColor                     ? null
+            :  ApplyThemeToRedirectedOutput ? DefaultTemplateTheme
+            :                                 null;
 
     public override void Enable(OptionSet options)
     {
@@ -76,7 +83,7 @@ class OutputFormatFeature : CommandFeature
 
         if (_json)
         {
-            outputConfiguration.WriteTo.Console(OutputFormatter.Json);
+            outputConfiguration.WriteTo.Console(OutputFormatter.Json(TemplateTheme));
         }
         else
         {

@@ -87,7 +87,7 @@ class ImportCommand : Command
             ? await TemplateImportState.LoadAsync(stateFile)
             : new TemplateImportState();
             
-        var args = _args.Properties.ToDictionary(
+        var args = _args.FlatProperties.ToDictionary(
             v => v.Key,
             v => (JsonTemplate) (v.Value switch {
                 string s => new JsonTemplateString(s),

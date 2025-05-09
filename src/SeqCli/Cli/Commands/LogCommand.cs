@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 // Copyright 2018 Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,7 +81,7 @@ class LogCommand : Command
         if (!string.IsNullOrWhiteSpace(_exception))
             payload["@x"] = _exception;
 
-        foreach (var (key, value) in _properties.Properties)
+        foreach (var (key, value) in _properties.NestedProperties)
         {
             if (string.IsNullOrWhiteSpace(key))
                 continue;
@@ -89,7 +90,7 @@ class LogCommand : Command
             if (name.StartsWith('@'))
                 name = $"@{name}";
 
-            payload[name] = new JValue(value);
+            payload[name] = ToJsonValue(value);
         }
 
         StringContent content;
@@ -133,5 +134,21 @@ class LogCommand : Command
 
         Log.Error("Failed with status code {StatusCode} ({ReasonPhrase})", result.StatusCode, result.ReasonPhrase);
         return 1;
+    }
+
+    static JToken ToJsonValue(object? value)
+    {
+        if (value is not IReadOnlyDictionary<string, object?> rod)
+        {
+            return new JValue(value);
+        }
+        
+        var result = new JObject();
+        foreach (var (key, sub) in rod)
+        {
+            result[key] = ToJsonValue(sub);
+        }
+
+        return result;
     }
 }

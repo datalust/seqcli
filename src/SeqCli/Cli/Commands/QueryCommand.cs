@@ -35,6 +35,7 @@ class QueryCommand : Command
     readonly SignalExpressionFeature _signal;
     readonly TimeoutFeature _timeout;
     string? _query;
+    bool _trace;
 
     public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
@@ -45,6 +46,7 @@ class QueryCommand : Command
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
         _output = Enable(new OutputFormatFeature(config.Output));
+        Options.Add("trace", "Enable detailed (server-side) query tracing", _ => _trace = true);
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -62,14 +64,14 @@ class QueryCommand : Command
             
         if (_output.Json)
         {
-            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
+            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
 
             // Some friendlier JSON output is definitely possible here
             Console.WriteLine(JsonConvert.SerializeObject(result));
         }
         else
         {
-            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout);
+            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
             _output.WriteCsv(result);
         }
 
