@@ -87,7 +87,7 @@ class IngestCommand : Command
             if (_level != null)
                 enrichers.Add(new ScalarPropertyEnricher(LevelMapping.SurrogateLevelProperty, _level));
             
-            foreach (var (name, value) in _properties.Properties)
+            foreach (var (name, value) in _properties.FlatProperties)
                 enrichers.Add(new ScalarPropertyEnricher(name, value));
 
             Func<LogEvent, bool>? filter = null;

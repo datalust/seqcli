@@ -106,7 +106,7 @@ class CreateCommand : Command
         var apiKey = await connection.ApiKeys.TemplateAsync();
 
         apiKey.Title = _title;
-        apiKey.InputSettings.AppliedProperties = _properties.Properties
+        apiKey.InputSettings.AppliedProperties = _properties.FlatProperties
             .Select(kvp => new EventPropertyPart(kvp.Key, kvp.Value))
             .ToList();
         apiKey.InputSettings.UseServerTimestamps = _useServerTimestamps;
