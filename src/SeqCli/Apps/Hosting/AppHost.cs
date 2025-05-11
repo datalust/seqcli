@@ -42,8 +42,6 @@ static class AppHost
         if (appInstanceId == null) throw new ArgumentNullException(nameof(appInstanceId));
         if (appInstanceTitle == null) throw new ArgumentNullException(nameof(appInstanceTitle));
 
-        ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-
         await using var log = new LoggerConfiguration()
             .MinimumLevel.Is(LevelAlias.Minimum)
             .WriteTo.Console(new CompactJsonFormatter(), standardErrorFromLevel: LevelAlias.Minimum)

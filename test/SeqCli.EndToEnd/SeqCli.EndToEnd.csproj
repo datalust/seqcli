@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.9.2" />

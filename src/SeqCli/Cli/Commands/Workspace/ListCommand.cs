@@ -23,7 +23,7 @@ class ListCommand : Command
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _entityIdentity = Enable(new EntityIdentityFeature("workspace", "list"));
-        _entityOwner = Enable(new EntityOwnerFeature("workspace", "list", _entityIdentity));
+        _entityOwner = Enable(new EntityOwnerFeature("workspace", "list", "listed", _entityIdentity));
         _output = Enable(new OutputFormatFeature(config.Output));
         _connection = Enable<ConnectionFeature>();
     }

@@ -55,8 +55,8 @@ class ListCommand : Command
         var connection = _connectionFactory.Connect(_connection);
 
         var list = _id != null ?
-            new[] { await connection.ClusterNodes.FindAsync(_id) } :
-            (await connection.ClusterNodes.ListAsync())
+            new[] { await connection.Cluster.FindAsync(_id) } :
+            (await connection.Cluster.ListAsync())
             .Where(n => _name == null || _name == n.Name);
 
         _output.ListEntities(list);

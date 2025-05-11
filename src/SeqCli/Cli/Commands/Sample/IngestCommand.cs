@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
@@ -31,6 +32,7 @@ class IngestCommand : Command
     readonly BatchSizeFeature _batchSize;
 
     bool _quiet;
+    int _simulations = 1;
 
     public IngestCommand(SeqConnectionFactory connectionFactory)
     {
@@ -39,6 +41,8 @@ class IngestCommand : Command
         _connection = Enable<ConnectionFeature>();
 
         Options.Add("quiet", "Don't echo ingested events to `STDOUT`", _ => _quiet = true);
+        Options.Add("simulations=", "Number of concurrent simulations to run; the default runs a single simulation",
+            v => _simulations = int.Parse(v));
             
         _batchSize = Enable<BatchSizeFeature>();
     }
@@ -55,7 +59,12 @@ class IngestCommand : Command
         }
 
         var connection = _connectionFactory.Connect(_connection);
-        await Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet);
+        var simulations = Enumerable.Range(0, _simulations)
+            .Select(_ => Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet))
+            .ToList();
+
+        await Task.WhenAll(simulations);
+        
         return 0;
     }
 }

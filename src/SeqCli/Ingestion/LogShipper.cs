@@ -24,11 +24,14 @@ using SeqCli.Api;
 using SeqCli.Output;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting;
 
 namespace SeqCli.Ingestion;
 
 static class LogShipper
 {
+    static readonly ITextFormatter JsonFormatter = OutputFormatter.Json(null);
+    
     public static async Task<int> ShipEvents(
         SeqConnection connection,
         string? apiKey,
@@ -155,7 +158,7 @@ static class LogShipper
         using (var builder = new StringWriter())
         {
             foreach (var evt in batch)
-                OutputFormatter.Json.Format(evt, builder);
+                JsonFormatter.Format(evt, builder);
 
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }

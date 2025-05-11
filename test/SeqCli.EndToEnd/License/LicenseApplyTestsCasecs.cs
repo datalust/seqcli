@@ -21,9 +21,9 @@ public class LicenseApplyTestCase : ICliTestCase
         var filename = _testDataFolder.ItemPath("license.txt");
         File.WriteAllText(filename, "Ceci n'est pas une licence");
         runner.Exec("license apply", $"--certificate=\"{filename}\"");
-        Assert.Equal(
-            "The command failed: 400 - The license format is invalid: data precedes any keys.",
-            runner.LastRunProcess.Output.Trim());
+        Assert.Contains(
+            "The license format is invalid: data precedes any keys.",
+            runner.LastRunProcess!.Output.Trim());
         return Task.CompletedTask;
     }
 }

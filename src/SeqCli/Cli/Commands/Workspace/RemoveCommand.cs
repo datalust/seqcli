@@ -22,7 +22,7 @@ class RemoveCommand : Command
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _entityIdentity = Enable(new EntityIdentityFeature("workspace", "remove"));
-        _entityOwner = Enable(new EntityOwnerFeature("workspace", "remove", _entityIdentity));
+        _entityOwner = Enable(new EntityOwnerFeature("workspace", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
     }
 

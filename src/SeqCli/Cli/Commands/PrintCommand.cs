@@ -56,11 +56,11 @@ class PrintCommand : Command
 
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
-        Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+        Options.Add("no-color", "Don't colorize text output", _ => _noColor = true);
 
         Options.Add("force-color",
             "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
-            v => _forceColor = true);
+            _ => _forceColor = true);
     }
 
     protected override async Task<int> Run()
