@@ -31,7 +31,7 @@ for:
   
   - provider: NuGet
     api_key:
-      secure: V+MlStLrFQQKjtbJQQ9RDTGD2VPlPJaQhkXayCO3AM4dWBKf5/fQWJgStZyK6Tx3
+      secure: 8gHaCWoeZrbMxRKH09E/cwYxYVvkiJ9P/GXC8H4oNxoYZ2pQgeWzBGkOT9noYrBU
     skip_symbols: true
     artifact: /seqcli\..*\.nupkg/
     on:
