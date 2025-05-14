@@ -10,10 +10,10 @@ public class CliCommandRunner(TestConfiguration configuration)
         
     public ITestProcess? LastRunProcess { get; private set; }
 
-    public int Exec(string command, string? args = null, bool disconnected = false)
+    public int Exec(string command, string? args = null, bool disconnected = false, TimeSpan? timeout = null)
     {
         using var process = configuration.SpawnCliProcess(command, args, skipServerArg: disconnected);
         LastRunProcess = process;
-        return process.WaitForExit(DefaultExecTimeout);
+        return process.WaitForExit(timeout ?? DefaultExecTimeout);
     }
 }
