@@ -1,10 +1,11 @@
-Push-Location $PSScriptRoot
+Push-Location $PSScriptRoot/../
 
-. ./Build.Common.ps1
+. ./build/Build.Common.ps1
 
 $ErrorActionPreference = 'Stop'
 
-$version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
+$version = Get-SemVer
+
 $framework = 'net9.0'
 $windowsTfmSuffix = '-windows'
 
@@ -78,6 +79,26 @@ function Publish-Docs($version)
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
+function Upload-NugetPackages
+{
+    # GitHub Actions will only supply this to branch builds and not PRs. We publish
+    # builds from any branch this action targets (i.e. main and dev).
+
+    Write-Output "build: Publishing NuGet packages"
+
+    foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
+        & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
+        if($LASTEXITCODE -ne 0) { throw "Publishing failed" }
+    }
+}
+
+function Upload-GitHubRelease($version)
+{
+    Write-Output "build: Creating release for version $version"
+
+    iex "gh release create v$version --title v$version --generate-notes $(get-item ./artifacts/*)"
+}
+
 function Remove-GlobalJson
 {
     if(Test-Path ./global.json) { rm ./global.json }    
@@ -104,6 +125,16 @@ Publish-Archives($version)
 Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
+
+if ("$($env:NUGET_API_KEY)" -ne "")
+{
+    Upload-NugetPackages
+}
+
+if ($env:CI_PUBLISH -eq "True") {
+    Upload-GitHubRelease($version)
+}
+
 Remove-GlobalJson
 
 Pop-Location
