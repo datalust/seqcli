@@ -2,10 +2,9 @@ Push-Location $PSScriptRoot
 
 . ./Build.Common.ps1
 
-$IsCIBuild = $null -ne $env:APPVEYOR_BUILD_NUMBER
-$IsPublishedBuild = ($env:APPVEYOR_REPO_BRANCH -eq "main" -or $env:APPVEYOR_REPO_BRANCH -eq "dev") -and $null -eq $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH
+$IsPublishedBuild = $null -ne $env:DOCKER_TOKEN
 
-$version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
+$version = Get-SemVer()
 $framework = "net9.0"
 $image = "datalust/seqcli"
 $archs = @(
@@ -42,14 +41,19 @@ function Build-DockerImage($arch)
     if($LASTEXITCODE -ne 0) { exit 3 }
 }
 
-function Publish-DockerImage($arch)
+function Login-ToDocker()
 {
     $ErrorActionPreference = "SilentlyContinue"
 
-    if ($IsCIBuild) {
-        Write-Output "$env:DOCKER_TOKEN" | docker login -u $env:DOCKER_USER --password-stdin
-        if ($LASTEXITCODE) { exit 3 }
-    }
+    Write-Output "$env:DOCKER_TOKEN" | docker login -u $env:DOCKER_USER --password-stdin
+    if ($LASTEXITCODE) { exit 3 }
+
+    $ErrorActionPreference = "Stop"
+}
+
+function Publish-DockerImage($arch)
+{
+    $ErrorActionPreference = "SilentlyContinue"
 
     & docker push "$image-ci:$version-$($arch.rid)"
     if($LASTEXITCODE -ne 0) { exit 3 }
@@ -76,13 +80,15 @@ Execute-Tests
 
 foreach ($arch in $archs) {
     Build-DockerImage($arch)
-
-    if ($IsPublishedBuild) {
-        Publish-DockerImage($arch)
-    }
 }
 
 if ($IsPublishedBuild) {
+    Login-ToDocker()
+
+    foreach ($arch in $archs) {
+        Publish-DockerImage($arch)
+    }
+
     Publish-DockerManifest($archs)
 }
 
