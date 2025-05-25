@@ -2,7 +2,13 @@ Push-Location $PSScriptRoot/../
 
 . ./build/Build.Common.ps1
 
+Write-Host "Run Number: $env:CI_BUILD_NUMBER_BASE"
+Write-Host "Target Branch: $env:CI_TARGET_BRANCH"
+Write-Host "Published: $env:CI_PUBLISH"
+
 $version = Get-SemVer
+
+Write-Output "Building version $version"
 
 $framework = "net9.0"
 $image = "datalust/seqcli"
