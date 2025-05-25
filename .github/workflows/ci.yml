@@ -11,7 +11,7 @@ on:
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
-  CI_PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+  CI_PUBLISH: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
 
 jobs:
   build-windows:

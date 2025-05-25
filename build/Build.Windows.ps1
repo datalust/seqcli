@@ -4,7 +4,13 @@ Push-Location $PSScriptRoot/../
 
 $ErrorActionPreference = 'Stop'
 
+Write-Host "Run Number: $env:CI_BUILD_NUMBER_BASE"
+Write-Host "Target Branch: $env:CI_TARGET_BRANCH"
+Write-Host "Published: $env:CI_PUBLISH"
+
 $version = Get-SemVer
+
+Write-Output "Building version $version"
 
 $framework = 'net9.0'
 $windowsTfmSuffix = '-windows'
@@ -65,7 +71,9 @@ function Publish-Archives($version)
 }
 
 function Publish-DotNetTool($version)
-{    
+{
+    Write-Output "Building dotnet tool"
+
     # Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
     dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFrameworks=$framework
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
@@ -84,7 +92,7 @@ function Upload-NugetPackages
     # GitHub Actions will only supply this to branch builds and not PRs. We publish
     # builds from any branch this action targets (i.e. main and dev).
 
-    Write-Output "build: Publishing NuGet packages"
+    Write-Output "Publishing NuGet packages"
 
     foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
         & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
@@ -94,7 +102,7 @@ function Upload-NugetPackages
 
 function Upload-GitHubRelease($version)
 {
-    Write-Output "build: Creating release for version $version"
+    Write-Output "Creating release for version $version"
 
     iex "gh release create v$version --title v$version --generate-notes $(get-item ./artifacts/*)"
 }
@@ -112,8 +120,6 @@ function Create-GlobalJson
     Remove-GlobalJson
     cp ./ci.global.json global.json
 }
-
-Write-Output "Building version $version"
 
 $env:Path = "$pwd/.dotnetcli;$env:Path"
 
