@@ -85,23 +85,36 @@ class SearchCommand : Command
             if (!string.IsNullOrWhiteSpace(_filter))
                 filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
 
-            var search = _noWebSockets ?
-                connection.Events.PagedEnumerateAsync(null,
-                    _signal.Signal,
-                    filter,
-                    _count,
-                    fromDateUtc: _range.Start,
-                    toDateUtc: _range.End,
-                    trace: _trace) :
-                connection.Events.EnumerateAsync(null,
-                    _signal.Signal,
-                    filter,
-                    _count,
-                    fromDateUtc: _range.Start,
-                    toDateUtc: _range.End,
-                    trace: _trace);
+            try
+            {
+                if (!_noWebSockets)
+                {
+                    await foreach (var evt in connection.Events.EnumerateAsync(null,
+                                       _signal.Signal,
+                                       filter,
+                                       _count,
+                                       fromDateUtc: _range.Start,
+                                       toDateUtc: _range.End,
+                                       trace: _trace))
+                    {
+                        output.Write(ToSerilogEvent(evt));
+                    }
+
+                    return 0;
+                }
+            }
+            catch (NotSupportedException nse)
+            {
+                Log.Information(nse, "WebSockets not supported; falling back to paged search");
+            }
             
-            await foreach (var evt in search)
+            await foreach (var evt in connection.Events.PagedEnumerateAsync(null,
+                               _signal.Signal,
+                               filter,
+                               _count,
+                               fromDateUtc: _range.Start,
+                               toDateUtc: _range.End,
+                               trace: _trace))
             {
                 output.Write(ToSerilogEvent(evt));
             }
