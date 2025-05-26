@@ -35,9 +35,9 @@ class OutputFormatFeature : CommandFeature
     public const string DefaultOutputTemplate =
         "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
 
-    public static readonly ConsoleTheme DefaultTheme     = SystemConsoleTheme.Literate;
     public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Code;
-    static readonly TemplateTheme DefaultTemplateTheme = TemplateTheme.Literate;
+    public static readonly ConsoleTheme DefaultTheme     = OperatingSystem.IsWindows() ? SystemConsoleTheme.Literate : DefaultAnsiTheme;
+    static readonly TemplateTheme DefaultTemplateTheme = TemplateTheme.Code;
 
     bool _json, _noColor, _forceColor;
 
