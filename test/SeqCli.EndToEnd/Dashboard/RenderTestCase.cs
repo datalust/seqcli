@@ -19,7 +19,7 @@ public class RenderTestCase : ICliTestCase
 
         var id = runner.LastRunProcess.Output.Split(' ')[0];
 
-        exit = runner.Exec("dashboard render", $"-i {id} -c \"All Events\" --last 1d --by 1h");
+        exit = runner.Exec("dashboard render", $"-i {id} -c \"All Events\" --last 1d --by 1h --no-color");
         Assert.Equal(0, exit);
 
         var lines = new StringReader(runner.LastRunProcess.Output);
