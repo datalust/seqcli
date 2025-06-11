@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{2EA56595-519
 		README.md = README.md
 		CONTRIBUTING.md = CONTRIBUTING.md
 		ci.global.json = ci.global.json
+		baseversion = baseversion
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3587B633-0C03-4235-8903-6226900328F1}"

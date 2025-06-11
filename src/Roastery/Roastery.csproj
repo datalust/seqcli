@@ -6,8 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Serilog" Version="4.0.2" />
-        <PackageReference Include="SerilogTracing" Version="2.1.2" />
+        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="SerilogTracing" Version="2.3.1" />
     </ItemGroup>
 
 </Project>
