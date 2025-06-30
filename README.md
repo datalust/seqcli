@@ -19,7 +19,7 @@ seqcli config -k connection.serverUrl -v https://your-seq-server
 seqcli config -k connection.apiKey -v your-api-key
 ```
 
-The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
+The API key will be stored in your `SeqCli.json` (or `SEQCLI_CONFIG_FILE`) configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
 
 `seqcli` is also available as a Docker container under [`datalust/seqcli`](https://store.docker.com/community/images/datalust/seqcli):
 
@@ -113,7 +113,7 @@ seqcli help apikey
   - [`appinstance remove`](#appinstance-remove) &mdash; Remove an app instance from the server.
   - [`appinstance update`](#appinstance-update) &mdash; Update an existing app instance.
 - [`bench`](#bench) &mdash; Measure query performance.
-- [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
+- [`config`](#config) &mdash; View and set fields in the `SeqCli.json` (or `SEQCLI_CONFIG_PATH`) file; run with no arguments to list all fields.
 - `dashboard`
   - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
   - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
@@ -491,7 +491,7 @@ Measure query performance.
 
 ### `config`
 
-View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
+View and set fields in the default `SeqCli.json` or environment-specified `SEQCLI_CONFIG_FILE` file; run with no arguments to list all fields.
 
 | Option | Description |
 | ------ | ----------- |

@@ -25,7 +25,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands;
 
-[Command("config", "View and set fields in the `SeqCli.json` file; run with no arguments to list all fields")]
+[Command("config", "View and set fields in the default `SeqCli.json` or environment-specified `SEQCLI_CONFIG_FILE` file; run with no arguments to list all fields")]
 class ConfigCommand : Command
 {
     string? _key, _value;
@@ -44,7 +44,7 @@ class ConfigCommand : Command
             
         try
         {
-            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.DefaultConfigFilename);
+            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.SeqCliConfigFilename());
             
             if (_key != null)
             {
@@ -52,13 +52,13 @@ class ConfigCommand : Command
                 {
                     verb = "clear";
                     KeyValueSettings.Clear(config, _key);
-                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.SeqCliConfigFilename());
                 }
                 else if (_value != null)
                 {
                     verb = "update";
                     KeyValueSettings.Set(config, _key, _value);
-                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.SeqCliConfigFilename());
                 }
                 else
                 {
