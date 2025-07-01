@@ -40,7 +40,7 @@ static class RuntimeConfigurationLoader
     public static string SeqCliConfigFilename()
     {
         var customConfigFilename = Environment.GetEnvironmentVariable("SEQCLI_CONFIG_FILE");
-        if (File.Exists(customConfigFilename))
+        if (!string.IsNullOrEmpty(customConfigFilename))
         {
             return customConfigFilename;
         }
