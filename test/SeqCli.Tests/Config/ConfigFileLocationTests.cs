@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using SeqCli.Config;
 using Xunit;
+using Xunit.Sdk;
 
 namespace SeqCli.Tests.Config;
 
@@ -16,15 +17,31 @@ public class ConfigFileLocationTests
     }
 
     [Fact]
+    [EnvironmentOverridenConfigFilenameBeforeAfter(SeqCliConfigFile = "MyCustomSeqCli.json")]
     public void EnvironmentOverridenConfigFilename()
     {
-        var tempConfigFile = Path.GetTempFileName();
-        Environment.SetEnvironmentVariable("SEQCLI_CONFIG_FILE", tempConfigFile);
         var configFile = RuntimeConfigurationLoader.SeqCliConfigFilename();
-        // Clean up immediately to avoid affecting environment for other tests
-        // TODO: Or better move to public void Dispose() ?
-        Environment.SetEnvironmentVariable("SEQCLI_CONFIG_FILE", null);
+        var customConfigFile = Path.Combine(Path.GetTempPath(), "MyCustomSeqCli.json");
+        Assert.Equal(customConfigFile, configFile);
+    }
+}
 
-        Assert.Equal(tempConfigFile, configFile);
+[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+public class EnvironmentOverridenConfigFilenameBeforeAfter : BeforeAfterTestAttribute
+{
+    private string originalValue;
+    public string SeqCliConfigFile { get; set; }
+
+    public override void Before(System.Reflection.MethodInfo methodUnderTest)
+    {
+        originalValue = Environment.GetEnvironmentVariable("SEQCLI_CONFIG_FILE");
+
+        var configFile = Path.Combine(Path.GetTempPath(), SeqCliConfigFile);
+        Environment.SetEnvironmentVariable("SEQCLI_CONFIG_FILE", configFile);
+    }
+
+    public override void After(System.Reflection.MethodInfo methodUnderTest)
+    {
+        Environment.SetEnvironmentVariable("SEQCLI_CONFIG_FILE", originalValue);
     }
 }
