@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace SeqCli.Config;
 
@@ -23,17 +25,37 @@ static class RuntimeConfigurationLoader
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
 
     const string DefaultEnvironmentVariablePrefix = "SEQCLI_";
-    
+
     /// <summary>
-    /// This is the method to use when loading configuration for runtime use. It will read the default configuration
+    /// This is the method to use when loading configuration for runtime use. It will read the configuration
     /// file, if any, and apply overrides from the environment.
     /// </summary>
     public static SeqCliConfig Load()
     {
-        var config = SeqCliConfig.ReadFromFile(DefaultConfigFilename);
-        
+        var config = SeqCliConfig.ReadFromFile(SeqCliConfigFilename());
+
         EnvironmentOverrides.Apply(DefaultEnvironmentVariablePrefix, config);
-            
+
         return config;
-    }    
+    }
+
+    /// <summary>
+    /// Resolves location of the configuration file for runtime use, returning either the defaullt location
+    /// or user-specified using `SEQCLI_CONFIG_FILE` environment variable.
+    /// </summary>
+    public static string SeqCliConfigFilename()
+    {
+        var environment = Environment.GetEnvironmentVariables();
+        return SeqCliConfigFilename(environment.Keys.Cast<string>().ToDictionary(k => k, k => (string?)environment[k]));
+    }
+
+    internal static string SeqCliConfigFilename(Dictionary<string, string?> environment)
+    {
+        if (environment.TryGetValue("SEQCLI_CONFIG_FILE", out var customConfigFilename) && !string.IsNullOrEmpty(customConfigFilename))
+        {
+            return customConfigFilename;
+        }
+
+        return DefaultConfigFilename;
+    }
 }

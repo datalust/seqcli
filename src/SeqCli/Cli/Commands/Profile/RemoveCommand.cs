@@ -34,14 +34,14 @@ class RemoveCommand : Command
 
         try
         {
-            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.DefaultConfigFilename);
+            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.SeqCliConfigFilename());
             if (!config.Profiles.Remove(_name))
             {
                 Log.Error("No profile with name {ProfileName} was found", _name);
                 return 1;
             }
 
-            SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+            SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.SeqCliConfigFilename());
 
             return 0;
         }
