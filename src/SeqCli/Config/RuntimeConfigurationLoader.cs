@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace SeqCli.Config;
 
@@ -43,8 +45,13 @@ static class RuntimeConfigurationLoader
     /// </summary>
     public static string SeqCliConfigFilename()
     {
-        var customConfigFilename = Environment.GetEnvironmentVariable("SEQCLI_CONFIG_FILE");
-        if (!string.IsNullOrEmpty(customConfigFilename))
+        var environment = Environment.GetEnvironmentVariables();
+        return SeqCliConfigFilename(environment.Keys.Cast<string>().ToDictionary(k => k, k => (string?)environment[k]));
+    }
+
+    internal static string SeqCliConfigFilename(Dictionary<string, string?> environment)
+    {
+        if (environment.TryGetValue("SEQCLI_CONFIG_FILE", out var customConfigFilename) && !string.IsNullOrEmpty(customConfigFilename))
         {
             return customConfigFilename;
         }
