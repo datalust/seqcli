@@ -14,14 +14,13 @@
 
 #if WINDOWS
 
-using System; 
+using System;
 using System.IO;
 using System.Threading.Tasks;
-using SeqCli.Forwarder.Util;
-using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
+using SeqCli.Forwarder.Util;
 
-namespace SeqCli.Forwarder.Cli.Commands
+namespace SeqCli.Cli.Commands.Forwarder
 {
     [Command("forwarder", "uninstall", "Uninstall the forwarder Windows service", IsPreview = true)]
     class UninstallCommand : Command

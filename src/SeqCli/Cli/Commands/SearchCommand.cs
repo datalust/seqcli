@@ -42,6 +42,7 @@ class SearchCommand : Command
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
+    bool _trace, _noWebSockets;
 
     public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
     {
@@ -64,7 +65,11 @@ class SearchCommand : Command
             "request-timeout=",
             $"The time allowed for retrieving each page of events, in milliseconds; the default is {_httpClientTimeout}",
             v => _httpClientTimeout = int.Parse(v.Trim()));
-            
+
+        Options.Add("trace", "Enable detailed (server-side) query tracing", _ => _trace = true);
+
+        Options.Add("no-websockets", "Do not use WebSocket-driven streaming searches", _ => _noWebSockets = true);
+
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -80,12 +85,36 @@ class SearchCommand : Command
             if (!string.IsNullOrWhiteSpace(_filter))
                 filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
 
-            await foreach (var evt in connection.Events.EnumerateAsync(null,
+            try
+            {
+                if (!_noWebSockets)
+                {
+                    await foreach (var evt in connection.Events.EnumerateAsync(null,
+                                       _signal.Signal,
+                                       filter,
+                                       _count,
+                                       fromDateUtc: _range.Start,
+                                       toDateUtc: _range.End,
+                                       trace: _trace))
+                    {
+                        output.Write(ToSerilogEvent(evt));
+                    }
+
+                    return 0;
+                }
+            }
+            catch (NotSupportedException nse)
+            {
+                Log.Information(nse, "WebSockets not supported; falling back to paged search");
+            }
+            
+            await foreach (var evt in connection.Events.PagedEnumerateAsync(null,
                                _signal.Signal,
                                filter,
                                _count,
                                fromDateUtc: _range.Start,
-                               toDateUtc: _range.End))
+                               toDateUtc: _range.End,
+                               trace: _trace))
             {
                 output.Write(ToSerilogEvent(evt));
             }

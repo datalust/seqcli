@@ -30,7 +30,7 @@ class SeqCliModule : Autofac.Module
             .As<Command>()
             .WithMetadataFrom<CommandAttribute>();
         builder.RegisterType<SeqConnectionFactory>();
-        builder.Register(c => SeqCliConfig.Read()).SingleInstance();
+        builder.Register(c => RuntimeConfigurationLoader.Load()).SingleInstance();
         builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
         builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
         builder.Register(c => c.Resolve<SeqCliConfig>().Encryption.DataProtector()).As<IDataProtector>();

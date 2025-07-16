@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SeqCli.Util;
 
 namespace SeqCli.Cli.Features;
@@ -22,22 +23,27 @@ namespace SeqCli.Cli.Features;
 class FileInputFeature : CommandFeature
 {
     readonly string _description;
-    readonly bool _supportsWildcard;
+    readonly bool _allowMultiple;
+    readonly List<string> _inputFilenames = new();
 
-    public FileInputFeature(string description, bool supportsWildcard = false)
+    public FileInputFeature(string description, bool allowMultiple = false)
     {
         _description = description;
-        _supportsWildcard = supportsWildcard;
+        _allowMultiple = allowMultiple;
     }
-
-    string? InputFilename { get; set; }
 
     public override void Enable(OptionSet options)
     {
-        var wildcardHelp = _supportsWildcard ? $", including the `{DirectoryExt.Wildcard}` wildcard" : "";
+        var wildcardHelp = _allowMultiple ? $", including the `{DirectoryExt.Wildcard}` wildcard" : "";
         options.Add("i=|input=",
             $"{_description}{wildcardHelp}; if not specified, `STDIN` will be used",
-            v => InputFilename = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+            v =>
+            {
+                if (!string.IsNullOrWhiteSpace(v))
+                {
+                    _inputFilenames.Add(v.Trim());
+                }
+            });
     }
 
     static TextReader OpenText(string filename)
@@ -46,21 +52,29 @@ class FileInputFeature : CommandFeature
             File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
     }
 
-    public TextReader OpenInput()
+    public TextReader OpenSingleInput()
     {
-        return InputFilename != null ? OpenText(InputFilename) : Console.In;
+        return _inputFilenames.SingleOrDefault() is {} filename ? OpenText(filename) : Console.In;
     }
 
     public IEnumerable<TextReader> OpenInputs()
     {
-        if (InputFilename == null || !DirectoryExt.IncludesWildcard(InputFilename))
+        if (_inputFilenames.Count == 0)
         {
-            yield return OpenInput();
+            yield return OpenSingleInput();
         }
-        else
+
+        foreach (var filename in _inputFilenames)
         {
-            foreach (var path in DirectoryExt.GetFiles(InputFilename))
-                yield return OpenText(path);
+            if (!DirectoryExt.IncludesWildcard(filename))
+            {
+                yield return OpenText(filename);
+            }
+            else
+            {
+                foreach (var path in DirectoryExt.GetFiles(filename))
+                    yield return OpenText(path);
+            }
         }
     }
 }

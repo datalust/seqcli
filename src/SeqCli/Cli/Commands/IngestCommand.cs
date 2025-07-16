@@ -47,7 +47,7 @@ class IngestCommand : Command
     public IngestCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
-        _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", supportsWildcard: true));
+        _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", allowMultiple: true));
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
         _properties = Enable<PropertiesFeature>();
 
@@ -87,7 +87,7 @@ class IngestCommand : Command
             if (_level != null)
                 enrichers.Add(new ScalarPropertyEnricher(LevelMapping.SurrogateLevelProperty, _level));
             
-            foreach (var (name, value) in _properties.Properties)
+            foreach (var (name, value) in _properties.FlatProperties)
                 enrichers.Add(new ScalarPropertyEnricher(name, value));
 
             Func<LogEvent, bool>? filter = null;

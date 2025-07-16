@@ -32,7 +32,7 @@ class ListCommand : Command
 
     string? _name, _id;
         
-    public ListCommand(SeqConnectionFactory connectionFactory, OutputConfig outputConfig)
+    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig seqCliOutputConfig)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             
@@ -46,7 +46,7 @@ class ListCommand : Command
             "The id of a single cluster node to list",
             id => _id = id);
             
-        _output = Enable(new OutputFormatFeature(outputConfig));
+        _output = Enable(new OutputFormatFeature(seqCliOutputConfig));
         _connection = Enable<ConnectionFeature>();
     }
         
@@ -55,8 +55,8 @@ class ListCommand : Command
         var connection = _connectionFactory.Connect(_connection);
 
         var list = _id != null ?
-            new[] { await connection.ClusterNodes.FindAsync(_id) } :
-            (await connection.ClusterNodes.ListAsync())
+            new[] { await connection.Cluster.FindAsync(_id) } :
+            (await connection.Cluster.ListAsync())
             .Where(n => _name == null || _name == n.Name);
 
         _output.ListEntities(list);

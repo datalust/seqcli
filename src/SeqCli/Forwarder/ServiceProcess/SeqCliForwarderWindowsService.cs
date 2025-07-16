@@ -30,10 +30,6 @@ namespace SeqCli.Forwarder.ServiceProcess
 
         public SeqCliForwarderWindowsService(ServerService serverService)
         {
-            // Enable TLS 1.2 Support.
-            // .NET Framework 4.5.2 does not have it enabled by default
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-
             _serverService = serverService;
 
             ServiceName = WindowsServiceName;

@@ -30,13 +30,13 @@ namespace SeqCli.Ingestion;
 class JsonLogEventReader : ILogEventReader
 {
     static readonly TimeSpan TrailingLineArrivalDeadline = TimeSpan.FromMilliseconds(10);
-        
-    readonly FrameReader _reader;
-    readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
+    static readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
     {
         DateParseHandling = DateParseHandling.None,
         Culture = CultureInfo.InvariantCulture
     });
+
+    readonly FrameReader _reader;
 
     public JsonLogEventReader(TextReader input)
     {
@@ -63,7 +63,16 @@ class JsonLogEventReader : ILogEventReader
         return new ReadResult(evt, frame.IsAtEnd);
     }
 
-    public static LogEvent ReadFromJObject(JObject jObject)
+    public static LogEvent ReadFromJson(string json)
+    {
+        var frameValue = new JsonTextReader(new StringReader(json));
+        if (_serializer.Deserialize<JToken>(frameValue) is not JObject jObject)
+            throw new InvalidDataException($"The line is not a JSON object: `{json.Trim()}`.");
+
+        return ReadFromJObject(jObject);
+    }
+
+    static LogEvent ReadFromJObject(JObject jObject)
     {
         if (!jObject.TryGetValue("@t", out _))
             jObject.Add("@t", new JValue(DateTime.UtcNow.ToString("O")));

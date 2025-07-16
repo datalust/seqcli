@@ -75,7 +75,7 @@ class CreateCommand : Command
 
         Options.Add(
             "permissions=",
-            "A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project` and `System`",
+            "A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project`, `Organization`, and `System`",
             v => _permissions = ArgumentString.NormalizeList(v));
 
         Options.Add(
@@ -106,7 +106,7 @@ class CreateCommand : Command
         var apiKey = await connection.ApiKeys.TemplateAsync();
 
         apiKey.Title = _title;
-        apiKey.InputSettings.AppliedProperties = _properties.Properties
+        apiKey.InputSettings.AppliedProperties = _properties.FlatProperties
             .Select(kvp => new EventPropertyPart(kvp.Key, kvp.Value))
             .ToList();
         apiKey.InputSettings.UseServerTimestamps = _useServerTimestamps;
@@ -133,7 +133,7 @@ class CreateCommand : Command
         {
             foreach (var permission in _permissions)
             {
-                if (!Enum.TryParse<Permission>(permission, out var p))
+                if (!Enum.TryParse<Permission>(permission, true, out var p))
                 {
                     Log.Error("Unrecognized permission {Permission}", permission);
                     return 1;

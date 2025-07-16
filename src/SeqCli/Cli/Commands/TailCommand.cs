@@ -13,10 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Connection;
@@ -25,6 +23,7 @@ using SeqCli.Ingestion;
 namespace SeqCli.Cli.Commands;
 
 [Command("tail", "Stream log events matching a filter")]
+// ReSharper disable once UnusedType.Global
 class TailCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
@@ -60,20 +59,26 @@ class TailCommand : Command
             var converted = await connection.Expressions.ToStrictAsync(_filter, cancel.Token);
             strict = converted.StrictExpression;
         }
-
+        
         await using var output = _output.CreateOutputLogger();
-        using var stream = await connection.Events.StreamAsync<JObject>(
-            filter: strict, 
-            signal: _signal.Signal,
-            cancellationToken: cancel.Token);
-        var subscription = stream
-            .Select(JsonLogEventReader.ReadFromJObject)
-            // ReSharper disable once AccessToDisposedClosure
-            .Subscribe(evt => output.Write(evt), () => cancel.Cancel());
 
-        cancel.Token.WaitHandle.WaitOne();
-        subscription.Dispose();
-
+        try
+        {
+            await foreach (var json in connection.Events.StreamDocumentsAsync(
+                               filter: strict,
+                               signal: _signal.Signal,
+                               clef: true,
+                               cancellationToken: cancel.Token))
+            {
+                var evt = JsonLogEventReader.ReadFromJson(json);
+                output.Write(evt);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // All done!
+        }
+        
         return 0;
     }
 }

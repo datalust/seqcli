@@ -1,11 +1,18 @@
-Push-Location $PSScriptRoot
+Push-Location $PSScriptRoot/../
 
-. ./Build.Common.ps1
+. ./build/Build.Common.ps1
 
 $ErrorActionPreference = 'Stop'
 
-$version = Get-SemVer(@{ $true = $env:APPVEYOR_BUILD_VERSION; $false = "99.99.99" }[$env:APPVEYOR_BUILD_VERSION -ne $NULL])
-$framework = 'net8.0'
+Write-Host "Run Number: $env:CI_BUILD_NUMBER_BASE"
+Write-Host "Target Branch: $env:CI_TARGET_BRANCH"
+Write-Host "Published: $env:CI_PUBLISH"
+
+$version = Get-SemVer
+
+Write-Output "Building version $version"
+
+$framework = 'net9.0'
 $windowsTfmSuffix = '-windows'
 
 function Clean-Output
@@ -64,7 +71,9 @@ function Publish-Archives($version)
 }
 
 function Publish-DotNetTool($version)
-{    
+{
+    Write-Output "Building dotnet tool"
+
     # Tool packages have to target a single non-platform-specific TFM; doing this here is cleaner than attempting it in the CSPROJ directly
     dotnet pack ./src/SeqCli/SeqCli.csproj -c Release --output ./artifacts /p:VersionPrefix=$version /p:TargetFrameworks=$framework
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
@@ -78,16 +87,60 @@ function Publish-Docs($version)
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
-Write-Output "Building version $version"
+function Upload-NugetPackages
+{
+    # GitHub Actions will only supply this to branch builds and not PRs. We publish
+    # builds from any branch this action targets (i.e. main and dev).
+
+    Write-Output "Publishing NuGet packages"
+
+    foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
+        & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
+        if($LASTEXITCODE -ne 0) { throw "Publishing failed" }
+    }
+}
+
+function Upload-GitHubRelease($version)
+{
+    Write-Output "Creating release for version $version"
+
+    iex "gh release create v$version --title v$version --generate-notes $(get-item ./artifacts/*)"
+}
+
+function Remove-GlobalJson
+{
+    if(Test-Path ./global.json) { rm ./global.json }    
+}
+
+function Create-GlobalJson
+{
+    # It's very important that SeqCli use the same .NET SDK version as its matching Seq version, to avoid
+    # container and installer bloat. But, highly-restrictive global.json files are annoying during development. So,
+    # we create a temporary global.json from ci.global.json to use during CI builds.
+    Remove-GlobalJson
+    cp ./ci.global.json global.json
+}
 
 $env:Path = "$pwd/.dotnetcli;$env:Path"
 
 Clean-Output
 Create-ArtifactDir
+Create-GlobalJson
 Restore-Packages
 Publish-Archives($version)
 Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
+
+if ("$($env:NUGET_API_KEY)" -ne "")
+{
+    Upload-NugetPackages
+}
+
+if ($env:CI_PUBLISH -eq "True") {
+    Upload-GitHubRelease($version)
+}
+
+Remove-GlobalJson
 
 Pop-Location

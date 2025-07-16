@@ -69,13 +69,14 @@ class BenchCommand : Command
     int _runs = 10;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
+    readonly TimeoutFeature _timeout;
     string _cases = "";
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
     string _description = "";
     bool _withIngestion = false;
     bool _withQueries = false;
-    
+
     public BenchCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
@@ -88,6 +89,7 @@ class BenchCommand : Command
 
         _connection = Enable<ConnectionFeature>();
         _range = Enable<DateRangeFeature>();
+        _timeout = Enable<TimeoutFeature>();
         
         Options.Add(
             "reporting-server=", 
@@ -123,6 +125,7 @@ class BenchCommand : Command
         {
             var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
             var connection = _connectionFactory.Connect(_connection);
+            var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
             var seqVersion = (await connection.Client.GetRootAsync()).Version;
             await using var reportingLogger = BuildReportingLogger();
 
@@ -194,14 +197,14 @@ class BenchCommand : Command
 
                 if (_withQueries)
                 {
-                    var collectedTimings = await QueryBenchmark(reportingLogger, runId, connection, seqVersion);
+                    var collectedTimings = await QueryBenchmark(reportingLogger, runId, connection, seqVersion, timeout);
                     collectedTimings.LogSummary(_description);
                     cancellationTokenSource.Cancel();
                 }
             }
 
             return 0;
-        } 
+        }
         catch (Exception ex)
         {
             Log.Error(ex, "Benchmarking failed: {ErrorMessage}", ex.Message);
@@ -225,13 +228,14 @@ class BenchCommand : Command
         }
         else
         {
-            var simulationTasks = Enumerable.Range(1, 2000)
+            var simulationTasks = Enumerable.Range(1, 1000)
                 .Select(i => Simulation.RunAsync(connection, apiKey, 10000, echoToStdout: false, cancellationToken))
                 .ToArray();
         }
     }
 
-    async Task<QueryBenchRunResults> QueryBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string seqVersion)
+    async Task<QueryBenchRunResults> QueryBenchmark(Logger reportingLogger, string runId, SeqConnection connection,
+        string seqVersion, TimeSpan? timeout)
     {
         var cases = ReadCases(_cases);
         QueryBenchRunResults queryBenchRunResults = new(reportingLogger);
@@ -254,7 +258,7 @@ class BenchCommand : Command
                     _range.End,
                     c.SignalExpression != null ? SignalExpressionPart.Signal(c.SignalExpression) : null,
                     null,
-                    TimeSpan.FromMinutes(4)
+                    timeout
                 );
         
                 timings.PushElapsed(response.Statistics.ElapsedMilliseconds);

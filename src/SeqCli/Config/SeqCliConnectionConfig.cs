@@ -20,7 +20,7 @@ using SeqCli.Util;
 
 namespace SeqCli.Config;
 
-public class ConnectionConfig
+public class SeqCliConnectionConfig
 {
     const string ProtectedDataPrefix = "pd.";
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+namespace SeqCli.Cli.Features;
 
-namespace SeqCli.Config;
-
-public class OutputConfig
+class WaitUntilHealthyFeature(string targetName): CommandFeature
 {
-    public bool DisableColor { get; set; }
-    public bool ForceColor   { get; set; }
+    public bool ShouldWait { get; private set; }
+    
+    public override void Enable(OptionSet options)
+    {
+        options.Add("wait-until-healthy", $"Wait until the {targetName} returns a status of healthy", _ =>
+        {
+            ShouldWait = true;
+        });
+    }
 }

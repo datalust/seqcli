@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Connection;
@@ -31,6 +32,8 @@ class IngestCommand : Command
     readonly BatchSizeFeature _batchSize;
 
     bool _quiet;
+    bool _setup;
+    int _simulations = 1;
 
     public IngestCommand(SeqConnectionFactory connectionFactory)
     {
@@ -39,6 +42,9 @@ class IngestCommand : Command
         _connection = Enable<ConnectionFeature>();
 
         Options.Add("quiet", "Don't echo ingested events to `STDOUT`", _ => _quiet = true);
+        Options.Add("setup", "Configure sample dashboards, signals, users, and so on before starting ingestion", _ => _setup = true);
+        Options.Add("simulations=", "Number of concurrent simulations to run; the default runs a single simulation",
+            v => _simulations = int.Parse(v));
             
         _batchSize = Enable<BatchSizeFeature>();
     }
@@ -47,15 +53,33 @@ class IngestCommand : Command
     {
         var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
         var batchSize = _batchSize.Value;
-            
-        if (!_confirm.TryConfirm($"This will send sample events to the Seq server at {url}."))
-        {
+
+        if (!_confirm.TryConfirm(_setup
+            ? $"This will apply sample configuration and send sample events to the Seq server at {url}."
+            : $"This will send sample events to the Seq server at {url}."
+        )) {
             await Console.Error.WriteLineAsync("Canceled by user.");
             return 1;
         }
 
         var connection = _connectionFactory.Connect(_connection);
-        await Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet);
+
+        if (_setup)
+        {
+            var setupResult = await SetupCommand.ImportTemplates(connection);
+
+            if (setupResult != 0)
+            {
+                return setupResult;
+            }
+        }
+
+        var simulations = Enumerable.Range(0, _simulations)
+            .Select(_ => Simulation.RunAsync(connection, apiKey, batchSize, echoToStdout: !_quiet))
+            .ToList();
+
+        await Task.WhenAll(simulations);
+        
         return 0;
     }
 }

@@ -48,11 +48,11 @@ class CreateCommand : Command
             
         try
         {
-            var config = SeqCliConfig.Read();
-            var connectionConfig = new ConnectionConfig { ServerUrl = _url };
+            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.DefaultConfigFilename);
+            var connectionConfig = new SeqCliConnectionConfig { ServerUrl = _url };
             connectionConfig.EncodeApiKey(_apiKey, config.Encryption.DataProtector());
             config.Profiles[_name] = connectionConfig;
-            SeqCliConfig.Write(config);
+            SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
             return 0;
         }
         catch (Exception ex)

@@ -39,7 +39,7 @@ class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly ConnectionConfig _connectionConfig;
+    readonly SeqCliConnectionConfig _seqCliConnectionConfig;
     readonly LogChannelMap _logChannels;
 
     readonly JsonSerializer _rawSerializer = JsonSerializer.Create(
@@ -49,7 +49,7 @@ class IngestionEndpoints : IMapEndpoints
         SeqCliConfig config,
         LogChannelMap logChannels)
     {
-        _connectionConfig = config.Connection;
+        _seqCliConnectionConfig = config.Connection;
         _logChannels = logChannels;
     }
     

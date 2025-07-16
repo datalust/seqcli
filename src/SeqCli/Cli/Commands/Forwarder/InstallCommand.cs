@@ -21,16 +21,15 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.ServiceProcess;
 using System.Threading.Tasks;
-using SeqCli.Forwarder.Cli.Features;
-using SeqCli.Forwarder.Util;
-using SeqCli.Cli;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Forwarder.Cli.Features;
 using SeqCli.Forwarder.ServiceProcess;
+using SeqCli.Forwarder.Util;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
-namespace SeqCli.Forwarder.Cli.Commands
+namespace SeqCli.Cli.Commands.Forwarder
 {
     [Command("forwarder", "install", "Install the forwarder as a Windows service", IsPreview = true)]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
@@ -180,12 +179,12 @@ namespace SeqCli.Forwarder.Cli.Commands
                 throw new ArgumentException("Seq requires a local (or SAN) storage location; network shares are not supported.");
 
             Console.WriteLine($"Updating the configuration in {_storagePath.ConfigFilePath}...");
-            var config = SeqCliConfig.Read();
+            var config = SeqCliConfig.ReadFromFile(_storagePath.ConfigFilePath);
             
             if (!string.IsNullOrEmpty(_listenUri.ListenUri))
             {
                 config.Forwarder.Api.ListenUri = _listenUri.ListenUri;
-                SeqCliConfig.Write(config);
+                SeqCliConfig.WriteToFile(config, _storagePath.ConfigFilePath);
             }
 
             if (_serviceCredentials.IsUsernameSpecified)

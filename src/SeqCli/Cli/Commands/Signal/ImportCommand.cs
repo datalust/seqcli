@@ -51,7 +51,7 @@ class ImportCommand : Command
             _ => _merge = true);
 
         _fileInputFeature = Enable(new FileInputFeature("File to import"));
-        _entityOwner = Enable(new EntityOwnerFeature("signal", "import"));
+        _entityOwner = Enable(new EntityOwnerFeature("signal", "import", "imported"));
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -59,7 +59,7 @@ class ImportCommand : Command
     {
         var connection = _connectionFactory.Connect(_connection);
 
-        using var input = _fileInputFeature.OpenInput();
+        using var input = _fileInputFeature.OpenSingleInput();
         var line = await input.ReadLineAsync();
         while (line != null)
         {

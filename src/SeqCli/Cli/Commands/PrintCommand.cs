@@ -38,13 +38,13 @@ class PrintCommand : Command
     string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
     bool _noColor, _forceColor;
 
-    public PrintCommand(OutputConfig outputConfig)
+    public PrintCommand(SeqCliOutputConfig seqCliOutputConfig)
     {
-        if (outputConfig == null) throw new ArgumentNullException(nameof(outputConfig));
-        _noColor = outputConfig.DisableColor;
-        _forceColor = outputConfig.ForceColor;
+        if (seqCliOutputConfig == null) throw new ArgumentNullException(nameof(seqCliOutputConfig));
+        _noColor = seqCliOutputConfig.DisableColor;
+        _forceColor = seqCliOutputConfig.ForceColor;
 
-        _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", supportsWildcard: true));
+        _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", allowMultiple: true));
 
         Options.Add("f=|filter=",
             "Filter expression to select a subset of events",
@@ -56,11 +56,11 @@ class PrintCommand : Command
 
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
-        Options.Add("no-color", "Don't colorize text output", v => _noColor = true);
+        Options.Add("no-color", "Don't colorize text output", _ => _noColor = true);
 
         Options.Add("force-color",
             "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
-            v => _forceColor = true);
+            _ => _forceColor = true);
     }
 
     protected override async Task<int> Run()

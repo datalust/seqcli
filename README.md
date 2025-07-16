@@ -31,6 +31,12 @@ To connect to Seq in a docker container on the local machine use the machine's I
 
 Use Docker networks and volumes to make local files and other containers accessible to `seqcli` within its container.
 
+### Environment variable overrides
+
+Each setting value can be overridden at runtime by specifying an environment variable of the form `SEQCLI_<setting path>`, where <setting path> contains one element for each dotted segment of the setting name, separated by underscores.
+
+For example the setting `connection.serverUrl` can overridden with the `SEQCLI_CONNECTION_SERVERURL` variable.
+
 ### Connecting without an API key
 
 If you're automating Seq setup, chances are you won't have an API key yet for `seqcli` to use. During the initial Seq server configuration, you can specify `firstRun.adminUsername` and `firstRun.adminPasswordHash` (or the equivalent environment variables `SEQ_FIRSTRUN_ADMINUSERNAME` and `SEQ_FIRSTRUN_ADMINPASSWORDHASH`) to set an initial username and password for the administrator account. You can use these to create an API key, and then use the API key token with the remaining `seqcli` commands.
@@ -44,7 +50,7 @@ $token = (
   echo $pw |
   seqcli apikey create `
     -t CLI `
-    --permissions="read,write,project,organization,system" `
+    --permissions="Read,Write,Project,Organization,System" `
     --connect-username $user --connect-password-stdin
 )
 ```
@@ -507,7 +513,7 @@ seqcli dashboard list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the dashboard(s) to list |
 | `-i`, `--id=VALUE` | The id of a single dashboard to list |
-| `-o`, `--owner=VALUE` | The id of the user to list dashboards for; by default, shared dashboards are listd |
+| `-o`, `--owner=VALUE` | The id of the user to list dashboards for; by default, shared dashboards are listed |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
@@ -529,7 +535,7 @@ seqcli dashboard remove -i dashboard-159
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the dashboard(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single dashboard to remove |
-| `-o`, `--owner=VALUE` | The id of the user to remove dashboards for; by default, shared dashboards are removd |
+| `-o`, `--owner=VALUE` | The id of the user to remove dashboards for; by default, shared dashboards are removed |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1170,7 +1176,7 @@ seqcli signal import -i ./Exceptions.json
 | ------ | ----------- |
 |       `--merge` | Update signals that have ids matching those in the imported data; the default is to always create new signals |
 | `-i`, `--input=VALUE` | File to import; if not specified, `STDIN` will be used |
-| `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are importd |
+| `-o`, `--owner=VALUE` | The id of the user to import signals for; by default, shared signals are imported |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1189,7 +1195,7 @@ seqcli signal list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the signal(s) to list |
 | `-i`, `--id=VALUE` | The id of a single signal to list |
-| `-o`, `--owner=VALUE` | The id of the user to list signals for; by default, shared signals are listd |
+| `-o`, `--owner=VALUE` | The id of the user to list signals for; by default, shared signals are listed |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
@@ -1211,7 +1217,25 @@ seqcli signal remove -t 'Test Signal'
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the signal(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single signal to remove |
-| `-o`, `--owner=VALUE` | The id of the user to remove signals for; by default, shared signals are removd |
+| `-o`, `--owner=VALUE` | The id of the user to remove signals for; by default, shared signals are removed |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `signal update`
+
+Update an existing signal.
+
+Example:
+
+```
+seqcli signal update --json '{...}'
+```
+
+| Option | Description |
+| ------ | ----------- |
+|       `--json=VALUE` | The updated signal in JSON format; this can be produced using `seqcli signal list --json` |
+|       `--json-stdin` | Read the updated signal as JSON from `STDIN` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1412,7 +1436,7 @@ seqcli workspace list
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the workspace(s) to list |
 | `-i`, `--id=VALUE` | The id of a single workspace to list |
-| `-o`, `--owner=VALUE` | The id of the user to list workspaces for; by default, shared workspaces are listd |
+| `-o`, `--owner=VALUE` | The id of the user to list workspaces for; by default, shared workspaces are listed |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
@@ -1434,7 +1458,25 @@ seqcli workspace remove -t 'My Workspace'
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | The title of the workspace(s) to remove |
 | `-i`, `--id=VALUE` | The id of a single workspace to remove |
-| `-o`, `--owner=VALUE` | The id of the user to remove workspaces for; by default, shared workspaces are removd |
+| `-o`, `--owner=VALUE` | The id of the user to remove workspaces for; by default, shared workspaces are removed |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `workspace update`
+
+Update an existing workspace.
+
+Example:
+
+```
+seqcli workspace update --json '{...}'
+```
+
+| Option | Description |
+| ------ | ----------- |
+|       `--json=VALUE` | The updated workspace in JSON format; this can be produced using `seqcli workspace list --json` |
+|       `--json-stdin` | Read the updated workspace as JSON from `STDIN` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1583,3 +1625,26 @@ seqcli ingest -i http.log --invalid-data=ignore -x "{@t:w3cdt} {ServerIP} {@m:={
 ```
 
 A nested `{@m:=` pattern is used to collect a substring of the log line for display as the event's message.
+
+## Updating entities
+
+The `seqcli * update` family of commands make it possible to perform arbitrary updates to many complex entity types.
+
+The `update` commands, like `seqcli signal update` shown in the example below, receive an updated JSON representation of an
+entity via `STDIN`.
+
+This works particularly well with tools like `jq` and modern shells with native JSON support, such as PowerShell:
+
+```
+PS > $warnings = (seqcli signal list -i signal-m33302 --json | ConvertFrom-Json)
+
+PS > $warnings.Title                                                                                                                
+Warnings
+
+PS > $warnings.Title = "Alarms"
+
+PS > (echo $warnings | ConvertTo-Json) | seqcli signal update --json-stdin        
+
+PS > seqcli signal list -i signal-m33302 --json                                 
+{"Title": "Alarms", "Description": "Automatically created", "Filters": [{"De...
+```

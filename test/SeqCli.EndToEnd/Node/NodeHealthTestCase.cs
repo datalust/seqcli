@@ -6,14 +6,19 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Node;
 
-[CliTestCase(MinimumApiVersion = "2021.3.6410")]
+[CliTestCase]
 public class NodeHealthTestCase: ICliTestCase
 {
     public Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
     {
         var exit = runner.Exec("node health");
         Assert.Equal(0, exit);
-        Assert.StartsWith("HTTP 1.1 200 OK", runner.LastRunProcess!.Output);
+        Assert.Equal("200", runner.LastRunProcess!.Output.Trim());
+        
+        exit = runner.Exec("node health --no-color --json");
+        Assert.Equal(0, exit);
+        Assert.StartsWith("{\"status\":", runner.LastRunProcess!.Output);
+        
         return Task.CompletedTask;
     }
 }

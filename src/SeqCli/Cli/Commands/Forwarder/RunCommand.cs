@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -29,7 +28,6 @@ using SeqCli.Config;
 using SeqCli.Config.Forwarder;
 using SeqCli.Forwarder;
 using SeqCli.Forwarder.Util;
-using SeqCli.Forwarder.Web;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
 using Serilog;
@@ -80,7 +78,7 @@ class RunCommand : Command
         try
         {
             // ISSUE: we can't really rely on the default `SeqCliConfig` path being readable when running as a service.
-            config = SeqCliConfig.Read(); // _storagePath.ConfigFilePath);
+            config = SeqCliConfig.ReadFromFile(_storagePath.ConfigFilePath);
         }
         catch (Exception ex)
         {

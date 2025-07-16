@@ -22,6 +22,7 @@ using SeqCli.Connection;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Import;
 using SeqCli.Util;
+using Seq.Api;
 
 // ReSharper disable once UnusedType.Global
 
@@ -58,6 +59,11 @@ class SetupCommand : Command
             return 1;
         }
 
+        return await ImportTemplates(connection);
+    }
+
+    internal static async Task<int> ImportTemplates(SeqConnection connection)
+    {
         var templateArgs = new Dictionary<string, JsonTemplate>();
         templateArgs["ownerId"] = new JsonTemplateNull();
 

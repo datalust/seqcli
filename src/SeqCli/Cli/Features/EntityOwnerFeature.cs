@@ -21,12 +21,14 @@ class EntityOwnerFeature : CommandFeature
 {
     readonly string _entityName;
     readonly string _verb;
+    private readonly string _verbPastParticiple;
     readonly EntityIdentityFeature? _identityFeature;
 
-    public EntityOwnerFeature(string entityName, string verb, EntityIdentityFeature? identityFeature = null)
+    public EntityOwnerFeature(string entityName, string verb, string verbPastParticiple, EntityIdentityFeature? identityFeature = null)
     {
         _entityName = entityName ?? throw new ArgumentNullException(nameof(entityName));
         _verb = verb ?? throw new ArgumentNullException(nameof(verb));
+        _verbPastParticiple = verbPastParticiple ?? throw new ArgumentNullException(nameof(verbPastParticiple));
         _identityFeature = identityFeature;
     }
 
@@ -34,7 +36,7 @@ class EntityOwnerFeature : CommandFeature
     {
         options.Add(
             "o=|owner=",
-            $"The id of the user to {_verb} {_entityName}s for; by default, shared {_entityName}s are {_verb.TrimEnd('e')}d",
+            $"The id of the user to {_verb} {_entityName}s for; by default, shared {_entityName}s are {_verbPastParticiple}",
             o =>
             {
                 OwnerId = StringNormalizationExtensions.Normalize(o);
@@ -55,4 +57,5 @@ class EntityOwnerFeature : CommandFeature
     public string? OwnerId { get; private set; }
 
     public bool IncludeShared { get; private set; } = true;
+
 }

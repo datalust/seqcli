@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections;
 using System.Collections.Generic;
+using SeqCli.Ingestion;
 
 namespace SeqCli.Cli.Features;
 
@@ -21,9 +23,10 @@ class PropertiesFeature : CommandFeature
     readonly string _shortOptionName;
     readonly string _longOptionName;
     readonly string _description;
-    readonly Dictionary<string, object?> _properties = new();
+    readonly Dictionary<string, object?> _flatProperties = new();
 
-    public IReadOnlyDictionary<string, object?> Properties => _properties;
+    public IReadOnlyDictionary<string, object?> FlatProperties => _flatProperties;
+    public IReadOnlyDictionary<string, object?> NestedProperties => UnflattenDottedPropertyNames.ProcessDottedPropertyNames(FlatProperties);
 
     public PropertiesFeature()
         : this("p", "property", "Specify name/value properties, e.g. `-p Customer=C123 -p Environment=Production`")
@@ -47,15 +50,15 @@ class PropertiesFeature : CommandFeature
                 var name = n.Trim();
                 var valueText = v?.Trim();
                 if (string.IsNullOrEmpty(valueText))
-                    _properties.Add(name, null);
+                    _flatProperties.Add(name, null);
                 else if (valueText == "true")
-                    _properties.Add(name, true);
+                    _flatProperties.Add(name, true);
                 else if (valueText == "false")
-                    _properties.Add(name, false);
+                    _flatProperties.Add(name, false);
                 else if (decimal.TryParse(valueText, out var numeric))
-                    _properties.Add(name, numeric);
+                    _flatProperties.Add(name, numeric);
                 else
-                    _properties.Add(name, valueText);
+                    _flatProperties.Add(name, valueText);
             });
     }
 }

@@ -16,15 +16,13 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.ServiceProcess;
 using System.Threading.Tasks;
-using SeqCli.Cli;
 using SeqCli.Forwarder.ServiceProcess;
 
 // ReSharper disable UnusedType.Global
 
-namespace SeqCli.Forwarder.Cli.Commands
+namespace SeqCli.Cli.Commands.Forwarder
 {
     [Command("forwarder", "restart", "Restart the forwarder Windows service", IsPreview = true)]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
