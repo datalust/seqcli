@@ -29,7 +29,7 @@ abstract class StoreDirectory
     /// </summary>
     public abstract StoreFile Create(string name);
 
-    public virtual (string, StoreFile) CreateTemporary()
+    protected virtual (string, StoreFile) CreateTemporary()
     {
         var tmpName = $"rc{Guid.NewGuid():N}.tmp";
         return (tmpName, Create(tmpName));

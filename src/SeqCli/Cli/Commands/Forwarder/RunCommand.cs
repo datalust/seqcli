@@ -89,6 +89,8 @@ class RunCommand : Command
             logger.Fatal(ex, "Failed to load configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
             return 1;
         }
+        
+        Log.Information("Loaded configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
 
         Log.Logger = CreateLogger(
             config.Forwarder.Diagnostics.InternalLoggingLevel,

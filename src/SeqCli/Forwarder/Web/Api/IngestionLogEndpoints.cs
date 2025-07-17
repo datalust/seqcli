@@ -33,10 +33,7 @@ class IngestionLogEndpoints : IMapEndpoints
 
     public void MapEndpoints(WebApplication app)
     {
-        // ISSUE: this route should probably only be mapped when some kind of --unsafe-debug flag
-        // is set.
-        
-        app.MapGet("/", () =>
+        app.MapGet("api/diagnostics/ingestion", () =>
         {
             var events = IngestionLog.Read();
             using var log = new StringWriter();

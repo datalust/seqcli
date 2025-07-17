@@ -7,7 +7,7 @@ namespace SeqCli.Forwarder.Channel;
 
 class LogChannel
 {
-    public LogChannel(Func<CancellationToken, Task> write, CancellationToken cancellationToken)
+    public LogChannel(Func<ArraySegment<byte>, CancellationToken, Task> write)
     {
         var channel = System.Threading.Channels.Channel.CreateBounded<LogChannelEntry>(new BoundedChannelOptions(5)
         {
@@ -16,7 +16,7 @@ class LogChannel
             FullMode = BoundedChannelFullMode.Wait,
         });
 
-        _shutdownTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _shutdownTokenSource = new CancellationTokenSource();
         _writer = channel.Writer;
         _worker = Task.Run(async () =>
         {
@@ -24,7 +24,7 @@ class LogChannel
             {
                 try
                 {
-                    await write(_shutdownTokenSource.Token);
+                    await write(entry.Storage[entry.Range], _shutdownTokenSource.Token);
                     entry.Completion.SetResult();
                 }
                 catch (Exception e)

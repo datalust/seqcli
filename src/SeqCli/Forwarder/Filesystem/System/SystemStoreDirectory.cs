@@ -44,7 +44,7 @@ sealed class SystemStoreDirectory : StoreDirectory
         return new SystemStoreFile(filePath);
     }
 
-    public override (string, StoreFile) CreateTemporary()
+    protected override (string, StoreFile) CreateTemporary()
     {
         // Temporary files are still created in the same directory
         // This is necessary for renames to be atomic on some filesystems

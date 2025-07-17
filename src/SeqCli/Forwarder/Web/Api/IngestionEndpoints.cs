@@ -14,9 +14,7 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -25,55 +23,47 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Net.Http.Headers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
 using JsonException = System.Text.Json.JsonException;
-using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace SeqCli.Forwarder.Web.Api;
+
+// ReSharper disable UnusedMethodReturnValue.Local
 
 class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly SeqCliConnectionConfig _seqCliConnectionConfig;
     readonly LogChannelMap _logChannels;
 
-    readonly JsonSerializer _rawSerializer = JsonSerializer.Create(
-        new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
-
-    public IngestionEndpoints(
-        SeqCliConfig config,
-        LogChannelMap logChannels)
+    public IngestionEndpoints(LogChannelMap logChannels)
     {
-        _seqCliConnectionConfig = config.Connection;
         _logChannels = logChannels;
     }
     
     public void MapEndpoints(WebApplication app)
     {
-        app.MapPost("api/events/raw", new Func<HttpContext, Task<IResult>>(async (context) =>
-        {
-            var clef = DefaultedBoolQuery(context.Request, "clef");
-
-            if (clef)
-                return await IngestCompactFormat(context);
-
-            var contentType = (string?) context.Request.Headers[HeaderNames.ContentType];
-            const string clefMediaType = "application/vnd.serilog.clef";
-
-            if (contentType != null && contentType.StartsWith(clefMediaType))
-                return await IngestCompactFormat(context);
-
-            IngestionLog.ForClient(context.Connection.RemoteIpAddress)
-                .Error("Client supplied a legacy raw-format (non-CLEF) payload");
-            return Results.BadRequest("Only newline-delimited JSON (CLEF) payloads are supported.");
-        }));
+        app.MapPost("ingest/clef", async context => await IngestCompactFormatAsync(context));
+        app.MapPost("api/events/raw", async context => await IngestAsync(context));
     }
-    
+
+    async Task<IResult> IngestAsync(HttpContext context)
+    {
+        var clef = DefaultedBoolQuery(context.Request, "clef");
+
+        if (clef) return await IngestCompactFormatAsync(context);
+
+        var contentType = (string?)context.Request.Headers[HeaderNames.ContentType];
+        const string clefMediaType = "application/vnd.serilog.clef";
+
+        if (contentType != null && contentType.StartsWith(clefMediaType)) return await IngestCompactFormatAsync(context);
+
+        IngestionLog.ForClient(context.Connection.RemoteIpAddress)
+            .Error("Client supplied a legacy raw-format (non-CLEF) payload");
+        return Results.BadRequest("Only newline-delimited JSON (CLEF) payloads are supported.");
+    }
+
     static bool DefaultedBoolQuery(HttpRequest request, string queryParameterName)
     {
         var parameter = request.Query[queryParameterName];
@@ -92,7 +82,7 @@ class IngestionEndpoints : IMapEndpoints
         return "true".Equals(value, StringComparison.OrdinalIgnoreCase) || value == "" || value == queryParameterName;
     }
 
-    static string? ApiKey(HttpRequest request)
+    static string? GetApiKey(HttpRequest request)
     {
         var apiKeyHeader = request.Headers["X-SeqApiKey"];
 
@@ -100,12 +90,12 @@ class IngestionEndpoints : IMapEndpoints
         return request.Query.TryGetValue("apiKey", out var apiKey) ? apiKey.Last() : null;
     }
     
-    async Task<ContentHttpResult> IngestCompactFormat(HttpContext context)
+    async Task<ContentHttpResult> IngestCompactFormatAsync(HttpContext context)
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var log = _logChannels.Get(ApiKey(context.Request));
+        var log = _logChannels.Get(GetApiKey(context.Request));
 
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;

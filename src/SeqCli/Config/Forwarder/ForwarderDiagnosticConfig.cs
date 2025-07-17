@@ -12,6 +12,7 @@ public class ForwarderDiagnosticConfig
     public LogEventLevel InternalLoggingLevel { get; set; } = LogEventLevel.Information;
     public string? InternalLogServerUri { get; set; }
     public string? InternalLogServerApiKey { get; set; }
+    public bool ExposeIngestionLog { get; set; }
     public bool IngestionLogShowDetail { get; set; }
 
     public static string GetDefaultInternalLogPath()

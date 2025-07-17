@@ -38,10 +38,16 @@ class ForwarderModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<ServerService>().SingleInstance();
-        builder.RegisterType<LogChannelMap>().SingleInstance();
+        builder.Register(_ => new LogChannelMap(_bufferPath)).SingleInstance();
 
         builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();
+
+        if (_config.Forwarder.Diagnostics.ExposeIngestionLog)
+        {
+            builder.RegisterType<IngestionLogEndpoints>().As<IMapEndpoints>();
+        }
+        
         builder.RegisterInstance(new MessageTemplateTextFormatter(
             "[{Timestamp:o} {Level:u3}] {Message}{NewLine}" + (_config.Forwarder.Diagnostics.IngestionLogShowDetail
                 ? ""

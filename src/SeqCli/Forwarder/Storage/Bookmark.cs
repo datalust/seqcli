@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using SeqCli.Forwarder.Filesystem;
 using Path = System.IO.Path;
 
@@ -29,9 +30,8 @@ sealed class Bookmark
 {
     readonly StoreDirectory _storeDirectory;
 
-    readonly object _sync = new();
+    readonly Lock _sync = new();
     BookmarkName _name;
-
     BookmarkValue? _value;
 
     Bookmark(StoreDirectory storeDirectory, BookmarkName name, BookmarkValue? value)
