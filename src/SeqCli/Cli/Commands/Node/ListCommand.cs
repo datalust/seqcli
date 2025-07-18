@@ -29,10 +29,11 @@ class ListCommand : Command
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _name, _id;
         
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig seqCliOutputConfig)
+    public ListCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             
@@ -46,20 +47,22 @@ class ListCommand : Command
             "The id of a single cluster node to list",
             id => _id = id);
             
-        _output = Enable(new OutputFormatFeature(seqCliOutputConfig));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
         
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
-        var list = _id != null ?
-            new[] { await connection.Cluster.FindAsync(_id) } :
+        var list = _id != null ? [await connection.Cluster.FindAsync(_id)]
+            :
             (await connection.Cluster.ListAsync())
             .Where(n => _name == null || _name == n.Name);
 
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
             
         return 0;
     }

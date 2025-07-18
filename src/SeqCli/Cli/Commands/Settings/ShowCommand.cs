@@ -16,6 +16,7 @@ using System;
 using System.Globalization;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Settings;
@@ -27,18 +28,21 @@ class ShowCommand: Command
 
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
-
+    readonly StoragePathFeature _storagePath;
+    
     public ShowCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _name = Enable<SettingNameFeature>();
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
 

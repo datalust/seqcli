@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Sample.Loader;
 
@@ -30,7 +31,8 @@ class IngestCommand : Command
     readonly ConnectionFeature _connection;
     readonly ConfirmFeature _confirm;
     readonly BatchSizeFeature _batchSize;
-
+    readonly StoragePathFeature _storagePath;
+    
     bool _quiet;
     bool _setup;
     int _simulations = 1;
@@ -47,11 +49,13 @@ class IngestCommand : Command
             v => _simulations = int.Parse(v));
             
         _batchSize = Enable<BatchSizeFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
         
     protected override async Task<int> Run()
     {
-        var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
         var batchSize = _batchSize.Value;
 
         if (!_confirm.TryConfirm(_setup
@@ -62,7 +66,7 @@ class IngestCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         if (_setup)
         {

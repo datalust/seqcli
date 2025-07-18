@@ -20,13 +20,14 @@ class CreateCommand : Command
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _title, _appId, _streamIncomingEventsSignal;
     readonly Dictionary<string, string> _settings = new();
     readonly List<string> _overridable = new();
     bool _streamIncomingEvents;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -70,12 +71,14 @@ class CreateCommand : Command
             s => _overridable.Add(s));
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
         
         AppInstanceEntity instance = await connection.AppInstances.TemplateAsync(_appId)!;
 
@@ -112,7 +115,7 @@ class CreateCommand : Command
         
         instance = await connection.AppInstances.AddAsync(instance);
 
-        _output.WriteEntity(instance);
+        _output.GetOutputFormat(config).WriteEntity(instance);
 
         return 0;
     }

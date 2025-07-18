@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Ingestion;
 using SeqCli.Levels;
@@ -40,6 +41,7 @@ class IngestCommand : Command
     readonly SendFailureHandlingFeature _sendFailureHandlingFeature;
     readonly ConnectionFeature _connection;
     readonly BatchSizeFeature _batchSize;
+    readonly StoragePathFeature _storagePath;
     string? _filter, _level, _message;
     string _pattern = DefaultPattern;
     bool _json;
@@ -76,6 +78,7 @@ class IngestCommand : Command
         _sendFailureHandlingFeature = Enable<SendFailureHandlingFeature>();            
         _connection = Enable<ConnectionFeature>();
         _batchSize = Enable<BatchSizeFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -97,12 +100,13 @@ class IngestCommand : Command
                 filter = evt => Seq.Syntax.Expressions.ExpressionResult.IsTrue(eval(evt));
             }
 
-            var connection = _connectionFactory.Connect(_connection);
+            var config = RuntimeConfigurationLoader.Load(_storagePath);
+            var connection = _connectionFactory.Connect(_connection, config);
             
             // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
             // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
             // close at some point!
-            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
             var batchSize = _batchSize.Value;
 
             foreach (var input in _fileInputFeature.OpenInputs())

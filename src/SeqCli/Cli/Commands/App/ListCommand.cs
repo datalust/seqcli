@@ -15,13 +15,13 @@ class ListCommand : Command
     string? _title, _id;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? PackageId => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
     string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
 
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ListCommand(SeqConnectionFactory connectionFactory)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         Options.Add(
@@ -34,7 +34,8 @@ class ListCommand : Command
             "The id of a single app to list",
             t => _id = t);
 
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
     
@@ -42,18 +43,19 @@ class ListCommand : Command
     {
         if (PackageId != null && Id != null)
         {
-            ShowUsageErrors(new[] {"Only one of either `package-id` or `id` can be specified"});
+            ShowUsageErrors(["Only one of either `package-id` or `id` can be specified"]);
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
-        var list = Id != null ?
-            new[] { await connection.Apps.FindAsync(Id) } :
+        var list = Id != null ? [await connection.Apps.FindAsync(Id)]
+            :
             (await connection.Apps.ListAsync())
             .Where(ak => PackageId == null || PackageId == ak.Package.PackageId);
 
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
             
         return 0;
     }

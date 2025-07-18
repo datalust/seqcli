@@ -67,11 +67,6 @@ class CommandLineHost
                 }
 
                 var impl = cmd.Value.Value;
-                
-                // This one is global, because implicitly-created components in the container rely on the specified
-                // storage path. It's a convoluted data flow that we should rip out when possible.
-                _storagePathFeature.Enable(impl.Options);
-                
                 return await impl.Invoke(commandSpecificArgs);
             }
         }

@@ -33,12 +33,13 @@ class CreateCommand : Command
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _afterDuration;
     bool _deleteAllEvents;
     string? _deleteMatchingSignal;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -62,12 +63,14 @@ class CreateCommand : Command
         );
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         SignalExpressionPart? removedSignalExpression;
         
@@ -106,7 +109,7 @@ class CreateCommand : Command
 
         policy = await connection.RetentionPolicies.AddAsync(policy);
 
-        _output.WriteEntity(policy);
+        _output.GetOutputFormat(config).WriteEntity(policy);
 
         return 0;
     }

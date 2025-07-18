@@ -37,32 +37,35 @@ class HealthCommand : Command
     readonly WaitUntilHealthyFeature _waitUntilHealthy;
     readonly TimeoutFeature _timeout;
     readonly OutputFormatFeature _output;
-
-    public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig seqCliOutputConfig)
+    readonly StoragePathFeature _storagePath;
+    
+    public HealthCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
 
         _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("node"));
         _timeout = Enable(new TimeoutFeature());
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(seqCliOutputConfig));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         if (_waitUntilHealthy.ShouldWait)
         {
-            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30));
+            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30), _output.GetOutputFormat(config));
         }
 
-        return await RunOnce(connection);
+        return await RunOnce(connection, _output.GetOutputFormat(config));
     }
 
-    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout)
+    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout, OutputFormat outputFormat)
     {
         using var ct = new CancellationTokenSource(timeout);
         
@@ -76,7 +79,7 @@ class HealthCommand : Command
             {
                 while (true)
                 {
-                    if (await RunOnce(connection) == 0)
+                    if (await RunOnce(connection, outputFormat) == 0)
                     {
                         return 0;
                     }
@@ -91,7 +94,7 @@ class HealthCommand : Command
         }
     }
 
-    async Task<int> RunOnce(SeqConnection connection)
+    async Task<int> RunOnce(SeqConnection connection, OutputFormat outputFormat)
     {
         try
         {
@@ -104,17 +107,17 @@ class HealthCommand : Command
                 Log.Information("{HeaderName}: {HeaderValue}", key, value);
             }
 
-            if (_output.Json)
+            if (outputFormat.Json)
             {
                 var shouldBeJson = await response.Content.ReadAsStringAsync();
                 try
                 {
                     var obj = JsonConvert.DeserializeObject(shouldBeJson) ?? throw new InvalidDataException();
-                    _output.WriteObject(obj);
+                    outputFormat.WriteObject(obj);
                 }
                 catch
                 {
-                    _output.WriteObject(new { Response = shouldBeJson });
+                    outputFormat.WriteObject(new { Response = shouldBeJson });
                 }
             }
             else

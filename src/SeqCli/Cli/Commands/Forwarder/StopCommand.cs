@@ -20,49 +20,48 @@ using System.ServiceProcess;
 using System.Threading.Tasks;
 using SeqCli.Forwarder.ServiceProcess;
 
-namespace SeqCli.Cli.Commands.Forwarder
+namespace SeqCli.Cli.Commands.Forwarder;
+
+[Command("forwarder", "stop", "Stop the forwarder Windows service", IsPreview = true)]
+[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+class StopCommand : Command
 {
-    [Command("forwarder", "stop", "Stop the forwarder Windows service", IsPreview = true)]
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
-    class StopCommand : Command
+    protected override Task<int> Run()
     {
-        protected override Task<int> Run()
+        try
         {
-            try
+            var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
+
+            if (controller.Status != ServiceControllerStatus.Running)
             {
-                var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
-
-                if (controller.Status != ServiceControllerStatus.Running)
-                {
-                    Console.WriteLine("Cannot stop {0}, current status is: {1}", controller.ServiceName, controller.Status);
-                    return Task.FromResult(-1);
-                }
-
-                Console.WriteLine("Stopping {0}...", controller.ServiceName);
-                controller.Stop();
-
-                if (controller.Status != ServiceControllerStatus.Stopped)
-                {
-                    Console.WriteLine("Waiting up to 60 seconds for the service to stop (currently: " + controller.Status + ")...");                            
-                    controller.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(60));
-                }
-
-                if (controller.Status == ServiceControllerStatus.Stopped)
-                {
-                    Console.WriteLine("Stopped.");
-                    return Task.FromResult(0);
-                }
-
-                Console.WriteLine("The service hasn't stopped successfully.");
-                return Task.FromResult(-1);                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                if (ex.InnerException != null)
-                    Console.WriteLine(ex.InnerException.Message);
+                Console.WriteLine("Cannot stop {0}, current status is: {1}", controller.ServiceName, controller.Status);
                 return Task.FromResult(-1);
             }
+
+            Console.WriteLine("Stopping {0}...", controller.ServiceName);
+            controller.Stop();
+
+            if (controller.Status != ServiceControllerStatus.Stopped)
+            {
+                Console.WriteLine("Waiting up to 60 seconds for the service to stop (currently: " + controller.Status + ")...");                            
+                controller.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(60));
+            }
+
+            if (controller.Status == ServiceControllerStatus.Stopped)
+            {
+                Console.WriteLine("Stopped.");
+                return Task.FromResult(0);
+            }
+
+            Console.WriteLine("The service hasn't stopped successfully.");
+            return Task.FromResult(-1);                
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            if (ex.InnerException != null)
+                Console.WriteLine(ex.InnerException.Message);
+            return Task.FromResult(-1);
         }
     }
 }

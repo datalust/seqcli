@@ -32,7 +32,8 @@ class ImportCommand : Command
     readonly FileInputFeature _fileInputFeature;
     readonly EntityOwnerFeature _entityOwner;
     readonly ConnectionFeature _connection;
-
+    readonly StoragePathFeature _storagePath;
+    
     bool _merge;
 
     readonly JsonSerializer _serializer = JsonSerializer.Create(
@@ -40,9 +41,8 @@ class ImportCommand : Command
             Converters = { new StringEnumConverter() }
         });
 
-    public ImportCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ImportCommand(SeqConnectionFactory connectionFactory)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         Options.Add(
@@ -53,11 +53,13 @@ class ImportCommand : Command
         _fileInputFeature = Enable(new FileInputFeature("File to import"));
         _entityOwner = Enable(new EntityOwnerFeature("signal", "import", "imported"));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         using var input = _fileInputFeature.OpenSingleInput();
         var line = await input.ReadLineAsync();

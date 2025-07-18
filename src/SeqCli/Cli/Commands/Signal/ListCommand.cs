@@ -30,28 +30,30 @@ class ListCommand : Command
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly EntityOwnerFeature _entityOwner;
-
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    readonly StoragePathFeature _storagePath;
+    
+    public ListCommand(SeqConnectionFactory connectionFactory)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _entityIdentity = Enable(new EntityIdentityFeature("signal", "list"));
         _entityOwner = Enable(new EntityOwnerFeature("signal", "list", "listed", _entityIdentity));
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
-        var list = _entityIdentity.Id != null ?
-            new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
+        var list = _entityIdentity.Id != null ? [await connection.Signals.FindAsync(_entityIdentity.Id)]
+            :
             (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
             .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title);
 
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
 
         return 0;
     }

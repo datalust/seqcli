@@ -32,34 +32,13 @@ namespace SeqCli.Cli.Features;
 
 class OutputFormatFeature : CommandFeature
 {
-    public const string DefaultOutputTemplate =
-        "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
+    bool _json;
+    bool? _noColor, _forceColor;
 
-    public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Code;
-    public static readonly ConsoleTheme DefaultTheme     = OperatingSystem.IsWindows() ? SystemConsoleTheme.Literate : DefaultAnsiTheme;
-    static readonly TemplateTheme DefaultTemplateTheme = TemplateTheme.Code;
-
-    bool _json, _noColor, _forceColor;
-
-    public OutputFormatFeature(SeqCliOutputConfig seqCliOutputConfig)
+    public OutputFormat GetOutputFormat(SeqCliConfig config)
     {
-        _noColor = seqCliOutputConfig.DisableColor;
-        _forceColor = seqCliOutputConfig.ForceColor;
+        return new OutputFormat(_json, _noColor ?? config.Output.DisableColor, _forceColor ?? config.Output.ForceColor);
     }
-
-    public bool Json => _json;
-
-    bool ApplyThemeToRedirectedOutput => _noColor == false && _forceColor;
-
-    ConsoleTheme Theme
-        => _noColor                     ? ConsoleTheme.None
-            :  ApplyThemeToRedirectedOutput ? DefaultAnsiTheme
-            :                                 DefaultTheme;
-
-    TemplateTheme? TemplateTheme
-        => _noColor                     ? null
-            :  ApplyThemeToRedirectedOutput ? DefaultTemplateTheme
-            :                                 null;
 
     public override void Enable(OptionSet options)
     {
@@ -74,6 +53,33 @@ class OutputFormatFeature : CommandFeature
             "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
             _ => _forceColor = true);
     }
+}
+
+sealed class OutputFormat(bool _json, bool _noColor, bool _forceColor)
+{
+   public const string DefaultOutputTemplate =
+        "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
+
+    public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Code;
+
+    public static readonly ConsoleTheme DefaultTheme =
+        OperatingSystem.IsWindows() ? SystemConsoleTheme.Literate : DefaultAnsiTheme;
+
+    static readonly TemplateTheme DefaultTemplateTheme = Serilog.Templates.Themes.TemplateTheme.Code;
+
+    public bool Json => _json;
+
+    bool ApplyThemeToRedirectedOutput => _noColor == false && _forceColor;
+
+    ConsoleTheme Theme
+        => _noColor                     ? ConsoleTheme.None
+            :  ApplyThemeToRedirectedOutput ? DefaultAnsiTheme
+            :                                 DefaultTheme;
+
+    TemplateTheme? TemplateTheme
+        => _noColor                     ? null
+            :  ApplyThemeToRedirectedOutput ? DefaultTemplateTheme
+            :                                 null;
 
     public Logger CreateOutputLogger()
     {
@@ -98,7 +104,7 @@ class OutputFormatFeature : CommandFeature
 
     public void WriteCsv(string csv)
     {
-        if (_noColor)
+        if (_noColor )
         {
             Console.Write(csv);
         }

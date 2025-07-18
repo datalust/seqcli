@@ -35,7 +35,7 @@ class PrintCommand : Command
     readonly FileInputFeature _fileInputFeature;
     readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
 
-    string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
+    string? _filter, _template = OutputFormat.DefaultOutputTemplate;
     bool _noColor, _forceColor;
 
     public PrintCommand(SeqCliOutputConfig seqCliOutputConfig)
@@ -70,14 +70,14 @@ class PrintCommand : Command
 
         var theme
             = _noColor                      ? ConsoleTheme.None
-            :  applyThemeToRedirectedOutput ? OutputFormatFeature.DefaultAnsiTheme
-            :                                 OutputFormatFeature.DefaultTheme;
+            :  applyThemeToRedirectedOutput ? OutputFormat.DefaultAnsiTheme
+            :                                 OutputFormat.DefaultTheme;
 
         var outputConfiguration = new LoggerConfiguration()
             .MinimumLevel.Is(LevelAlias.Minimum)
             .Enrich.With<RedundantEventTypeRemovalEnricher>()
             .WriteTo.Console(
-                outputTemplate: _template ?? OutputFormatFeature.DefaultOutputTemplate,
+                outputTemplate: _template ?? OutputFormat.DefaultOutputTemplate,
                 theme: theme,
                 applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
 

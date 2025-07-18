@@ -52,16 +52,16 @@ class RunCommand : Command
     readonly StoragePathFeature _storagePath;
     readonly ListenUriFeature _listenUri;
     readonly ConnectionFeature _connection;
-
+    
     bool _noLogo;
 
-    public RunCommand(SeqConnectionFactory connectionFactory, StoragePathFeature storagePath)
+    public RunCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
         Options.Add("nologo", _ => _noLogo = true);
         _listenUri = Enable<ListenUriFeature>();
         _connection = Enable<ConnectionFeature>();
-        _storagePath = storagePath;
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run(string[] unrecognized)
@@ -81,8 +81,7 @@ class RunCommand : Command
         SeqCliConfig config;
         try
         {
-            // ISSUE: we can't really rely on the default `SeqCliConfig` path being readable when running as a service.
-            config = SeqCliConfig.ReadFromFile(_storagePath.ConfigFilePath);
+            config = RuntimeConfigurationLoader.Load(_storagePath);
         }
         catch (Exception ex)
         {
@@ -93,13 +92,13 @@ class RunCommand : Command
             logger.Fatal(ex, "Failed to load configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
             return 1;
         }
-        
-        var connection = _connectionFactory.Connect(_connection);
+
+        var connection = _connectionFactory.Connect(_connection, config);
             
         // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
         // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
         // close at some point!
-        var (serverUrl, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+        var (serverUrl, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
         
         Log.Logger = CreateLogger(
             config.Forwarder.Diagnostics.InternalLoggingLevel,

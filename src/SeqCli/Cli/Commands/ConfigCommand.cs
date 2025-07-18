@@ -28,12 +28,12 @@ class ConfigCommand : Command
     bool _clear;
     readonly StoragePathFeature _storagePath;
 
-    public ConfigCommand(StoragePathFeature storagePath)
+    public ConfigCommand()
     {
         Options.Add("k|key=", "The field, for example `connection.serverUrl`", k => _key = k);
         Options.Add("v|value=", "The field value; if not specified, the command will print the current value", v => _value = v);
         Options.Add("c|clear", "Clear the field", _ => _clear = true);
-        _storagePath = storagePath;
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override Task<int> Run()

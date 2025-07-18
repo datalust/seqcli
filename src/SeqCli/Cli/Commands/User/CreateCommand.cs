@@ -32,11 +32,12 @@ class CreateCommand : Command
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _username, _displayName, _roleTitle, _filter, _emailAddress, _password;
     bool _passwordStdin, _noPasswordChange;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -81,12 +82,14 @@ class CreateCommand : Command
             _ => _noPasswordChange = true);
             
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var user = await connection.Users.TemplateAsync();
 
@@ -148,7 +151,7 @@ class CreateCommand : Command
 
         user = await connection.Users.AddAsync(user);
 
-        _output.WriteEntity(user);
+        _output.GetOutputFormat(config).WriteEntity(user);
 
         return 0;
     }

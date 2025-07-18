@@ -20,48 +20,47 @@ using System.ServiceProcess;
 using System.Threading.Tasks;
 using SeqCli.Forwarder.ServiceProcess;
 
-namespace SeqCli.Cli.Commands.Forwarder
+namespace SeqCli.Cli.Commands.Forwarder;
+
+[Command("forwarder", "start", "Start the forwarder Windows service", IsPreview = true)]
+[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+class StartCommand : Command
 {
-    [Command("forwarder", "start", "Start the forwarder Windows service", IsPreview = true)]
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
-    class StartCommand : Command
+    protected override Task<int> Run()
     {
-        protected override Task<int> Run()
+        try
         {
-            try
+            var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
+            if (controller.Status != ServiceControllerStatus.Stopped)
             {
-                var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
-                if (controller.Status != ServiceControllerStatus.Stopped)
-                {
-                    Console.WriteLine("Cannot start {0}, current status is: {1}", controller.ServiceName, controller.Status);
-                    return Task.FromResult(-1);
-                }
-
-                Console.WriteLine("Starting {0}...", controller.ServiceName);
-                controller.Start();
-
-                if (controller.Status != ServiceControllerStatus.Running)
-                {
-                    Console.WriteLine("Waiting up to 15 seconds for the service to start (currently: " + controller.Status + ")...");
-                    controller.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
-                }
-
-                if (controller.Status == ServiceControllerStatus.Running)
-                {
-                    Console.WriteLine("Started.");
-                    return Task.FromResult(0);
-                }
-                
-                Console.WriteLine("The service hasn't started successfully.");
+                Console.WriteLine("Cannot start {0}, current status is: {1}", controller.ServiceName, controller.Status);
                 return Task.FromResult(-1);
             }
-            catch (Exception ex)
+
+            Console.WriteLine("Starting {0}...", controller.ServiceName);
+            controller.Start();
+
+            if (controller.Status != ServiceControllerStatus.Running)
             {
-                Console.WriteLine(ex.Message);
-                if (ex.InnerException != null)
-                    Console.WriteLine(ex.InnerException.Message);
-                return Task.FromResult(-1);
+                Console.WriteLine("Waiting up to 15 seconds for the service to start (currently: " + controller.Status + ")...");
+                controller.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
             }
+
+            if (controller.Status == ServiceControllerStatus.Running)
+            {
+                Console.WriteLine("Started.");
+                return Task.FromResult(0);
+            }
+            
+            Console.WriteLine("The service hasn't started successfully.");
+            return Task.FromResult(-1);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            if (ex.InnerException != null)
+                Console.WriteLine(ex.InnerException.Message);
+            return Task.FromResult(-1);
         }
     }
 }

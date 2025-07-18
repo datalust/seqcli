@@ -20,33 +20,32 @@ using System.ServiceProcess;
 using System.Threading.Tasks;
 using SeqCli.Forwarder.ServiceProcess;
 
-namespace SeqCli.Cli.Commands.Forwarder
-{
-    [Command("forwarder", "status", "Show the status of the forwarder Windows service", IsPreview = true)]
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
-    class StatusCommand : Command
-    {
-        protected override Task<int> Run()
-        {
-            try
-            {
-                var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
-                Console.WriteLine($"The {SeqCliForwarderWindowsService.WindowsServiceName} service is installed and {controller.Status.ToString().ToLowerInvariant()}.");
-            }
-            catch (InvalidOperationException)
-            {
-                Console.WriteLine($"The {SeqCliForwarderWindowsService.WindowsServiceName} service is not installed.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                if (ex.InnerException != null)
-                    Console.WriteLine(ex.InnerException.Message);
-                return Task.FromResult(1);
-            }
+namespace SeqCli.Cli.Commands.Forwarder;
 
+[Command("forwarder", "status", "Show the status of the forwarder Windows service", IsPreview = true)]
+[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+class StatusCommand : Command
+{
+    protected override Task<int> Run()
+    {
+        try
+        {
+            var controller = new ServiceController(SeqCliForwarderWindowsService.WindowsServiceName);
+            Console.WriteLine($"The {SeqCliForwarderWindowsService.WindowsServiceName} service is installed and {controller.Status.ToString().ToLowerInvariant()}.");
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine($"The {SeqCliForwarderWindowsService.WindowsServiceName} service is not installed.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            if (ex.InnerException != null)
+                Console.WriteLine(ex.InnerException.Message);
             return Task.FromResult(1);
         }
+
+        return Task.FromResult(1);
     }
 }
 

@@ -14,13 +14,13 @@ class RemoveCommand : Command
     string? _name;
     readonly StoragePathFeature _storagePath;
 
-    public RemoveCommand(StoragePathFeature storagePathPath)
+    public RemoveCommand()
     {
         Options.Add("n=|name=",
             "The name of the connection profile to remove",
             v => _name = ArgumentString.Normalize(v));
 
-        _storagePath = storagePathPath;
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override Task<int> Run()

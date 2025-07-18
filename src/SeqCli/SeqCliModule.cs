@@ -15,10 +15,7 @@
 using System.Reflection;
 using Autofac;
 using SeqCli.Cli;
-using SeqCli.Cli.Features;
-using SeqCli.Config;
 using SeqCli.Connection;
-using SeqCli.Encryptor;
 
 namespace SeqCli;
 
@@ -26,15 +23,10 @@ class SeqCliModule : Autofac.Module
 {
     protected override void Load(ContainerBuilder builder)
     {
-        builder.RegisterInstance(new StoragePathFeature());
         builder.RegisterType<CommandLineHost>();
         builder.RegisterAssemblyTypes(typeof(Program).GetTypeInfo().Assembly)
             .As<Command>()
             .WithMetadataFrom<CommandAttribute>();
         builder.RegisterType<SeqConnectionFactory>();
-        builder.Register(c => RuntimeConfigurationLoader.Load(c.Resolve<StoragePathFeature>())).SingleInstance();
-        builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
-        builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
-        builder.Register(c => c.Resolve<SeqCliConfig>().Encryption.DataProtector()).As<IDataProtector>();
     }
 }

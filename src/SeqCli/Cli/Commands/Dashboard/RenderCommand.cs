@@ -40,12 +40,12 @@ class RenderCommand : Command
     readonly OutputFormatFeature _output;
     readonly SignalExpressionFeature _signal;
     readonly TimeoutFeature _timeout;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _id, _lastDuration, _intervalDuration, _chartTitle;
 
-    public RenderCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public RenderCommand(SeqConnectionFactory connectionFactory)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         Options.Add(
@@ -63,13 +63,15 @@ class RenderCommand : Command
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         if (_id == null)
         {
@@ -158,8 +160,9 @@ class RenderCommand : Command
         var q = BuildSqlQuery(query, rangeStart, rangeEnd, timeGrouping);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
-            
-        if (_output.Json)
+
+        var output = _output.GetOutputFormat(config);
+        if (output.Json)
         {
             var result = await connection.Data.QueryAsync(q, signal: signal, timeout: timeout);
 
@@ -169,7 +172,7 @@ class RenderCommand : Command
         else
         {
             var result = await connection.Data.QueryCsvAsync(q, signal: signal, timeout: timeout);
-            _output.WriteCsv(result);
+            output.WriteCsv(result);
         }
 
         return 0;

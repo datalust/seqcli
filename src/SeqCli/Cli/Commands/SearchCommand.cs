@@ -39,12 +39,13 @@ class SearchCommand : Command
     readonly OutputFormatFeature _output;
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
+    readonly StoragePathFeature _storagePath;
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
     bool _trace, _noWebSockets;
 
-    public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public SearchCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -58,7 +59,8 @@ class SearchCommand : Command
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
         _range = Enable<DateRangeFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
 
         Options.Add(
@@ -77,8 +79,9 @@ class SearchCommand : Command
     {
         try
         {
-            await using var output = _output.CreateOutputLogger();
-            var connection = _connectionFactory.Connect(_connection);
+            var config = RuntimeConfigurationLoader.Load(_storagePath);
+            await using var output = _output.GetOutputFormat(config).CreateOutputLogger();
+            var connection = _connectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
             string? filter = null;

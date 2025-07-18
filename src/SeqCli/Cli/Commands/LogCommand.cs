@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
@@ -35,6 +36,7 @@ class LogCommand : Command
     readonly SeqConnectionFactory _connectionFactory;
     readonly PropertiesFeature _properties;
     readonly ConnectionFeature _connection;
+    readonly StoragePathFeature _storagePath;
     string? _message, _level, _timestamp, _exception;
 
     public LogCommand(SeqConnectionFactory connectionFactory)
@@ -63,6 +65,7 @@ class LogCommand : Command
 
         _properties = Enable<PropertiesFeature>();
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -103,8 +106,9 @@ class LogCommand : Command
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
-        var connection = _connectionFactory.Connect(_connection);
-        var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
+        var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
 
         var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) {Content = content};
         if (apiKey != null)

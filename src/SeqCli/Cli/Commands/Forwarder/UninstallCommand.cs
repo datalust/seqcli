@@ -20,30 +20,29 @@ using System.Threading.Tasks;
 using SeqCli.Forwarder.ServiceProcess;
 using SeqCli.Forwarder.Util;
 
-namespace SeqCli.Cli.Commands.Forwarder
+namespace SeqCli.Cli.Commands.Forwarder;
+
+[Command("forwarder", "uninstall", "Uninstall the forwarder Windows service", IsPreview = true)]
+class UninstallCommand : Command
 {
-    [Command("forwarder", "uninstall", "Uninstall the forwarder Windows service", IsPreview = true)]
-    class UninstallCommand : Command
+    protected override Task<int> Run()
     {
-        protected override Task<int> Run()
+        try
         {
-            try
-            {
-                Console.WriteLine("Uninstalling service...");
+            Console.WriteLine("Uninstalling service...");
 
-                var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
-                var exitCode = CaptiveProcess.Run(sc, $"delete \"{SeqCliForwarderWindowsService.WindowsServiceName}\"", Console.WriteLine, Console.WriteLine);
-                if (exitCode != 0)
-                    throw new InvalidOperationException($"The `sc.exe delete` call failed with exit code {exitCode}.");
+            var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
+            var exitCode = CaptiveProcess.Run(sc, $"delete \"{SeqCliForwarderWindowsService.WindowsServiceName}\"", Console.WriteLine, Console.WriteLine);
+            if (exitCode != 0)
+                throw new InvalidOperationException($"The `sc.exe delete` call failed with exit code {exitCode}.");
 
-                Console.WriteLine("Service uninstalled successfully.");
-                return Task.FromResult(0);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Could not uninstall the service: " + ex.Message);
-                return Task.FromResult(-1);
-            }
+            Console.WriteLine("Service uninstalled successfully.");
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Could not uninstall the service: " + ex.Message);
+            return Task.FromResult(-1);
         }
     }
 }

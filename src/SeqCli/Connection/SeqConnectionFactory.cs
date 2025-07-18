@@ -22,20 +22,13 @@ namespace SeqCli.Connection;
 
 class SeqConnectionFactory
 {
-    readonly SeqCliConfig _config;
-
-    public SeqConnectionFactory(SeqCliConfig config)
+    public SeqConnection Connect(ConnectionFeature connection, SeqCliConfig config)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
-    }
-
-    public SeqConnection Connect(ConnectionFeature connection)
-    {
-        var (url, apiKey) = GetConnectionDetails(connection);
+        var (url, apiKey) = GetConnectionDetails(connection, config);
         return new SeqConnection(url, apiKey);
     }
         
-    public (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection)
+    public (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection, SeqCliConfig config)
     {
         if (connection == null) throw new ArgumentNullException(nameof(connection));
 
@@ -47,16 +40,16 @@ class SeqConnectionFactory
         }
         else if (connection.IsProfileNameSpecified)
         {
-            if (!_config.Profiles.TryGetValue(connection.ProfileName!, out var profile))
+            if (!config.Profiles.TryGetValue(connection.ProfileName!, out var profile))
                 throw new ArgumentException($"A profile named `{connection.ProfileName}` was not found; see `seqcli profile list` for available profiles.");
                 
             url = profile.ServerUrl;
-            apiKey = profile.DecodeApiKey(_config.Encryption.DataProtector());
+            apiKey = profile.DecodeApiKey(config.Encryption.DataProtector());
         }
         else
         {
-            url = _config.Connection.ServerUrl;
-            apiKey = connection.IsApiKeySpecified ? connection.ApiKey : _config.Connection.DecodeApiKey(_config.Encryption.DataProtector());
+            url = config.Connection.ServerUrl;
+            apiKey = connection.IsApiKeySpecified ? connection.ApiKey : config.Connection.DecodeApiKey(config.Encryption.DataProtector());
         }
 
         return (url, apiKey);

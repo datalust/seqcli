@@ -29,8 +29,8 @@ class StoragePathFeature : CommandFeature
     public override void Enable(OptionSet options)
     {
         options.Add("storage=",
-            "Set the folder where data will be stored; " +
-            "" + GetDefaultStorageRoot() + " is used by default.",
+            "The folder where `SeqCli.json` and other data will be stored; " +
+            "`" + GetDefaultStorageRoot() + "` is used by default",
             v => _storageRoot = Path.GetFullPath(v));
     }
 

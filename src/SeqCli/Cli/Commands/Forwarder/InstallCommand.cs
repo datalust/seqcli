@@ -38,19 +38,19 @@ namespace SeqCli.Cli.Commands.Forwarder
         readonly StoragePathFeature _storagePath;
         readonly ServiceCredentialsFeature _serviceCredentials;
         readonly ListenUriFeature _listenUri;
-
+        
         bool _setup;
 
-        public InstallCommand(StoragePathFeature storagePath)
+        public InstallCommand()
         {
-            _storagePath = storagePath;
+            _storagePath = Enable<StoragePathFeature>();
             _listenUri = Enable<ListenUriFeature>();
             _serviceCredentials = Enable<ServiceCredentialsFeature>();
 
             Options.Add(
                 "setup",
                 "Install and start the service only if it does not exist; otherwise reconfigure the binary location",
-                v => _setup = true);
+                _ => _setup = true);
         }
 
         string ServiceUsername => _serviceCredentials.IsUsernameSpecified ? _serviceCredentials.Username : "NT AUTHORITY\\LocalService";
@@ -106,10 +106,7 @@ namespace SeqCli.Cli.Commands.Forwarder
             Console.WriteLine("Service is installed; checking path and dependency configuration...");
             Reconfigure(controller);
 
-            if (controller.Status != ServiceControllerStatus.Running)
-                return Start(controller);
-
-            return 0;
+            return controller.Status != ServiceControllerStatus.Running ? Start(controller) : 0;
         }
 
         static void Reconfigure(ServiceController controller)
@@ -121,7 +118,7 @@ namespace SeqCli.Cli.Commands.Forwarder
             if (!ServiceConfiguration.GetServiceBinaryPath(controller, out var path))
                 return;
 
-            var current = "\"" + Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, Program.BinaryName) + "\"";
+            var current = "\"" + Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Program.BinaryName) + "\"";
             if (path.StartsWith(current))
                 return;
 

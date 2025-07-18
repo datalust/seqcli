@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -28,12 +27,12 @@ class ListCommand : Command
         
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _id;
 
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ListCommand(SeqConnectionFactory connectionFactory)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             
         Options.Add(
@@ -41,20 +40,22 @@ class ListCommand : Command
             "The id of a single retention policy to list",
             id => _id = id);
             
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var list = _id != null ? [await connection.RetentionPolicies.FindAsync(_id)]
             :
             (await connection.RetentionPolicies.ListAsync())
             .ToArray();
-
-        _output.ListEntities(list);
+        
+        _output.GetOutputFormat(config).ListEntities(list);
             
         return 0;
     }

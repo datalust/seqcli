@@ -13,8 +13,8 @@ class CreateCommand : Command
 {
     string? _url, _apiKey, _name;
     readonly StoragePathFeature _storagePath;
-
-    public CreateCommand(StoragePathFeature storagePath)
+    
+    public CreateCommand()
     {
         Options.Add("n=|name=",
             "The name of the connection profile",
@@ -28,7 +28,7 @@ class CreateCommand : Command
             "The API key to use when connecting to the server, if required",
             v => _apiKey = ArgumentString.Normalize(v));
 
-        _storagePath = storagePath;
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override Task<int> Run()

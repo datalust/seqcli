@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
@@ -30,7 +31,8 @@ class RemoveCommand : Command
     readonly EntityIdentityFeature _entityIdentity;
     readonly EntityOwnerFeature _entityOwner;
     readonly ConnectionFeature _connection;
-
+    readonly StoragePathFeature _storagePath;
+    
     public RemoveCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
@@ -38,6 +40,7 @@ class RemoveCommand : Command
         _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "remove"));
         _entityOwner = Enable(new EntityOwnerFeature("dashboard", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -48,7 +51,8 @@ class RemoveCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var toRemove = _entityIdentity.Id != null ? [await connection.Dashboards.FindAsync(_entityIdentity.Id)]
             :

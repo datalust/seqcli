@@ -23,6 +23,7 @@ using SeqCli.Templates.Ast;
 using SeqCli.Templates.Import;
 using SeqCli.Util;
 using Seq.Api;
+using SeqCli.Config;
 
 // ReSharper disable once UnusedType.Global
 
@@ -36,7 +37,8 @@ class SetupCommand : Command
 
     readonly ConnectionFeature _connection;
     readonly ConfirmFeature _confirm;
-
+    readonly StoragePathFeature _storagePath;
+    
     public SetupCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
@@ -46,13 +48,15 @@ class SetupCommand : Command
             
         _confirm = Enable<ConfirmFeature>();
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
-        var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
+        var (url, _) = _connectionFactory.GetConnectionDetails(_connection, config);
         if (!_confirm.TryConfirm($"This will apply sample configuration items to the Seq server at {url}."))
         {
             await Console.Error.WriteLineAsync("Canceled by user.");
@@ -64,8 +68,10 @@ class SetupCommand : Command
 
     internal static async Task<int> ImportTemplates(SeqConnection connection)
     {
-        var templateArgs = new Dictionary<string, JsonTemplate>();
-        templateArgs["ownerId"] = new JsonTemplateNull();
+        var templateArgs = new Dictionary<string, JsonTemplate>
+        {
+            ["ownerId"] = new JsonTemplateNull()
+        };
 
         var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
         var templateFiles = Directory.GetFiles(templatesPath);

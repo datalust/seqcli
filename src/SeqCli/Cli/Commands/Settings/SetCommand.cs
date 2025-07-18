@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
@@ -27,6 +28,7 @@ class SetCommand: Command
 
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
+    readonly StoragePathFeature _storagePath;
     
     string? _value;
     bool _valueSpecified, _readValueFromStdin;
@@ -51,6 +53,7 @@ class SetCommand: Command
             _ => _readValueFromStdin = true);
 
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -60,8 +63,9 @@ class SetCommand: Command
             Log.Error("A value must be supplied with either `--value=VALUE` or `--value-stdin`.");
             return 1;
         }
-        
-        var connection = _connectionFactory.Connect(_connection);
+
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
         setting.Value = ReadValue();

@@ -37,8 +37,6 @@ class HelpCommand : Command
 
     protected override Task<int> Run(string[] unrecognized)
     {
-        Console.WriteLine(_pre);
-        
         var orderedCommands = _availableCommands
             .Where(c => !c.Metadata.IsPreview || _pre)
             .OrderBy(c => c.Metadata.Name)

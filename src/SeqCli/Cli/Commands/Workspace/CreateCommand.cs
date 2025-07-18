@@ -19,12 +19,13 @@ class CreateCommand : Command
         
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _title, _description;
     bool _isProtected;
     readonly List<string?> _include = new();
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -49,12 +50,14 @@ class CreateCommand : Command
             _ => _isProtected = true);
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var workspace = await connection.Workspaces.TemplateAsync();
         workspace.OwnerId = null;
@@ -69,7 +72,7 @@ class CreateCommand : Command
 
         workspace = await connection.Workspaces.AddAsync(workspace);
 
-        _output.WriteEntity(workspace);
+        _output.GetOutputFormat(config).WriteEntity(workspace);
 
         return 0;
     }

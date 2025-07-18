@@ -25,9 +25,9 @@ class TruncateCommand : Command
     readonly StoragePathFeature _storagePath;
     readonly ConfirmFeature _confirm;
 
-    public TruncateCommand(StoragePathFeature storagePath)
+    public TruncateCommand()
     {
-        _storagePath = storagePath;
+        _storagePath = Enable<StoragePathFeature>();
         _confirm = Enable<ConfirmFeature>();
     }
 

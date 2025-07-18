@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Util;
 using Serilog;
@@ -17,7 +18,8 @@ class ApplyCommand : Command
 {
     readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _certificateFilename;
     bool _certificateStdin;
     bool _automaticallyRefresh;
@@ -39,6 +41,7 @@ class ApplyCommand : Command
             "the certificate when the subscription is changed or renewed",
             _ => _automaticallyRefresh = true);
             
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -71,7 +74,8 @@ class ApplyCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
         var license = await connection.Licenses.FindCurrentAsync();
         license.LicenseText = certificate;
         license.AutomaticallyRefresh = _automaticallyRefresh;

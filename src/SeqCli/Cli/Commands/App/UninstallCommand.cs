@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Util;
 using Serilog;
@@ -17,7 +18,8 @@ class UninstallCommand : Command
 
     string? _packageId, _id;
     readonly ConnectionFeature _connection;
-
+    readonly StoragePathFeature _storagePath;
+    
     public UninstallCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
@@ -33,6 +35,7 @@ class UninstallCommand : Command
             t => _id = ArgumentString.Normalize(t));
 
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -43,7 +46,8 @@ class UninstallCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var toRemove = _id != null ? [await connection.Apps.FindAsync(_id)]
             : (await connection.Apps.ListAsync())

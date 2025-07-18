@@ -11,10 +11,10 @@ namespace SeqCli.Cli.Commands.Profile;
 class ListCommand : Command
 {
     readonly StoragePathFeature _storagePath;
-
-    public ListCommand(StoragePathFeature storagePath)
+    
+    public ListCommand()
     {
-        _storagePath = storagePath;
+        _storagePath = Enable<StoragePathFeature>();
     }
     
     protected override Task<int> Run()

@@ -30,9 +30,10 @@ class TailCommand : Command
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly SignalExpressionFeature _signal;
+    readonly StoragePathFeature _storagePath;
     string? _filter;
 
-    public TailCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public TailCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -41,7 +42,8 @@ class TailCommand : Command
             "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
             v => _filter = v);
 
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _connection = Enable<ConnectionFeature>();
     }
@@ -50,8 +52,9 @@ class TailCommand : Command
     {
         var cancel = new CancellationTokenSource();
         Console.CancelKeyPress += (_,_) => cancel.Cancel();
-            
-        var connection = _connectionFactory.Connect(_connection);
+
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         string? strict = null;
         if (!string.IsNullOrWhiteSpace(_filter))
@@ -60,7 +63,7 @@ class TailCommand : Command
             strict = converted.StrictExpression;
         }
         
-        await using var output = _output.CreateOutputLogger();
+        await using var output = _output.GetOutputFormat(config).CreateOutputLogger();
 
         try
         {

@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
@@ -28,7 +29,8 @@ class RemoveCommand : Command
     readonly SeqConnectionFactory _connectionFactory;
         
     readonly ConnectionFeature _connection;
-        
+    readonly StoragePathFeature _storagePath;
+    
     string? _name, _id;
         
     public RemoveCommand(SeqConnectionFactory connectionFactory)
@@ -46,6 +48,7 @@ class RemoveCommand : Command
             id => _id = id);
             
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -56,7 +59,8 @@ class RemoveCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var toRemove = _id != null ? [await connection.Feeds.FindAsync(_id)]
             :

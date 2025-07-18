@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SeqCli.Apps.Hosting;
+using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Util;
 
@@ -39,10 +40,10 @@ class RunCommand : Command
         
     readonly Dictionary<string, string> _settings = new();
 
-    public RunCommand(SeqCliConfig config)
+    public RunCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _serverUrl = config.Connection.ServerUrl;
+        // The usual `--storage` argument is not supported on this command (see notes on `--storage` arg below).
+        _serverUrl = RuntimeConfigurationLoader.Load(new StoragePathFeature()).Connection.ServerUrl;
 
         Options.Add(
             "d=|directory=",
@@ -64,6 +65,8 @@ class RunCommand : Command
                 _settings.Add(name, valueText ?? "");
             });
             
+        // Important note, this conflicts with the `--storage` argument accepted by the majority of other commands; changing
+        // this requires an update to Seq, which uses this command for hosting .NET apps.
         Options.Add(
             "storage=",
             "A directory in which app-specific data can be stored; defaults to the current directory",

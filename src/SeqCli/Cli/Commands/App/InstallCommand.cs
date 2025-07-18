@@ -33,10 +33,11 @@ class InstallCommand : Command
 
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _packageId, _version, _feedId;
 
-    public InstallCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public InstallCommand(SeqConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -56,7 +57,8 @@ class InstallCommand : Command
             feedId => _feedId = ArgumentString.Normalize(feedId));
         
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -67,7 +69,8 @@ class InstallCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = _connectionFactory.Connect(_connection, config);
 
         var feedId = _feedId;
         if (feedId == null)
@@ -83,7 +86,7 @@ class InstallCommand : Command
         }
 
         var app = await connection.Apps.InstallPackageAsync(feedId, _packageId, _version);
-        _output.WriteEntity(app);
+        _output.GetOutputFormat(config).WriteEntity(app);
 
         return 0;
     }
