@@ -23,18 +23,14 @@ namespace SeqCli.Cli.Commands.RetentionPolicy;
 [Command("retention", "list", "List retention policies", Example="seqcli retention list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
     string? _id;
 
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            
         Options.Add(
             "i=|id=",
             "The id of a single retention policy to list",
@@ -48,7 +44,7 @@ class ListCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _id != null ? [await connection.RetentionPolicies.FindAsync(_id)]
             :

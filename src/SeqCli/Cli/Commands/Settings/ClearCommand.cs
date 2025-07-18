@@ -23,16 +23,12 @@ namespace SeqCli.Cli.Commands.Settings;
 [Command("setting", "clear", "Clear a runtime-configurable server setting")]
 class ClearCommand: Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
     readonly StoragePathFeature _storagePath;
     
-    public ClearCommand(SeqConnectionFactory connectionFactory)
+    public ClearCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _name = Enable<SettingNameFeature>();
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
@@ -41,7 +37,7 @@ class ClearCommand: Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
         setting.Value = null;

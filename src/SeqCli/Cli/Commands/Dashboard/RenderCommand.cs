@@ -33,8 +33,6 @@ class RenderCommand : Command
 {
     const int MaximumReturnedHitRows = 10000;
 
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly DateRangeFeature _range;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
@@ -44,10 +42,8 @@ class RenderCommand : Command
     
     string? _id, _lastDuration, _intervalDuration, _chartTitle;
 
-    public RenderCommand(SeqConnectionFactory connectionFactory)
+    public RenderCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of a single dashboard to render",
@@ -71,7 +67,7 @@ class RenderCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         if (_id == null)
         {

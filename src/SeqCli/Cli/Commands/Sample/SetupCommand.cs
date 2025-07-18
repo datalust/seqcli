@@ -33,16 +33,12 @@ namespace SeqCli.Cli.Commands.Sample;
     Example = "seqcli sample setup")]
 class SetupCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly ConfirmFeature _confirm;
     readonly StoragePathFeature _storagePath;
     
-    public SetupCommand(SeqConnectionFactory connectionFactory)
+    public SetupCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         // The command will also at some point accept an `--allow-outbound-requests` flag, which will cause sample
         // apps to be installed, and a health check to be set up.
             
@@ -54,9 +50,9 @@ class SetupCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var (url, _) = _connectionFactory.GetConnectionDetails(_connection, config);
+        var (url, _) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
         if (!_confirm.TryConfirm($"This will apply sample configuration items to the Seq server at {url}."))
         {
             await Console.Error.WriteLineAsync("Canceled by user.");

@@ -26,17 +26,13 @@ namespace SeqCli.Cli.Commands.Dashboard;
     Example="seqcli dashboard remove -i dashboard-159")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly EntityOwnerFeature _entityOwner;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "remove"));
         _entityOwner = Enable(new EntityOwnerFeature("dashboard", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
@@ -52,7 +48,7 @@ class RemoveCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = _entityIdentity.Id != null ? [await connection.Dashboards.FindAsync(_entityIdentity.Id)]
             :

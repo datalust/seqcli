@@ -15,8 +15,6 @@ namespace SeqCli.Cli.Commands.Workspace;
     Example = "seqcli workspace create -t 'My Workspace' -c signal-314159 -c dashboard-628318")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -25,10 +23,8 @@ class CreateCommand : Command
     bool _isProtected;
     readonly List<string?> _include = new();
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the workspace",
@@ -57,7 +53,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var workspace = await connection.Workspaces.TemplateAsync();
         workspace.OwnerId = null;

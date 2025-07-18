@@ -24,16 +24,12 @@ namespace SeqCli.Cli.Commands.Settings;
 [Command("setting", "show", "Print the current value of a runtime-configurable server setting")]
 class ShowCommand: Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
     readonly StoragePathFeature _storagePath;
     
-    public ShowCommand(SeqConnectionFactory connectionFactory)
+    public ShowCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _name = Enable<SettingNameFeature>();
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
@@ -42,7 +38,7 @@ class ShowCommand: Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
 

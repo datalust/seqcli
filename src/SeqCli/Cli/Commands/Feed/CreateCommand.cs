@@ -26,8 +26,6 @@ namespace SeqCli.Cli.Commands.Feed;
     Example = "seqcli feed create -n 'CI' --location=\"https://f.feedz.io/example/ci\" -u Seq --password-stdin")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -35,10 +33,8 @@ class CreateCommand : Command
     string? _name, _location, _username, _password;
     bool _passwordStdin;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "n=|name=",
             "A unique name for the feed",
@@ -72,7 +68,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var feed = await connection.Feeds.TemplateAsync();
         feed.Name = _name;

@@ -12,16 +12,12 @@ namespace SeqCli.Cli.Commands.AppInstance;
 
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("app instance", "remove"));
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
@@ -36,7 +32,7 @@ class RemoveCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = _entityIdentity.Id != null ? [await connection.AppInstances.FindAsync(_entityIdentity.Id)]
             :

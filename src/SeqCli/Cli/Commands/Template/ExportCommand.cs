@@ -17,17 +17,14 @@ namespace SeqCli.Cli.Commands.Template;
     Example = "seqcli template export -o ./Templates")]
 class ExportCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
     readonly HashSet<string?> _include = new();
     string? _outputDir = ".";
 
-    public ExportCommand(SeqConnectionFactory connectionFactory)
+    public ExportCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "o=|output=",
             "The directory in which to write template files; the directory must exist; any existing files with " +
@@ -59,7 +56,7 @@ class ExportCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var export = new TemplateSetExporter(connection, _include, _outputDir);
         await export.ExportTemplateSet();

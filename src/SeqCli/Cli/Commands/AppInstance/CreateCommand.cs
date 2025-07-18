@@ -16,8 +16,6 @@ namespace SeqCli.Cli.Commands.AppInstance;
     Example = "seqcli appinstance create -t 'Email Ops' --app hostedapp-314159 -p To=ops@example.com")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -27,10 +25,8 @@ class CreateCommand : Command
     readonly List<string> _overridable = new();
     bool _streamIncomingEvents;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the app instance",
@@ -78,7 +74,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         
         AppInstanceEntity instance = await connection.AppInstances.TemplateAsync(_appId)!;
 

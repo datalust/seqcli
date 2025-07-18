@@ -14,16 +14,12 @@ namespace SeqCli.Cli.Commands.App;
 // ReSharper disable once UnusedType.Global
 class UninstallCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     string? _packageId, _id;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
-    public UninstallCommand(SeqConnectionFactory connectionFactory)
+    public UninstallCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "package-id=",
             "The package id of the app package to uninstall",
@@ -47,7 +43,7 @@ class UninstallCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = _id != null ? [await connection.Apps.FindAsync(_id)]
             : (await connection.Apps.ListAsync())

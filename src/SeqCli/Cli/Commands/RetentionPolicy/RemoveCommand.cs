@@ -25,17 +25,13 @@ namespace SeqCli.Cli.Commands.RetentionPolicy;
     Example="seqcli retention remove -i retentionpolicy-17")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
     string? _id;
         
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of a single retention policy to remove",
@@ -54,7 +50,7 @@ class RemoveCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = await connection.RetentionPolicies.FindAsync(_id);
 

@@ -48,16 +48,14 @@ namespace SeqCli.Cli.Commands.Forwarder;
 [Command("forwarder", "run", "Listen on an HTTP endpoint and forward ingested logs to Seq", IsPreview = true)]
 class RunCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly StoragePathFeature _storagePath;
     readonly ListenUriFeature _listenUri;
     readonly ConnectionFeature _connection;
     
     bool _noLogo;
 
-    public RunCommand(SeqConnectionFactory connectionFactory)
+    public RunCommand()
     {
-        _connectionFactory = connectionFactory;
         Options.Add("nologo", _ => _noLogo = true);
         _listenUri = Enable<ListenUriFeature>();
         _connection = Enable<ConnectionFeature>();
@@ -93,12 +91,12 @@ class RunCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
             
         // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
         // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
         // close at some point!
-        var (serverUrl, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
+        var (serverUrl, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
         
         Log.Logger = CreateLogger(
             config.Forwarder.Diagnostics.InternalLoggingLevel,

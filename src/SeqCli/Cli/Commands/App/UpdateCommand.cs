@@ -28,8 +28,6 @@ namespace SeqCli.Cli.Commands.App;
 // ReSharper disable once UnusedType.Global
 class UpdateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -37,10 +35,8 @@ class UpdateCommand : Command
     string? _id, _name, _version;
     bool _all, _force;
 
-    public UpdateCommand(SeqConnectionFactory connectionFactory)
+    public UpdateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of a single installed app to update",
@@ -94,7 +90,7 @@ class UpdateCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var output = _output.GetOutputFormat(config);
 
         var apps = await connection.Apps.ListAsync();

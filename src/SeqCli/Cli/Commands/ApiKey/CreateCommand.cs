@@ -32,8 +32,6 @@ namespace SeqCli.Cli.Commands.ApiKey;
     Example = "seqcli apikey create -t 'Test API Key' -p Environment=Test")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly PropertiesFeature _properties;
     readonly OutputFormatFeature _output;
@@ -43,10 +41,8 @@ class CreateCommand : Command
     string[]? _permissions;
     bool _useServerTimestamps, _connectPasswordStdin;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the API key",
@@ -189,13 +185,13 @@ class CreateCommand : Command
                 _connectPassword = await Console.In.ReadLineAsync();
             }
 
-            var (url, _) = _connectionFactory.GetConnectionDetails(_connection, config);
+            var (url, _) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
             connection = new SeqConnection(url);
             await connection.Users.LoginAsync(_connectUsername, _connectPassword ?? "");
         }
         else
         {
-            connection = _connectionFactory.Connect(_connection, config);
+            connection = SeqConnectionFactory.Connect(_connection, config);
         }
 
         return connection;

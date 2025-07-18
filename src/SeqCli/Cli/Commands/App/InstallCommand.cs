@@ -29,18 +29,14 @@ namespace SeqCli.Cli.Commands.App;
 // ReSharper disable once UnusedType.Global
 class InstallCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
     string? _packageId, _version, _feedId;
 
-    public InstallCommand(SeqConnectionFactory connectionFactory)
+    public InstallCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "package-id=",
             "The package id of the app to install",
@@ -70,7 +66,7 @@ class InstallCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var feedId = _feedId;
         if (feedId == null)

@@ -26,17 +26,13 @@ namespace SeqCli.Cli.Commands.Feed;
     Example="seqcli feed remove -n CI")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
     string? _name, _id;
         
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "n=|name=",
             "The name of the feed to remove",
@@ -60,7 +56,7 @@ class RemoveCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = _id != null ? [await connection.Feeds.FindAsync(_id)]
             :

@@ -28,7 +28,6 @@ namespace SeqCli.Cli.Commands.Signal;
     Example="seqcli signal import -i ./Exceptions.json")]
 class ImportCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly FileInputFeature _fileInputFeature;
     readonly EntityOwnerFeature _entityOwner;
     readonly ConnectionFeature _connection;
@@ -41,10 +40,8 @@ class ImportCommand : Command
             Converters = { new StringEnumConverter() }
         });
 
-    public ImportCommand(SeqConnectionFactory connectionFactory)
+    public ImportCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "merge",
             "Update signals that have ids matching those in the imported data; the default is to always create new signals",
@@ -59,7 +56,7 @@ class ImportCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         using var input = _fileInputFeature.OpenSingleInput();
         var line = await input.ReadLineAsync();

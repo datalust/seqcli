@@ -27,6 +27,5 @@ class SeqCliModule : Autofac.Module
         builder.RegisterAssemblyTypes(typeof(Program).GetTypeInfo().Assembly)
             .As<Command>()
             .WithMetadataFrom<CommandAttribute>();
-        builder.RegisterType<SeqConnectionFactory>();
     }
 }

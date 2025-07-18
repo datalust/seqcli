@@ -29,8 +29,6 @@ namespace SeqCli.Cli.Commands.Signal;
     Example = "seqcli signal create -t 'Exceptions' -f \"@Exception is not null\"")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -40,10 +38,8 @@ class CreateCommand : Command
     string? _title, _description, _filter, _group;
     bool _isProtected, _noGrouping;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the signal",
@@ -87,7 +83,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var signal = await connection.Signals.TemplateAsync();
         signal.OwnerId = null;

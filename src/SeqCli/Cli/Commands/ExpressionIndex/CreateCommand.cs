@@ -29,18 +29,14 @@ namespace SeqCli.Cli.Commands.ExpressionIndex;
     Example = "seqcli expressionindex create --expression \"ServerName\"")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
     string? _expression;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "e=|expression=",
             "The expression to index",
@@ -54,7 +50,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         if (string.IsNullOrEmpty(_expression))
         {

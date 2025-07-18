@@ -25,16 +25,13 @@ namespace SeqCli.Cli.Commands.Index;
 [Command("index", "suppress", "Suppress an index", Example="seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748")]
 class SuppressCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
     string? _id;
 
-    public SuppressCommand(SeqConnectionFactory connectionFactory)
+    public SuppressCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of an index to suppress",
@@ -53,7 +50,7 @@ class SuppressCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var toSuppress = await connection.Indexes.FindAsync(_id);
         await connection.Indexes.SuppressAsync(toSuppress);
 

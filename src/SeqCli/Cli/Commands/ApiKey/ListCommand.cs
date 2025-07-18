@@ -24,17 +24,13 @@ namespace SeqCli.Cli.Commands.ApiKey;
 [Command("apikey", "list", "List available API keys", Example="seqcli apikey list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
 
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("API key", "list"));
         _output = Enable<OutputFormatFeature>();
         _storagePath = Enable<StoragePathFeature>();
@@ -44,7 +40,7 @@ class ListCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _entityIdentity.Id != null ?
             new[] { await connection.ApiKeys.FindAsync(_entityIdentity.Id) } :

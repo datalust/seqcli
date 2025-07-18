@@ -26,17 +26,14 @@ namespace SeqCli.Cli.Commands;
 // ReSharper disable once UnusedType.Global
 class TailCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly SignalExpressionFeature _signal;
     readonly StoragePathFeature _storagePath;
     string? _filter;
 
-    public TailCommand(SeqConnectionFactory connectionFactory)
+    public TailCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "f=|filter=",
             "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
@@ -54,7 +51,7 @@ class TailCommand : Command
         Console.CancelKeyPress += (_,_) => cancel.Cancel();
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         string? strict = null;
         if (!string.IsNullOrWhiteSpace(_filter))

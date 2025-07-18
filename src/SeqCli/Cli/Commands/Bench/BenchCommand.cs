@@ -66,7 +66,6 @@ namespace SeqCli.Cli.Commands.Bench;
 [Command("bench", @"Measure query performance")]
 class BenchCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     int _runs = 10;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
@@ -79,9 +78,8 @@ class BenchCommand : Command
     bool _withIngestion = false;
     bool _withQueries = false;
 
-    public BenchCommand(SeqConnectionFactory connectionFactory)
+    public BenchCommand()
     {
-        _connectionFactory = connectionFactory;
         Options.Add("r|runs=", "The number of runs to execute; the default is 10", r => _runs = int.Parse(r));
         
         Options.Add(
@@ -128,8 +126,8 @@ class BenchCommand : Command
         try
         {
             var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
-            var connection = _connectionFactory.Connect(_connection, config);
+            var (_, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
+            var connection = SeqConnectionFactory.Connect(_connection, config);
             var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
             var seqVersion = (await connection.Client.GetRootAsync()).Version;
             await using var reportingLogger = BuildReportingLogger();

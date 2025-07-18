@@ -28,8 +28,6 @@ namespace SeqCli.Cli.Commands.User;
     Example = "seqcli user create -n alice -d 'Alice Example' -r 'User (read/write)' --password-stdin")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -37,10 +35,8 @@ class CreateCommand : Command
     string? _username, _displayName, _roleTitle, _filter, _emailAddress, _password;
     bool _passwordStdin, _noPasswordChange;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "n=|name=",
             "A unique username for the user",
@@ -89,7 +85,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var user = await connection.Users.TemplateAsync();
 

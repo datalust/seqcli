@@ -26,8 +26,6 @@ namespace SeqCli.Cli.Commands.Sample;
     Example = "seqcli sample ingest")]
 class IngestCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly ConfirmFeature _confirm;
     readonly BatchSizeFeature _batchSize;
@@ -37,9 +35,8 @@ class IngestCommand : Command
     bool _setup;
     int _simulations = 1;
 
-    public IngestCommand(SeqConnectionFactory connectionFactory)
+    public IngestCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _confirm = Enable<ConfirmFeature>();
         _connection = Enable<ConnectionFeature>();
 
@@ -55,7 +52,7 @@ class IngestCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
+        var (url, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
         var batchSize = _batchSize.Value;
 
         if (!_confirm.TryConfirm(_setup
@@ -66,7 +63,7 @@ class IngestCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         if (_setup)
         {

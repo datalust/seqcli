@@ -26,18 +26,14 @@ namespace SeqCli.Cli.Commands.Index;
 [Command("index", "list", "List indexes", Example="seqcli index list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
     string? _id;
 
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        
         Options.Add(
             "i=|id=",
             "The id of a single index to list",
@@ -51,7 +47,7 @@ class ListCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _id is not null 
             ? [await connection.Indexes.FindAsync(_id)]

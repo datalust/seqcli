@@ -31,18 +31,14 @@ namespace SeqCli.Cli.Commands.Cluster;
     Example = "seqcli cluster health -s https://seq.example.com --wait-until-healthy")]
 class HealthCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly TimeoutFeature _timeout;
     readonly WaitUntilHealthyFeature _waitUntilHealthy;
     readonly StoragePathFeature _storagePath;
     
-    public HealthCommand(SeqConnectionFactory connectionFactory)
+    public HealthCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        
         _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("cluster"));
         _timeout = Enable(new TimeoutFeature());
         _output = Enable<OutputFormatFeature>();
@@ -53,7 +49,7 @@ class HealthCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 

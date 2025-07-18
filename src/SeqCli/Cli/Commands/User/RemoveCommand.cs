@@ -26,16 +26,12 @@ namespace SeqCli.Cli.Commands.User;
     Example="seqcli user remove -n alice")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly UserIdentityFeature _userIdentity;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _userIdentity = Enable(new UserIdentityFeature("remove"));
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
@@ -50,7 +46,7 @@ class RemoveCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = _userIdentity.Id != null ? [await connection.Users.FindAsync(_userIdentity.Id)]
             :

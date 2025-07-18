@@ -20,15 +20,15 @@ using SeqCli.Encryptor;
 
 namespace SeqCli.Connection;
 
-class SeqConnectionFactory
+static class SeqConnectionFactory
 {
-    public SeqConnection Connect(ConnectionFeature connection, SeqCliConfig config)
+    public static SeqConnection Connect(ConnectionFeature connection, SeqCliConfig config)
     {
         var (url, apiKey) = GetConnectionDetails(connection, config);
         return new SeqConnection(url, apiKey);
     }
         
-    public (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection, SeqCliConfig config)
+    public static (string? serverUrl, string? apiKey) GetConnectionDetails(ConnectionFeature connection, SeqCliConfig config)
     {
         if (connection == null) throw new ArgumentNullException(nameof(connection));
 

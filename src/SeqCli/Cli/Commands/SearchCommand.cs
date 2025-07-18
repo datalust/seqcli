@@ -34,7 +34,6 @@ namespace SeqCli.Cli.Commands;
     Example = "seqcli search -f \"@Exception like '%TimeoutException%'\" -c 30")]
 class SearchCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly DateRangeFeature _range;
@@ -45,10 +44,8 @@ class SearchCommand : Command
     int _httpClientTimeout = 100000;
     bool _trace, _noWebSockets;
 
-    public SearchCommand(SeqConnectionFactory connectionFactory)
+    public SearchCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "f=|filter=",
             "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
@@ -81,7 +78,7 @@ class SearchCommand : Command
         {
             var config = RuntimeConfigurationLoader.Load(_storagePath);
             await using var output = _output.GetOutputFormat(config).CreateOutputLogger();
-            var connection = _connectionFactory.Connect(_connection, config);
+            var connection = SeqConnectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
             string? filter = null;

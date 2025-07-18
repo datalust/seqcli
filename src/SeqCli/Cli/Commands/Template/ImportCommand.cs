@@ -23,7 +23,6 @@ namespace SeqCli.Cli.Commands.Template;
     Example = "seqcli template import -i ./Templates")]
 class ImportCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly PropertiesFeature _args;
     readonly StoragePathFeature _storagePath;
@@ -32,9 +31,8 @@ class ImportCommand : Command
     string? _stateFile;
     bool _merge;
         
-    public ImportCommand(SeqConnectionFactory connectionFactory)
+    public ImportCommand()
     {
-        _connectionFactory = connectionFactory;
             
         Options.Add(
             "i=|input=",
@@ -101,7 +99,7 @@ class ImportCommand : Command
             }));
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var err = await TemplateSetImporter.ImportAsync(templates, connection, args, state, _merge);
 
         await TemplateImportState.SaveAsync(stateFile, state);

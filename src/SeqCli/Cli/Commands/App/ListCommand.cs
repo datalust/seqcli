@@ -10,8 +10,6 @@ namespace SeqCli.Cli.Commands.App;
 [Command("app", "list", "List installed app packages", Example="seqcli app list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     string? _title, _id;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
@@ -20,10 +18,8 @@ class ListCommand : Command
     string? PackageId => string.IsNullOrWhiteSpace(_title) ? null : _title.Trim();
     string? Id => string.IsNullOrWhiteSpace(_id) ? null : _id.Trim();
 
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "package-id=",
             "The package id of the app(s) to list",
@@ -48,7 +44,7 @@ class ListCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = Id != null ? [await connection.Apps.FindAsync(Id)]
             :

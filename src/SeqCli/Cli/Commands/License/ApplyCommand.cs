@@ -16,7 +16,6 @@ namespace  SeqCli.Cli.Commands.License;
     Example = "seqcli license apply --certificate=\"license.txt\"")]
 class ApplyCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     
@@ -24,10 +23,8 @@ class ApplyCommand : Command
     bool _certificateStdin;
     bool _automaticallyRefresh;
         
-    public ApplyCommand(SeqConnectionFactory connectionFactory)
+    public ApplyCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add("c=|certificate=",
             "Certificate file; the file must be UTF-8 text",
             v => _certificateFilename = ArgumentString.Normalize(v));
@@ -75,7 +72,7 @@ class ApplyCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var license = await connection.Licenses.FindCurrentAsync();
         license.LicenseText = certificate;
         license.AutomaticallyRefresh = _automaticallyRefresh;

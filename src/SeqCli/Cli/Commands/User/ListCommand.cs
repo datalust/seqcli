@@ -24,17 +24,13 @@ namespace SeqCli.Cli.Commands.User;
 [Command("user", "list", "List users", Example="seqcli user list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly UserIdentityFeature _userIdentity;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _userIdentity = Enable(new UserIdentityFeature("list"));
         _output = Enable<OutputFormatFeature>();
         _storagePath = Enable<StoragePathFeature>();
@@ -44,7 +40,7 @@ class ListCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _userIdentity.Id != null ? [await connection.Users.FindAsync(_userIdentity.Id)]
             :

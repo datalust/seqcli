@@ -33,16 +33,13 @@ namespace SeqCli.Cli.Commands;
 [Command("log", "Send a structured log event to the server", Example = "seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test")]
 class LogCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly PropertiesFeature _properties;
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
     string? _message, _level, _timestamp, _exception;
 
-    public LogCommand(SeqConnectionFactory connectionFactory)
+    public LogCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "m=|message=",
             "A message to associate with the event (the default is to send no message); https://messagetemplates.org syntax is supported",
@@ -107,8 +104,8 @@ class LogCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
-        var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
+        var (_, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
 
         var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) {Content = content};
         if (apiKey != null)

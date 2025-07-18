@@ -24,18 +24,14 @@ namespace SeqCli.Cli.Commands.Feed;
 [Command("feed", "list", "List NuGet feeds", Example="seqcli feed list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
     string? _name, _id;
 
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "n=|name=",
             "The name of the feed to list",
@@ -54,7 +50,7 @@ class ListCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _id != null ? [await connection.Feeds.FindAsync(_id)]
             :

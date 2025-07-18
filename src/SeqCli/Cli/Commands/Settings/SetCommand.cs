@@ -24,8 +24,6 @@ namespace SeqCli.Cli.Commands.Settings;
 [Command("setting", "set", "Change a runtime-configurable server setting")]
 class SetCommand: Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
     readonly StoragePathFeature _storagePath;
@@ -33,10 +31,8 @@ class SetCommand: Command
     string? _value;
     bool _valueSpecified, _readValueFromStdin;
 
-    public SetCommand(SeqConnectionFactory connectionFactory)
+    public SetCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _name = Enable<SettingNameFeature>();
         
         Options.Add("v|value=",
@@ -65,7 +61,7 @@ class SetCommand: Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
         setting.Value = ReadValue();

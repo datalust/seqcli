@@ -34,7 +34,6 @@ class IngestCommand : Command
 {
     const string DefaultPattern = "{@m:line}";
         
-    readonly SeqConnectionFactory _connectionFactory;
     readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
     readonly FileInputFeature _fileInputFeature;
     readonly PropertiesFeature _properties;
@@ -46,9 +45,8 @@ class IngestCommand : Command
     string _pattern = DefaultPattern;
     bool _json;
 
-    public IngestCommand(SeqConnectionFactory connectionFactory)
+    public IngestCommand()
     {
-        _connectionFactory = connectionFactory;
         _fileInputFeature = Enable(new FileInputFeature("File(s) to ingest", allowMultiple: true));
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
         _properties = Enable<PropertiesFeature>();
@@ -101,12 +99,12 @@ class IngestCommand : Command
             }
 
             var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var connection = _connectionFactory.Connect(_connection, config);
+            var connection = SeqConnectionFactory.Connect(_connection, config);
             
             // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
             // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
             // close at some point!
-            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection, config);
+            var (_, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
             var batchSize = _batchSize.Value;
 
             foreach (var input in _fileInputFeature.OpenInputs())

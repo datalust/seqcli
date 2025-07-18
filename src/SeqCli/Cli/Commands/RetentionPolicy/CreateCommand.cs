@@ -29,8 +29,6 @@ namespace SeqCli.Cli.Commands.RetentionPolicy;
     Example = "seqcli retention create --after 30d --delete-all-events")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
@@ -39,10 +37,8 @@ class CreateCommand : Command
     bool _deleteAllEvents;
     string? _deleteMatchingSignal;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "after=",
             "A duration after which the policy will delete events, e.g. `7d`",
@@ -70,7 +66,7 @@ class CreateCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         SignalExpressionPart? removedSignalExpression;
         

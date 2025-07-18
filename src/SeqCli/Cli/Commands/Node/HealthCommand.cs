@@ -31,17 +31,14 @@ namespace SeqCli.Cli.Commands.Node;
     Example = "seqcli node health -s https://seq-2.example.com")]
 class HealthCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly WaitUntilHealthyFeature _waitUntilHealthy;
     readonly TimeoutFeature _timeout;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
-    public HealthCommand(SeqConnectionFactory connectionFactory)
+    public HealthCommand()
     {
-        _connectionFactory = connectionFactory;
 
         _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("node"));
         _timeout = Enable(new TimeoutFeature());
@@ -53,7 +50,7 @@ class HealthCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 

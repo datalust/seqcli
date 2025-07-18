@@ -29,7 +29,6 @@ namespace SeqCli.Cli.Commands;
 class QueryCommand : Command
 {
     readonly OutputFormatFeature _output;
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
@@ -38,9 +37,8 @@ class QueryCommand : Command
     string? _query;
     bool _trace;
 
-    public QueryCommand(SeqConnectionFactory connectionFactory)
+    public QueryCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         Options.Add("q=|query=", "The query to execute", v => _query = v);
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
@@ -60,7 +58,7 @@ class QueryCommand : Command
         }
 
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 

@@ -24,18 +24,14 @@ namespace SeqCli.Cli.Commands.Signal;
 [Command("signal", "list", "List available signals", Example="seqcli signal list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly EntityOwnerFeature _entityOwner;
     readonly StoragePathFeature _storagePath;
     
-    public ListCommand(SeqConnectionFactory connectionFactory)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("signal", "list"));
         _entityOwner = Enable(new EntityOwnerFeature("signal", "list", "listed", _entityIdentity));
         _output = Enable<OutputFormatFeature>();
@@ -46,7 +42,7 @@ class ListCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        var connection = _connectionFactory.Connect(_connection, config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _entityIdentity.Id != null ? [await connection.Signals.FindAsync(_entityIdentity.Id)]
             :
