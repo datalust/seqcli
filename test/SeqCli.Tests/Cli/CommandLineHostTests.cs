@@ -27,7 +27,7 @@ public class CommandLineHostTests
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test2"))),
                 new CommandMetadata {Name = "test2", HelpText = "help"})
         };
-        var commandLineHost = new CommandLineHost(availableCommands, new StoragePathFeature());
+        var commandLineHost = new CommandLineHost(availableCommands);
         await commandLineHost.Run(["test"],new LoggingLevelSwitch());
 
         Assert.Equal("test", executed.Single());
@@ -43,7 +43,7 @@ public class CommandLineHostTests
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test"))),
                 new CommandMetadata {Name = "test", HelpText = "help", IsPreview = true}),
         };
-        var commandLineHost = new CommandLineHost(availableCommands, new StoragePathFeature());
+        var commandLineHost = new CommandLineHost(availableCommands);
         var exit = await commandLineHost.Run(["test"],new LoggingLevelSwitch());
         Assert.Equal(1, exit);
         Assert.Empty(executed);
@@ -67,7 +67,7 @@ public class CommandLineHostTests
                     new Lazy<Command>(() => new ActionCommand(() => executed.Add("test-subcommand2"))),
                     new CommandMetadata {Name = "test", SubCommand = "subcommand2", HelpText = "help"})
             };
-        var commandLineHost = new CommandLineHost(availableCommands, new StoragePathFeature());
+        var commandLineHost = new CommandLineHost(availableCommands);
         await commandLineHost.Run(["test", "subcommand2"], new LoggingLevelSwitch());
 
         Assert.Equal("test-subcommand2", executed.First());
@@ -86,7 +86,7 @@ public class CommandLineHostTests
                     new CommandMetadata {Name = "test", HelpText = "help"})
             };
             
-        var commandLineHost = new CommandLineHost(availableCommands, new StoragePathFeature());
+        var commandLineHost = new CommandLineHost(availableCommands);
             
         await commandLineHost.Run(["test", "--verbose"], levelSwitch);
             
