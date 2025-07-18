@@ -16,7 +16,7 @@ using SeqCli.Encryptor;
 
 namespace SeqCli.Config;
 
-public class SeqCliEncryptionProviderConfig
+class SeqCliEncryptionProviderConfig
 {
     public string? Encryptor { get; set; }
     public string? EncryptorArgs { get; set; }

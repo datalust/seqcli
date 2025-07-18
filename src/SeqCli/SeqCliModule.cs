@@ -15,7 +15,6 @@
 using System.Reflection;
 using Autofac;
 using SeqCli.Cli;
-using SeqCli.Connection;
 
 namespace SeqCli;
 

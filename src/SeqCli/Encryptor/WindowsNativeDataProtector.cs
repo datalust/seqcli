@@ -5,7 +5,7 @@ using SeqCli.Util;
 
 namespace SeqCli.Encryptor;
 
-public class WindowsNativeDataProtector : IDataProtector
+class WindowsNativeDataProtector : IDataProtector
 {
     public byte[] Encrypt(byte[] unencrypted)
     {

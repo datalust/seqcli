@@ -57,7 +57,6 @@
     <PackageReference Include="Autofac" Version="8.3.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Superpower" Version="3.1.0" />
-    <PackageReference Include="System.Reactive" Version="6.0.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.7" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.7" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />

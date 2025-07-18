@@ -7,7 +7,7 @@ using SeqCli.Config;
 
 namespace SeqCli.Encryptor;
 
-public class ExternalDataProtector : IDataProtector
+class ExternalDataProtector : IDataProtector
 {
     public ExternalDataProtector(SeqCliEncryptionProviderConfig providerConfig)
     {
@@ -66,7 +66,7 @@ public class ExternalDataProtector : IDataProtector
             throw new InvalidOperationException("The process did not start.");
 
         var stderrBuf = new StringBuilder();
-        process.ErrorDataReceived += (o, e) =>
+        process.ErrorDataReceived += (_, e) =>
         {
             if (e.Data == null)
                 // ReSharper disable once AccessToDisposedClosure

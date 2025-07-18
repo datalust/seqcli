@@ -20,7 +20,7 @@ using Serilog.Events;
 
 namespace SeqCli.Forwarder.Diagnostics;
 
-public class InMemorySink : ILogEventSink
+class InMemorySink : ILogEventSink
 {
     readonly int _queueLength;
     readonly ConcurrentQueue<LogEvent> _queue = new();
