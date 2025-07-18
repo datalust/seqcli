@@ -57,7 +57,7 @@ class CommandLineHost
             if (cmd != null)
             {
                 var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
-                var commandSpecificArgs = args.Skip(amountToSkip).Where(arg => arg != prereleaseArg).ToArray();
+                var commandSpecificArgs = args.Skip(amountToSkip).Where(arg => cmd.Metadata.Name == "help" || arg != prereleaseArg).ToArray();
                     
                 var verbose = commandSpecificArgs.Any(arg => arg == verboseArg);
                 if (verbose)

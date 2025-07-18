@@ -3,7 +3,7 @@
   "profiles": {
     "SeqCli": {
       "commandName": "Project",
-      "commandLineArgs": "forwarder run --pre"
+      "commandLineArgs": "help --pre"
     }
   }
 }
