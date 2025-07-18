@@ -41,7 +41,7 @@ public class TestConfiguration(Args args)
         {
             var containerName = Guid.NewGuid().ToString("n");
             const string containerRuntime = "docker";
-            return new CaptiveProcess(containerRuntime, $"run --name {containerName} -d -e ACCEPT_EULA=Y -p {_serverListenPort}:80 datalust/seq:{imageTag}", stopCommandFullExePath: containerRuntime, stopCommandArgs: $"rm -f {containerName}");
+            return new CaptiveProcess(containerRuntime, $"run --name {containerName} -d -e ACCEPT_EULA=Y SEQ_FIRSTRUN_NOAUTHENTICATION -p {_serverListenPort}:80 datalust/seq:{imageTag}", stopCommandFullExePath: containerRuntime, stopCommandArgs: $"rm -f {containerName}");
         }
         
         return new CaptiveProcess("seq", commandWithArgs);
