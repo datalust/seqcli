@@ -25,7 +25,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Config.Forwarder;
 using SeqCli.Connection;
 using SeqCli.Forwarder;
 using SeqCli.Forwarder.Util;
@@ -85,7 +84,7 @@ class RunCommand : Command
         {
             await using var logger = CreateLogger(
                 LogEventLevel.Information,
-                ForwarderDiagnosticConfig.GetDefaultInternalLogPath());
+                _storagePath.InternalLogPath);
 
             logger.Fatal(ex, "Failed to load configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
             return 1;
@@ -100,7 +99,7 @@ class RunCommand : Command
         
         Log.Logger = CreateLogger(
             config.Forwarder.Diagnostics.InternalLoggingLevel,
-            config.Forwarder.Diagnostics.InternalLogPath,
+            _storagePath.InternalLogPath,
             config.Forwarder.Diagnostics.InternalLogServerUri,
             config.Forwarder.Diagnostics.InternalLogServerApiKey);
 

@@ -26,6 +26,8 @@ class StoragePathFeature : CommandFeature
 
     public string BufferPath => Path.Combine(StorageRootPath, "SeqCli", "Buffer");
 
+    public string InternalLogPath => Path.Combine(StorageRootPath, "SeqCli", "Logs");
+
     public override void Enable(OptionSet options)
     {
         options.Add("storage=",

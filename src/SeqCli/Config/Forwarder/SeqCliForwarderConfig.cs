@@ -4,7 +4,7 @@ namespace SeqCli.Config.Forwarder;
 
 class SeqCliForwarderConfig
 {
-    public ForwarderStorageConfig Storage { get; set; } = new();
-    public ForwarderDiagnosticConfig Diagnostics { get; set; } = new();
-    public ForwarderApiConfig Api { get; set; } = new();
+    public SeqCliForwarderStorageConfig Storage { get; set; } = new();
+    public SeqCliForwarderDiagnosticConfig Diagnostics { get; set; } = new();
+    public SeqCliForwarderApiConfig Api { get; set; } = new();
 }

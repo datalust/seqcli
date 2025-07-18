@@ -198,8 +198,8 @@ namespace SeqCli.Cli.Commands.Forwarder
             Console.WriteLine($"Granting {ServiceUsername} rights to {_storagePath.StorageRootPath}...");
             GiveFullControl(_storagePath.StorageRootPath);
 
-            Console.WriteLine($"Granting {ServiceUsername} rights to {config.Forwarder.Diagnostics.InternalLogPath}...");
-            GiveFullControl(config.Forwarder.Diagnostics.InternalLogPath);
+            Console.WriteLine($"Granting {ServiceUsername} rights to {_storagePath.InternalLogPath}...");
+            GiveFullControl(_storagePath.InternalLogPath);
 
             var listenUri = MakeListenUriReservationPattern(config.Forwarder.Api.ListenUri);
             Console.WriteLine($"Adding URL reservation at {listenUri} for {ServiceUsername}...");
