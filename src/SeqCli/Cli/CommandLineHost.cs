@@ -18,7 +18,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
-using SeqCli.Cli.Features;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -26,12 +25,10 @@ namespace SeqCli.Cli;
 
 class CommandLineHost
 {
-    readonly StoragePathFeature _storagePathFeature;
     readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
 
-    public CommandLineHost(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands, StoragePathFeature storagePathFeature)
+    public CommandLineHost(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
     {
-        _storagePathFeature = storagePathFeature;
         _availableCommands = availableCommands.ToList();
     }
 
