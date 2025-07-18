@@ -29,7 +29,7 @@ namespace SeqCli.Forwarder.Cli.Features
         public override void Enable(OptionSet options)
         {
             options.Add("u=|username=",
-                "The name of a Windows account to run the service under; if not specified the Local System account will be used",
+                "The name of a Windows account to run the service under; if not specified the `NT AUTHORITY\\LocalService` account will be used",
                 v => Username = v.Trim());
 
             options.Add("p=|password=",
