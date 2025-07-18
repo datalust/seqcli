@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -31,6 +32,56 @@ namespace SeqCli.Ingestion;
 static class LogShipper
 {
     static readonly ITextFormatter JsonFormatter = OutputFormatter.Json(null);
+
+    public static async Task<bool> ShipBuffer(
+        SeqConnection connection,
+        string? apiKey,
+        ArraySegment<byte> utf8Clef,
+        SendFailureHandling sendFailureHandling)
+    {
+        var content = new ByteArrayContent(utf8Clef.Array!, utf8Clef.Offset, utf8Clef.Count)
+        {
+            Headers =
+            {
+                ContentType = new MediaTypeHeaderValue(ApiConstants.ClefMediaType, "utf-8")
+            }
+        };
+        
+        var retries = 0;
+        while (true)
+        {
+            var sendSucceeded = false;
+            try
+            {
+                sendSucceeded = await Send(
+                    connection,
+                    apiKey,
+                    sendFailureHandling != SendFailureHandling.Ignore,
+                    content);
+            }
+            catch (Exception ex)
+            {
+                if (sendFailureHandling != SendFailureHandling.Ignore)
+                    Log.Error(ex, "Failed to send an event batch");
+            }
+
+            if (!sendSucceeded)
+            {
+                if (sendFailureHandling == SendFailureHandling.Fail)
+                    return false;
+
+                if (sendFailureHandling == SendFailureHandling.Retry)
+                {
+                    var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
+                    await Task.Delay(millisecondsDelay);
+                    retries += 1;
+                    continue;
+                }
+            }
+
+            return true;
+        }
+    }
     
     public static async Task<int> ShipEvents(
         SeqConnection connection,
@@ -163,6 +214,11 @@ static class LogShipper
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
+        return await Send(connection, apiKey, logSendFailures, content);
+    }
+
+    static async Task<bool> Send(SeqConnection connection, string? apiKey, bool logSendFailures, HttpContent content)
+    {
         var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) { Content = content };
         if (apiKey != null)
             request.Headers.Add(ApiConstants.ApiKeyHeaderName, apiKey);

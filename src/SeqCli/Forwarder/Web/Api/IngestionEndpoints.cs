@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Net.Http.Headers;
+using SeqCli.Api;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
 using JsonException = System.Text.Json.JsonException;
@@ -35,11 +36,11 @@ class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly LogChannelMap _logChannels;
+    readonly ForwardingChannelMap _forwardingChannels;
 
-    public IngestionEndpoints(LogChannelMap logChannels)
+    public IngestionEndpoints(ForwardingChannelMap forwardingChannels)
     {
-        _logChannels = logChannels;
+        _forwardingChannels = forwardingChannels;
     }
     
     public void MapEndpoints(WebApplication app)
@@ -84,7 +85,7 @@ class IngestionEndpoints : IMapEndpoints
 
     static string? GetApiKey(HttpRequest request)
     {
-        var apiKeyHeader = request.Headers["X-SeqApiKey"];
+        var apiKeyHeader = request.Headers[ApiConstants.ApiKeyHeaderName];
 
         if (apiKeyHeader.Count > 0) return apiKeyHeader.Last();
         return request.Query.TryGetValue("apiKey", out var apiKey) ? apiKey.Last() : null;
@@ -95,7 +96,7 @@ class IngestionEndpoints : IMapEndpoints
         var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var log = _logChannels.Get(GetApiKey(context.Request));
+        var log = _forwardingChannels.Get(GetApiKey(context.Request));
 
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;
@@ -225,11 +226,11 @@ class IngestionEndpoints : IMapEndpoints
         return true;
     }
 
-    static async Task Write(LogChannel log, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
+    static async Task Write(ForwardingChannel forwardingChannel, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
     {
         try
         {
-            await log.WriteAsync(storage, range, cancellationToken);
+            await forwardingChannel.WriteAsync(storage, range, cancellationToken);
         }
         catch
         {

@@ -98,6 +98,10 @@ class IngestCommand : Command
             }
 
             var connection = _connectionFactory.Connect(_connection);
+            
+            // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
+            // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
+            // close at some point!
             var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
             var batchSize = _batchSize.Value;
 
@@ -105,8 +109,8 @@ class IngestCommand : Command
             {
                 using (input)
                 {
-                    var reader = _json
-                        ? (ILogEventReader) new JsonLogEventReader(input)
+                    ILogEventReader reader = _json
+                        ? new JsonLogEventReader(input)
                         : new PlainTextLogEventReader(input, _pattern);
 
                     reader = new EnrichingReader(reader, enrichers);

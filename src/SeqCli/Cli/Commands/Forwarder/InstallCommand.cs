@@ -41,9 +41,9 @@ namespace SeqCli.Cli.Commands.Forwarder
 
         bool _setup;
 
-        public InstallCommand()
+        public InstallCommand(StoragePathFeature storagePath)
         {
-            _storagePath = Enable<StoragePathFeature>();
+            _storagePath = storagePath;
             _listenUri = Enable<ListenUriFeature>();
             _serviceCredentials = Enable<ServiceCredentialsFeature>();
 

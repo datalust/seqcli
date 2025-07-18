@@ -24,13 +24,13 @@ namespace SeqCli.Forwarder.Web.Host;
 class ServerService
 {
     readonly IHost _host;
-    readonly LogChannelMap _logChannelMap;
+    readonly ForwardingChannelMap _forwardingChannelMap;
     readonly string _listenUri;
 
-    public ServerService(IHost host, LogChannelMap logChannelMap, string listenUri)
+    public ServerService(IHost host, ForwardingChannelMap forwardingChannelMap, string listenUri)
     {
         _host = host;
-        _logChannelMap = logChannelMap;
+        _forwardingChannelMap = forwardingChannelMap;
         _listenUri = listenUri;
     }
 
@@ -60,6 +60,6 @@ class ServerService
 
         Log.Information("HTTP server stopped; flushing buffers...");
 
-        await _logChannelMap.StopAsync();
+        await _forwardingChannelMap.StopAsync();
     }
 }

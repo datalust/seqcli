@@ -26,6 +26,7 @@ using Microsoft.Extensions.Hosting;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Config.Forwarder;
+using SeqCli.Connection;
 using SeqCli.Forwarder;
 using SeqCli.Forwarder.Util;
 using SeqCli.Forwarder.Web.Api;
@@ -47,16 +48,20 @@ namespace SeqCli.Cli.Commands.Forwarder;
 [Command("forwarder", "run", "Listen on an HTTP endpoint and forward ingested logs to Seq", IsPreview = true)]
 class RunCommand : Command
 {
+    readonly SeqConnectionFactory _connectionFactory;
     readonly StoragePathFeature _storagePath;
     readonly ListenUriFeature _listenUri;
+    readonly ConnectionFeature _connection;
 
     bool _noLogo;
 
-    public RunCommand()
+    public RunCommand(SeqConnectionFactory connectionFactory, StoragePathFeature storagePath)
     {
+        _connectionFactory = connectionFactory;
         Options.Add("nologo", _ => _noLogo = true);
-        _storagePath = Enable<StoragePathFeature>();
         _listenUri = Enable<ListenUriFeature>();
+        _connection = Enable<ConnectionFeature>();
+        _storagePath = storagePath;
     }
 
     protected override async Task<int> Run(string[] unrecognized)
@@ -74,7 +79,6 @@ class RunCommand : Command
         }
 
         SeqCliConfig config;
-
         try
         {
             // ISSUE: we can't really rely on the default `SeqCliConfig` path being readable when running as a service.
@@ -90,13 +94,21 @@ class RunCommand : Command
             return 1;
         }
         
-        Log.Information("Loaded configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
-
+        var connection = _connectionFactory.Connect(_connection);
+            
+        // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
+        // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
+        // close at some point!
+        var (serverUrl, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+        
         Log.Logger = CreateLogger(
             config.Forwarder.Diagnostics.InternalLoggingLevel,
             config.Forwarder.Diagnostics.InternalLogPath,
             config.Forwarder.Diagnostics.InternalLogServerUri,
             config.Forwarder.Diagnostics.InternalLogServerApiKey);
+
+        Log.Information("Loaded configuration from {ConfigFilePath}", _storagePath.ConfigFilePath);
+        Log.Information("Forwarding to {ServerUrl}", serverUrl);
 
         var listenUri = _listenUri.ListenUri ?? config.Forwarder.Api.ListenUri;
 
@@ -145,7 +157,7 @@ class RunCommand : Command
                 .ConfigureContainer<ContainerBuilder>(containerBuilder =>
                 {
                     containerBuilder.RegisterBuildCallback(ls => container = ls);
-                    containerBuilder.RegisterModule(new ForwarderModule(_storagePath.BufferPath, config));
+                    containerBuilder.RegisterModule(new ForwarderModule(_storagePath.BufferPath, config, connection, apiKey));
                 });
             
             await using var app = builder.Build();

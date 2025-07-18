@@ -43,6 +43,11 @@ readonly record struct BufferReaderBatch
         return _storage.AsSpan()[.._length];
     }
 
+    public ArraySegment<byte> AsArraySegment()
+    {
+        return _storage[.._length];
+    }
+
     public void Return()
     {
         _pool?.Return(_storage);

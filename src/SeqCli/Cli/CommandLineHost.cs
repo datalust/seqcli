@@ -18,6 +18,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
+using SeqCli.Cli.Features;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -25,10 +26,12 @@ namespace SeqCli.Cli;
 
 class CommandLineHost
 {
+    readonly StoragePathFeature _storagePathFeature;
     readonly List<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
 
-    public CommandLineHost(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
+    public CommandLineHost(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands, StoragePathFeature storagePathFeature)
     {
+        _storagePathFeature = storagePathFeature;
         _availableCommands = availableCommands.ToList();
     }
 
@@ -63,7 +66,13 @@ class CommandLineHost
                     commandSpecificArgs = commandSpecificArgs.Where(arg => arg != verboseArg).ToArray();
                 }
 
-                return await cmd.Value.Value.Invoke(commandSpecificArgs);
+                var impl = cmd.Value.Value;
+                
+                // This one is global, because implicitly-created components in the container rely on the specified
+                // storage path. It's a convoluted data flow that we should rip out when possible.
+                _storagePathFeature.Enable(impl.Options);
+                
+                return await impl.Invoke(commandSpecificArgs);
             }
         }
 

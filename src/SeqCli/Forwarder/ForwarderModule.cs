@@ -16,6 +16,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using Autofac;
+using Seq.Api;
 using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Web.Api;
@@ -28,17 +29,21 @@ class ForwarderModule : Module
 {
     readonly string _bufferPath;
     readonly SeqCliConfig _config;
+    readonly SeqConnection _connection;
+    readonly string? _apiKey;
 
-    public ForwarderModule(string bufferPath, SeqCliConfig config)
+    public ForwarderModule(string bufferPath, SeqCliConfig config, SeqConnection connection, string? apiKey)
     {
         _bufferPath = bufferPath ?? throw new ArgumentNullException(nameof(bufferPath));
         _config = config ?? throw new ArgumentNullException(nameof(config));
+        _connection = connection;
+        _apiKey = apiKey;
     }
 
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<ServerService>().SingleInstance();
-        builder.Register(_ => new LogChannelMap(_bufferPath)).SingleInstance();
+        builder.Register(_ => new ForwardingChannelMap(_bufferPath, _connection, _apiKey)).SingleInstance();
 
         builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();

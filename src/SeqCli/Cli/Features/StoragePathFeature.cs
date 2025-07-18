@@ -22,13 +22,13 @@ class StoragePathFeature : CommandFeature
         }
     }
         
-    public string ConfigFilePath => Path.Combine(StorageRootPath, "SeqForwarder.json");
+    public string ConfigFilePath => Path.Combine(StorageRootPath, "SeqCli.json");
 
-    public string BufferPath => Path.Combine(StorageRootPath, "Buffer");
+    public string BufferPath => Path.Combine(StorageRootPath, "SeqCli", "Buffer");
 
     public override void Enable(OptionSet options)
     {
-        options.Add("s=|storage=",
+        options.Add("storage=",
             "Set the folder where data will be stored; " +
             "" + GetDefaultStorageRoot() + " is used by default.",
             v => _storageRoot = Path.GetFullPath(v));
@@ -36,17 +36,7 @@ class StoragePathFeature : CommandFeature
 
     static string GetDefaultStorageRoot()
     {
-        return Path.GetFullPath(Path.Combine(
-#if WINDOWS
-                // Common, here, because the service may run as Local Service, which has no obvious home
-                // directory.
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-#else
-            // Specific to and writable by the current user.
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-#endif
-            "SeqCli",
-            "Forwarder"));
+        return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     }
 
     static string? TryQueryInstalledStorageRoot()
