@@ -165,4 +165,12 @@ sealed class OutputFormat(bool json, bool noColor, bool forceColor)
             WriteEntity(entity);
         }
     }
+    
+    // ReSharper disable once MemberCanBeMadeStatic.Global
+#pragma warning disable CA1822
+    public void WriteText(string? text)
+#pragma warning restore CA1822
+    {
+        Console.WriteLine(text?.TrimEnd());
+    }
 }
