@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using SeqCli.Templates.Export;
 using SeqCli.Util;
@@ -16,16 +17,14 @@ namespace SeqCli.Cli.Commands.Template;
     Example = "seqcli template export -o ./Templates")]
 class ExportCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
-        
+    readonly StoragePathFeature _storagePath;
+    
     readonly HashSet<string?> _include = new();
     string? _outputDir = ".";
 
-    public ExportCommand(SeqConnectionFactory connectionFactory)
+    public ExportCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "o=|output=",
             "The directory in which to write template files; the directory must exist; any existing files with " +
@@ -39,6 +38,7 @@ class ExportCommand : Command
             i => _include.Add(ArgumentString.Normalize(i)));
 
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -55,7 +55,8 @@ class ExportCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var export = new TemplateSetExporter(connection, _include, _outputDir);
         await export.ExportTemplateSet();

@@ -10,32 +10,30 @@ namespace SeqCli.Cli.Commands.AppInstance;
 [Command("appinstance", "list", "List instances of installed apps", Example="seqcli appinstance list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    readonly StoragePathFeature _storagePath;
+    
+    public ListCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("app instance", "list"));
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
     
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var list = _entityIdentity.Id != null ?
-            new[] { await connection.AppInstances.FindAsync(_entityIdentity.Id) } :
+        var list = _entityIdentity.Id != null ? [await connection.AppInstances.FindAsync(_entityIdentity.Id)]
+            :
             (await connection.AppInstances.ListAsync())
             .Where(d => _entityIdentity.Title == null || _entityIdentity.Title == d.Title);
 
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
 
         return 0;
     }

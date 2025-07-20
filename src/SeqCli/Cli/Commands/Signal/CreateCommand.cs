@@ -29,20 +29,17 @@ namespace SeqCli.Cli.Commands.Signal;
     Example = "seqcli signal create -t 'Exceptions' -f \"@Exception is not null\"")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     readonly List<string> _columns = new();
 
     string? _title, _description, _filter, _group;
     bool _isProtected, _noGrouping;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the signal",
@@ -79,12 +76,14 @@ class CreateCommand : Command
             _ => _isProtected = true);
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var signal = await connection.Signals.TemplateAsync();
         signal.OwnerId = null;
@@ -124,7 +123,7 @@ class CreateCommand : Command
 
         signal = await connection.Signals.AddAsync(signal);
 
-        _output.WriteEntity(signal);
+        _output.GetOutputFormat(config).WriteEntity(signal);
 
         return 0;
     }

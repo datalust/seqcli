@@ -20,4 +20,5 @@ public class CommandMetadata : ICommandMetadata
     public string? SubCommand { get; set; }
     public required string HelpText { get; set; }
     public string? Example { get; set; }
+    public bool IsPreview { get; set; }
 }

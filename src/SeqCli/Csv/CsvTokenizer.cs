@@ -42,7 +42,7 @@ class CsvTokenizer : Tokenizer<CsvToken>
 
                     if (next.Value != '"')
                     {
-                        yield return Result.Empty<CsvToken>(next.Location, new[] {"double-quote"});
+                        yield return Result.Empty<CsvToken>(next.Location, ["double-quote"]);
                         yield break;
                     }
 
@@ -79,13 +79,13 @@ class CsvTokenizer : Tokenizer<CsvToken>
                 }
                 else
                 {
-                    yield return Result.Empty<CsvToken>(next.Location, new[] {"comma", "newline"});
+                    yield return Result.Empty<CsvToken>(next.Location, ["comma", "newline"]);
                     yield break;
                 }
             }
             else
             {
-                yield return Result.Empty<CsvToken>(next.Location, new[] {"double-quote"});
+                yield return Result.Empty<CsvToken>(next.Location, ["double-quote"]);
                 yield break;
             }
                 

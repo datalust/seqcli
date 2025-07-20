@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Settings;
@@ -22,22 +23,21 @@ namespace SeqCli.Cli.Commands.Settings;
 [Command("setting", "clear", "Clear a runtime-configurable server setting")]
 class ClearCommand: Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
-
-    public ClearCommand(SeqConnectionFactory connectionFactory)
+    readonly StoragePathFeature _storagePath;
+    
+    public ClearCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _name = Enable<SettingNameFeature>();
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
         setting.Value = null;

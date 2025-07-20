@@ -31,38 +31,37 @@ namespace SeqCli.Cli.Commands.Cluster;
     Example = "seqcli cluster health -s https://seq.example.com --wait-until-healthy")]
 class HealthCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly TimeoutFeature _timeout;
     readonly WaitUntilHealthyFeature _waitUntilHealthy;
+    readonly StoragePathFeature _storagePath;
     
-    public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    public HealthCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        
         _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("cluster"));
         _timeout = Enable(new TimeoutFeature());
-        _output = Enable(new OutputFormatFeature(outputConfig));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
         
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         if (_waitUntilHealthy.ShouldWait)
         {
-            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30));
+            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30), _output.GetOutputFormat(config));
         }
 
-        return await RunOnce(connection);
+        return await RunOnce(connection, _output.GetOutputFormat(config));
     }
 
-    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout)
+    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout, OutputFormat outputFormat)
     {
         using var ct = new CancellationTokenSource(timeout);
         
@@ -78,7 +77,7 @@ class HealthCommand : Command
                 {
                     try
                     {
-                        if (await RunOnce(connection) == 0)
+                        if (await RunOnce(connection, outputFormat) == 0)
                         {
                             return 0;
                         }
@@ -98,13 +97,13 @@ class HealthCommand : Command
         }
     }
 
-    async Task<int> RunOnce(SeqConnection connection)
+    static async Task<int> RunOnce(SeqConnection connection, OutputFormat output)
     {
         var health = await connection.Cluster.CheckHealthAsync();
 
-        if (_output.Json)
+        if (output.Json)
         {
-            _output.WriteObject(health);
+            output.WriteObject(health);
         } else if (!string.IsNullOrWhiteSpace(health.Description)) {
             Console.WriteLine($"{health.Status}: {health.Description}");
         } else {

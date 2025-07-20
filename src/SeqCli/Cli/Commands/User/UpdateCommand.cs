@@ -20,6 +20,6 @@ namespace SeqCli.Cli.Commands.User;
 [Command("user", "update",
     "Update an existing user",
     Example="seqcli user update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "user", nameof(SeqConnection.Users));
+class UpdateCommand():
+    Shared.UpdateCommand("user", nameof(SeqConnection.Users));
     

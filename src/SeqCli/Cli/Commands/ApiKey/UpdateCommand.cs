@@ -20,6 +20,6 @@ namespace SeqCli.Cli.Commands.ApiKey;
 [Command("apikey", "update",
     "Update an existing API key",
     Example="seqcli apikey update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "apikey", nameof(SeqConnection.ApiKeys), "API key");
+class UpdateCommand():
+    Shared.UpdateCommand("apikey", nameof(SeqConnection.ApiKeys), "API key");
     

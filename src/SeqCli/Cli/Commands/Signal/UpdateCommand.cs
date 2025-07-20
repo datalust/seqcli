@@ -20,6 +20,6 @@ namespace SeqCli.Cli.Commands.Signal;
 [Command("signal", "update",
     "Update an existing signal",
     Example="seqcli signal update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "signal", nameof(SeqConnection.Signals));
+class UpdateCommand():
+    Shared.UpdateCommand("signal", nameof(SeqConnection.Signals));
     

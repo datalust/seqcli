@@ -18,29 +18,32 @@ namespace SeqCli.Cli.Commands.License;
     Example = "seqcli license show")]
 class ShowCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
+    readonly StoragePathFeature _storage;
 
-    public ShowCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ShowCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storage = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storage);
+        var output = _output.GetOutputFormat(config);
+
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var license = await connection.Licenses.FindCurrentAsync();
 
-        if (_output.Json)
+        if (output.Json)
         {
-            _output.WriteEntity(license);
+            output.WriteEntity(license);
         }
         else
         {
-            _output.WriteText(license?.LicenseText);
+            output.WriteText(license?.LicenseText);
         }
 
         return 0;

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Linq;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
 
-namespace SeqCli.EndToEnd.RetentionPolicies;
+namespace SeqCli.EndToEnd.RetentionPolicy;
 
 // ReSharper disable once UnusedType.Global
 public class RetentionPolicyBasicsTestCase : ICliTestCase

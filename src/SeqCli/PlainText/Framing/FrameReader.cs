@@ -58,7 +58,7 @@ class FrameReader
         }
         else if (_unawaitedNextLine != null)
         {
-            var index = Task.WaitAny(new Task[] {_unawaitedNextLine}, _trailingLineArrivalDeadline);
+            var index = Task.WaitAny([_unawaitedNextLine], _trailingLineArrivalDeadline);
             if (index == -1)
                 return new Frame();
                 
@@ -81,7 +81,7 @@ class FrameReader
         while (true)
         {
             readLine = readLine ?? Task.Run(_source.ReadLineAsync);                
-            var index = Task.WaitAny(new Task[] {readLine}, _trailingLineArrivalDeadline);
+            var index = Task.WaitAny([readLine], _trailingLineArrivalDeadline);
             if (index == -1)
             {
                 if (hasValue)

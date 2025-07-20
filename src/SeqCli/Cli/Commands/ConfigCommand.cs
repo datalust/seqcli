@@ -13,12 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
+using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Util;
 using Serilog;
@@ -30,12 +26,14 @@ class ConfigCommand : Command
 {
     string? _key, _value;
     bool _clear;
+    readonly StoragePathFeature _storagePath;
 
     public ConfigCommand()
     {
         Options.Add("k|key=", "The field, for example `connection.serverUrl`", k => _key = k);
         Options.Add("v|value=", "The field value; if not specified, the command will print the current value", v => _value = v);
         Options.Add("c|clear", "Clear the field", _ => _clear = true);
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override Task<int> Run()
@@ -44,7 +42,7 @@ class ConfigCommand : Command
             
         try
         {
-            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.DefaultConfigFilename);
+            var config = SeqCliConfig.ReadFromFile(_storagePath.ConfigFilePath);
             
             if (_key != null)
             {
@@ -52,13 +50,13 @@ class ConfigCommand : Command
                 {
                     verb = "clear";
                     KeyValueSettings.Clear(config, _key);
-                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+                    SeqCliConfig.WriteToFile(config, _storagePath.ConfigFilePath);
                 }
                 else if (_value != null)
                 {
                     verb = "update";
                     KeyValueSettings.Set(config, _key, _value);
-                    SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+                    SeqCliConfig.WriteToFile(config, _storagePath.ConfigFilePath);
                 }
                 else
                 {

@@ -29,23 +29,22 @@ namespace SeqCli.Cli.Commands;
 class QueryCommand : Command
 {
     readonly OutputFormatFeature _output;
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
     readonly TimeoutFeature _timeout;
+    readonly StoragePathFeature _storagePath;
     string? _query;
     bool _trace;
 
-    public QueryCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public QueryCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         Options.Add("q=|query=", "The query to execute", v => _query = v);
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         Options.Add("trace", "Enable detailed (server-side) query tracing", _ => _trace = true);
         _connection = Enable<ConnectionFeature>();
     }
@@ -58,11 +57,13 @@ class QueryCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
-            
-        if (_output.Json)
+
+        var output = _output.GetOutputFormat(config);
+        if (output.Json)
         {
             var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
 
@@ -72,7 +73,7 @@ class QueryCommand : Command
         else
         {
             var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-            _output.WriteCsv(result);
+            output.WriteCsv(result);
         }
 
         return 0;

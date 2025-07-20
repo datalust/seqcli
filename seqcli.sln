@@ -19,7 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3587B633-0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "asset", "asset", "{438A0DA5-F3CF-4FCE-B43A-B6DA2981D4AE}"
 	ProjectSection(SolutionItems) = preProject
-		asset\SeqCliLicense.rtf = asset\SeqCliLicense.rtf
 		asset\SeqCli.ico = asset\SeqCli.ico
 		asset\SeqCli.png = asset\SeqCli.png
 	EndProjectSection

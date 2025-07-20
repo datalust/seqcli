@@ -20,6 +20,6 @@ namespace SeqCli.Cli.Commands.Workspace;
 [Command("workspace", "update",
     "Update an existing workspace",
     Example="seqcli workspace update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "workspace", nameof(SeqConnection.Workspaces));
+class UpdateCommand():
+    Shared.UpdateCommand("workspace", nameof(SeqConnection.Workspaces));
     

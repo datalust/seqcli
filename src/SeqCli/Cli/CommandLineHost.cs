@@ -39,30 +39,37 @@ class CommandLineHost
 
         if (args.Length > 0)
         {
+            const string prereleaseArg = "--pre", verboseArg = "--verbose";
+            
             var norm = args[0].ToLowerInvariant();
             var subCommandNorm = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
-                
+
+            var pre = args.Any(a => a == prereleaseArg);
+            
             var cmd = _availableCommands.SingleOrDefault(c =>
-                c.Metadata.Name == norm && (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
+                (!c.Metadata.IsPreview || pre) &&
+                c.Metadata.Name == norm &&
+                (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
                 
             if (cmd != null)
             {
                 var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
-                var commandSpecificArgs = args.Skip(amountToSkip).ToArray();
+                var commandSpecificArgs = args.Skip(amountToSkip).Where(arg => cmd.Metadata.Name == "help" || arg != prereleaseArg).ToArray();
                     
-                var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg == "--verbose");
-                if (verboseArg != null)
+                var verbose = commandSpecificArgs.Any(arg => arg == verboseArg);
+                if (verbose)
                 {
                     levelSwitch.MinimumLevel = LogEventLevel.Information;
                     commandSpecificArgs = commandSpecificArgs.Where(arg => arg != verboseArg).ToArray();
                 }
 
-                return await cmd.Value.Value.Invoke(commandSpecificArgs);
+                var impl = cmd.Value.Value;
+                return await impl.Invoke(commandSpecificArgs);
             }
         }
 
         Console.WriteLine($"Usage: {name} <command> [<args>]");
         Console.WriteLine($"Type `{name} help` for available commands");
-        return -1;
+        return 1;
     }
 }

@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
+using SeqCli.Config;
 using SeqCli.Connection;
 using Serilog;
 
@@ -25,19 +26,17 @@ namespace SeqCli.Cli.Commands.Dashboard;
     Example="seqcli dashboard remove -i dashboard-159")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly EntityOwnerFeature _entityOwner;
     readonly ConnectionFeature _connection;
-
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    readonly StoragePathFeature _storagePath;
+    
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("dashboard", "remove"));
         _entityOwner = Enable(new EntityOwnerFeature("dashboard", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -48,10 +47,11 @@ class RemoveCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var toRemove = _entityIdentity.Id != null ?
-            new[] { await connection.Dashboards.FindAsync(_entityIdentity.Id) } :
+        var toRemove = _entityIdentity.Id != null ? [await connection.Dashboards.FindAsync(_entityIdentity.Id)]
+            :
             (await connection.Dashboards.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
             .Where(dashboard => _entityIdentity.Title == dashboard.Title)
             .ToArray();

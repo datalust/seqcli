@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ using SeqCli.Templates.Ast;
 using SeqCli.Templates.Import;
 using SeqCli.Util;
 using Seq.Api;
+using SeqCli.Config;
 
 // ReSharper disable once UnusedType.Global
 
@@ -32,27 +33,26 @@ namespace SeqCli.Cli.Commands.Sample;
     Example = "seqcli sample setup")]
 class SetupCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly ConfirmFeature _confirm;
-
-    public SetupCommand(SeqConnectionFactory connectionFactory)
+    readonly StoragePathFeature _storagePath;
+    
+    public SetupCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         // The command will also at some point accept an `--allow-outbound-requests` flag, which will cause sample
         // apps to be installed, and a health check to be set up.
             
         _confirm = Enable<ConfirmFeature>();
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
+        var (url, _) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
         if (!_confirm.TryConfirm($"This will apply sample configuration items to the Seq server at {url}."))
         {
             await Console.Error.WriteLineAsync("Canceled by user.");
@@ -64,8 +64,10 @@ class SetupCommand : Command
 
     internal static async Task<int> ImportTemplates(SeqConnection connection)
     {
-        var templateArgs = new Dictionary<string, JsonTemplate>();
-        templateArgs["ownerId"] = new JsonTemplateNull();
+        var templateArgs = new Dictionary<string, JsonTemplate>
+        {
+            ["ownerId"] = new JsonTemplateNull()
+        };
 
         var templatesPath = Content.GetPath(Path.Combine("Sample", "Templates"));
         var templateFiles = Directory.GetFiles(templatesPath);

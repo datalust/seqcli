@@ -13,10 +13,7 @@ static class ReifiedProperties
         SpanId = "@sp",
         TraceId = "@tr";
         
-    static readonly HashSet<string> All = new()
-    {
-        Message, Timestamp, Level, Exception, StartTimestamp, SpanId, TraceId
-    };
+    static readonly HashSet<string> All = [Message, Timestamp, Level, Exception, StartTimestamp, SpanId, TraceId];
 
     public static bool IsReifiedProperty(string name)
     {

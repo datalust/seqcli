@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using Newtonsoft.Json;
+using SeqCli.Encryptor;
 using SeqCli.Util;
 
 namespace SeqCli.Config;
@@ -22,39 +24,38 @@ class SeqCliConnectionConfig
 {
     const string ProtectedDataPrefix = "pd.";
 
+    static readonly Encoding ProtectedDataEncoding = new UTF8Encoding(false);
+
     public string ServerUrl { get; set; } = "http://localhost:5341";
 
     [JsonProperty("apiKey")]
     public string? EncodedApiKey { get; set; }
 
-    [JsonIgnore]
-    public string? ApiKey
+    public string? DecodeApiKey(IDataProtector dataProtector)
     {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(EncodedApiKey))
-                return null;
+        if (string.IsNullOrWhiteSpace(EncodedApiKey))
+            return null;
+        
+        if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
+            return EncodedApiKey;
 
-            if (!OperatingSystem.IsWindows())
-                return EncodedApiKey;
-
-            if (!EncodedApiKey.StartsWith(ProtectedDataPrefix))
-                return EncodedApiKey;
-
-            return UserScopeDataProtection.Unprotect(EncodedApiKey.Substring(ProtectedDataPrefix.Length));
-        }
-        set
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                EncodedApiKey = null;
-                return;
-            }
-
-            if (OperatingSystem.IsWindows())
-                EncodedApiKey = $"{ProtectedDataPrefix}{UserScopeDataProtection.Protect(value)}";
-            else
-                EncodedApiKey = value;
-        }
+        return ProtectedDataEncoding.GetString(dataProtector.Decrypt(Convert.FromBase64String(EncodedApiKey[ProtectedDataPrefix.Length..])));
     }
+
+    public void EncodeApiKey(string? apiKey, IDataProtector dataProtector)
+    {
+        if (apiKey == null)
+        {
+            EncodedApiKey = null;
+            return;
+        }
+
+        var encoded = dataProtector.Encrypt(ProtectedDataEncoding.GetBytes(apiKey));
+
+        EncodedApiKey = $"{ProtectedDataPrefix}{Convert.ToBase64String(encoded)}";
+    }
+
+    public uint? PooledConnectionLifetimeMilliseconds { get; set; } = null;
+    public ulong EventBodyLimitBytes { get; set; } = 256 * 1024;
+    public ulong PayloadLimitBytes { get; set; } = 10 * 1024 * 1024;
 }
