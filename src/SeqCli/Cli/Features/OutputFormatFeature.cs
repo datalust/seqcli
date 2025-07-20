@@ -185,4 +185,10 @@ class OutputFormatFeature : CommandFeature
             WriteEntity(entity);
         }
     }
+
+    // ReSharper disable once MemberCanBeMadeStatic.Global
+    public void WriteText(string? text)
+    {
+        Console.WriteLine(text?.TrimEnd());
+    }
 }
