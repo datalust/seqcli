@@ -34,25 +34,15 @@ class ShowCommand : Command
         var connection = _connectionFactory.Connect(_connection);
         var license = await connection.Licenses.FindCurrentAsync();
 
-        if (license == null)
+        if (_output.Json)
         {
-            Log.Warning("No license is currently applied to the server.");
-            return 2;
+            _output.WriteEntity(license);
         }
-
-        _output.WriteEntity(_output.Json ? license : new OutputWrapperLicenseEntity(license));
+        else
+        {
+            _output.WriteText(license?.LicenseText);
+        }
 
         return 0;
-    }
-
-    /// <summary>
-    /// Wraps the license entity for none json output.
-    /// </summary>
-    class OutputWrapperLicenseEntity : Entity
-    {
-        public OutputWrapperLicenseEntity(LicenseEntity license)
-        {
-            this.Id = license.LicenseText;
-        }
     }
 }
