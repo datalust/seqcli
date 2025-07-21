@@ -2,7 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">$(TargetFrameworks);net9.0-windows</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.9.3" />

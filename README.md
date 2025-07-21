@@ -19,7 +19,7 @@ seqcli config -k connection.serverUrl -v https://your-seq-server
 seqcli config -k connection.apiKey -v your-api-key
 ```
 
-The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
+The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is stored in plain text unless an encryptor is defined in `encryption.encryptor`. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
 
 `seqcli` is also available as a Docker container under [`datalust/seqcli`](https://store.docker.com/community/images/datalust/seqcli):
 
