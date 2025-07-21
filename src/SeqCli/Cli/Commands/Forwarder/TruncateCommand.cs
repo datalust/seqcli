@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
 using Serilog;
@@ -37,7 +38,11 @@ class TruncateCommand : Command
         {
             if (!_confirm.TryConfirm("All data in the forwarder's log buffer will be deleted. This cannot be undone."))
                 return 1;
-                
+
+            foreach (var bufferStorageDirectory in Directory.GetDirectories(_storagePath.BufferPath))
+            {
+                Directory.Delete(bufferStorageDirectory, true);
+            }
             return 0;
         }
         catch (Exception ex)
