@@ -7,7 +7,7 @@ namespace SeqCli.EndToEnd.Support;
 
 public class TestConfiguration
 {
-    static int _nextServerPort = 10111;
+    static int _nextServerPort = 9989;
 
     public int AllocatePort() => Interlocked.Increment(ref _nextServerPort);
     

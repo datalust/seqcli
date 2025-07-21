@@ -3,8 +3,13 @@ using Autofac;
 using SeqCli.EndToEnd;
 using SeqCli.EndToEnd.Support;
 using Serilog;
+using Serilog.Debugging;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
+
+SelfLog.Enable(Console.Error);
 
 try
 {

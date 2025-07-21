@@ -63,10 +63,10 @@ public class CliCommandRunner(TestConfiguration configuration, TestDataFolder te
                     return;
                 Log.Information("Waiting for forwarder API to become available; last result {StatusCode}", ingestionResult.StatusCode);
             }
-            catch
+            catch (Exception ex)
             {
                 // Back around the loop
-                Log.Information("Waiting for forwarder API to become available; the last request failed");
+                Log.Information("Waiting for forwarder API to become available; the last request failed ({Message})", ex.Message);
             }
 
             await Task.Delay(1000, cts.Token);

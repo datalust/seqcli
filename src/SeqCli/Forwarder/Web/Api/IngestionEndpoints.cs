@@ -71,18 +71,18 @@ class IngestionEndpoints : IMapEndpoints
         {
             var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
             cts.CancelAfter(TimeSpan.FromSeconds(5));
-
+            
             var log = _forwardingChannels.Get(GetApiKey(context.Request));
-
+            
             var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
             var writeHead = 0;
             var readHead = 0;
-            var discarding = false;
-
+            
             var done = false;
             while (!done)
             {
-                // Fill our buffer
+                // Fill the memory buffer from as much of the incoming request payload as possible; buffering in memory increases the
+                // size of write batches.
                 while (!done)
                 {
                     var remaining = payload.Length - writeHead;
@@ -96,11 +96,11 @@ class IngestionEndpoints : IMapEndpoints
                     {
                         done = true;
                     }
-
+            
                     writeHead += read;
                 }
-
-                // Process events
+            
+                // Validate what we read, marking out a batch of one or more complete newline-delimited events.
                 var batchStart = readHead;
                 var batchEnd = readHead;
                 while (batchEnd < writeHead)
@@ -112,50 +112,32 @@ class IngestionEndpoints : IMapEndpoints
                     {
                         break;
                     }
-
+            
                     var eventEnd = eventStart + nlIndex + 1;
-
-                    if (discarding)
+            
+                    batchEnd = eventEnd;
+                    readHead = batchEnd;
+        
+                    if (!ValidateClef(payload.AsSpan()[eventStart..eventEnd], out var error))
                     {
-                        batchStart = eventEnd;
-                        batchEnd = eventEnd;
-                        readHead = batchEnd;
-
-                        discarding = false;
-                    }
-                    else
-                    {
-                        batchEnd = eventEnd;
-                        readHead = batchEnd;
-
-                        if (!ValidateClef(payload.AsSpan()[eventStart..batchEnd], out var error))
-                        {
-                            var payloadText = Encoding.UTF8.GetString(payload.AsSpan()[eventStart..batchEnd]);
-                            IngestionLog.ForPayload(context.Connection.RemoteIpAddress, payloadText)
-                                .Error("Payload failed validation: {Error}", error);
-                        }
-
-                        await Write(log, ArrayPool<byte>.Shared, payload, batchStart..eventStart, cts.Token);
-                        batchStart = batchEnd;
+                        var payloadText = Encoding.UTF8.GetString(payload.AsSpan()[eventStart..eventEnd]);
+                        IngestionLog.ForPayload(context.Connection.RemoteIpAddress, payloadText)
+                            .Error("Payload validation failed: {Error}", error);
+                        return Results.BadRequest($"Payload validation failed: {error}.");
                     }
                 }
-
+            
                 if (batchStart != batchEnd)
                 {
                     await Write(log, ArrayPool<byte>.Shared, payload, batchStart..batchEnd, cts.Token);
                 }
-                else if (batchStart == 0)
-                {
-                    readHead = payload.Length;
-                    discarding = true;
-                }
-
+            
                 // Copy any unprocessed data into our buffer and continue
                 if (!done)
                 {
-                    var retain = payload.Length - readHead;
-                    payload.AsSpan()[retain..].CopyTo(payload.AsSpan()[..retain]);
-                    readHead = retain;
+                    var retain = writeHead - readHead;
+                    payload.AsSpan()[readHead..writeHead].CopyTo(payload.AsSpan()[..retain]);
+                    readHead = 0;
                     writeHead = retain;
                 }
             }
