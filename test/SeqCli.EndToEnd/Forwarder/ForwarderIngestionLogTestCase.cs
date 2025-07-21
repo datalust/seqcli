@@ -1,7 +1,3 @@
-using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
@@ -10,6 +6,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Forwarder;
 
+[CliTestCase(Multiuser = true)]
 public class ForwarderIngestionLogTestCase: ICliTestCase
 {
     public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)

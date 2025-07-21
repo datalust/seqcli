@@ -49,13 +49,14 @@ public class CliCommandRunner(TestConfiguration configuration, TestDataFolder te
     {
         using var httpClient = new HttpClient();
         var ingestEndpoint = $"{forwarderApiListenUri}/ingest/clef";
-        var content = new StringContent("", new MediaTypeHeaderValue("application/vnd.serilog.clef", "utf-8"));
         
         using var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromSeconds(30));
         
         while (true)
         {
+            var content = new StringContent("", new MediaTypeHeaderValue("application/vnd.serilog.clef", "utf-8"));
+            
             try
             {
                 var ingestionResult = await httpClient.PostAsync(ingestEndpoint, content, cts.Token);
