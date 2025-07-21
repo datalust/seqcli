@@ -1,18 +1,26 @@
-﻿using System.Threading.Tasks;
+﻿using System;
 using Autofac;
+using SeqCli.EndToEnd;
 using SeqCli.EndToEnd.Support;
+using Serilog;
 
-namespace SeqCli.EndToEnd;
+Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
-static class Program
+try
 {
-    static async Task<int> Main(string[] rawArgs)
-    {
-        var args = new Args(rawArgs);
+    var testDriverArgs = new Args(args);
 
-        var builder = new ContainerBuilder();
-        builder.RegisterModule(new TestDriverModule(args));
-        await using var container = builder.Build();
-        return await container.Resolve<TestDriver>().Run();
-    }
+    var builder = new ContainerBuilder();
+    builder.RegisterModule(new TestDriverModule(testDriverArgs));
+    await using var container = builder.Build();
+    return await container.Resolve<TestDriver>().Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Testing failed");
+    return 1;
+}
+finally
+{
+    await Log.CloseAndFlushAsync();
 }

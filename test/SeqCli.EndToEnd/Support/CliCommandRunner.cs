@@ -66,6 +66,7 @@ public class CliCommandRunner(TestConfiguration configuration, TestDataFolder te
             catch
             {
                 // Back around the loop
+                Log.Information("Waiting for forwarder API to become available; the last request failed");
             }
 
             await Task.Delay(1000, cts.Token);
