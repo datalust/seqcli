@@ -47,7 +47,7 @@ static class IngestionLog
         return Log.ForContext("ClientHostIP", clientHostIP);
     }
 
-    public static ILogger ForPayload(IPAddress clientHostIP, string payload)
+    public static ILogger ForPayload(IPAddress? clientHostIP, string payload)
     {
         var prefix = CapturePrefix(payload);
         return ForClient(clientHostIP)

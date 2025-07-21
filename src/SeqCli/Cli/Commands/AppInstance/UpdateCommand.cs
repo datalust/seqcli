@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using Seq.Api;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.AppInstance;
 

@@ -21,7 +21,10 @@ using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
+using Serilog;
+using Serilog.Formatting;
 using Serilog.Formatting.Display;
+using Serilog.Templates;
 
 namespace SeqCli.Forwarder;
 
@@ -45,28 +48,35 @@ class ForwarderModule : Module
         builder.RegisterType<ServerService>().SingleInstance();
         builder.Register(_ => new ForwardingChannelMap(_bufferPath, _connection, _apiKey)).SingleInstance();
 
-        builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();
 
         if (_config.Forwarder.Diagnostics.ExposeIngestionLog)
         {
+            Log.Warning("Configured to expose ingestion log via HTTP API");
             builder.RegisterType<IngestionLogEndpoints>().As<IMapEndpoints>();
+
+            var ingestionLogTemplate = "[{@t:o} {@l:u3}] {@m}\n";
+            if (_config.Forwarder.Diagnostics.IngestionLogShowDetail)
+            {
+                Log.Warning("Including full client, payload, and error detail in the ingestion log");
+                ingestionLogTemplate +=
+                    "{#if ClientHostIP is not null}Client IP address: {ClientHostIP}\n{#end}" +
+                    "{#if DocumentStart is not null}First {StartToLog} characters of payload: {DocumentStart:l}\n{#end}" +
+                    "{@x}";
+            }
+            
+            builder.Register(_ => new ExpressionTemplate(ingestionLogTemplate)).As<ITextFormatter>();
         }
-        
-        builder.RegisterInstance(new MessageTemplateTextFormatter(
-            "[{Timestamp:o} {Level:u3}] {Message}{NewLine}" + (_config.Forwarder.Diagnostics.IngestionLogShowDetail
-                ? ""
-                : "Client IP address: {ClientHostIP}{NewLine}First {StartToLog} characters of payload: {DocumentStart:l}{NewLine}{Exception}{NewLine}"))).SingleInstance();
 
         builder.Register(c =>
         {
             var config = c.Resolve<SeqCliConfig>();
             var baseUri = config.Connection.ServerUrl;
             if (string.IsNullOrWhiteSpace(baseUri))
-                throw new ArgumentException("The destination Seq server URL must be configured in SeqForwarder.json.");
+                throw new ArgumentException("The destination Seq server URL must be configured in `SeqCli.json`.");
 
-            if (!baseUri.EndsWith("/"))
-                baseUri += "/";
+            if (!baseUri.EndsWith('/'))
+                baseUri += '/';
 
             // additional configuration options that require the use of SocketsHttpHandler should be added to
             // this expression, using an "or" operator.

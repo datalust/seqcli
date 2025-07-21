@@ -16,9 +16,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Shared;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Util;
 using Serilog;
 
