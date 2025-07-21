@@ -91,7 +91,7 @@ class IngestionEndpoints : IMapEndpoints
                         break;
                     }
                     
-                    var read = await context.Request.Body.ReadAsync(payload.AsMemory(writeHead, remaining), context.RequestAborted);
+                    var read = await context.Request.Body.ReadAsync(payload.AsMemory(writeHead, remaining), cts.Token);
                     if (read == 0)
                     {
                         done = true;
