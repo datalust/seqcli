@@ -6,7 +6,6 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Forwarder;
 
-[CliTestCase(Multiuser = true)]
 public class ForwarderIngestionLogTestCase: ICliTestCase
 {
     public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
