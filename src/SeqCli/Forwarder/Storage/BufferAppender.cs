@@ -45,7 +45,7 @@ sealed class BufferAppender : IDisposable
     }
 
     /// <summary>
-    /// Try write a batch.
+    /// Try to write a batch.
     ///
     /// This method does not throw.
     ///

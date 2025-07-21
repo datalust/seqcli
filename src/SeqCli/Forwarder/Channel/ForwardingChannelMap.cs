@@ -34,13 +34,13 @@ class ForwardingChannelMap
         // TODO, when it's not the default, persist the API key and validate equality on reopen
         
         var storePath = Path.Combine(_bufferPath, name);
-        var defaultStore = new SystemStoreDirectory(storePath);
+        var store = new SystemStoreDirectory(storePath);
         Log.Information("Opening local buffer in {StorePath}", storePath);
         
         return new ForwardingChannel(
-            BufferAppender.Open(defaultStore),
-            BufferReader.Open(defaultStore),
-            Bookmark.Open(defaultStore),
+            BufferAppender.Open(store),
+            BufferReader.Open(store),
+            Bookmark.Open(store),
             _connection,
             apiKey,
             _shutdownTokenSource.Token);
