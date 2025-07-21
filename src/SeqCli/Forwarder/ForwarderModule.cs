@@ -43,7 +43,7 @@ class ForwarderModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<ServerService>().SingleInstance();
-        builder.Register(_ => new ForwardingChannelMap(_bufferPath, _connection, _apiKey)).SingleInstance();
+        builder.Register(_ => new ForwardingChannelMap(_bufferPath, _connection, _config, _apiKey)).SingleInstance();
 
         builder.RegisterType<ApiRootEndpoints>().As<IMapEndpoints>();
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();

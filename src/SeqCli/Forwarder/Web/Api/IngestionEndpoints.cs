@@ -15,6 +15,7 @@
 using System;
 using System.Buffers;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -27,6 +28,7 @@ using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
+using Tavis.UriTemplates;
 using JsonException = System.Text.Json.JsonException;
 
 namespace SeqCli.Forwarder.Web.Api;
@@ -38,7 +40,7 @@ class IngestionEndpoints : IMapEndpoints
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
     readonly ForwardingChannelMap _forwardingChannels;
-    private readonly SeqCliConfig _config;
+    readonly SeqCliConfig _config;
 
     public IngestionEndpoints(ForwardingChannelMap forwardingChannels, SeqCliConfig config)
     {
@@ -96,12 +98,22 @@ class IngestionEndpoints : IMapEndpoints
     
     async Task<ContentHttpResult> IngestCompactFormatAsync(HttpContext context)
     {
+        var apiKey = GetApiKey(context.Request);
+        if (_config.Forwarder.UseApiKeyForwarding && string.IsNullOrEmpty(apiKey))
+        {
+            return TypedResults.Content(
+                "API key is required", 
+                "text/plain", 
+                Utf8, 
+                StatusCodes.Status400BadRequest);
+        }
+        
         var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var log = _forwardingChannels.Get(_config.Connection.ForwardApiKey 
-            ? GetApiKey(context.Request) 
-            : null);
+        var log = _config.Forwarder.UseApiKeyForwarding
+            ? _forwardingChannels.GetApiKeyChannel(apiKey!)
+            : _forwardingChannels.GetSeqCliConnectionChannel();
 
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;

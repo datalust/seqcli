@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
+using SeqCli.Config;
 using SeqCli.Forwarder.Filesystem.System;
 using SeqCli.Forwarder.Storage;
 using Serilog;
@@ -15,26 +16,28 @@ class ForwardingChannelMap
 {
     readonly string _bufferPath;
     readonly SeqConnection _connection;
+    readonly SeqCliConfig _config;
     readonly ForwardingChannel _defaultChannel;
     readonly Lock _channelsSync = new();
     readonly Dictionary<string, ForwardingChannel> _channels = new();
     readonly CancellationTokenSource _shutdownTokenSource = new();
+    const string DefaultChannelName = "Default";
 
-    public ForwardingChannelMap(string bufferPath, SeqConnection connection, string? defaultApiKey)
+    public ForwardingChannelMap(string bufferPath, SeqConnection connection, SeqCliConfig config, string? seqCliApiKey)
     {
         _bufferPath = bufferPath;
         _connection = connection;
-        _defaultChannel = OpenOrCreateChannel(defaultApiKey, "Default");
+        _config = config;
+        _defaultChannel = OpenOrCreateChannel(seqCliApiKey, DefaultChannelName);
         
-        // TODO, load other channels at start-up
+        ReopenApiKeyChannels();
     }
 
     ForwardingChannel OpenOrCreateChannel(string? apiKey, string name)
     {
-        // TODO, when it's not the default, persist the API key and validate equality on reopen
-        
-        var storePath = Path.Combine(_bufferPath, name);
+        var storePath = GetStorePath(name);
         var store = new SystemStoreDirectory(storePath);
+        
         Log.Information("Opening local buffer in {StorePath}", storePath);
         
         return new ForwardingChannel(
@@ -45,14 +48,43 @@ class ForwardingChannelMap
             apiKey,
             _shutdownTokenSource.Token);
     }
-
-    public ForwardingChannel Get(string? apiKey)
+    
+    void ReopenApiKeyChannels()
     {
-        if (string.IsNullOrWhiteSpace(apiKey))
+        if (_config.Forwarder.UseApiKeyForwarding)
         {
-            return _defaultChannel;
+            foreach (var directoryPath in Directory.EnumerateDirectories(_bufferPath))
+            {
+                if (directoryPath.Equals(GetStorePath("Default"))) continue;
+                
+                var path = new SystemStoreDirectory(directoryPath);
+                var apiKey = path.ReadApiKey(_config);
+
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    var created = OpenOrCreateChannel(apiKey, ApiKeyToName(apiKey));
+                    
+                    lock (_channelsSync)
+                    {
+                        _channels.Add(apiKey, created);
+                    }
+                }
+            }
         }
-        
+    }
+
+    string GetStorePath(string name)
+    {
+        return Path.Combine(_bufferPath, name);
+    }
+
+    public ForwardingChannel GetSeqCliConnectionChannel()
+    {
+        return _defaultChannel;
+    }
+
+    public ForwardingChannel GetApiKeyChannel(string apiKey)
+    {
         lock (_channelsSync)
         {
             if (_channels.TryGetValue(apiKey, out var channel))
@@ -60,13 +92,19 @@ class ForwardingChannelMap
                 return channel;
             }
 
-            // Seq API keys begin with four identifying characters that aren't considered part of the
-            // confidential key. TODO: we could likely do better than this.
-            var name = apiKey[..4];
-            var created = OpenOrCreateChannel(apiKey, name);
+            var created = OpenOrCreateChannel(apiKey, ApiKeyToName(apiKey));
+            var store = new SystemStoreDirectory(GetStorePath(ApiKeyToName(apiKey)));
+            store.WriteApiKey(_config, apiKey);
             _channels.Add(apiKey, created);
             return created;
         }
+    }
+
+    string ApiKeyToName(string apiKey)
+    {
+        // Seq API keys begin with four identifying characters that aren't considered part of the
+        // confidential key. TODO: we could likely do better than this.
+        return apiKey[..(Math.Min(apiKey.Length, 4))];
     }
 
     public async Task StopAsync()

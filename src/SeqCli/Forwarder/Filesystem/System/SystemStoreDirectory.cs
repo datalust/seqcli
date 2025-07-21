@@ -16,6 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using SeqCli.Config;
+using Serilog;
 
 #if UNIX
 using SeqCli.Forwarder.Filesystem.System.Unix;
@@ -32,6 +35,26 @@ sealed class SystemStoreDirectory : StoreDirectory
         _directoryPath = Path.GetFullPath(path);
 
         if (!Directory.Exists(_directoryPath)) Directory.CreateDirectory(_directoryPath);
+    }
+
+    public void WriteApiKey(SeqCliConfig config, string apiKey)
+    {
+        File.WriteAllBytes(Path.Combine(_directoryPath, "api.key"), Encoding.UTF8.GetBytes(apiKey));
+    }
+
+    public string? ReadApiKey(SeqCliConfig config)
+    {
+        string? apiKey = null;
+        try
+        {
+            var encrypted = File.ReadAllBytes(Path.Combine(_directoryPath, "api.key"));
+            apiKey = Encoding.UTF8.GetString(config.Encryption.DataProtector().Decrypt(encrypted));
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(exception, "Could not read or decrypt api key");
+        }
+        return apiKey;
     }
 
     public override SystemStoreFile Create(string name)
