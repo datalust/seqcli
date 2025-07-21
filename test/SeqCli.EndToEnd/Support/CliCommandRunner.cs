@@ -55,13 +55,19 @@ public class CliCommandRunner(TestConfiguration configuration, TestDataFolder te
         
         while (true)
         {
+            cts.Token.ThrowIfCancellationRequested();
+            
             var content = new StringContent("", new MediaTypeHeaderValue("application/vnd.serilog.clef", "utf-8"));
             
             try
             {
-                var ingestionResult = await httpClient.PostAsync(ingestEndpoint, content, cts.Token);
+                using var shortCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+                shortCts.CancelAfter(TimeSpan.FromSeconds(1));
+                
+                var ingestionResult = await httpClient.PostAsync(ingestEndpoint, content, shortCts.Token);
                 if (ingestionResult.IsSuccessStatusCode)
                     return;
+                
                 Log.Information("Waiting for forwarder API to become available; last result {StatusCode}", ingestionResult.StatusCode);
             }
             catch (Exception ex)
