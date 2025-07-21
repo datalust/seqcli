@@ -17,22 +17,28 @@ using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using SeqCli.Forwarder.Diagnostics;
-using Serilog.Formatting.Display;
+using Serilog.Formatting;
 
 namespace SeqCli.Forwarder.Web.Api;
 
 class IngestionLogEndpoints : IMapEndpoints
 {
-    readonly MessageTemplateTextFormatter _formatter;
+    readonly ITextFormatter _formatter;
     readonly Encoding _utf8 = new UTF8Encoding(false);
 
-    public IngestionLogEndpoints(MessageTemplateTextFormatter formatter)
+    public IngestionLogEndpoints(ITextFormatter formatter)
     {
         _formatter = formatter;
     }
 
     public void MapEndpoints(WebApplication app)
     {
+        app.MapGet("/api",
+            () => Results.Content("{\"Links\":{\"DiagnosticsResources\":\"/api/diagnostics/resources\"}}", "application/json", _utf8));
+        
+        app.MapGet("/api/diagnostics/resources",
+            () => Results.Content("{\"Links\":{\"Self\":\"api/diagnostics/resources\",\"IngestionLog\":\"api/diagnostics/ingestion\"}}", "application/json", _utf8));
+
         app.MapGet("api/diagnostics/ingestion", () =>
         {
             var events = IngestionLog.Read();

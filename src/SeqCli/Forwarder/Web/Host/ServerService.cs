@@ -42,8 +42,8 @@ class ServerService
                 
             _host.Start();
 
-            Log.Information("SeqCli Forwarder listening on {ListenUri}", _listenUri);
-            IngestionLog.Log.Debug("SeqCli Forwarder is accepting events");
+            Log.Information("SeqCli forwarder listening on {ListenUri}", _listenUri);
+            IngestionLog.Log.Debug("SeqCli forwarder is accepting events");
         }
         catch (Exception ex)
         {
