@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -206,23 +207,45 @@ class RunCommand : Command
     {
         service.Start();
 
+        var waitForShutDownRequest = new TaskCompletionSource();
+        var done = new ManualResetEventSlim(false);
+
+        void ShutDown()
+        {
+            waitForShutDownRequest.TrySetResult();
+            done.Wait();
+        }
+
         try
         {
-            Console.TreatControlCAsInput = true;
-            var k = Console.ReadKey(true);
-            while (k.Key != ConsoleKey.C || !k.Modifiers.HasFlag(ConsoleModifiers.Control))
-                k = Console.ReadKey(true);
-
-            cout.WriteLine("Ctrl+C pressed; stopping...");
             Console.TreatControlCAsInput = false;
+            Console.CancelKeyPress += (_, _) =>
+            {
+                cout.WriteLine("Ctrl+C pressed; stopping...");
+                Log.Information("Interrupt signal received");
+                ShutDown();
+            };
         }
-        catch (Exception ex)
+        catch (IOException)
         {
-            Log.Debug(ex, "Console not attached, waiting for any input");
-            Console.Read();
+            Log.Information("Disabling Ctrl+C handling; process is non-interactive");
         }
 
-        await service.StopAsync();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            Log.Information("Termination signal received");
+            ShutDown();
+        };
+
+        try
+        {
+            await waitForShutDownRequest.Task;
+            await service.StopAsync();
+        }
+        finally
+        {
+            done.Set();
+        }
 
         return 0;
     }

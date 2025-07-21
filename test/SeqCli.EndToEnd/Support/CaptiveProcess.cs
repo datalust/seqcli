@@ -15,7 +15,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
     readonly ManualResetEvent _outputComplete = new(false);
     readonly ManualResetEvent _errorComplete = new(false);
 
-    readonly object _sync = new();
+    readonly Lock _sync = new();
     readonly StringWriter _output = new();
 
     public CaptiveProcess(
@@ -27,7 +27,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
         string stopCommandFullExePath = null,
         string stopCommandArgs = null)
     {
-        if (fullExePath == null) throw new ArgumentNullException(nameof(fullExePath));
+        ArgumentNullException.ThrowIfNull(fullExePath);
         _captureOutput = captureOutput;
         _stopCommandFullExePath = stopCommandFullExePath;
         _stopCommandArgs = stopCommandArgs;
