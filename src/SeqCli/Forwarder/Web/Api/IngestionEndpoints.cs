@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Net.Http.Headers;
 using SeqCli.Api;
+using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
 using JsonException = System.Text.Json.JsonException;
@@ -37,10 +38,12 @@ class IngestionEndpoints : IMapEndpoints
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
     readonly ForwardingChannelMap _forwardingChannels;
+    private readonly SeqCliConfig _config;
 
-    public IngestionEndpoints(ForwardingChannelMap forwardingChannels)
+    public IngestionEndpoints(ForwardingChannelMap forwardingChannels, SeqCliConfig config)
     {
         _forwardingChannels = forwardingChannels;
+        _config = config;
     }
     
     public void MapEndpoints(WebApplication app)
@@ -96,7 +99,9 @@ class IngestionEndpoints : IMapEndpoints
         var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var log = _forwardingChannels.Get(GetApiKey(context.Request));
+        var log = _forwardingChannels.Get(_config.Connection.ForwardApiKey 
+            ? GetApiKey(context.Request) 
+            : null);
 
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;

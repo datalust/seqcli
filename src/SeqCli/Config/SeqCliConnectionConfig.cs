@@ -58,4 +58,5 @@ class SeqCliConnectionConfig
     public uint? PooledConnectionLifetimeMilliseconds { get; set; } = null;
     public ulong EventBodyLimitBytes { get; set; } = 256 * 1024;
     public ulong PayloadLimitBytes { get; set; } = 10 * 1024 * 1024;
+    public bool ForwardApiKey { get; set; }
 }
