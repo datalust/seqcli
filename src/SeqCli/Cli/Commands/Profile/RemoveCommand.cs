@@ -46,7 +46,6 @@ class RemoveCommand : Command
             }
 
             SeqCliConfig.WriteToFile(config, _storagePath.ConfigFilePath);
-
             return 0;
         }
         catch (Exception ex)

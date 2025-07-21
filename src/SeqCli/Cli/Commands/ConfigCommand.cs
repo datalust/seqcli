@@ -21,7 +21,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands;
 
-[Command("config", "View and set fields in the `SeqCli.json` file; run with no arguments to list all fields")]
+[Command("config", "View and set fields in `SeqCli.json`; run with no arguments to list all fields")]
 class ConfigCommand : Command
 {
     string? _key, _value;

@@ -9,7 +9,20 @@ namespace SeqCli.Cli.Features;
 
 class StoragePathFeature : CommandFeature
 {
+    const string StoragePathVarName = "SEQCLI_STORAGE_PATH";
+    
     string? _storageRoot;
+    readonly Func<string, string?> _getEnvironmentVariable;
+
+    public StoragePathFeature()
+    : this(Environment.GetEnvironmentVariable)
+    {
+    }
+
+    public StoragePathFeature(Func<string, string?> getEnvironmentVariable)
+    {
+        _getEnvironmentVariable = getEnvironmentVariable;
+    }
 
     public string StorageRootPath
     {
@@ -18,7 +31,13 @@ class StoragePathFeature : CommandFeature
             if (!string.IsNullOrWhiteSpace(_storageRoot))
                 return _storageRoot;
 
-            return TryQueryInstalledStorageRoot() ?? GetDefaultStorageRoot();
+            if (_getEnvironmentVariable(StoragePathVarName) is {} fromVar && !string.IsNullOrWhiteSpace(fromVar))
+                return fromVar;
+            
+            if (TryQueryInstalledStorageRoot() is { } installed)
+                return installed;
+            
+            return GetDefaultStorageRoot();
         }
     }
         
@@ -31,8 +50,9 @@ class StoragePathFeature : CommandFeature
     public override void Enable(OptionSet options)
     {
         options.Add("storage=",
-            "The folder where `SeqCli.json` and other data will be stored; " +
-            "`" + GetDefaultStorageRoot() + "` is used by default",
+            $"The folder where `SeqCli.json` and other data will be stored; falls back to `{StoragePathVarName}` from " +
+            $"the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then " +
+            "`" + GetDefaultStorageRoot() + "`",
             v => _storageRoot = Path.GetFullPath(v));
     }
 
