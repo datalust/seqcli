@@ -17,7 +17,7 @@ public class ForwarderIngestionLogTestCase: ICliTestCase
         var (proc1, listenUri1) = await runner.SpawnForwarderAsync();
         using (proc1)
         {
-            var exit = runner.Exec($"diagnostics ingestionlog -s {listenUri1}");
+            var exit = runner.Exec($"diagnostics ingestionlog -s {listenUri1}", disconnected: true);
             Assert.NotEqual(0, exit);
         }
 
@@ -27,7 +27,7 @@ public class ForwarderIngestionLogTestCase: ICliTestCase
         });
         using (proc2)
         {
-            var exit = runner.Exec($"diagnostics ingestionlog -s {listenUri2}");
+            var exit = runner.Exec($"diagnostics ingestionlog -s {listenUri2}", disconnected: true);
             Assert.Equal(0, exit);
 
             Assert.StartsWith("[20", runner.LastRunProcess!.Output);
