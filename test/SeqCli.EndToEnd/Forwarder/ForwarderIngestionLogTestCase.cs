@@ -10,64 +10,27 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Forwarder;
 
-public class ForwarderIngestionLogTestCase(TestConfiguration testConfiguration): ICliTestCase
+public class ForwarderIngestionLogTestCase: ICliTestCase
 {
     public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
     {
-        var forwarderApiListenUri = $"http://0.0.0.0:{testConfiguration.AllocatePort()}";
-
-        using (testConfiguration.SpawnCliProcess("forwarder run", environment: new()
+        var (proc1, listenUri1) = await runner.SpawnForwarderAsync();
+        using (proc1)
         {
-            ["SEQCLI_FORWARDER_API_LISTENURI"] = forwarderApiListenUri
-        }))
-        {
-            await WaitForForwarderConnectionAsync(forwarderApiListenUri);
-
-            var exit = runner.Exec($"diagnostics ingestionlog -s {forwarderApiListenUri}");
+            var exit = runner.Exec($"diagnostics ingestionlog -s {listenUri1}");
             Assert.NotEqual(0, exit);
-
         }
 
-        forwarderApiListenUri = $"http://0.0.0.0:{testConfiguration.AllocatePort()}";
-
-        using (testConfiguration.SpawnCliProcess("forwarder run", environment: new()
-               {
-                   ["SEQCLI_FORWARDER_API_LISTENURI"] = forwarderApiListenUri,
-                   ["SEQCLI_FORWARDER_DIAGNOSTICS_EXPOSEINGESTIONLOG"] = "True"
-               }))
+        var (proc2, listenUri2) = await runner.SpawnForwarderAsync(environment: new()
         {
-            await WaitForForwarderConnectionAsync(forwarderApiListenUri);
-
-            var exit = runner.Exec($"diagnostics ingestionlog -s {forwarderApiListenUri}");
+            ["SEQCLI_FORWARDER_DIAGNOSTICS_EXPOSEINGESTIONLOG"] = "True"
+        });
+        using (proc2)
+        {
+            var exit = runner.Exec($"diagnostics ingestionlog -s {listenUri2}");
             Assert.Equal(0, exit);
 
             Assert.StartsWith("[20", runner.LastRunProcess!.Output);
         }
     }
-
-    static async Task WaitForForwarderConnectionAsync(string forwarderApiListenUri)
-    {
-        var httpClient = new HttpClient();
-        var ingestEndpoint = $"{forwarderApiListenUri}/ingest/clef";
-        var content = new StringContent("", new MediaTypeHeaderValue("application/vnd.serilog.clef", "utf-8"));
-        
-        using var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(30));
-        
-        while (true)
-        {
-            try
-            {
-                if ((await httpClient.PostAsync(ingestEndpoint, content, cts.Token)).IsSuccessStatusCode)
-                    return;
-            }
-            catch
-            {
-                // Back around the loop
-            }
-
-            await Task.Delay(100, cts.Token);
-        }
-    }
 }
-
