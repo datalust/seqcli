@@ -25,7 +25,7 @@ public class BufferTests
         Assert.False(reader.TryFillBatch(10, out _));
         Assert.True(reader.TryFillBatch(10, out var batch));
         var batchBuffer = batch.Value;
-        Assert.Equal(new BufferReaderHead(1, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(1, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":1}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
 
         // Advance the reader
@@ -39,7 +39,7 @@ public class BufferTests
         // Read the payload
         Assert.True(reader.TryFillBatch(10, out batch));
         batchBuffer = batch.Value;
-        Assert.Equal(new BufferReaderHead(1, 18), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(1, 18), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":2}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
 
         // Advance the reader
@@ -67,7 +67,7 @@ public class BufferTests
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
 
-        Assert.Equal(new BufferReaderHead(1, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(1, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":1}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
     }
 
@@ -83,7 +83,7 @@ public class BufferTests
 
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
-        Assert.Equal(new BufferReaderHead(2, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(2, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":1}\n{\"id\":2}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
 
         Assert.Equal(2, directory.Files.Count);
@@ -100,12 +100,44 @@ public class BufferTests
         Assert.False(reader.TryFillBatch(512, out _));
         Assert.True(reader.TryFillBatch(512, out batch));
         batchBuffer = batch.Value;
-        Assert.Equal(new BufferReaderHead(3, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(3, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":3}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
 
         reader.AdvanceTo(batchBuffer.ReaderHead);
 
         Assert.Single(directory.Files);
+    }
+
+    [Fact]
+    public void AdvancingToNonexistentLowerPositionRereadsAllChunks()
+    {
+        var directory = new InMemoryStoreDirectory();
+
+        directory.Create(new ChunkName(71).ToString(), "{\"id\":1}\n"u8.ToArray());
+        directory.Create(new ChunkName(72).ToString(), "{\"id\":2}\n"u8.ToArray());
+
+        var reader = BufferReader.Open(directory);      
+        
+        reader.AdvanceTo(new BufferPosition(60, 0));
+        
+        Assert.True(reader.TryFillBatch(512, out var batch));
+        var batchBuffer = batch.Value;
+        Assert.Equal(new BufferPosition(72, 9), batchBuffer.ReaderHead);
+    }
+    
+    [Fact]
+    public void AdvancingToNonexistentHigherPositionDiscardsAllChunks()
+    {
+        var directory = new InMemoryStoreDirectory();
+
+        directory.Create(new ChunkName(71).ToString(), "{\"id\":1}\n"u8.ToArray());
+        directory.Create(new ChunkName(72).ToString(), "{\"id\":2}\n"u8.ToArray());
+
+        var reader = BufferReader.Open(directory);      
+        
+        reader.AdvanceTo(new BufferPosition(80, 0));
+        
+        Assert.False(reader.TryFillBatch(512, out _));
     }
 
     [Fact]
@@ -136,7 +168,7 @@ public class BufferTests
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
 
-        Assert.Equal(new BufferReaderHead(2, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(2, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":2}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
     }
 
@@ -159,7 +191,7 @@ public class BufferTests
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
 
-        Assert.Equal(new BufferReaderHead(2, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(2, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":2}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
     }
 
@@ -181,7 +213,7 @@ public class BufferTests
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
 
-        Assert.Equal(new BufferReaderHead(2, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(2, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":2}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
     }
 
@@ -208,7 +240,7 @@ public class BufferTests
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
 
-        Assert.Equal(new BufferReaderHead(2, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(2, 9), batchBuffer.ReaderHead);
         Assert.Equal("{\"id\":1}\n{\"id\":2}\n{\"id\":3}\n"u8.ToArray(), batchBuffer.AsSpan().ToArray());
 
         reader.AdvanceTo(batchBuffer.ReaderHead);
@@ -236,7 +268,7 @@ public class BufferTests
         Assert.True(reader.TryFillBatch(512, out var batch));
         var batchBuffer = batch.Value;
 
-        Assert.Equal(new BufferReaderHead(1, 9), batchBuffer.ReaderHead);
+        Assert.Equal(new BufferPosition(1, 9), batchBuffer.ReaderHead);
     }
 
     [Fact]

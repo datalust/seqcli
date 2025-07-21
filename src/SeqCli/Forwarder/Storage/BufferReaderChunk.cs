@@ -38,9 +38,9 @@ class BufferReaderChunk : IDisposable
         _reader?.Item2.Dispose();
     }
 
-    public bool TryCopyTo(Span<byte> buffer, BufferReaderChunkHead head, int fill)
+    public bool TryCopyTo(Span<byte> buffer, BufferReaderChunkExtents chunkExtents, int fill)
     {
-        var readEnd = head.CommitHead + fill;
+        var readEnd = chunkExtents.CommitHead + fill;
 
         if (_reader != null)
             if (_reader.Value.Item1 < readEnd)
@@ -53,12 +53,12 @@ class BufferReaderChunk : IDisposable
 
         if (_reader == null)
         {
-            if (!Chunk.TryOpenRead(head.WriteHead, out var reader)) return false;
+            if (!Chunk.TryOpenRead(chunkExtents.WriteHead, out var reader)) return false;
 
-            _reader = (head.WriteHead, reader);
+            _reader = (chunkExtents.WriteHead, reader);
         }
 
-        _reader.Value.Item2.CopyTo(buffer, head.CommitHead, fill);
+        _reader.Value.Item2.CopyTo(buffer, chunkExtents.CommitHead, fill);
 
         return true;
     }

@@ -20,14 +20,14 @@ namespace SeqCli.Forwarder.Storage;
 /// <summary>
 ///     The in-memory value of a bookmark.
 /// </summary>
-readonly record struct BookmarkValue(ulong Id, long CommitHead)
+readonly record struct BufferPosition(ulong ChunkId, long Offset)
 {
     public void EncodeTo(Span<byte> bookmark)
     {
         if (bookmark.Length != 16) throw new Exception($"Bookmark values must be 16 bytes (got {bookmark.Length}).");
 
-        BinaryPrimitives.WriteUInt64LittleEndian(bookmark, Id);
-        BinaryPrimitives.WriteInt64LittleEndian(bookmark[8..], CommitHead);
+        BinaryPrimitives.WriteUInt64LittleEndian(bookmark, ChunkId);
+        BinaryPrimitives.WriteInt64LittleEndian(bookmark[8..], Offset);
     }
 
     public byte[] Encode()
@@ -38,17 +38,17 @@ readonly record struct BookmarkValue(ulong Id, long CommitHead)
         return buffer;
     }
 
-    public static BookmarkValue Decode(Span<byte> bookmark)
+    public static BufferPosition Decode(Span<byte> bookmark)
     {
         if (bookmark.Length != 16) throw new Exception($"Bookmark values must be 16 bytes (got {bookmark.Length}).");
 
-        var id = BinaryPrimitives.ReadUInt64LittleEndian(bookmark);
-        var commitHead = BinaryPrimitives.ReadInt64LittleEndian(bookmark[8..]);
+        var chunkId = BinaryPrimitives.ReadUInt64LittleEndian(bookmark[..8]);
+        var offset = BinaryPrimitives.ReadInt64LittleEndian(bookmark[8..]);
 
-        return new BookmarkValue
+        return new BufferPosition
         {
-            Id = id,
-            CommitHead = commitHead
+            ChunkId = chunkId,
+            Offset = offset
         };
     }
 }
