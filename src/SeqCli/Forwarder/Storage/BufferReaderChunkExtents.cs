@@ -15,9 +15,9 @@
 namespace SeqCli.Forwarder.Storage;
 
 /// <summary>
-///     The current position in a <see cref="BufferReaderChunk" />.
+///     The current read and write positions in a <see cref="BufferReaderChunk" />.
 /// </summary>
-readonly record struct BufferReaderChunkHead(long CommitHead, long WriteHead)
+readonly record struct BufferReaderChunkExtents(long CommitHead, long WriteHead)
 {
     public long Unadvanced => WriteHead - CommitHead;
 }

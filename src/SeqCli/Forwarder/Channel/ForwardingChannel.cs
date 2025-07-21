@@ -48,8 +48,7 @@ class ForwardingChannel
         {
             if (bookmark.TryGet(out var bookmarkValue))
             {
-                // TODO: initialize reader
-                // reader.AdvanceTo(bookmarkValue.Value);
+                reader.AdvanceTo(bookmarkValue.Value);
             }
             
             while (true)
@@ -64,8 +63,8 @@ class ForwardingChannel
 
                 await LogShipper.ShipBuffer(connection, apiKey, batch.Value.AsArraySegment(), SendFailureHandling.Retry);
 
-                if (bookmark.TrySet(new BookmarkValue(batch.Value.ReaderHead.Chunk,
-                        batch.Value.ReaderHead.CommitHead)))
+                if (bookmark.TrySet(new BufferPosition(batch.Value.ReaderHead.ChunkId,
+                        batch.Value.ReaderHead.Offset)))
                 {
                     reader.AdvanceTo(batch.Value.ReaderHead);
                 }

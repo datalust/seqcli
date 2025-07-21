@@ -17,13 +17,13 @@ public class BookmarkTests
         Assert.False(bookmark.TryGet(out var value));
         Assert.Null(value);
 
-        Assert.True(bookmark.TrySet(new BookmarkValue(42, 1)));
+        Assert.True(bookmark.TrySet(new BufferPosition(42, 1)));
         Assert.True(bookmark.TryGet(out value));
-        Assert.Equal(new BookmarkValue(42, 1), value.Value);
+        Assert.Equal(new BufferPosition(42, 1), value.Value);
 
-        Assert.True(bookmark.TrySet(new BookmarkValue(42, int.MaxValue)));
+        Assert.True(bookmark.TrySet(new BufferPosition(42, int.MaxValue)));
         Assert.True(bookmark.TryGet(out value));
-        Assert.Equal(new BookmarkValue(42, int.MaxValue), value.Value);
+        Assert.Equal(new BufferPosition(42, int.MaxValue), value.Value);
     }
 
     [Fact]
@@ -31,8 +31,8 @@ public class BookmarkTests
     {
         var directory = new InMemoryStoreDirectory();
 
-        directory.Create($"{1L:x16}.bookmark", new BookmarkValue(3, 3478).Encode());
-        directory.Create($"{3L:x16}.bookmark", new BookmarkValue(42, 17).Encode());
+        directory.Create($"{1L:x16}.bookmark", new BufferPosition(3, 3478).Encode());
+        directory.Create($"{3L:x16}.bookmark", new BufferPosition(42, 17).Encode());
 
         Assert.Equal(2, directory.Files.Count);
 
@@ -41,7 +41,7 @@ public class BookmarkTests
         Assert.Equal($"{3L:x16}.bookmark", directory.Files.Single().Key);
 
         Assert.True(bookmark.TryGet(out var value));
-        Assert.Equal(new BookmarkValue(42, 17), value);
+        Assert.Equal(new BufferPosition(42, 17), value);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class BookmarkTests
     {
         var directory = new InMemoryStoreDirectory();
 
-        directory.Create($"{1L:x16}.bookmark", new BookmarkValue(3, 3478).Encode());
+        directory.Create($"{1L:x16}.bookmark", new BufferPosition(3, 3478).Encode());
 
         // This bookmark is invalid
         directory.Create($"{3L:x16}.bookmark", new byte[] { 1, 2, 3 });
@@ -58,7 +58,7 @@ public class BookmarkTests
 
         Assert.Empty(directory.Files);
 
-        Assert.True(bookmark.TrySet(new BookmarkValue(42, 17)));
+        Assert.True(bookmark.TrySet(new BufferPosition(42, 17)));
 
         Assert.Equal($"{4L:x16}.bookmark", directory.Files.Single().Key);
     }
@@ -68,16 +68,16 @@ public class BookmarkTests
     {
         var directory = new InMemoryStoreDirectory();
 
-        directory.Create($"{1L:x16}.bookmark", new BookmarkValue(3, 3478).Encode());
+        directory.Create($"{1L:x16}.bookmark", new BufferPosition(3, 3478).Encode());
 
         // This bookmark is invalid
-        directory.Create($"ff{3L:x16}.bookmark", new BookmarkValue(42, 17).Encode());
+        directory.Create($"ff{3L:x16}.bookmark", new BufferPosition(42, 17).Encode());
 
         var bookmark = Bookmark.Open(directory);
 
         Assert.Single(directory.Files);
 
         Assert.True(bookmark.TryGet(out var value));
-        Assert.Equal(new BookmarkValue(3, 3478), value);
+        Assert.Equal(new BufferPosition(3, 3478), value);
     }
 }

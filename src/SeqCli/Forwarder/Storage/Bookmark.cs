@@ -32,9 +32,9 @@ sealed class Bookmark
 
     readonly Lock _sync = new();
     BookmarkName _name;
-    BookmarkValue? _value;
+    BufferPosition? _value;
 
-    Bookmark(StoreDirectory storeDirectory, BookmarkName name, BookmarkValue? value)
+    Bookmark(StoreDirectory storeDirectory, BookmarkName name, BufferPosition? value)
     {
         _storeDirectory = storeDirectory;
         _name = name;
@@ -48,7 +48,7 @@ sealed class Bookmark
         return new Bookmark(storeDirectory, name, value);
     }
 
-    public bool TryGet([NotNullWhen(true)] out BookmarkValue? bookmark)
+    public bool TryGet([NotNullWhen(true)] out BufferPosition? bookmark)
     {
         lock (_sync)
         {
@@ -63,7 +63,7 @@ sealed class Bookmark
         }
     }
 
-    public bool TrySet(BookmarkValue value, bool sync = true)
+    public bool TrySet(BufferPosition value, bool sync = true)
     {
         lock (_sync)
         {
@@ -82,7 +82,7 @@ sealed class Bookmark
         }
     }
 
-    static void Write(StoreDirectory storeDirectory, BookmarkName name, BookmarkValue value, bool fsync)
+    static void Write(StoreDirectory storeDirectory, BookmarkName name, BufferPosition value, bool fsync)
     {
         unsafe
         {
@@ -93,7 +93,7 @@ sealed class Bookmark
         }
     }
 
-    static (BookmarkName, BookmarkValue?) Read(StoreDirectory storeDirectory)
+    static (BookmarkName, BufferPosition?) Read(StoreDirectory storeDirectory)
     {
         // NOTE: This method shouldn't throw
         var bookmarks = new List<(string, BookmarkName, StoreFile)>();
@@ -131,14 +131,14 @@ sealed class Bookmark
                 Span<byte> bookmark = stackalloc byte[16];
                 if (file.CopyContentsTo(bookmark) != 16) throw new Exception("The bookmark is corrupted.");
 
-                return (bookmarkName, BookmarkValue.Decode(bookmark));
+                return (bookmarkName, BufferPosition.Decode(bookmark));
             }
         }
         catch
         {
             storeDirectory.TryDelete(fileName);
 
-            return (new BookmarkName(bookmarkName.Id + 1), new BookmarkValue());
+            return (new BookmarkName(bookmarkName.Id + 1), new BufferPosition());
         }
     }
 }
