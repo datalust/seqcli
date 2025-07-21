@@ -16,9 +16,8 @@ using System;
 using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Encryptor;
 
-namespace SeqCli.Connection;
+namespace SeqCli.Api;
 
 static class SeqConnectionFactory
 {

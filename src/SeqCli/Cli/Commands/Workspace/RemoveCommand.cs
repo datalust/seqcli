@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Workspace;

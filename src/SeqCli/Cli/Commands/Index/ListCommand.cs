@@ -17,9 +17,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Indexes;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Index;
 

@@ -23,7 +23,6 @@ using Newtonsoft.Json.Linq;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using Serilog;
 
 // ReSharper disable UseAwaitUsing, MethodHasAsyncOverload

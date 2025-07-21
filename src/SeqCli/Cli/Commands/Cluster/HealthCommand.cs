@@ -18,9 +18,9 @@ using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Util;
 using Seq.Api.Model.Cluster;
+using SeqCli.Api;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Cluster;

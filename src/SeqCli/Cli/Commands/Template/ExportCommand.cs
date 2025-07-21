@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Templates.Export;
 using SeqCli.Util;
 using Serilog;
