@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -35,9 +36,21 @@ class ForwardingChannel
             {
                 try
                 {
-                    // TODO: chunk sizes, max chunks, ingestion log
-                    appender.TryAppend(entry.Data.AsSpan(), targetChunkSizeBytes, maxChunks);
-                    entry.CompletionSource.SetResult();
+                    const int maxTries = 3;
+                    for (var retry = 0; retry < maxTries; ++retry)
+                    {
+                        if (appender.TryAppend(entry.Data.AsSpan(), targetChunkSizeBytes, maxChunks))
+                        {
+                            entry.CompletionSource.SetResult();
+                            break;
+                        }
+                        
+                        if (retry == maxTries - 1)
+                        {
+                            IngestionLog.Log.Error("Buffering failed due to an I/O error; the incoming chunk was rejected");
+                            entry.CompletionSource.TrySetException(new IOException("Buffering failed due to an I/O error."));
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
