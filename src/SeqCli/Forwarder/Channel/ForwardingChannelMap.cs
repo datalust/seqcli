@@ -35,7 +35,7 @@ class ForwardingChannelMap
         
         var storePath = Path.Combine(_bufferPath, name);
         var store = new SystemStoreDirectory(storePath);
-        Log.Information("Opening local buffer in {StorePath}", storePath);
+        Log.ForContext<ForwardingChannelMap>().Information("Opening local buffer in {StorePath}", storePath);
         
         return new ForwardingChannel(
             BufferAppender.Open(store),
@@ -71,7 +71,7 @@ class ForwardingChannelMap
 
     public async Task StopAsync()
     {
-        Log.Information("Flushing log buffers");
+        Log.ForContext<ForwardingChannelMap>().Information("Flushing log buffers");
         
         _shutdownTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 

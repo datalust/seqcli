@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.Forwarder.Storage;
 using SeqCli.Ingestion;
+using Serilog;
 
 namespace SeqCli.Forwarder.Channel;
 
@@ -29,49 +30,67 @@ class ForwardingChannel
         _writer = channel.Writer;
         _writeWorker = Task.Run(async () =>
         {
-            await foreach (var entry in channel.Reader.ReadAllAsync(hardCancel))
+            try
             {
-                try
+                await foreach (var entry in channel.Reader.ReadAllAsync(hardCancel))
                 {
-                    // TODO: chunk sizes, max chunks, ingestion log
-                    appender.TryAppend(entry.Data.AsSpan(), 100_000_000);
-                    entry.CompletionSource.SetResult();
+                    try
+                    {
+                        // TODO: chunk sizes, max chunks, ingestion log
+                        appender.TryAppend(entry.Data.AsSpan(), 100_000_000);
+                        entry.CompletionSource.SetResult();
+                    }
+                    catch (Exception e)
+                    {
+                        entry.CompletionSource.TrySetException(e);
+                    }
                 }
-                catch (Exception e)
-                {
-                    entry.CompletionSource.TrySetException(e);
-                }
+            }
+            catch (Exception ex)
+            {
+                // We don't loop here; the exception was unexpected, so it's either hard cancellation or an
+                // unknown condition that could cause CPU-burning hot looping.
+                Log.ForContext<ForwardingChannel>().Fatal(ex, "Forwarding ingest reader failed and exited");
             }
         }, cancellationToken: hardCancel);
 
         _readWorker = Task.Run<Task>(async () =>
         {
-            if (bookmark.TryGet(out var bookmarkValue))
+            try
             {
-                reader.AdvanceTo(bookmarkValue.Value);
+                if (bookmark.TryGet(out var bookmarkValue))
+                {
+                    reader.AdvanceTo(bookmarkValue.Value);
+                }
+                
+                // Stopping shipping is a priority during shut-down, the work represented by the persistent buffer is unbounded
+                // so leaving it un-shipped avoids messier hard cancellation if we can't complete the work in time.
+                while (!_stop.IsCancellationRequested)
+                {
+                    if (_hardCancel.IsCancellationRequested) return;
+
+                    if (!reader.TryFillBatch(1024 * 1024, out var batch))
+                    {
+                        await Task.Delay(100, hardCancel);
+                        continue;
+                    }
+
+                    await LogShipper.ShipBuffer(connection, apiKey, batch.Value.AsArraySegment(), SendFailureHandling.Retry);
+
+                    if (bookmark.TrySet(new BufferPosition(batch.Value.ReaderHead.ChunkId,
+                            batch.Value.ReaderHead.Offset)))
+                    {
+                        reader.AdvanceTo(batch.Value.ReaderHead);
+                    }
+
+                    batch.Value.Return();
+                }
             }
-            
-            // Stopping shipping is a priority during shut-down, the work represented by the persistent buffer is unbounded
-            // so leaving it un-shipped avoids messier hard cancellation if we can't complete the work in time.
-            while (!_stop.IsCancellationRequested)
+            catch (Exception ex)
             {
-                if (_hardCancel.IsCancellationRequested) return;
-
-                if (!reader.TryFillBatch(1024 * 1024, out var batch))
-                {
-                    await Task.Delay(100, hardCancel);
-                    continue;
-                }
-
-                await LogShipper.ShipBuffer(connection, apiKey, batch.Value.AsArraySegment(), SendFailureHandling.Retry);
-
-                if (bookmark.TrySet(new BufferPosition(batch.Value.ReaderHead.ChunkId,
-                        batch.Value.ReaderHead.Offset)))
-                {
-                    reader.AdvanceTo(batch.Value.ReaderHead);
-                }
-
-                batch.Value.Return();
+                // We don't loop here; the exception was unexpected, so it's either hard cancellation or an
+                // unknown condition that could cause CPU-burning hot looping.
+                Log.ForContext<ForwardingChannel>().Fatal(ex, "Forwarding log shipper failed and exited");
             }
         }, cancellationToken: hardCancel);
     }
