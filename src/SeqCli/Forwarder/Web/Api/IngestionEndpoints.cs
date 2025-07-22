@@ -16,6 +16,7 @@ using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -23,6 +24,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
+using Seq.Api.Model.Shared;
 using SeqCli.Api;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
@@ -62,7 +64,7 @@ class IngestionEndpoints : IMapEndpoints
 
         IngestionLog.ForClient(context.Connection.RemoteIpAddress)
             .Error("Client supplied a legacy raw-format (non-CLEF) payload");
-        return Results.BadRequest("Only newline-delimited JSON (CLEF) payloads are supported.");
+        return Error(HttpStatusCode.BadRequest, "Only newline-delimited JSON (CLEF) payloads are supported.");
     }
     
     async Task<IResult> IngestCompactFormatAsync(HttpContext context)
@@ -123,7 +125,7 @@ class IngestionEndpoints : IMapEndpoints
                         var payloadText = Encoding.UTF8.GetString(payload.AsSpan()[eventStart..eventEnd]);
                         IngestionLog.ForPayload(context.Connection.RemoteIpAddress, payloadText)
                             .Error("Payload validation failed: {Error}", error);
-                        return Results.BadRequest($"Payload validation failed: {error}.");
+                        return Error(HttpStatusCode.BadRequest, $"Payload validation failed: {error}.");
                     }
                 }
             
@@ -145,17 +147,13 @@ class IngestionEndpoints : IMapEndpoints
             // Exception cases are handled by `Write`
             ArrayPool<byte>.Shared.Return(payload);
             
-            return TypedResults.Content(
-                null, 
-                "application/json", 
-                Utf8, 
-                StatusCodes.Status201Created);
+            return SuccessfulIngestion();
         }
         catch (Exception ex)
         {
             IngestionLog.ForClient(context.Connection.RemoteIpAddress)
                 .Error(ex, "Ingestion failed");
-            return Results.InternalServerError();
+            return Error(HttpStatusCode.InternalServerError, "Ingestion failed.");
         }
     }
 
@@ -258,5 +256,19 @@ class IngestionEndpoints : IMapEndpoints
             pool.Return(storage);
             throw;
         }
+    }
+    
+    static IResult Error(HttpStatusCode statusCode, string message)
+    {
+        return Results.Json(new ErrorPart { Error = message }, statusCode: (int)statusCode);
+    }
+
+    static IResult SuccessfulIngestion()
+    {
+        return TypedResults.Content(
+            "{}",
+            "application/json", 
+            Utf8, 
+            StatusCodes.Status201Created);
     }
 }

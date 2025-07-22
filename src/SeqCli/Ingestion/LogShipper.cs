@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -33,11 +34,11 @@ static class LogShipper
 {
     static readonly ITextFormatter JsonFormatter = OutputFormatter.Json(null);
 
-    public static async Task<bool> ShipBuffer(
+    public static async Task ShipBuffer(
         SeqConnection connection,
         string? apiKey,
         ArraySegment<byte> utf8Clef,
-        SendFailureHandling sendFailureHandling)
+        ILogger sendFailureLog)
     {
         var content = new ByteArrayContent(utf8Clef.Array!, utf8Clef.Offset, utf8Clef.Count)
         {
@@ -50,36 +51,33 @@ static class LogShipper
         var retries = 0;
         while (true)
         {
-            var sendSucceeded = false;
             try
             {
-                sendSucceeded = await Send(
+                var statusCode = await Send(
                     connection,
                     apiKey,
-                    sendFailureHandling != SendFailureHandling.Ignore,
+                    sendFailureLog,
                     content);
+
+                if ((int)statusCode is >= 200 and < 300)
+                {
+                    return;
+                }
+
+                if (statusCode == HttpStatusCode.BadRequest)
+                {
+                    sendFailureLog.Warning("Status code {StatusCode} indicates that the batch will not be accepted on retry; dropping", (int)statusCode);
+                    return;
+                }
             }
             catch (Exception ex)
             {
-                if (sendFailureHandling != SendFailureHandling.Ignore)
-                    Log.Error(ex, "Failed to send an event batch");
+                var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
+                sendFailureLog.Error(ex, "Failed to send an event batch; retry in {MillisecondsDelay}", millisecondsDelay);
+
+                await Task.Delay(millisecondsDelay);
+                retries += 1;
             }
-
-            if (!sendSucceeded)
-            {
-                if (sendFailureHandling == SendFailureHandling.Fail)
-                    return false;
-
-                if (sendFailureHandling == SendFailureHandling.Retry)
-                {
-                    var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
-                    await Task.Delay(millisecondsDelay);
-                    retries += 1;
-                    continue;
-                }
-            }
-
-            return true;
         }
     }
     
@@ -92,9 +90,6 @@ static class LogShipper
         int batchSize,
         Func<LogEvent, bool>? filter = null)
     {
-        if (connection == null) throw new ArgumentNullException(nameof(connection));
-        if (reader == null) throw new ArgumentNullException(nameof(reader));
-
         const int maxEmptyBatchWaitMS = 2000;
         var batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling, maxEmptyBatchWaitMS);
         var retries = 0;
@@ -103,16 +98,18 @@ static class LogShipper
             var sendSucceeded = false;
             try
             {
-                sendSucceeded = await SendBatchAsync(
+                var statusCode = await SendBatchAsync(
                     connection,
                     apiKey,
                     batch.LogEvents,
-                    sendFailureHandling != SendFailureHandling.Ignore);
+                    sendFailureHandling != SendFailureHandling.Ignore ? Log.Logger : null);
+                
+                sendSucceeded = (int)statusCode is >= 200 and < 300;
             }
             catch (Exception ex)
             {
                 if (sendFailureHandling != SendFailureHandling.Ignore)
-                    Log.Error(ex, "Failed to send an event batch");
+                    Log.Error(ex, "Batch shipping failed");
             }
 
             if (!sendSucceeded)
@@ -195,14 +192,14 @@ static class LogShipper
         } while (true);
     }
 
-    static async Task<bool> SendBatchAsync(
+    static async Task<HttpStatusCode> SendBatchAsync(
         SeqConnection connection,
         string? apiKey,
         IReadOnlyCollection<LogEvent> batch,
-        bool logSendFailures)
+        ILogger? sendFailureLog)
     {
         if (batch.Count == 0)
-            return true;
+            return HttpStatusCode.OK;
 
         StringContent content;
         // ReSharper disable once UseAwaitUsing
@@ -214,10 +211,10 @@ static class LogShipper
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
-        return await Send(connection, apiKey, logSendFailures, content);
+        return await Send(connection, apiKey, sendFailureLog, content);
     }
 
-    static async Task<bool> Send(SeqConnection connection, string? apiKey, bool logSendFailures, HttpContent content)
+    static async Task<HttpStatusCode> Send(SeqConnection connection, string? apiKey, ILogger? sendFailureLog, HttpContent content)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) { Content = content };
         if (apiKey != null)
@@ -225,11 +222,8 @@ static class LogShipper
 
         var result = await connection.Client.HttpClient.SendAsync(request);
 
-        if (result.IsSuccessStatusCode)
-            return true;
-
-        if (!logSendFailures)
-            return false;
+        if (result.IsSuccessStatusCode || sendFailureLog == null)
+            return result.StatusCode;
 
         var resultJson = await result.Content.ReadAsStringAsync();
         if (!string.IsNullOrWhiteSpace(resultJson))
@@ -238,11 +232,11 @@ static class LogShipper
             {
                 var error = JsonConvert.DeserializeObject<dynamic>(resultJson)!;
 
-                Log.Error("Failed with status code {StatusCode}: {ErrorMessage}",
+                sendFailureLog.Error("Shipping failed with status code {StatusCode}: {ErrorMessage}",
                     result.StatusCode,
                     (string)error.Error);
 
-                return false;
+                return result.StatusCode;
             }
             catch
             {
@@ -250,7 +244,7 @@ static class LogShipper
             }
         }
 
-        Log.Error("Failed with status code {StatusCode} ({ReasonPhrase})", result.StatusCode, result.ReasonPhrase);
-        return false;
+        sendFailureLog.Error("Shipping failed with status code {StatusCode} ({ReasonPhrase})", result.StatusCode, result.ReasonPhrase);
+        return result.StatusCode;
     }
 }

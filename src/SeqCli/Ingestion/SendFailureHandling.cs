@@ -17,7 +17,6 @@ namespace SeqCli.Ingestion;
 /// <summary>
 /// Controls how connection failures during ingestion are handled.
 /// </summary>
-/// <remarks>A 'retry' option will appear here at some future point.</remarks>
 enum SendFailureHandling
 {
     /// <summary>

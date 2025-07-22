@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Seq.Api;
+using SeqCli.Forwarder.Diagnostics;
 using SeqCli.Forwarder.Storage;
 using SeqCli.Ingestion;
 
@@ -61,7 +62,7 @@ class ForwardingChannel
                     continue;
                 }
 
-                await LogShipper.ShipBuffer(connection, apiKey, batch.Value.AsArraySegment(), SendFailureHandling.Retry);
+                await LogShipper.ShipBuffer(connection, apiKey, batch.Value.AsArraySegment(), IngestionLog.Log);
 
                 if (bookmark.TrySet(new BufferPosition(batch.Value.ReaderHead.ChunkId,
                         batch.Value.ReaderHead.Offset)))
