@@ -19,6 +19,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api;
@@ -34,11 +35,12 @@ static class LogShipper
 {
     static readonly ITextFormatter JsonFormatter = OutputFormatter.Json(null);
 
-    public static async Task ShipBuffer(
+    public static async Task ShipBufferAsync(
         SeqConnection connection,
         string? apiKey,
         ArraySegment<byte> utf8Clef,
-        ILogger sendFailureLog)
+        ILogger sendFailureLog,
+        CancellationToken cancellationToken)
     {
         var content = new ByteArrayContent(utf8Clef.Array!, utf8Clef.Offset, utf8Clef.Count)
         {
@@ -53,11 +55,12 @@ static class LogShipper
         {
             try
             {
-                var statusCode = await Send(
+                var statusCode = await SendAsync(
                     connection,
                     apiKey,
                     sendFailureLog,
-                    content);
+                    content,
+                    cancellationToken);
 
                 if ((int)statusCode is >= 200 and < 300)
                 {
@@ -66,29 +69,40 @@ static class LogShipper
 
                 if (statusCode == HttpStatusCode.BadRequest)
                 {
-                    sendFailureLog.Warning("Status code {StatusCode} indicates that the batch will not be accepted on retry; dropping", (int)statusCode);
+                    sendFailureLog.Warning(
+                        "Status code {StatusCode} indicates that the batch will not be accepted on retry; dropping",
+                        (int)statusCode);
                     return;
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
                 sendFailureLog.Error(ex, "Failed to send an event batch; retry in {MillisecondsDelay}", millisecondsDelay);
 
-                await Task.Delay(millisecondsDelay);
+                await Task.Delay(millisecondsDelay, cancellationToken);
                 retries += 1;
             }
         }
     }
     
-    public static async Task<int> ShipEvents(
+    public static async Task<int> ShipEventsAsync(
         SeqConnection connection,
         string? apiKey,
         ILogEventReader reader,
         InvalidDataHandling invalidDataHandling,
         SendFailureHandling sendFailureHandling,
         int batchSize,
-        Func<LogEvent, bool>? filter = null)
+        Func<LogEvent, bool>? filter,
+        CancellationToken cancellationToken)
     {
         const int maxEmptyBatchWaitMS = 2000;
         var batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling, maxEmptyBatchWaitMS);
@@ -102,7 +116,8 @@ static class LogShipper
                     connection,
                     apiKey,
                     batch.LogEvents,
-                    sendFailureHandling != SendFailureHandling.Ignore ? Log.Logger : null);
+                    sendFailureHandling != SendFailureHandling.Ignore ? Log.Logger : null,
+                    cancellationToken);
                 
                 sendSucceeded = (int)statusCode is >= 200 and < 300;
             }
@@ -196,7 +211,8 @@ static class LogShipper
         SeqConnection connection,
         string? apiKey,
         IReadOnlyCollection<LogEvent> batch,
-        ILogger? sendFailureLog)
+        ILogger? sendFailureLog,
+        CancellationToken cancellationToken)
     {
         if (batch.Count == 0)
             return HttpStatusCode.OK;
@@ -211,21 +227,21 @@ static class LogShipper
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
 
-        return await Send(connection, apiKey, sendFailureLog, content);
+        return await SendAsync(connection, apiKey, sendFailureLog, content, cancellationToken);
     }
 
-    static async Task<HttpStatusCode> Send(SeqConnection connection, string? apiKey, ILogger? sendFailureLog, HttpContent content)
+    static async Task<HttpStatusCode> SendAsync(SeqConnection connection, string? apiKey, ILogger? sendFailureLog, HttpContent content, CancellationToken cancellationToken)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, ApiConstants.IngestionEndpoint) { Content = content };
         if (apiKey != null)
             request.Headers.Add(ApiConstants.ApiKeyHeaderName, apiKey);
 
-        var result = await connection.Client.HttpClient.SendAsync(request);
+        var result = await connection.Client.HttpClient.SendAsync(request, cancellationToken);
 
         if (result.IsSuccessStatusCode || sendFailureLog == null)
             return result.StatusCode;
 
-        var resultJson = await result.Content.ReadAsStringAsync();
+        var resultJson = await result.Content.ReadAsStringAsync(cancellationToken);
         if (!string.IsNullOrWhiteSpace(resultJson))
         {
             try

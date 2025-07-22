@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
 using Seq.Api.Model.Shared;
 using SeqCli.Api;
+using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
 using JsonException = System.Text.Json.JsonException;
@@ -39,10 +40,12 @@ class IngestionEndpoints : IMapEndpoints
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
     readonly ForwardingChannelMap _forwardingChannels;
+    readonly SeqCliConfig _config;
 
-    public IngestionEndpoints(ForwardingChannelMap forwardingChannels)
+    public IngestionEndpoints(ForwardingChannelMap forwardingChannels, SeqCliConfig config)
     {
         _forwardingChannels = forwardingChannels;
+        _config = config;
     }
     
     public void MapEndpoints(WebApplication app)
@@ -76,7 +79,7 @@ class IngestionEndpoints : IMapEndpoints
             
             var log = _forwardingChannels.Get(GetApiKey(context.Request));
             
-            var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
+            var payload = ArrayPool<byte>.Shared.Rent(10 * 1024 * 1024);
             var writeHead = 0;
             var readHead = 0;
             
@@ -101,7 +104,7 @@ class IngestionEndpoints : IMapEndpoints
             
                     writeHead += read;
                 }
-            
+                
                 // Validate what we read, marking out a batch of one or more complete newline-delimited events.
                 var batchStart = readHead;
                 var batchEnd = readHead;
@@ -119,7 +122,7 @@ class IngestionEndpoints : IMapEndpoints
             
                     batchEnd = eventEnd;
                     readHead = batchEnd;
-        
+
                     if (!ValidateClef(payload.AsSpan()[eventStart..eventEnd], out var error))
                     {
                         var payloadText = Encoding.UTF8.GetString(payload.AsSpan()[eventStart..eventEnd]);
@@ -183,10 +186,16 @@ class IngestionEndpoints : IMapEndpoints
         return request.Query.TryGetValue("apiKey", out var apiKey) ? apiKey.Last() : null;
     }
 
-    static bool ValidateClef(Span<byte> evt, [NotNullWhen(false)] out string? errorFragment)
+    bool ValidateClef(Span<byte> evt, [NotNullWhen(false)] out string? errorFragment)
     {
         // Note that `errorFragment` does not include user-supplied values; we opt in to adding this to
         // the ingestion log and include it using `ForPayload()`.
+        
+        if (evt.Length > _config.Connection.EventSizeLimitBytes)
+        {
+            errorFragment = "an event exceeds the configured size limit";
+            return false;
+        }
         
         var reader = new Utf8JsonReader(evt);
 
