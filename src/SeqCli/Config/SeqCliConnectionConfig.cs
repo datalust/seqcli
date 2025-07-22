@@ -64,8 +64,7 @@ class SeqCliConnectionConfig
     public int EventSizeLimitBytes { get; set; } = 256 * 1024;
     
     /// <summary>
-    /// The maximum batch size to send to the Seq server when ingesting events. When forwarding, this setting is ignored
-    /// on the ingestion side, since the forwarder doesn't treat inbound batches atomically.
+    /// The maximum batch size to send to the Seq server when ingesting events.
     /// </summary>
     public int BatchSizeLimitBytes { get; set; } = 10 * 1024 * 1024;
 }
