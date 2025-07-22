@@ -39,7 +39,9 @@ sealed class SystemStoreDirectory : StoreDirectory
 
     public void WriteApiKey(SeqCliConfig config, string apiKey)
     {
-        File.WriteAllBytes(Path.Combine(_directoryPath, "api.key"), Encoding.UTF8.GetBytes(apiKey));
+        File.WriteAllBytes(
+            Path.Combine(_directoryPath, "api.key"), 
+            config.Encryption.DataProtector().Encrypt(Encoding.UTF8.GetBytes(apiKey)));
     }
 
     public string? ReadApiKey(SeqCliConfig config)

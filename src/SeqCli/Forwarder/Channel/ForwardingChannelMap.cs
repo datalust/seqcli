@@ -17,20 +17,21 @@ class ForwardingChannelMap
     readonly string _bufferPath;
     readonly SeqConnection _connection;
     readonly SeqCliConfig _config;
-    readonly ForwardingChannel _defaultChannel;
+    readonly string? _seqCliApiKey;
+    private ForwardingChannel? _seqCliConnectionChannel = null;
     readonly Lock _channelsSync = new();
-    readonly Dictionary<string, ForwardingChannel> _channels = new();
+    readonly Dictionary<string, ForwardingChannel> _channelsByName = new();
     readonly CancellationTokenSource _shutdownTokenSource = new();
-    const string DefaultChannelName = "Default";
+    const string SeqCliConnectionChannelName = "Default";
 
     public ForwardingChannelMap(string bufferPath, SeqConnection connection, SeqCliConfig config, string? seqCliApiKey)
     {
         _bufferPath = bufferPath;
         _connection = connection;
         _config = config;
-        _defaultChannel = OpenOrCreateChannel(seqCliApiKey, DefaultChannelName);
-        
-        ReopenApiKeyChannels();
+        _seqCliApiKey = seqCliApiKey;
+
+        LoadChannels();
     }
 
     ForwardingChannel OpenOrCreateChannel(string? apiKey, string name)
@@ -49,27 +50,26 @@ class ForwardingChannelMap
             _shutdownTokenSource.Token);
     }
     
-    void ReopenApiKeyChannels()
+    void LoadChannels()
     {
         if (_config.Forwarder.UseApiKeyForwarding)
         {
             foreach (var directoryPath in Directory.EnumerateDirectories(_bufferPath))
             {
-                if (directoryPath.Equals(GetStorePath("Default"))) continue;
-                
                 var path = new SystemStoreDirectory(directoryPath);
                 var apiKey = path.ReadApiKey(_config);
 
                 if (!string.IsNullOrEmpty(apiKey))
                 {
-                    var created = OpenOrCreateChannel(apiKey, ApiKeyToName(apiKey));
-                    
-                    lock (_channelsSync)
-                    {
-                        _channels.Add(apiKey, created);
-                    }
+                    var channelName = ApiKeyToName(apiKey);
+                    var created = OpenOrCreateChannel(apiKey, channelName);
+                    _channelsByName.Add(channelName, created);
                 }
             }
+        }
+        else
+        {
+            _seqCliConnectionChannel = OpenOrCreateChannel(_seqCliApiKey, SeqCliConnectionChannelName);
         }
     }
 
@@ -78,25 +78,34 @@ class ForwardingChannelMap
         return Path.Combine(_bufferPath, name);
     }
 
-    public ForwardingChannel GetSeqCliConnectionChannel()
-    {
-        return _defaultChannel;
-    }
-
-    public ForwardingChannel GetApiKeyChannel(string apiKey)
+    public ForwardingChannel GetApiKeyForwardingChannel(string requestApiKey)
     {
         lock (_channelsSync)
         {
-            if (_channels.TryGetValue(apiKey, out var channel))
+            var channelName = ApiKeyToName(requestApiKey);
+            
+            if (_channelsByName.TryGetValue(channelName, out var channel))
             {
                 return channel;
             }
 
-            var created = OpenOrCreateChannel(apiKey, ApiKeyToName(apiKey));
-            var store = new SystemStoreDirectory(GetStorePath(ApiKeyToName(apiKey)));
-            store.WriteApiKey(_config, apiKey);
-            _channels.Add(apiKey, created);
+            var created = OpenOrCreateChannel(requestApiKey, channelName);
+            var store = new SystemStoreDirectory(GetStorePath(channelName));
+            store.WriteApiKey(_config, requestApiKey);
+            _channelsByName.Add(channelName, created);
             return created;
+        }
+    }
+    
+    public ForwardingChannel GetSeqCliConnectionChannel()
+    {
+        lock (_channelsSync)
+        {
+            if (_seqCliConnectionChannel == null)
+            {
+                _seqCliConnectionChannel = OpenOrCreateChannel(_seqCliApiKey, SeqCliConnectionChannelName);
+            }
+            return _seqCliConnectionChannel;
         }
     }
 
@@ -116,12 +125,15 @@ class ForwardingChannelMap
         Task[] stopChannels;
         lock (_channelsSync)
         {
-            stopChannels = _channels.Values.Select(ch => ch.StopAsync()).ToArray();
+            stopChannels = _channelsByName.Values.Select(ch => ch.StopAsync()).ToArray();
+        }
+
+        if (_seqCliConnectionChannel != null)
+        {
+            stopChannels = stopChannels.Append(_seqCliConnectionChannel.StopAsync()).ToArray();
         }
         
-        await Task.WhenAll([
-            _defaultChannel.StopAsync(),
-            ..stopChannels]);
+        await Task.WhenAll([..stopChannels]);
         
         await _shutdownTokenSource.CancelAsync(); 
     }

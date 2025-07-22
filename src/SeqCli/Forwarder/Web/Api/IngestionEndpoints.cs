@@ -98,22 +98,27 @@ class IngestionEndpoints : IMapEndpoints
     
     async Task<ContentHttpResult> IngestCompactFormatAsync(HttpContext context)
     {
-        var apiKey = GetApiKey(context.Request);
-        if (_config.Forwarder.UseApiKeyForwarding && string.IsNullOrEmpty(apiKey))
+        var requestApiKey = GetApiKey(context.Request);
+        ForwardingChannel log;
+        if (_config.Forwarder.UseApiKeyForwarding) 
         {
-            return TypedResults.Content(
-                "API key is required", 
-                "text/plain", 
-                Utf8, 
-                StatusCodes.Status400BadRequest);
+            if (string.IsNullOrEmpty(requestApiKey))
+            {
+                return TypedResults.Content(
+                    "API key is required", 
+                    "text/plain", 
+                    Utf8, 
+                    StatusCodes.Status400BadRequest);
+            }
+            log = _forwardingChannels.GetApiKeyForwardingChannel(requestApiKey);    
+        }
+        else
+        {
+            log = _forwardingChannels.GetSeqCliConnectionChannel();
         }
         
         var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-        var log = _config.Forwarder.UseApiKeyForwarding
-            ? _forwardingChannels.GetApiKeyChannel(apiKey!)
-            : _forwardingChannels.GetSeqCliConnectionChannel();
 
         var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
         var writeHead = 0;
