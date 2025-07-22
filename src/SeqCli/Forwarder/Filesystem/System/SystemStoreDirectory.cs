@@ -44,12 +44,12 @@ sealed class SystemStoreDirectory : StoreDirectory
             config.Encryption.DataProtector().Encrypt(Encoding.UTF8.GetBytes(apiKey)));
     }
 
-    public string? ReadApiKey(SeqCliConfig config)
+    public bool TryReadApiKey(SeqCliConfig config, out string? apiKey)
     {
-        string? apiKey = null;
+        apiKey = null;
         var path = Path.Combine(_directoryPath, "api.key");
 
-        if (!File.Exists(path)) return apiKey;
+        if (!File.Exists(path)) return false;
         
         try
         {
@@ -60,7 +60,7 @@ sealed class SystemStoreDirectory : StoreDirectory
         {
             Log.Warning(exception, "Could not read or decrypt api key");
         }
-        return apiKey;
+        return true;
     }
 
     public override SystemStoreFile Create(string name)

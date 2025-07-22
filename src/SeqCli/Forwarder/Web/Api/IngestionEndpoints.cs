@@ -37,10 +37,10 @@ class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly ForwardingChannelMap _forwardingChannels;
+    readonly ForwardingChannelWrapper _forwardingChannels;
     readonly SeqCliConfig _config;
 
-    public IngestionEndpoints(ForwardingChannelMap forwardingChannels, SeqCliConfig config)
+    public IngestionEndpoints(ForwardingChannelWrapper forwardingChannels, SeqCliConfig config)
     {
         _forwardingChannels = forwardingChannels;
         _config = config;
@@ -76,9 +76,7 @@ class IngestionEndpoints : IMapEndpoints
             cts.CancelAfter(TimeSpan.FromSeconds(5));
             
             var requestApiKey = GetApiKey(context.Request);
-            var log = _config.Forwarder.UseApiKeyForwarding 
-                ? _forwardingChannels.GetApiKeyForwardingChannel(requestApiKey) 
-                : _forwardingChannels.GetSeqCliConnectionChannel();
+            var log = _forwardingChannels.GetForwardingChannel(requestApiKey); 
             
             var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
             var writeHead = 0;

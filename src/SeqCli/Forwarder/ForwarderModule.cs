@@ -46,7 +46,19 @@ class ForwarderModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<ServerService>().SingleInstance();
-        builder.Register(_ => new ForwardingChannelMap(_bufferPath, _connection, _config, _apiKey)).SingleInstance();
+
+        if (_config.Forwarder.UseApiKeyForwarding)
+        {
+            builder.Register<ApiKeyForwardingChannelWrapper>(_ =>  
+                new ApiKeyForwardingChannelWrapper(_bufferPath, _connection, _config))
+                .As<ForwardingChannelWrapper>().SingleInstance();
+        }
+        else
+        {
+            builder.Register<SeqCliConnectionForwardingChannelWrapper>(_ =>  
+                new SeqCliConnectionForwardingChannelWrapper(_bufferPath, _connection, _apiKey))
+                .As<ForwardingChannelWrapper>().SingleInstance();
+        }
 
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();
 
