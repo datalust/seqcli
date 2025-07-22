@@ -1648,3 +1648,101 @@ PS > (echo $warnings | ConvertTo-Json) | seqcli signal update --json-stdin
 PS > seqcli signal list -i signal-m33302 --json                                 
 {"Title": "Alarms", "Description": "Automatically created", "Filters": [{"De...
 ```
+
+## Store-and-forward ingestion proxy (preview)
+
+The `seqcli forwarder` family of commands provide simple, durable ingestion buffering for occasionally-connected and
+intermittently-disconnected systems. The forwarder implements the Seq ingestion API, so applications that write
+directly to Seq can instead write to the forwarder, which will persist data locally until it can be sent to the
+destination Seq server.
+
+> [!NOTE]
+> 
+> Forwarder is designed for local use in isolated environments &mdash; for example, locally on a firewalled machine, or
+> within a secured container network.
+> 
+> The forwarder HTTP API does not authenticate incoming requests. By default, only the ingestion endpoint is exposed,
+> but if you opt into additional APIs such as the ingestion log, ensure the API is not reachable externally. Even in the
+> default configuration, be aware that clients may trigger disk space exhaustion and other issues by sending
+> excessive or maliciously-crafted ingestion traffic.
+
+### Running the forwarder
+
+To start a forwarder instance at the terminal, listening on port 5341 and forwarding to `seq.example.com`, run:
+
+```shell
+seqcli forwarder run --pre --listen http://127.0.0.1:5341 -s https://seq.example.com
+```
+
+> While the `forwarder` command group is in preview, all `forwarder` commands require the `--pre` switch; you'll
+> also need to supply `--pre` when requesting help, e.g. `seqcli help forwarder run --pre`.
+
+You can test your forwarder using the `seqcli log` command:
+
+```shell
+seqcli log -m Test -s http://127.0.0.1:5341
+```
+
+If forwarding is successful, the event will appear in the target Seq instance within a few seconds. If it isn't,
+and `seqcli log` didn't report an error, run through these troubleshooting steps:
+
+ 1. Read the output of the `seqcli forwarder run` command: are the paths and URLs in there the ones you expect?
+ 2. Check the destination Seq server's ingestion log; if the payload is being rejected by Seq, its likely you need to configure an API key for the forwarder's outbound connections, or API key forwarding (see below).
+ 3. Check the forwarder's log file; this will be in the `SeqCli/Logs` subdirectory of the forwarder's storage path, which will be your user's home directory unless you overrode it with `--storage` or `SEQCLI_STORAGE_PATH`.
+ 4. Enable the forwarder's ingestion log temporarily, ensuring this isn't accessible to untrusted callers.
+
+### The forwarder's ingestion log
+
+The ingestion log records ingestion issues in a short in-memory buffer, so repetitive ingestion issues don't chew up
+disk space. The ingestion log may contain fragments of event data so it's not enabled by default; you can turn it on
+with:
+
+```shell
+SEQCLI_FORWARDER_DIAGNOSTICS_EXPOSEINGESTIONLOG=True seqcli forwarder run <other args>
+```
+
+The log can be retrieved by pointing `seqcli` at the forwarder:
+
+```shell
+seqcli diagnostics ingestionlog -s http://127.0.0.1:5341
+```
+
+If the ingestion log contains relevant entries but doesn't include enough information to track down the issue, you
+can opt in to showing even more information with `SEQCLI_FORWARDER_DIAGNOSTICS_INGESTIONLOGSHOWDETAIL=True`.
+
+### Configuring the forwarder
+
+The forwarder reads its configuration from the environment and the `SeqCli.json` file. Run `seqcli config` to view
+all of the supported `forwarder.*` (`SEQCLI_FORWARDER_*`) settings.
+
+Locally buffered events are stored in the `SeqCli/Buffer` subdirectory of the directory containing `SeqCli.json`. By 
+default, this will be your user account's home folder.
+
+To change the location of the `SeqCli.json` config file and local buffers, specify the `--storage` argument
+or set the `SEQCLI_STORAGE_PATH` environment variable when configuring and running the forwarder.
+
+### Connection authentication and API key forwarding
+
+When connecting to Seq, `seqcli forwarder` will ignore any API keys attached to incoming payloads, and instead use the server URL 
+and API key stored in `SeqCli.json`, in the `SEQCLI_CONNECTION_*` environment variables, or passed on 
+the `forwarder run` command line.
+
+To use the API keys from incoming payloads instead, set `forwarder.useApiKeyForwarding` or `SEQCLI_FORWARDER_USEAPIKEYFORWARDING`
+to `True`.
+
+> [!WARNING]
+> 
+> In order for durable buffering to work, `seqcli forwarder` needs to store the incoming API keys in its local buffer
+> storage.
+> 
+> On Windows, these will be encrypted using machine-scoped DPAPI by default, and on other platforms they'll be saved
+> as plain text. To perform encryption of stored API keys, supply shell scripts in the `encryption.encryptor` and
+> `encryption.decryptor` (`SEQCLI_ENCRYPTION_ENCRYPTOR` and `SEQCLI_ENCRYPTION_DECRYPTOR`) configuration entries. The scripts
+> will need to process data on `STDIN` and `STDOUT`: you can verify their effects by examining the `api.key` files stored
+> in subdirectories of `SeqCli/Buffer`.
+
+### Windows service installation
+
+On Windows it's possible to install the forwarder as a service, using the `seqcli forwarder install` command. Pass
+a directory to make readable by the service in the `--storage` argument when installing the it. Make sure this directory
+is also passed in `--storage` when configuring the forwarder.
