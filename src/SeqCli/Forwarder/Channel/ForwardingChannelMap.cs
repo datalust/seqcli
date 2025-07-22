@@ -56,6 +56,12 @@ class ForwardingChannelMap
         {
             foreach (var directoryPath in Directory.EnumerateDirectories(_bufferPath))
             {
+                if (directoryPath.Equals(GetStorePath(SeqCliConnectionChannelName)))
+                {
+                    // data was stored when not using API key forwarding
+                    continue;
+                }
+
                 var path = new SystemStoreDirectory(directoryPath);
                 var apiKey = path.ReadApiKey(_config);
 
