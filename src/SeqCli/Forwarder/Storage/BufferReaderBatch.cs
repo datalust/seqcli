@@ -27,7 +27,7 @@ readonly record struct BufferReaderBatch
     readonly ArrayPool<byte>? _pool;
     readonly byte[] _storage;
 
-    public BufferReaderBatch(BufferReaderHead readerHead, ArrayPool<byte>? pool, byte[] storage, int length)
+    public BufferReaderBatch(BufferPosition readerHead, ArrayPool<byte>? pool, byte[] storage, int length)
     {
         ReaderHead = readerHead;
 
@@ -36,7 +36,7 @@ readonly record struct BufferReaderBatch
         _length = length;
     }
 
-    public BufferReaderHead ReaderHead { get; }
+    public BufferPosition ReaderHead { get; }
 
     public ReadOnlySpan<byte> AsSpan()
     {

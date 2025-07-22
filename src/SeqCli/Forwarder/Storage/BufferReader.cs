@@ -27,16 +27,16 @@ namespace SeqCli.Forwarder.Storage;
 sealed class BufferReader
 {
     readonly StoreDirectory _storeDirectory;
-    BufferReaderHead? _discardingHead;
-    BufferReaderHead? _readHead;
+    BufferPosition? _discardingHead;
+    BufferPosition _readHead;
     List<BufferReaderChunk> _sortedChunks;
 
     BufferReader(StoreDirectory storeDirectory)
     {
-        _sortedChunks = new List<BufferReaderChunk>();
+        _sortedChunks = [];
         _storeDirectory = storeDirectory;
         _discardingHead = null;
-        _readHead = null;
+        _readHead = new(0, 0);
     }
 
     public static BufferReader Open(StoreDirectory storeDirectory)
@@ -86,7 +86,7 @@ sealed class BufferReader
 
                 // If the chunk has changed (it may have been deleted externally)
                 // then stop discarding
-                if (chunk.Name.Id != _discardingHead.Value.Chunk)
+                if (chunk.Name.Id != _discardingHead.Value.ChunkId)
                 {
                     _discardingHead = null;
 
@@ -94,11 +94,11 @@ sealed class BufferReader
                     break;
                 }
 
-                var chunkHead = Head(chunk);
+                var chunkHead = Extents(chunk);
 
                 // Attempt to fill the buffer with data from the underlying chunk
                 if (!TryFillChunk(chunk,
-                        chunkHead with { CommitHead = _discardingHead.Value.CommitHead },
+                        chunkHead with { CommitHead = _discardingHead.Value.Offset },
                         discardingBatchBuffer,
                         out var fill))
                 {
@@ -119,11 +119,11 @@ sealed class BufferReader
 
                 _discardingHead = _discardingHead.Value with
                 {
-                    CommitHead = _discardingHead.Value.CommitHead + fill.Value
+                    Offset = _discardingHead.Value.Offset + fill.Value
                 };
-                _readHead = _discardingHead;
+                _readHead = _discardingHead.Value;
 
-                var isChunkFinished = _discardingHead.Value.CommitHead == chunkHead.WriteHead;
+                var isChunkFinished = _discardingHead.Value.Offset == chunkHead.WriteHead;
 
                 // If the chunk is finished or a newline is found then stop discarding
                 if (firstNewlineIndex >= 0 || (isChunkFinished && _sortedChunks.Count > 1))
@@ -153,7 +153,7 @@ sealed class BufferReader
         var batchBuffer = rentedArray.AsSpan()[..maxSize];
         var batchLength = 0;
 
-        BufferReaderHead? batchHead = null;
+        BufferPosition? batchHead = null;
         var chunkIndex = 0;
 
         // Try fill the buffer with as much data as possible
@@ -161,7 +161,7 @@ sealed class BufferReader
         while (chunkIndex < _sortedChunks.Count)
         {
             var chunk = _sortedChunks[chunkIndex];
-            var chunkHead = Head(chunk);
+            var chunkHead = Extents(chunk);
 
             if (!TryFillChunk(chunk, chunkHead, batchBuffer[batchLength..], out var fill))
             {
@@ -192,7 +192,7 @@ sealed class BufferReader
                     // If this is the first chunk then we've hit an oversize payload
                     if (chunkIndex == 0)
                     {
-                        _discardingHead = new BufferReaderHead(chunk.Name.Id, chunkHead.CommitHead + fill.Value);
+                        _discardingHead = new BufferPosition(chunk.Name.Id, chunkHead.CommitHead + fill.Value);
 
                         // Ensures we don't attempt to yield the data we've read
                         batchHead = null;
@@ -206,7 +206,7 @@ sealed class BufferReader
             }
 
             batchLength += fill.Value;
-            batchHead = new BufferReaderHead(chunk.Name.Id, chunkHead.CommitHead + fill.Value);
+            batchHead = new BufferPosition(chunk.Name.Id, chunkHead.CommitHead + fill.Value);
 
             chunkIndex += 1;
         }
@@ -233,19 +233,26 @@ sealed class BufferReader
     /// This method does not throw.
     /// </summary>
     /// <param name="newReaderHead">The new head to resume reading from.</param>
-    public void AdvanceTo(BufferReaderHead newReaderHead)
+    public void AdvanceTo(BufferPosition newReaderHead)
     {
         var removeLength = 0;
+
         foreach (var chunk in _sortedChunks)
         {
             // A portion of the chunk is being skipped
-            if (chunk.Name.Id == newReaderHead.Chunk) break;
+            if (chunk.Name.Id == newReaderHead.ChunkId) break;
 
             // The remainder of the chunk is being skipped
-            if (chunk.Name.Id < newReaderHead.Chunk)
+            if (chunk.Name.Id < newReaderHead.ChunkId)
+            {
                 _storeDirectory.TryDelete(chunk.Name.ToString());
+            }
             else
-                throw new Exception("Chunks are out of order.");
+            {
+                // We might end up here if a chunk in the middle of the range was
+                // deleted from disk, while a saved bookmark references that chunk.
+                break;
+            }
 
             removeLength += 1;
         }
@@ -254,29 +261,27 @@ sealed class BufferReader
         _sortedChunks.RemoveRange(0, removeLength);
     }
 
-    BufferReaderChunkHead Head(BufferReaderChunk chunk)
+    BufferReaderChunkExtents Extents(BufferReaderChunk chunk)
     {
-        if (_readHead != null && chunk.Name.Id == _readHead.Value.Chunk)
+        if (chunk.Name.Id == _readHead.ChunkId)
             return chunk.Chunk.TryGetLength(out var writeHead)
-                ? new BufferReaderChunkHead(Math.Min(_readHead.Value.CommitHead, writeHead.Value), writeHead.Value)
-                : new BufferReaderChunkHead(_readHead.Value.CommitHead, _readHead.Value.CommitHead);
+                ? new BufferReaderChunkExtents(Math.Min(_readHead.Offset, writeHead.Value), writeHead.Value)
+                : new BufferReaderChunkExtents(_readHead.Offset, _readHead.Offset);
 
         chunk.Chunk.TryGetLength(out var length);
-        return new BufferReaderChunkHead(0, length ?? 0);
+        return new BufferReaderChunkExtents(0, length ?? 0);
     }
 
     void ReadChunks()
     {
-        var head = _readHead ?? new BufferReaderHead(0, 0);
-
-        List<BufferReaderChunk> chunks = new();
+        List<BufferReaderChunk> chunks = [];
 
         foreach (var (fileName, file) in _storeDirectory
                      .List(candidateName => Path.GetExtension(candidateName) is ".clef"))
         {
             if (!ChunkName.TryParse(fileName, out var parsedChunkName)) continue;
 
-            if (parsedChunkName.Value.Id >= head.Chunk)
+            if (parsedChunkName.Value.Id >= _readHead.ChunkId)
                 chunks.Add(new BufferReaderChunk(parsedChunkName.Value, file));
             else
                 // If the chunk is before the one we're expecting to read then delete it; we've already processed it
@@ -299,15 +304,15 @@ sealed class BufferReader
             }
     }
 
-    static bool TryFillChunk(BufferReaderChunk chunk, BufferReaderChunkHead chunkHead, Span<byte> buffer,
+    static bool TryFillChunk(BufferReaderChunk chunk, BufferReaderChunkExtents chunkExtents, Span<byte> buffer,
         [NotNullWhen(true)] out int? filled)
     {
         var remaining = buffer.Length;
-        var fill = (int)Math.Min(remaining, chunkHead.Unadvanced);
+        var fill = (int)Math.Min(remaining, chunkExtents.Unadvanced);
 
         try
         {
-            if (!chunk.TryCopyTo(buffer, chunkHead, fill))
+            if (!chunk.TryCopyTo(buffer, chunkExtents, fill))
             {
                 filled = null;
                 return false;

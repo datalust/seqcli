@@ -29,7 +29,7 @@ static class RuntimeConfigurationLoader
         var config = SeqCliConfig.ReadFromFile(storage.ConfigFilePath);
         
         EnvironmentOverrides.Apply(DefaultEnvironmentVariablePrefix, config);
-            
+        
         return config;
     }    
 }

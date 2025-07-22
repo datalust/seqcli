@@ -15,9 +15,9 @@
 using System;
 using System.Threading.Tasks;
 using Seq.Api.Model.Signals;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Signals;
 using SeqCli.Syntax;
 using SeqCli.Util;

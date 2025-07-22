@@ -18,11 +18,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Import;
 using SeqCli.Util;
 using Seq.Api;
+using SeqCli.Api;
 using SeqCli.Config;
 
 // ReSharper disable once UnusedType.Global

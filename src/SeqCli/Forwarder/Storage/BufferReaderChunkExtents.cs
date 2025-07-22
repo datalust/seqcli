@@ -1,4 +1,4 @@
-﻿// Copyright © Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+namespace SeqCli.Forwarder.Storage;
 
-namespace SeqCli.Forwarder.Web.Api;
-
-class ApiRootEndpoints : IMapEndpoints
+/// <summary>
+///     The current read and write positions in a <see cref="BufferReaderChunk" />.
+/// </summary>
+readonly record struct BufferReaderChunkExtents(long CommitHead, long WriteHead)
 {
-    readonly Encoding _utf8 = new UTF8Encoding(false);
-
-    public void MapEndpoints(WebApplication app)
-    {
-        app.MapGet("/api",
-            () => Results.Content("{\"Links\":{\"Events\":\"/api/events/describe\"}}", "application/json", _utf8));
-    }
+    public long Unadvanced => WriteHead - CommitHead;
 }

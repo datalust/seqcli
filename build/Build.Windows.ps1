@@ -28,7 +28,7 @@ function Restore-Packages
 
 function Execute-Tests($version)
 {
-    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
+    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release --framework "$framework$windowsTfmSuffix" /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 

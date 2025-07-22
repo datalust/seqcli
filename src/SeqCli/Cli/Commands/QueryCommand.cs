@@ -15,9 +15,9 @@
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using Serilog;
 
 // ReSharper disable UnusedType.Global
