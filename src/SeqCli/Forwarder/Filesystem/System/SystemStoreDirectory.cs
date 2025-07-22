@@ -47,9 +47,13 @@ sealed class SystemStoreDirectory : StoreDirectory
     public string? ReadApiKey(SeqCliConfig config)
     {
         string? apiKey = null;
+        var path = Path.Combine(_directoryPath, "api.key");
+
+        if (!File.Exists(path)) return apiKey;
+        
         try
         {
-            var encrypted = File.ReadAllBytes(Path.Combine(_directoryPath, "api.key"));
+            var encrypted = File.ReadAllBytes(path);
             apiKey = Encoding.UTF8.GetString(config.Encryption.DataProtector().Decrypt(encrypted));
         }
         catch (Exception exception)

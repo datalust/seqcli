@@ -76,23 +76,9 @@ class IngestionEndpoints : IMapEndpoints
             cts.CancelAfter(TimeSpan.FromSeconds(5));
             
             var requestApiKey = GetApiKey(context.Request);
-            ForwardingChannel log;
-            if (_config.Forwarder.UseApiKeyForwarding) 
-            {
-                if (string.IsNullOrEmpty(requestApiKey))
-                {
-                    return TypedResults.Content(
-                        "API key is required", 
-                        "text/plain", 
-                        Utf8, 
-                        StatusCodes.Status400BadRequest);
-                }
-                log = _forwardingChannels.GetApiKeyForwardingChannel(requestApiKey);    
-            }
-            else
-            {
-                log = _forwardingChannels.GetSeqCliConnectionChannel();
-            }
+            var log = _config.Forwarder.UseApiKeyForwarding 
+                ? _forwardingChannels.GetApiKeyForwardingChannel(requestApiKey) 
+                : _forwardingChannels.GetSeqCliConnectionChannel();
             
             var payload = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 10);
             var writeHead = 0;

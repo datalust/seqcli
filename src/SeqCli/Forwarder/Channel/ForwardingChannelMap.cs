@@ -18,11 +18,15 @@ class ForwardingChannelMap
     readonly SeqConnection _connection;
     readonly SeqCliConfig _config;
     readonly string? _seqCliApiKey;
-    private ForwardingChannel? _seqCliConnectionChannel = null;
+    
+    // Either seqcli is using its usual connection details and `_seqClieConnectionChannel` is the channel,
+    // or seqcli is using the incoming API key and there is one channel per API key (plus one for no API key) in the dictionary.
     readonly Lock _channelsSync = new();
+    ForwardingChannel? _seqCliConnectionChannel = null;
     readonly Dictionary<string, ForwardingChannel> _channelsByName = new();
+    
     readonly CancellationTokenSource _shutdownTokenSource = new();
-    const string SeqCliConnectionChannelName = "Default";
+    const string SeqCliConnectionChannelName = "SeqCliConnection";
 
     public ForwardingChannelMap(string bufferPath, SeqConnection connection, SeqCliConfig config, string? seqCliApiKey)
     {
@@ -65,12 +69,9 @@ class ForwardingChannelMap
                 var path = new SystemStoreDirectory(directoryPath);
                 var apiKey = path.ReadApiKey(_config);
 
-                if (!string.IsNullOrEmpty(apiKey))
-                {
-                    var channelName = ApiKeyToName(apiKey);
-                    var created = OpenOrCreateChannel(apiKey, channelName);
-                    _channelsByName.Add(channelName, created);
-                }
+                var channelName = ApiKeyToName(apiKey);
+                var created = OpenOrCreateChannel(apiKey, channelName);
+                _channelsByName.Add(channelName, created);
             }
         }
         else
@@ -84,7 +85,7 @@ class ForwardingChannelMap
         return Path.Combine(_bufferPath, name);
     }
 
-    public ForwardingChannel GetApiKeyForwardingChannel(string requestApiKey)
+    public ForwardingChannel GetApiKeyForwardingChannel(string? requestApiKey)
     {
         lock (_channelsSync)
         {
@@ -97,7 +98,10 @@ class ForwardingChannelMap
 
             var created = OpenOrCreateChannel(requestApiKey, channelName);
             var store = new SystemStoreDirectory(GetStorePath(channelName));
-            store.WriteApiKey(_config, requestApiKey);
+            if (requestApiKey != null)
+            {
+                store.WriteApiKey(_config, requestApiKey);
+            }
             _channelsByName.Add(channelName, created);
             return created;
         }
@@ -115,11 +119,11 @@ class ForwardingChannelMap
         }
     }
 
-    string ApiKeyToName(string apiKey)
+    string ApiKeyToName(string? apiKey)
     {
         // Seq API keys begin with four identifying characters that aren't considered part of the
         // confidential key. TODO: we could likely do better than this.
-        return apiKey[..(Math.Min(apiKey.Length, 4))];
+        return string.IsNullOrEmpty(apiKey) ? "EmptyApiKey" : apiKey[..(Math.Min(apiKey.Length, 4))];
     }
 
     public async Task StopAsync()
