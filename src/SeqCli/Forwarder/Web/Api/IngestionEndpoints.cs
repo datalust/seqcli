@@ -16,7 +16,6 @@ using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -28,7 +27,6 @@ using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Diagnostics;
-using Tavis.UriTemplates;
 using JsonException = System.Text.Json.JsonException;
 
 namespace SeqCli.Forwarder.Web.Api;
