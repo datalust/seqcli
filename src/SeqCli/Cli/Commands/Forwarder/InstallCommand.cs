@@ -101,7 +101,7 @@ class InstallCommand : Command
         if (netshResult != 0)
             Console.WriteLine($"Could not add URL reservation for {listenUri}: `netsh` returned {netshResult}; ignoring");
 
-        var exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, Program.BinaryName);
+        var exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Program.BinaryName);
         var forwarderRunCmdline = $"\"{exePath}\" forwarder run --pre --storage=\"{_storagePath.StorageRootPath}\"";
 
         var binPath = forwarderRunCmdline.Replace("\"", "\\\"");
@@ -117,7 +117,7 @@ class InstallCommand : Command
         var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
         if (0 != CaptiveProcess.Run(sc, scCmdline, Console.WriteLine, Console.WriteLine))
         {
-            throw new ArgumentException("Service setup failed");
+            throw new ArgumentException("Service setup failed.");
         }
 
         Console.WriteLine("Setting service restart policy...");
@@ -132,8 +132,6 @@ class InstallCommand : Command
 
     void GiveFullControl(string target)
     {
-        if (target == null) throw new ArgumentNullException(nameof(target));
-
         if (!Directory.Exists(target))
             Directory.CreateDirectory(target);
 
@@ -147,7 +145,7 @@ class InstallCommand : Command
     static string MakeListenUriReservationPattern(string uri)
     {
         var listenUri = uri.Replace("localhost", "+");
-        if (!listenUri.EndsWith("/"))
+        if (!listenUri.EndsWith('/'))
             listenUri += "/";
         return listenUri;
     }
