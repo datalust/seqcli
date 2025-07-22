@@ -51,7 +51,9 @@ class ForwardingChannel
                 reader.AdvanceTo(bookmarkValue.Value);
             }
             
-            while (true)
+            // Stopping shipping is a priority during shut-down, the work represented by the persistent buffer is unbounded
+            // so leaving it un-shipped avoids messier hard cancellation if we can't complete the work in time.
+            while (!_stop.IsCancellationRequested)
             {
                 if (_hardCancel.IsCancellationRequested) return;
 
