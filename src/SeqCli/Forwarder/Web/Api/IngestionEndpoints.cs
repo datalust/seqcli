@@ -37,10 +37,10 @@ class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly ForwardingChannelMap _forwardingChannels;
+    readonly ForwardingChannelWrapper _forwardingChannels;
     readonly SeqCliConfig _config;
 
-    public IngestionEndpoints(ForwardingChannelMap forwardingChannels, SeqCliConfig config)
+    public IngestionEndpoints(ForwardingChannelWrapper forwardingChannels, SeqCliConfig config)
     {
         _forwardingChannels = forwardingChannels;
         _config = config;
@@ -75,7 +75,8 @@ class IngestionEndpoints : IMapEndpoints
             var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
             cts.CancelAfter(TimeSpan.FromSeconds(5));
             
-            var log = _forwardingChannels.Get(GetApiKey(context.Request));
+            var requestApiKey = GetApiKey(context.Request);
+            var log = _forwardingChannels.GetForwardingChannel(requestApiKey); 
             
             // Add one for the extra newline that we have to insert at the end of batches.
             var bufferSize = _config.Connection.BatchSizeLimitBytes + 1;

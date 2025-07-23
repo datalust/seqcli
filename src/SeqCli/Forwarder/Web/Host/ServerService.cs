@@ -24,10 +24,10 @@ namespace SeqCli.Forwarder.Web.Host;
 class ServerService
 {
     readonly IHost _host;
-    readonly ForwardingChannelMap _forwardingChannelMap;
+    readonly ForwardingChannelWrapper _forwardingChannelMap;
     readonly string _listenUri;
 
-    public ServerService(IHost host, ForwardingChannelMap forwardingChannelMap, string listenUri)
+    public ServerService(IHost host, ForwardingChannelWrapper forwardingChannelMap, string listenUri)
     {
         _host = host;
         _forwardingChannelMap = forwardingChannelMap;
