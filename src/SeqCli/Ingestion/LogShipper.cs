@@ -85,12 +85,13 @@ static class LogShipper
             }
             catch (Exception ex)
             {
-                var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
-                sendFailureLog.Error(ex, "Failed to send an event batch; retry in {MillisecondsDelay}", millisecondsDelay);
-
-                await Task.Delay(millisecondsDelay, cancellationToken);
-                retries += 1;
+                sendFailureLog.Error(ex, "Failed to ship a batch");
             }
+            
+            var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
+            sendFailureLog.Information("Backing off connection schedule; will retry in {MillisecondsDelay}", millisecondsDelay);
+            await Task.Delay(millisecondsDelay, cancellationToken);
+            retries += 1;
         }
     }
     
