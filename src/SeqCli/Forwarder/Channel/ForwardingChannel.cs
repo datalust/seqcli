@@ -83,7 +83,7 @@ class ForwardingChannel
             }
         }, cancellationToken: hardCancel);
 
-        _readWorker = Task.Run<Task>(async () =>
+        _readWorker = Task.Run(async () =>
         {
             try
             {
