@@ -9,13 +9,12 @@ namespace SeqCli.Encryptor;
 
 class ExternalDataProtector : IDataProtector
 {
-    public ExternalDataProtector(SeqCliEncryptionProviderConfig providerConfig)
+    public ExternalDataProtector(string encryptor, string? encryptorArgs, string decryptor, string? decryptorArgs)
     {
-        _encryptor = providerConfig.Encryptor!;
-        _encryptorArgs = providerConfig.EncryptorArgs;
-        
-        _decryptor = providerConfig.Decryptor!;
-        _decryptorArgs = providerConfig.DecryptorArgs;
+        _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
+        _encryptorArgs = encryptorArgs;
+        _decryptor = decryptor ?? throw new ArgumentNullException(nameof(decryptor));
+        _decryptorArgs = decryptorArgs;
     }
 
     readonly string _encryptor;
@@ -28,7 +27,7 @@ class ExternalDataProtector : IDataProtector
         var exit = Invoke(_encryptor, _encryptorArgs, unencrypted, out var encrypted, out var err);
         if (exit != 0)
         {
-            throw new Exception($"Encryptor failed with exit code {exit} and produced: {err}");
+            throw new Exception($"Encryptor failed with exit code {exit} and produced: {err}.");
         }
 
         return encrypted;
@@ -39,7 +38,7 @@ class ExternalDataProtector : IDataProtector
         var exit = Invoke(_decryptor, _decryptorArgs, encrypted, out var decrypted, out var err);
         if (exit != 0)
         {
-            throw new Exception($"Decryptor failed with exit code {exit} and produced: {err}");
+            throw new Exception($"Decryptor failed with exit code {exit} and produced: {err}.");
         }
 
         return decrypted;
@@ -50,6 +49,7 @@ class ExternalDataProtector : IDataProtector
         var startInfo = new ProcessStartInfo
         {
             UseShellExecute = false,
+            RedirectStandardInput = true,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             WindowStyle = ProcessWindowStyle.Hidden,
