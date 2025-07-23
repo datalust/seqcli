@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -44,7 +45,7 @@ sealed class SystemStoreDirectory : StoreDirectory
             config.Encryption.DataProtector().Encrypt(Encoding.UTF8.GetBytes(apiKey)));
     }
 
-    public bool TryReadApiKey(SeqCliConfig config, out string? apiKey)
+    public bool TryReadApiKey(SeqCliConfig config, [NotNullWhen(true)] out string? apiKey)
     {
         apiKey = null;
         var path = Path.Combine(_directoryPath, "api.key");
@@ -55,12 +56,14 @@ sealed class SystemStoreDirectory : StoreDirectory
         {
             var encrypted = File.ReadAllBytes(path);
             apiKey = Encoding.UTF8.GetString(config.Encryption.DataProtector().Decrypt(encrypted));
+            return true;
         }
         catch (Exception exception)
         {
             Log.Warning(exception, "Could not read or decrypt api key");
         }
-        return true;
+  
+        return false;
     }
 
     public override SystemStoreFile Create(string name)

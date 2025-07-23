@@ -12,8 +12,8 @@ namespace SeqCli.Forwarder.Channel;
 
 class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
 {
-    readonly Dictionary<string, ForwardingChannel> _channelsByName = new();
-    const string EmptyApiKeyChannelName = "EmptyApiKey";
+    readonly Dictionary<string, ForwardingChannel> _channelsByApiKey = new();
+    const string EmptyApiKeyChannelId = "EmptyApiKey";
 
     public ApiKeyForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config) : base(bufferPath, connection, config)
     {
@@ -31,29 +31,21 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
                 continue;
             }
 
-            string apiKey, channelName;
-            
-            if (directoryPath.Equals(GetStorePath(EmptyApiKeyChannelName)))
+            string apiKey, channelId;
+
+            if (new SystemStoreDirectory(directoryPath).TryReadApiKey(Config, out var key))
             {
-                channelName = EmptyApiKeyChannelName;
-                apiKey = "";
+                apiKey = key!;
+                channelId = directoryPath;
             }
             else
             {
-                if (new SystemStoreDirectory(directoryPath).TryReadApiKey(Config, out var key))
-                {
-                    apiKey = key!;
-                    channelName = ApiKeyToName(apiKey);
-                }
-                else
-                {
-                    // directory should contain an api key file but does not
-                    continue;
-                }
+                // directory should contain an api key file but does not
+                continue;
             }
             
-            var created = OpenOrCreateChannel(channelName, apiKey);
-            _channelsByName.Add(channelName, created);
+            var created = OpenOrCreateChannel(channelId, apiKey);
+            _channelsByApiKey.Add(apiKey, created);
         }
     }
 
@@ -61,35 +53,24 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
     {
         lock (ChannelsSync)
         {
-            var channelName = ApiKeyToName(requestApiKey);
-
-            if (channelName == SeqCliConnectionChannelName)
-            {
-                // being defensive - this can't happen.
-                throw new ArgumentException("Request API key is invalid");
-            }
-            
-            if (_channelsByName.TryGetValue(channelName, out var channel))
+            // use empty string to represent no api key
+            if (_channelsByApiKey.TryGetValue(requestApiKey ?? "", out var channel))
             {
                 return channel;
             }
 
-            var created = OpenOrCreateChannel(channelName, requestApiKey);
-            var store = new SystemStoreDirectory(GetStorePath(channelName));
-            if (requestApiKey != null)
-            {
-                store.WriteApiKey(Config, requestApiKey);
-            }
-            _channelsByName.Add(channelName, created);
+            var channelId = ApiKeyToName(requestApiKey);
+            var created = OpenOrCreateChannel(channelId, requestApiKey);
+            var store = new SystemStoreDirectory(GetStorePath(channelId));
+            store.WriteApiKey(Config, requestApiKey ?? "");
+            _channelsByApiKey.Add(requestApiKey ?? "", created);
             return created;
         }
     }
 
     string ApiKeyToName(string? apiKey)
     {
-        // Seq API keys begin with four identifying characters that aren't considered part of the
-        // confidential key. TODO: we could likely do better than this.
-        return string.IsNullOrEmpty(apiKey) ? EmptyApiKeyChannelName : apiKey[..(Math.Min(apiKey.Length, 4))];
+        return string.IsNullOrEmpty(apiKey) ? EmptyApiKeyChannelId : Guid.NewGuid().ToString();
     }
 
     public override async Task StopAsync()
@@ -100,7 +81,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
         Task[] stopChannels;
         lock (ChannelsSync)
         {
-            stopChannels = _channelsByName.Values.Select(ch => ch.StopAsync()).ToArray();
+            stopChannels = _channelsByApiKey.Values.Select(ch => ch.StopAsync()).ToArray();
         }
         
         await Task.WhenAll([..stopChannels]);
