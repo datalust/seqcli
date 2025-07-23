@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using SeqCli.Encryptor;
 
 namespace SeqCli.Config;
@@ -26,14 +27,20 @@ class SeqCliEncryptionProviderConfig
 
     public IDataProtector DataProtector()
     {
+        if (!string.IsNullOrWhiteSpace(Encryptor) || !string.IsNullOrWhiteSpace(Decryptor))
+        {
+            if (string.IsNullOrWhiteSpace(Encryptor) || string.IsNullOrWhiteSpace(Decryptor))
+            {
+                throw new ArgumentException(
+                    "If either of `encryption.encryptor` or `encryption.decryptor` is specified, both must be specified.");
+            }
+            
+            return new ExternalDataProtector(Encryptor, EncryptorArgs, Decryptor, DecryptorArgs);
+        }
+
 #if WINDOWS
         return new WindowsNativeDataProtector();
 #else
-        if (!string.IsNullOrWhiteSpace(Encryptor) && !string.IsNullOrWhiteSpace(Decryptor))
-        {
-            return new ExternalDataProtector(this);
-        }
-
         return new PlaintextDataProtector();
 #endif
     }
