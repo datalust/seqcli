@@ -19,16 +19,16 @@ using SeqCli.Config;
 using SeqCli.Util;
 using Serilog;
 
-namespace SeqCli.Cli.Commands;
+namespace SeqCli.Cli.Commands.Config;
 
-[Command("config", "View and set fields in `SeqCli.json`; run with no arguments to list all fields")]
-class ConfigCommand : Command
+[Command("config", "legacy", "View and set fields in `SeqCli.json`; run with no arguments to list all fields", Visibility = FeatureVisibility.Hidden)]
+class LegacyCommand : Command
 {
     string? _key, _value;
     bool _clear;
     readonly StoragePathFeature _storagePath;
 
-    public ConfigCommand()
+    public LegacyCommand()
     {
         Options.Add("k|key=", "The field, for example `connection.serverUrl`", k => _key = k);
         Options.Add("v|value=", "The field value; if not specified, the command will print the current value", v => _value = v);

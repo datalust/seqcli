@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using SeqCli.Cli;
-using SeqCli.Cli.Features;
 using SeqCli.Tests.Support;
 using Serilog.Core;
 using Serilog.Events;
@@ -41,7 +40,7 @@ public class CommandLineHostTests
         {
             new(
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test"))),
-                new CommandMetadata {Name = "test", HelpText = "help", IsPreview = true}),
+                new CommandMetadata {Name = "test", HelpText = "help", Visibility = FeatureVisibility.Preview}),
         };
         var commandLineHost = new CommandLineHost(availableCommands);
         var exit = await commandLineHost.Run(["test"],new LoggingLevelSwitch());
