@@ -22,7 +22,8 @@ public class ExternalDataProtectorTests
     public void IfEncryptorFailsEncryptThrows()
     {
         var protector = new ExternalDataProtector("bash", "-c \"exit 1\"", Some.String(), null);
-        Assert.Throws<Exception>(() => protector.Encrypt(Some.Bytes(200)));
+        // May be `Exception` or `IOException`.
+        Assert.ThrowsAny<Exception>(() => protector.Encrypt(Some.Bytes(200)));
     }
 
     [Fact]
