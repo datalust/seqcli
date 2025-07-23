@@ -32,7 +32,7 @@ static class KeyValueSettings
 
         var steps = key.Split('.');
         if (steps.Length < 2)
-            throw new ArgumentException("The format of the key is incorrect; run `seqcli config` to view all keys.");
+            throw new ArgumentException("The format of the key is incorrect; run `seqcli config list` to view all keys.");
 
         object? receiver = config;
         for (var i = 0; i < steps.Length - 1; ++i)
@@ -42,7 +42,7 @@ static class KeyValueSettings
                 .SingleOrDefault(p => Camelize(GetUserFacingName(p)) == steps[i]);
 
             if (nextStep == null)
-                throw new ArgumentException("The key could not be found; run `seqcli config` to view all keys.");
+                throw new ArgumentException("The key could not be found; run `seqcli config list` to view all keys.");
 
             if (nextStep.PropertyType == typeof(Dictionary<string, SeqCliConnectionConfig>))
                 throw new NotSupportedException("Use `seqcli profile create` to configure connection profiles.");
@@ -60,7 +60,7 @@ static class KeyValueSettings
             .SingleOrDefault(p => Camelize(GetUserFacingName(p)) == steps[^1]);
 
         if (targetProperty == null)
-            throw new ArgumentException("The key could not be found; run `seqcli config` to view all keys.");
+            throw new ArgumentException("The key could not be found; run `seqcli config list` to view all keys.");
 
         var targetValue = ChangeType(value, targetProperty.PropertyType);
         targetProperty.SetValue(receiver, targetValue);
