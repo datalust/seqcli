@@ -25,6 +25,8 @@ using SeqCli.Forwarder.Cli.Features;
 using SeqCli.Forwarder.ServiceProcess;
 using SeqCli.Forwarder.Util;
 
+namespace SeqCli.Cli.Commands.Forwarder;
+
 // ReSharper disable once ClassNeverInstantiated.Global
 
 [Command("forwarder", "install", "Install the forwarder as a Windows service", Visibility = FeatureVisibility.Preview)]
