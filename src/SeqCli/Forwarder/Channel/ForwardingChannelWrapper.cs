@@ -2,16 +2,18 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
+using SeqCli.Config;
 using SeqCli.Forwarder.Filesystem.System;
 using SeqCli.Forwarder.Storage;
 using Serilog;
 
 namespace SeqCli.Forwarder.Channel;
 
-internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnection connection)
+internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config)
 {
     protected const string SeqCliConnectionChannelName = "SeqCliConnection";
     protected readonly string BufferPath = bufferPath;
+    readonly SeqCliConfig _config = config;
     protected readonly CancellationTokenSource ShutdownTokenSource = new();
     protected readonly Lock ChannelsSync = new();
 
@@ -30,6 +32,9 @@ internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnectio
             Bookmark.Open(store),
             connection,
             apiKey,
+            _config.Forwarder.Storage.TargetChunkSizeBytes,
+            _config.Forwarder.Storage.MaxChunks,
+            _config.Connection.BatchSizeLimitBytes,
             ShutdownTokenSource.Token);
     }
     

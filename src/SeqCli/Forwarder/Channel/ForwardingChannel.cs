@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Seq.Api;
+using SeqCli.Forwarder.Diagnostics;
 using SeqCli.Forwarder.Storage;
 using SeqCli.Ingestion;
 
@@ -15,7 +17,8 @@ class ForwardingChannel
     readonly CancellationTokenSource _stop;
     readonly CancellationToken _hardCancel;
     
-    public ForwardingChannel(BufferAppender appender, BufferReader reader, Bookmark bookmark, SeqConnection connection, string? apiKey, CancellationToken hardCancel)
+    public ForwardingChannel(BufferAppender appender, BufferReader reader, Bookmark bookmark,
+        SeqConnection connection, string? apiKey, long targetChunkSizeBytes, int? maxChunks, int batchSizeLimitBytes, CancellationToken hardCancel)
     {
         var channel = System.Threading.Channels.Channel.CreateBounded<ForwardingChannelEntry>(new BoundedChannelOptions(5)
         {
@@ -33,9 +36,21 @@ class ForwardingChannel
             {
                 try
                 {
-                    // TODO: chunk sizes, max chunks, ingestion log
-                    appender.TryAppend(entry.Data.AsSpan(), 100_000_000);
-                    entry.CompletionSource.SetResult();
+                    const int maxTries = 3;
+                    for (var retry = 0; retry < maxTries; ++retry)
+                    {
+                        if (appender.TryAppend(entry.Data.AsSpan(), targetChunkSizeBytes, maxChunks))
+                        {
+                            entry.CompletionSource.SetResult();
+                            break;
+                        }
+                        
+                        if (retry == maxTries - 1)
+                        {
+                            IngestionLog.Log.Error("Buffering failed due to an I/O error; the incoming chunk was rejected");
+                            entry.CompletionSource.TrySetException(new IOException("Buffering failed due to an I/O error."));
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
@@ -55,13 +70,13 @@ class ForwardingChannel
             {
                 if (_hardCancel.IsCancellationRequested) return;
 
-                if (!reader.TryFillBatch(1024 * 1024, out var batch))
+                if (!reader.TryFillBatch(batchSizeLimitBytes, out var batch))
                 {
                     await Task.Delay(100, hardCancel);
                     continue;
                 }
 
-                await LogShipper.ShipBuffer(connection, apiKey, batch.Value.AsArraySegment(), SendFailureHandling.Retry);
+                await LogShipper.ShipBufferAsync(connection, apiKey, batch.Value.AsArraySegment(), IngestionLog.Log, hardCancel);
 
                 if (bookmark.TrySet(new BufferPosition(batch.Value.ReaderHead.ChunkId,
                         batch.Value.ReaderHead.Offset)))
