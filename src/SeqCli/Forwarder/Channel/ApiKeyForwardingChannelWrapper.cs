@@ -12,13 +12,11 @@ namespace SeqCli.Forwarder.Channel;
 
 class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
 {
-    readonly SeqCliConfig _config;
     readonly Dictionary<string, ForwardingChannel> _channelsByName = new();
     const string EmptyApiKeyChannelName = "EmptyApiKey";
 
-    public ApiKeyForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config) : base(bufferPath, connection)
+    public ApiKeyForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config) : base(bufferPath, connection, config)
     {
-        _config = config;
         LoadChannels();
     }
     
@@ -42,7 +40,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
             }
             else
             {
-                if (new SystemStoreDirectory(directoryPath).TryReadApiKey(_config, out var key))
+                if (new SystemStoreDirectory(directoryPath).TryReadApiKey(Config, out var key))
                 {
                     apiKey = key!;
                     channelName = ApiKeyToName(apiKey);
@@ -80,7 +78,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
             var store = new SystemStoreDirectory(GetStorePath(channelName));
             if (requestApiKey != null)
             {
-                store.WriteApiKey(_config, requestApiKey);
+                store.WriteApiKey(Config, requestApiKey);
             }
             _channelsByName.Add(channelName, created);
             return created;
@@ -96,7 +94,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
 
     public override async Task StopAsync()
     {
-        Log.Information("Flushing log buffers");
+        Log.ForContext<ApiKeyForwardingChannelWrapper>().Information("Flushing log buffers");
         ShutdownTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
         Task[] stopChannels;

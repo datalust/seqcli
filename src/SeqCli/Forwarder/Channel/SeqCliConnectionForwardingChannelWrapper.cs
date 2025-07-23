@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Seq.Api;
+using SeqCli.Config;
 using Serilog;
 
 namespace SeqCli.Forwarder.Channel;
@@ -9,7 +10,7 @@ class SeqCliConnectionForwardingChannelWrapper: ForwardingChannelWrapper
 {
     readonly ForwardingChannel _seqCliConnectionChannel;
     
-    public SeqCliConnectionForwardingChannelWrapper(string bufferPath, SeqConnection connection, string? seqCliApiKey): base(bufferPath, connection)
+    public SeqCliConnectionForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config, string? seqCliApiKey): base(bufferPath, connection, config)
     {
         _seqCliConnectionChannel = OpenOrCreateChannel(SeqCliConnectionChannelName, seqCliApiKey);
     }
@@ -21,7 +22,7 @@ class SeqCliConnectionForwardingChannelWrapper: ForwardingChannelWrapper
     
     public override async Task StopAsync()
     {
-        Log.Information("Flushing log buffers");
+        Log.ForContext<SeqCliConnectionForwardingChannelWrapper>().Information("Flushing log buffers");
         ShutdownTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
         await _seqCliConnectionChannel.StopAsync();

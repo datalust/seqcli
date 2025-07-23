@@ -13,7 +13,7 @@ internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnectio
 {
     protected const string SeqCliConnectionChannelName = "SeqCliConnection";
     protected readonly string BufferPath = bufferPath;
-    readonly SeqCliConfig _config = config;
+    protected readonly SeqCliConfig Config = config;
     protected readonly CancellationTokenSource ShutdownTokenSource = new();
     protected readonly Lock ChannelsSync = new();
 
@@ -24,7 +24,7 @@ internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnectio
         var storePath = GetStorePath(name);
         var store = new SystemStoreDirectory(storePath);
         
-        Log.Information("Opening local buffer in {StorePath}", storePath);
+        Log.ForContext<ForwardingChannelWrapper>().Information("Opening local buffer in {StorePath}", storePath);
         
         return new ForwardingChannel(
             BufferAppender.Open(store),
@@ -32,9 +32,9 @@ internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnectio
             Bookmark.Open(store),
             connection,
             apiKey,
-            _config.Forwarder.Storage.TargetChunkSizeBytes,
-            _config.Forwarder.Storage.MaxChunks,
-            _config.Connection.BatchSizeLimitBytes,
+            Config.Forwarder.Storage.TargetChunkSizeBytes,
+            Config.Forwarder.Storage.MaxChunks,
+            Config.Connection.BatchSizeLimitBytes,
             ShutdownTokenSource.Token);
     }
     

@@ -56,7 +56,7 @@ class ForwarderModule : Module
         else
         {
             builder.Register<SeqCliConnectionForwardingChannelWrapper>(_ =>  
-                new SeqCliConnectionForwardingChannelWrapper(_bufferPath, _connection, _apiKey))
+                new SeqCliConnectionForwardingChannelWrapper(_bufferPath, _connection, _config, _apiKey))
                 .As<ForwardingChannelWrapper>().SingleInstance();
         }
 
