@@ -48,15 +48,17 @@ class ForwarderModule : Module
 
         if (_config.Forwarder.UseApiKeyForwarding)
         {
-            builder.Register<ApiKeyForwardingChannelWrapper>(_ =>  
-                new ApiKeyForwardingChannelWrapper(_bufferPath, _connection, _config))
-                .As<ForwardingChannelWrapper>().SingleInstance();
+            Log.ForContext<ForwarderModule>().Information("Using API key forwarding; inbound API keys will be persisted locally");
+            builder.Register<TransparentForwardingAuthenticationStrategy>(_ =>  
+                new TransparentForwardingAuthenticationStrategy(_bufferPath, _connection, _config))
+                .As<ForwardingAuthenticationStrategy>().SingleInstance();
         }
         else
         {
-            builder.Register<SeqCliConnectionForwardingChannelWrapper>(_ =>  
-                new SeqCliConnectionForwardingChannelWrapper(_bufferPath, _connection, _config, _apiKey))
-                .As<ForwardingChannelWrapper>().SingleInstance();
+            Log.ForContext<ForwarderModule>().Information("Using the default connection API key; inbound API keys will be ignored");
+            builder.Register<SharedConnectionForwardingAuthenticationStrategy>(_ =>  
+                new SharedConnectionForwardingAuthenticationStrategy(_bufferPath, _connection, _config, _apiKey))
+                .As<ForwardingAuthenticationStrategy>().SingleInstance();
         }
 
         builder.RegisterType<IngestionEndpoints>().As<IMapEndpoints>();

@@ -1,3 +1,18 @@
+// Copyright © Datalust Pty Ltd
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,13 +24,12 @@ using Serilog;
 
 namespace SeqCli.Forwarder.Channel;
 
-internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config)
+abstract class ForwardingAuthenticationStrategy(string bufferPath, SeqConnection connection, SeqCliConfig config)
 {
-    protected const string SeqCliConnectionChannelId = "SeqCliConnection";
+    readonly CancellationTokenSource _shutdownTokenSource = new();
+
     protected readonly string BufferPath = bufferPath;
     protected readonly SeqCliConfig Config = config;
-    protected readonly CancellationTokenSource ShutdownTokenSource = new();
-    protected readonly Lock ChannelsSync = new();
 
     // <param name="id">The id used for the channel storage on the file system.</param>
     // <param name="apiKey">The apiKey that will be used to connect to the downstream Seq instance.</param>
@@ -24,7 +38,7 @@ internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnectio
         var storePath = GetStorePath(id);
         var store = new SystemStoreDirectory(storePath);
         
-        Log.ForContext<ForwardingChannelWrapper>().Information("Opening local buffer in {StorePath}", storePath);
+        Log.ForContext<ForwardingAuthenticationStrategy>().Information("Opening local buffer in {StorePath}", storePath);
         
         return new ForwardingChannel(
             BufferAppender.Open(store),
@@ -35,13 +49,23 @@ internal abstract class ForwardingChannelWrapper(string bufferPath, SeqConnectio
             Config.Forwarder.Storage.TargetChunkSizeBytes,
             Config.Forwarder.Storage.MaxChunks,
             Config.Connection.BatchSizeLimitBytes,
-            ShutdownTokenSource.Token);
+            _shutdownTokenSource.Token);
     }
     
     public abstract ForwardingChannel GetForwardingChannel(string? requestApiKey);
 
     public abstract Task StopAsync();
     
+    protected async Task OnStoppedAsync()
+    {
+        await _shutdownTokenSource.CancelAsync();
+    }
+
+    protected void OnStopping()
+    {
+        _shutdownTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+    }
+
     protected string GetStorePath(string id)
     {
         return Path.Combine(BufferPath, id);
