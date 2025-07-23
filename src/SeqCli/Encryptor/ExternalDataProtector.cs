@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using SeqCli.Config;
 
 namespace SeqCli.Encryptor;
 
@@ -110,6 +109,8 @@ class ExternalDataProtector : IDataProtector
 
         stdout = stdoutBuf.AsSpan()[..stdoutBufLength].ToArray();
         ArrayPool<byte>.Shared.Return(stdoutBuf);
+
+        process.WaitForExit(TimeSpan.FromSeconds(30));
         
         return process.ExitCode;
     }
