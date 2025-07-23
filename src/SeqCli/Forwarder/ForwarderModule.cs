@@ -23,7 +23,6 @@ using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
 using Serilog;
 using Serilog.Formatting;
-using Serilog.Formatting.Display;
 using Serilog.Templates;
 
 namespace SeqCli.Forwarder;
@@ -64,13 +63,13 @@ class ForwarderModule : Module
 
         if (_config.Forwarder.Diagnostics.ExposeIngestionLog)
         {
-            Log.Warning("Configured to expose ingestion log via HTTP API");
+            Log.ForContext<ForwarderModule>().Warning("Configured to expose ingestion log via HTTP API");
             builder.RegisterType<IngestionLogEndpoints>().As<IMapEndpoints>();
 
             var ingestionLogTemplate = "[{@t:o} {@l:u3}] {@m}\n";
             if (_config.Forwarder.Diagnostics.IngestionLogShowDetail)
             {
-                Log.Warning("Including full client, payload, and error detail in the ingestion log");
+                Log.ForContext<ForwarderModule>().Warning("Including full client, payload, and error detail in the ingestion log");
                 ingestionLogTemplate +=
                     "{#if ClientHostIP is not null}Client IP address: {ClientHostIP}\n{#end}" +
                     "{#if DocumentStart is not null}First {StartToLog} characters of payload: {DocumentStart:l}\n{#end}" +
