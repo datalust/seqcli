@@ -12,7 +12,7 @@ class SeqCliConnectionForwardingChannelWrapper: ForwardingChannelWrapper
     
     public SeqCliConnectionForwardingChannelWrapper(string bufferPath, SeqConnection connection, SeqCliConfig config, string? seqCliApiKey): base(bufferPath, connection, config)
     {
-        _seqCliConnectionChannel = OpenOrCreateChannel(SeqCliConnectionChannelName, seqCliApiKey);
+        _seqCliConnectionChannel = OpenOrCreateChannel(SeqCliConnectionChannelId, seqCliApiKey);
     }
     
     public override ForwardingChannel GetForwardingChannel(string? _)

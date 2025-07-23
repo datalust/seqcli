@@ -25,7 +25,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
     {
         foreach (var directoryPath in Directory.EnumerateDirectories(BufferPath))
         {
-            if (directoryPath.Equals(GetStorePath(SeqCliConnectionChannelName)))
+            if (directoryPath.Equals(GetStorePath(SeqCliConnectionChannelId)))
             {
                 // data was stored when not using API key forwarding
                 continue;
@@ -59,7 +59,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
                 return channel;
             }
 
-            var channelId = ApiKeyToName(requestApiKey);
+            var channelId = ApiKeyToId(requestApiKey);
             var created = OpenOrCreateChannel(channelId, requestApiKey);
             var store = new SystemStoreDirectory(GetStorePath(channelId));
             store.WriteApiKey(Config, requestApiKey ?? "");
@@ -68,7 +68,7 @@ class ApiKeyForwardingChannelWrapper : ForwardingChannelWrapper
         }
     }
 
-    string ApiKeyToName(string? apiKey)
+    string ApiKeyToId(string? apiKey)
     {
         return string.IsNullOrEmpty(apiKey) ? EmptyApiKeyChannelId : Guid.NewGuid().ToString();
     }
