@@ -37,10 +37,10 @@ class IngestionEndpoints : IMapEndpoints
 {
     static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    readonly ForwardingChannelWrapper _forwardingChannels;
+    readonly ForwardingAuthenticationStrategy _forwardingChannels;
     readonly SeqCliConfig _config;
 
-    public IngestionEndpoints(ForwardingChannelWrapper forwardingChannels, SeqCliConfig config)
+    public IngestionEndpoints(ForwardingAuthenticationStrategy forwardingChannels, SeqCliConfig config)
     {
         _forwardingChannels = forwardingChannels;
         _config = config;
