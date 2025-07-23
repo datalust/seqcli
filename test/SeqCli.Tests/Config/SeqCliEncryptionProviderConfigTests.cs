@@ -51,4 +51,16 @@ public class SeqCliEncryptionProviderConfigTests
         
         Assert.Throws<ArgumentException>(() => config.DataProtector());
     }
+
+    [Fact]
+    public void SpecifyingEncryptorAndDecryptorActivatesExternalDataProtector()
+    {
+        var config = new SeqCliEncryptionProviderConfig
+        {
+            Encryptor = "test",
+            Decryptor = "test"
+        };
+        
+        Assert.IsType<ExternalDataProtector>(config.DataProtector());
+    }
 }

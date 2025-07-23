@@ -27,9 +27,6 @@ class SeqCliEncryptionProviderConfig
 
     public IDataProtector DataProtector()
     {
-#if WINDOWS
-        return new WindowsNativeDataProtector();
-#else
         if (!string.IsNullOrWhiteSpace(Encryptor) || !string.IsNullOrWhiteSpace(Decryptor))
         {
             if (string.IsNullOrWhiteSpace(Encryptor) || string.IsNullOrWhiteSpace(Decryptor))
@@ -41,6 +38,9 @@ class SeqCliEncryptionProviderConfig
             return new ExternalDataProtector(Encryptor, EncryptorArgs, Decryptor, DecryptorArgs);
         }
 
+#if WINDOWS
+        return new WindowsNativeDataProtector();
+#else
         return new PlaintextDataProtector();
 #endif
     }
