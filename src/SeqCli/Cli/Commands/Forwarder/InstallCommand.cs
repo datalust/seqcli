@@ -27,16 +27,13 @@ using SeqCli.Forwarder.Util;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
-namespace SeqCli.Cli.Commands.Forwarder;
-
-[Command("forwarder", "install", "Install the forwarder as a Windows service", IsPreview = true)]
+[Command("forwarder", "install", "Install the forwarder as a Windows service", Visibility = FeatureVisibility.Preview)]
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 class InstallCommand : Command
 {
     readonly StoragePathFeature _storagePath;
     readonly ServiceCredentialsFeature _serviceCredentials;
     readonly ListenUriFeature _listenUri;
-
     public InstallCommand()
     {
         _storagePath = Enable<StoragePathFeature>();

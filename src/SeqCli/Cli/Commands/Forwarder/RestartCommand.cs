@@ -24,7 +24,7 @@ using SeqCli.Forwarder.ServiceProcess;
 
 namespace SeqCli.Cli.Commands.Forwarder;
 
-[Command("forwarder", "restart", "Restart the forwarder Windows service", IsPreview = true)]
+[Command("forwarder", "restart", "Restart the forwarder Windows service", Visibility = FeatureVisibility.Preview)]
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 class RestartCommand : Command
 {

@@ -41,21 +41,30 @@ class CommandLineHost
         {
             const string prereleaseArg = "--pre", verboseArg = "--verbose";
             
-            var norm = args[0].ToLowerInvariant();
-            var subCommandNorm = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
+            var commandName = args[0].ToLowerInvariant();
+            var subCommandName = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
 
-            var pre = args.Any(a => a == prereleaseArg);
+            var hiddenLegacyCommand = false;
+            if (subCommandName == null && commandName == "config")
+            {
+                hiddenLegacyCommand = true;
+                subCommandName = "legacy";
+            }
+            
+            var featureVisibility = FeatureVisibility.Visible | FeatureVisibility.Hidden;
+            if (args.Any(a => a.Trim() is prereleaseArg))
+                featureVisibility |= FeatureVisibility.Preview;
             
             var cmd = _availableCommands.SingleOrDefault(c =>
-                (!c.Metadata.IsPreview || pre) &&
-                c.Metadata.Name == norm &&
-                (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
+                featureVisibility.HasFlag(c.Metadata.Visibility) &&
+                c.Metadata.Name == commandName &&
+                (c.Metadata.SubCommand == subCommandName || c.Metadata.SubCommand == null));
                 
             if (cmd != null)
             {
-                var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
-                var commandSpecificArgs = args.Skip(amountToSkip).Where(arg => cmd.Metadata.Name == "help" || arg != prereleaseArg).ToArray();
-                    
+                var amountToSkip = cmd.Metadata.SubCommand == null || hiddenLegacyCommand ? 1 : 2;
+                var commandSpecificArgs = args.Skip(amountToSkip).Where(arg => cmd.Metadata.Name == "help" || arg is not prereleaseArg).ToArray();
+                
                 var verbose = commandSpecificArgs.Any(arg => arg == verboseArg);
                 if (verbose)
                 {

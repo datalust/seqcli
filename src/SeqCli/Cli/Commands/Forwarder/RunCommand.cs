@@ -45,7 +45,7 @@ using SeqCli.Forwarder.ServiceProcess;
 
 namespace SeqCli.Cli.Commands.Forwarder;
 
-[Command("forwarder", "run", "Listen on an HTTP endpoint and forward ingested logs to Seq", IsPreview = true)]
+[Command("forwarder", "run", "Listen on an HTTP endpoint and forward ingested logs to Seq", Visibility = FeatureVisibility.Preview)]
 class RunCommand : Command
 {
     readonly StoragePathFeature _storagePath;

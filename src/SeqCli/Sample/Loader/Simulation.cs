@@ -34,8 +34,8 @@ static class Simulation
             .WriteTo.Sink(buffer)
             .CreateLogger();
 
-        var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
-            InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize), cancellationToken);
+        var ship = Task.Run(() => LogShipper.ShipEventsAsync(connection, apiKey, buffer,
+            InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize, null, cancellationToken), cancellationToken);
 
         await Roastery.Program.Main(logger, cancellationToken);
         await logger.DisposeAsync();

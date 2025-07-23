@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+// Copyright © Datalust Pty Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
+using System;
 
 namespace SeqCli.Cli;
 
-abstract class CommandFeature
+[Flags]
+public enum FeatureVisibility
 {
-    public abstract void Enable(OptionSet options);
-
-    public virtual IEnumerable<string> GetUsageErrors() => [];
+    None = 0,
+    Visible   = 1,
+    Preview   = 1 << 1,
+    Hidden    = 1 << 2
 }

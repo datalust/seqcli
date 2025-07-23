@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
@@ -120,14 +121,15 @@ class IngestCommand : Command
                     if (_message != null)
                         reader = new StaticMessageTemplateReader(reader, _message);
 
-                    var exit = await LogShipper.ShipEvents(
+                    var exit = await LogShipper.ShipEventsAsync(
                         connection,
                         apiKey,
                         reader,
                         _invalidDataHandlingFeature.InvalidDataHandling,
                         _sendFailureHandlingFeature.SendFailureHandling,
                         batchSize,
-                        filter);
+                        filter,
+                        CancellationToken.None);
 
                     if (exit != 0)
                         return exit;
