@@ -16,7 +16,6 @@ using System;
 using System.Text;
 using Newtonsoft.Json;
 using SeqCli.Encryptor;
-using SeqCli.Util;
 
 namespace SeqCli.Config;
 
@@ -56,6 +55,16 @@ class SeqCliConnectionConfig
     }
 
     public uint? PooledConnectionLifetimeMilliseconds { get; set; } = null;
-    public ulong EventBodyLimitBytes { get; set; } = 256 * 1024;
-    public ulong PayloadLimitBytes { get; set; } = 10 * 1024 * 1024;
+    
+    /// <summary>
+    /// The maximum event body size to send to the Seq server when ingesting events.
+    /// When forwarding, this value is consulted only on the way in; on the way out, we let the target server reject any
+    /// stragglers via 400 responses.
+    /// </summary>
+    public int EventSizeLimitBytes { get; set; } = 256 * 1024;
+    
+    /// <summary>
+    /// The maximum batch size to send to the Seq server when ingesting events.
+    /// </summary>
+    public int BatchSizeLimitBytes { get; set; } = 10 * 1024 * 1024;
 }

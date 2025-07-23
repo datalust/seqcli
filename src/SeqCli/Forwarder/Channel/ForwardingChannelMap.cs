@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Seq.Api;
+using SeqCli.Config;
 using SeqCli.Forwarder.Filesystem.System;
 using SeqCli.Forwarder.Storage;
 using Serilog;
@@ -15,15 +16,17 @@ class ForwardingChannelMap
 {
     readonly string _bufferPath;
     readonly SeqConnection _connection;
+    readonly SeqCliConfig _config;
     readonly ForwardingChannel _defaultChannel;
     readonly Lock _channelsSync = new();
     readonly Dictionary<string, ForwardingChannel> _channels = new();
     readonly CancellationTokenSource _shutdownTokenSource = new();
 
-    public ForwardingChannelMap(string bufferPath, SeqConnection connection, string? defaultApiKey)
+    public ForwardingChannelMap(string bufferPath, SeqConnection connection, string? defaultApiKey, SeqCliConfig config)
     {
         _bufferPath = bufferPath;
         _connection = connection;
+        _config = config;
         _defaultChannel = OpenOrCreateChannel(defaultApiKey, "Default");
         
         // TODO, load other channels at start-up
@@ -43,6 +46,9 @@ class ForwardingChannelMap
             Bookmark.Open(store),
             _connection,
             apiKey,
+            _config.Forwarder.Storage.TargetChunkSizeBytes,
+            _config.Forwarder.Storage.MaxChunks,
+            _config.Connection.BatchSizeLimitBytes,
             _shutdownTokenSource.Token);
     }
 
