@@ -25,20 +25,25 @@ namespace SeqCli.Cli.Commands;
 [Command("help", "Show information about available commands", Example = "seqcli help search")]
 class HelpCommand : Command
 {
-    readonly IEnumerable<Meta<Lazy<Command>, CommandMetadata>> _availableCommands;
-    bool _markdown, _pre;
+    readonly IEnumerable<Meta<Lazy<Command>, CommandMetadata>> _allCommands;
+    bool _markdown;
+    FeatureVisibility _included = FeatureVisibility.Visible;
 
-    public HelpCommand(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> availableCommands)
+    public HelpCommand(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> allCommands)
     {
-        _availableCommands = availableCommands;
-        Options.Add("pre", "Show preview commands", _ => _pre = true);
+        _allCommands = allCommands.OrderBy(c => c.Metadata.Name).ToList();
+
+        Options.Add("pre", "Show preview commands", _ => _included |= FeatureVisibility.Preview);
+        Options.Add("hidden", "Show hidden commands", _ => _included |= FeatureVisibility.Hidden, true);
         Options.Add("m|markdown", "Generate markdown for use in documentation", _ => _markdown = true);
     }
 
+    IEnumerable<Meta<Lazy<Command>, CommandMetadata>> AvailableCommands() =>
+        _allCommands.Where(c => _included.HasFlag(c.Metadata.Visibility));
+
     protected override Task<int> Run(string[] unrecognized)
     {
-        var orderedCommands = _availableCommands
-            .Where(c => !c.Metadata.IsPreview || _pre)
+        var orderedCommands = AvailableCommands()
             .OrderBy(c => c.Metadata.Name)
             .ThenBy(c => c.Metadata.SubCommand)
             .ToList();

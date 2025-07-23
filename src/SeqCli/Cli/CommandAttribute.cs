@@ -23,12 +23,13 @@ public class CommandAttribute : Attribute, ICommandMetadata
     public string? SubCommand { get; }
     public string HelpText { get; }
     public string? Example { get; set; }
-    public bool IsPreview { get; set; }
+    public FeatureVisibility Visibility { get; set; }
 
     public CommandAttribute(string name, string helpText)
     {
         Name = name;
         HelpText = helpText;
+        Visibility = FeatureVisibility.Visible;
     }
 
     public CommandAttribute(string name, string subCommand, string helpText) : this(name, helpText)
