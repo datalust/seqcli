@@ -4,6 +4,6 @@ namespace SeqCli.Config.Forwarder;
 
 public class SeqCliForwarderStorageConfig
 {
-    public long TargetChunkSizeBytes { get; set; } = 10 * 512 * 1024;
+    public long TargetChunkSizeBytes { get; set; } = 100 * 512 * 1024;
     public int? MaxChunks { get; set; } = null;
 }
