@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Channels;
@@ -73,6 +74,8 @@ class ForwardingChannel
                     {
                         entry.CompletionSource.TrySetException(e);
                     }
+                    
+                    ArrayPool<byte>.Shared.Return(entry.Data.Array!);
                 }
             }
             catch (Exception ex)
@@ -124,12 +127,14 @@ class ForwardingChannel
         }, cancellationToken: hardCancel);
     }
 
-    public async Task WriteAsync(byte[] storage, Range range, CancellationToken cancellationToken)
+    public async Task WriteAsync(ArraySegment<byte> data, CancellationToken cancellationToken)
     {
         var tcs = new TaskCompletionSource();
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _hardCancel);
 
-        await _writer.WriteAsync(new ForwardingChannelEntry(storage[range], tcs), cts.Token);
+        var copyBuffer = ArrayPool<byte>.Shared.Rent(data.Count);
+        data.AsSpan().CopyTo(copyBuffer.AsSpan());
+        await _writer.WriteAsync(new ForwardingChannelEntry(new ArraySegment<byte>(copyBuffer, 0, data.Count), tcs), cts.Token);
         await tcs.Task;
     }
 

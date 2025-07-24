@@ -17,4 +17,5 @@ using System.Threading.Tasks;
 
 namespace SeqCli.Forwarder.Channel;
 
+// Note, Data is backed by a rented array that the receiver should return.
 readonly record struct ForwardingChannelEntry(ArraySegment<byte> Data, TaskCompletionSource CompletionSource);
