@@ -13,13 +13,12 @@
 // limitations under the License.
 
 using Seq.Api;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.RetentionPolicy;
 
 [Command("retention", "update",
     "Update an existing retention policy",
     Example="seqcli retention update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "retention", nameof(SeqConnection.RetentionPolicies), "retention policy");
+class UpdateCommand():
+    Shared.UpdateCommand("retention", nameof(SeqConnection.RetentionPolicies), "retention policy");
     

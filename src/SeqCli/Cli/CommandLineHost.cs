@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Serilog.Core;
@@ -39,30 +40,50 @@ class CommandLineHost
 
         if (args.Length > 0)
         {
-            var norm = args[0].ToLowerInvariant();
-            var subCommandNorm = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
-                
+            const string prereleaseArg = "--pre", verboseArg = "--verbose";
+            
+            var commandName = args[0].ToLowerInvariant();
+            var subCommandName = args.Length > 1 && !args[1].Contains('-') ? args[1].ToLowerInvariant() : null;
+
+            var hiddenLegacyCommand = false;
+            if (subCommandName == null && commandName == "config")
+            {
+                hiddenLegacyCommand = true;
+                subCommandName = "legacy";
+            }
+            
+            var featureVisibility = FeatureVisibility.Visible | FeatureVisibility.Hidden;
+            if (args.Any(a => a.Trim() is prereleaseArg))
+                featureVisibility |= FeatureVisibility.Preview;
+            
+            var currentPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? SupportedPlatforms.Windows
+                : SupportedPlatforms.Posix;
+            
             var cmd = _availableCommands.SingleOrDefault(c =>
-                c.Metadata.Name == norm && (c.Metadata.SubCommand == subCommandNorm || c.Metadata.SubCommand == null));
+                c.Metadata.Platforms.HasFlag(currentPlatform) && featureVisibility.HasFlag(c.Metadata.Visibility) &&
+                c.Metadata.Name == commandName &&
+                (c.Metadata.SubCommand == subCommandName || c.Metadata.SubCommand == null));
                 
             if (cmd != null)
             {
-                var amountToSkip = cmd.Metadata.SubCommand == null ? 1 : 2;
-                var commandSpecificArgs = args.Skip(amountToSkip).ToArray();
-                    
-                var verboseArg = commandSpecificArgs.FirstOrDefault(arg => arg == "--verbose");
-                if (verboseArg != null)
+                var amountToSkip = cmd.Metadata.SubCommand == null || hiddenLegacyCommand ? 1 : 2;
+                var commandSpecificArgs = args.Skip(amountToSkip).Where(arg => cmd.Metadata.Name == "help" || arg is not prereleaseArg).ToArray();
+                
+                var verbose = commandSpecificArgs.Any(arg => arg == verboseArg);
+                if (verbose)
                 {
                     levelSwitch.MinimumLevel = LogEventLevel.Information;
                     commandSpecificArgs = commandSpecificArgs.Where(arg => arg != verboseArg).ToArray();
                 }
 
-                return await cmd.Value.Value.Invoke(commandSpecificArgs);
+                var impl = cmd.Value.Value;
+                return await impl.Invoke(commandSpecificArgs);
             }
         }
 
         Console.WriteLine($"Usage: {name} <command> [<args>]");
         Console.WriteLine($"Type `{name} help` for available commands");
-        return -1;
+        return 1;
     }
 }

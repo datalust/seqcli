@@ -18,9 +18,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Levels;
 using SeqCli.Util;
 using Serilog;
@@ -34,20 +34,18 @@ namespace SeqCli.Cli.Commands;
     Example = "seqcli search -f \"@Exception like '%TimeoutException%'\" -c 30")]
 class SearchCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
+    readonly StoragePathFeature _storagePath;
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
     bool _trace, _noWebSockets;
 
-    public SearchCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public SearchCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "f=|filter=",
             "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
@@ -58,7 +56,8 @@ class SearchCommand : Command
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
         _range = Enable<DateRangeFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
 
         Options.Add(
@@ -77,8 +76,9 @@ class SearchCommand : Command
     {
         try
         {
-            await using var output = _output.CreateOutputLogger();
-            var connection = _connectionFactory.Connect(_connection);
+            var config = RuntimeConfigurationLoader.Load(_storagePath);
+            await using var output = _output.GetOutputFormat(config).CreateOutputLogger();
+            var connection = SeqConnectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
             string? filter = null;

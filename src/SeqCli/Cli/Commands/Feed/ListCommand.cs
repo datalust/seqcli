@@ -15,27 +15,23 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Feed;
 
 [Command("feed", "list", "List NuGet feeds", Example="seqcli feed list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _name, _id;
 
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ListCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "n=|name=",
             "The name of the feed to list",
@@ -46,20 +42,22 @@ class ListCommand : Command
             "The id of a single feed to list",
             id => _id = id);
             
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var list = _id != null ?
-            new[] { await connection.Feeds.FindAsync(_id) } :
+        var list = _id != null ? [await connection.Feeds.FindAsync(_id)]
+            :
             (await connection.Feeds.ListAsync())
             .Where(f => _name == null || _name == f.Name);
 
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
             
         return 0;
     }

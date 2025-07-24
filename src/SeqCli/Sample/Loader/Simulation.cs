@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ static class Simulation
             .WriteTo.Sink(buffer)
             .CreateLogger();
 
-        var ship = Task.Run(() => LogShipper.ShipEvents(connection, apiKey, buffer,
-            InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize), cancellationToken);
+        var ship = Task.Run(() => LogShipper.ShipEventsAsync(connection, apiKey, buffer,
+            InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize, null, cancellationToken), cancellationToken);
 
         await Roastery.Program.Main(logger, cancellationToken);
         await logger.DisposeAsync();

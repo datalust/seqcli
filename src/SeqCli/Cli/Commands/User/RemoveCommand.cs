@@ -15,8 +15,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.User;
@@ -25,17 +26,15 @@ namespace SeqCli.Cli.Commands.User;
     Example="seqcli user remove -n alice")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly UserIdentityFeature _userIdentity;
     readonly ConnectionFeature _connection;
-
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    readonly StoragePathFeature _storagePath;
+    
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _userIdentity = Enable(new UserIdentityFeature("remove"));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -46,10 +45,11 @@ class RemoveCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var toRemove = _userIdentity.Id != null ?
-            new[] {await connection.Users.FindAsync(_userIdentity.Id)} :
+        var toRemove = _userIdentity.Id != null ? [await connection.Users.FindAsync(_userIdentity.Id)]
+            :
             (await connection.Users.ListAsync())
             .Where(u => _userIdentity.Name == u.Username) 
             .ToArray();

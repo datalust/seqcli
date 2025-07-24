@@ -18,6 +18,8 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using SeqCli.Config.Forwarder;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace SeqCli.Config;
@@ -58,10 +60,6 @@ class SeqCliConfig
         var content = JsonConvert.SerializeObject(data, Formatting.Indented, SerializerSettings);
         File.WriteAllText(filename, content);
     }
-
-    public SeqCliConnectionConfig Connection { get; set; } = new();
-    public SeqCliOutputConfig Output { get; set; } = new();
-    public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } = new(StringComparer.OrdinalIgnoreCase);
     
     /// <summary>
     /// Some configuration objects, for example those with environment overrides, should not be exported
@@ -71,4 +69,10 @@ class SeqCliConfig
     {
         _exportable = false;
     }
+    
+    public SeqCliConnectionConfig Connection { get; set; } = new();
+    public SeqCliOutputConfig Output { get; set; } = new();
+    public SeqCliForwarderConfig Forwarder { get; set; } = new();
+    public SeqCliEncryptionProviderConfig Encryption { get; set; } = new();
+    public Dictionary<string, SeqCliConnectionConfig> Profiles { get; } = new(StringComparer.OrdinalIgnoreCase);
 }

@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Node;
@@ -31,38 +31,38 @@ namespace SeqCli.Cli.Commands.Node;
     Example = "seqcli node health -s https://seq-2.example.com")]
 class HealthCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly WaitUntilHealthyFeature _waitUntilHealthy;
     readonly TimeoutFeature _timeout;
     readonly OutputFormatFeature _output;
-
-    public HealthCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    readonly StoragePathFeature _storagePath;
+    
+    public HealthCommand()
     {
-        _connectionFactory = connectionFactory;
 
         _waitUntilHealthy = Enable(new WaitUntilHealthyFeature("node"));
         _timeout = Enable(new TimeoutFeature());
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(outputConfig));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         if (_waitUntilHealthy.ShouldWait)
         {
-            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30));
+            return await RunUntilHealthy(connection, timeout ?? TimeSpan.FromSeconds(30), _output.GetOutputFormat(config));
         }
 
-        return await RunOnce(connection);
+        return await RunOnce(connection, _output.GetOutputFormat(config));
     }
 
-    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout)
+    async Task<int> RunUntilHealthy(SeqConnection connection, TimeSpan timeout, OutputFormat outputFormat)
     {
         using var ct = new CancellationTokenSource(timeout);
         
@@ -76,7 +76,7 @@ class HealthCommand : Command
             {
                 while (true)
                 {
-                    if (await RunOnce(connection) == 0)
+                    if (await RunOnce(connection, outputFormat) == 0)
                     {
                         return 0;
                     }
@@ -91,7 +91,7 @@ class HealthCommand : Command
         }
     }
 
-    async Task<int> RunOnce(SeqConnection connection)
+    async Task<int> RunOnce(SeqConnection connection, OutputFormat outputFormat)
     {
         try
         {
@@ -104,17 +104,17 @@ class HealthCommand : Command
                 Log.Information("{HeaderName}: {HeaderValue}", key, value);
             }
 
-            if (_output.Json)
+            if (outputFormat.Json)
             {
                 var shouldBeJson = await response.Content.ReadAsStringAsync();
                 try
                 {
                     var obj = JsonConvert.DeserializeObject(shouldBeJson) ?? throw new InvalidDataException();
-                    _output.WriteObject(obj);
+                    outputFormat.WriteObject(obj);
                 }
                 catch
                 {
-                    _output.WriteObject(new { Response = shouldBeJson });
+                    outputFormat.WriteObject(new { Response = shouldBeJson });
                 }
             }
             else

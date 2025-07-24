@@ -290,3 +290,5 @@ __pycache__/
 
 # ci.global.json is used in CI; local builds are unconstrained
 global.json
+
+.DS_Store/

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>seqcli</AssemblyName>
     <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;linux-musl-x64;osx-x64;linux-arm64;linux-musl-arm64;osx-arm64</RuntimeIdentifiers>
@@ -13,6 +13,10 @@
     <RollForward>Major</RollForward>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
@@ -27,17 +31,20 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="newtonsoft.json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Seq.Api" Version="2025.2.0" />
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="4.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Autofac" Version="8.3.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Superpower" Version="3.1.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.7" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.7" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
-    <PackageReference Include="Superpower" Version="3.0.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.5" />
-    <PackageReference Include="Seq.Api" Version="2025.2.0" />
     <PackageReference Include="Seq.Apps" Version="2023.4.0" />
     <PackageReference Include="Seq.Syntax" Version="1.0.0" />
     <PackageReference Include="Tavis.UriTemplates" Version="2.0.0" />

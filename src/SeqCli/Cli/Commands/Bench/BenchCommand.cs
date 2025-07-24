@@ -1,4 +1,4 @@
-// Copyright Datalust Pty Ltd and Contributors
+// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ using Newtonsoft.Json;
 using Seq.Api;
 using Seq.Api.Model.Data;
 using Seq.Api.Model.Signals;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using SeqCli.Sample.Loader;
 using SeqCli.Util;
 using Serilog;
@@ -65,11 +66,11 @@ namespace SeqCli.Cli.Commands.Bench;
 [Command("bench", @"Measure query performance")]
 class BenchCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     int _runs = 10;
     readonly ConnectionFeature _connection;
     readonly DateRangeFeature _range;
     readonly TimeoutFeature _timeout;
+    readonly StoragePathFeature _storagePath;
     string _cases = "";
     string _reportingServerUrl = "";
     string _reportingServerApiKey = "";
@@ -77,9 +78,8 @@ class BenchCommand : Command
     bool _withIngestion = false;
     bool _withQueries = false;
 
-    public BenchCommand(SeqConnectionFactory connectionFactory)
+    public BenchCommand()
     {
-        _connectionFactory = connectionFactory;
         Options.Add("r|runs=", "The number of runs to execute; the default is 10", r => _runs = int.Parse(r));
         
         Options.Add(
@@ -111,6 +111,8 @@ class BenchCommand : Command
             "with-queries",
             "Should the benchmark include querying Seq",
             _ => _withQueries = true);
+
+        _storagePath = Enable<StoragePathFeature>();
     }
     
     protected override async Task<int> Run()
@@ -123,8 +125,9 @@ class BenchCommand : Command
         
         try
         {
-            var (_, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
-            var connection = _connectionFactory.Connect(_connection);
+            var config = RuntimeConfigurationLoader.Load(_storagePath);
+            var (_, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
+            var connection = SeqConnectionFactory.Connect(_connection, config);
             var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
             var seqVersion = (await connection.Client.GetRootAsync()).Version;
             await using var reportingLogger = BuildReportingLogger();
@@ -159,9 +162,9 @@ class BenchCommand : Command
 
                     if (!_withQueries)
                     {
-                        int benchDurationMs = 120_000;
-                        await Task.Delay(benchDurationMs);
-                        cancellationTokenSource.Cancel();
+                        const int benchDurationMs = 120_000;
+                        await Task.Delay(benchDurationMs, cancellationToken);
+                        await cancellationTokenSource.CancelAsync();
                                 
                         var response = await connection.Data.QueryAsync(
                             "select count(*) from stream group by time(1s)",
@@ -199,7 +202,7 @@ class BenchCommand : Command
                 {
                     var collectedTimings = await QueryBenchmark(reportingLogger, runId, connection, seqVersion, timeout);
                     collectedTimings.LogSummary(_description);
-                    cancellationTokenSource.Cancel();
+                    await cancellationTokenSource.CancelAsync();
                 }
             }
 
@@ -212,7 +215,7 @@ class BenchCommand : Command
         }
     }
 
-    async Task IngestionBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string? apiKey, 
+    static async Task IngestionBenchmark(Logger reportingLogger, string runId, SeqConnection connection, string? apiKey, 
         string seqVersion, bool isQueryBench, CancellationToken cancellationToken = default)
     {
         reportingLogger.Information(
@@ -224,7 +227,7 @@ class BenchCommand : Command
             var simulationTasks = Enumerable.Range(1, 500)
                 .Select(i => Simulation.RunAsync(connection, apiKey, 10000, echoToStdout: false, cancellationToken))
                 .ToArray();
-            await Task.Delay(20_000); // how long to ingest before beginning queries
+            await Task.Delay(20_000, cancellationToken); // how long to ingest before beginning queries
         }
         else
         {
@@ -245,7 +248,7 @@ class BenchCommand : Command
         
 
         foreach (var c in cases.Cases.OrderBy(c => c.Id)
-                     .Concat(new [] { QueryBenchRunResults.FINAL_COUNT_CASE }))
+                     .Concat([QueryBenchRunResults.FINAL_COUNT_CASE]))
         {
             var timings = new QueryBenchCaseTimings(c);
             queryBenchRunResults.Add(timings);

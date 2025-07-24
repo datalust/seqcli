@@ -63,7 +63,7 @@ class Router : HttpServer
                     {
                         using var _ = LogContext.PushProperty("Controller", controllerName);
                         using var __ = LogContext.PushProperty("Action", actionName);
-                        return (Task<HttpResponse>) method.Invoke(controller, new object[] {r})!;
+                        return (Task<HttpResponse>) method.Invoke(controller, [r])!;
                     });
                     
                 _logger.Debug("Binding route HTTP {HttpMethod} {RouteTemplate} to action method {Controller}.{Action}()",

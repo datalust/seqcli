@@ -15,9 +15,9 @@
 using System;
 using System.Threading.Tasks;
 using Seq.Api.Model.Indexes;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Index;
@@ -25,20 +25,19 @@ namespace SeqCli.Cli.Commands.Index;
 [Command("index", "suppress", "Suppress an index", Example="seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748")]
 class SuppressCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
+    readonly StoragePathFeature _storagePath;
+    
     string? _id;
 
-    public SuppressCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public SuppressCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of an index to suppress",
             id => _id = id);
         
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -50,7 +49,8 @@ class SuppressCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var toSuppress = await connection.Indexes.FindAsync(_id);
         await connection.Indexes.SuppressAsync(toSuppress);
 

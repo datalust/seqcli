@@ -15,9 +15,9 @@
 using System;
 using System.Threading.Tasks;
 using Seq.Api.Model.Signals;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Signals;
 using SeqCli.Syntax;
 using SeqCli.Util;
@@ -29,19 +29,16 @@ namespace SeqCli.Cli.Commands.RetentionPolicy;
     Example = "seqcli retention create --after 30d --delete-all-events")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _afterDuration;
     bool _deleteAllEvents;
     string? _deleteMatchingSignal;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "after=",
             "A duration after which the policy will delete events, e.g. `7d`",
@@ -62,12 +59,14 @@ class CreateCommand : Command
         );
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         SignalExpressionPart? removedSignalExpression;
         
@@ -106,7 +105,7 @@ class CreateCommand : Command
 
         policy = await connection.RetentionPolicies.AddAsync(policy);
 
-        _output.WriteEntity(policy);
+        _output.GetOutputFormat(config).WriteEntity(policy);
 
         return 0;
     }

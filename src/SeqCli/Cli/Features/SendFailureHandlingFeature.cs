@@ -25,6 +25,6 @@ class SendFailureHandlingFeature : CommandFeature
     {
         options.Add("send-failure=",
             "Specify how connection failures are handled: `fail` (default), `retry`, `continue`, or `ignore`",
-            v => SendFailureHandling = (SendFailureHandling)Enum.Parse(typeof(SendFailureHandling), v, ignoreCase: true));
+            v => SendFailureHandling = Enum.Parse<SendFailureHandling>(v, ignoreCase: true));
     }
 }

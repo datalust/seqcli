@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using SeqCli.Util;
 using Serilog;
 
@@ -13,15 +14,12 @@ namespace SeqCli.Cli.Commands.App;
 // ReSharper disable once UnusedType.Global
 class UninstallCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     string? _packageId, _id;
     readonly ConnectionFeature _connection;
-
-    public UninstallCommand(SeqConnectionFactory connectionFactory)
+    readonly StoragePathFeature _storagePath;
+    
+    public UninstallCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "package-id=",
             "The package id of the app package to uninstall",
@@ -33,6 +31,7 @@ class UninstallCommand : Command
             t => _id = ArgumentString.Normalize(t));
 
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -43,7 +42,8 @@ class UninstallCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var toRemove = _id != null ? [await connection.Apps.FindAsync(_id)]
             : (await connection.Apps.ListAsync())

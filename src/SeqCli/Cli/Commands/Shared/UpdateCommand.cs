@@ -15,8 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Import;
 using SeqCli.Templates.Parser;
@@ -27,18 +28,16 @@ namespace SeqCli.Cli.Commands.Shared;
 
 abstract class UpdateCommand: Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
+    readonly StoragePathFeature _storagePath;
     readonly string _resourceGroupName;
     readonly string _entityName;
 
     string? _json;
     bool _jsonStdin;
 
-    protected UpdateCommand(SeqConnectionFactory connectionFactory, string commandGroupName, string resourceGroupName, string? entityName = null)
+    protected UpdateCommand(string commandGroupName, string resourceGroupName, string? entityName = null)
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _resourceGroupName = resourceGroupName;
         _entityName = entityName ?? commandGroupName;
 
@@ -53,11 +52,13 @@ abstract class UpdateCommand: Command
             _ => _jsonStdin = true);
         
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
     
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         if (_json == null && !_jsonStdin)
         {

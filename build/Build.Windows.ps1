@@ -13,7 +13,6 @@ $version = Get-SemVer
 Write-Output "Building version $version"
 
 $framework = 'net9.0'
-$windowsTfmSuffix = '-windows'
 
 function Clean-Output
 {
@@ -28,7 +27,7 @@ function Restore-Packages
 
 function Execute-Tests($version)
 {
-    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
+    & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release --framework "$framework" /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
@@ -42,9 +41,6 @@ function Publish-Archives($version)
     $rids = $([xml](Get-Content .\src\SeqCli\SeqCli.csproj)).Project.PropertyGroup.RuntimeIdentifiers.Split(';')
     foreach ($rid in $rids) {
         $tfm = $framework
-        if ($rid -eq "win-x64") {
-            $tfm = "$tfm$windowsTfmSuffix"
-        }
 
         & dotnet publish ./src/SeqCli/SeqCli.csproj -c Release -f $tfm -r $rid --self-contained /p:VersionPrefix=$version
         if($LASTEXITCODE -ne 0) { throw "Build failed" }

@@ -13,13 +13,12 @@
 // limitations under the License.
 
 using Seq.Api;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.AppInstance;
 
 [Command("appinstance", "update",
     "Update an existing app instance",
     Example="seqcli appinstance update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "appinstance", nameof(SeqConnection.AppInstances), "app instance");
+class UpdateCommand():
+    Shared.UpdateCommand("appinstance", nameof(SeqConnection.AppInstances), "app instance");
     

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Util;
 using Serilog;
@@ -11,7 +12,8 @@ namespace SeqCli.Cli.Commands.Profile;
 class CreateCommand : Command
 {
     string? _url, _apiKey, _name;
-
+    readonly StoragePathFeature _storagePath;
+    
     public CreateCommand()
     {
         Options.Add("n=|name=",
@@ -25,6 +27,8 @@ class CreateCommand : Command
         Options.Add("a=|apikey=",
             "The API key to use when connecting to the server, if required",
             v => _apiKey = ArgumentString.Normalize(v));
+
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override Task<int> Run()
@@ -48,9 +52,11 @@ class CreateCommand : Command
             
         try
         {
-            var config = SeqCliConfig.ReadFromFile(RuntimeConfigurationLoader.DefaultConfigFilename);
-            config.Profiles[_name] = new SeqCliConnectionConfig { ServerUrl = _url, ApiKey = _apiKey };
-            SeqCliConfig.WriteToFile(config, RuntimeConfigurationLoader.DefaultConfigFilename);
+            var config = SeqCliConfig.ReadFromFile(_storagePath.ConfigFilePath);
+            var connectionConfig = new SeqCliConnectionConfig { ServerUrl = _url };
+            connectionConfig.EncodeApiKey(_apiKey, config.Encryption.DataProtector());
+            config.Profiles[_name] = connectionConfig;
+            SeqCliConfig.WriteToFile(config, _storagePath.ConfigFilePath);
             return 0;
         }
         catch (Exception ex)

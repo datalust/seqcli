@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using Serilog;
-using Serilog.Core;
 
 namespace SeqCli.EndToEnd.Support;
 
@@ -13,7 +11,7 @@ public sealed class TestDataFolder : IDisposable
     {
         _basePath = System.IO.Path.Combine(
             System.IO.Path.GetTempPath(),
-            "SeqCli Test",
+            "SeqCli.Tests.EndToEnd",
             Guid.NewGuid().ToString("n"));
 
         Directory.CreateDirectory(_basePath);

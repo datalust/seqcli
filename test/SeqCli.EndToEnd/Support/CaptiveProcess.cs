@@ -15,7 +15,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
     readonly ManualResetEvent _outputComplete = new(false);
     readonly ManualResetEvent _errorComplete = new(false);
 
-    readonly object _sync = new();
+    readonly Lock _sync = new();
     readonly StringWriter _output = new();
 
     public CaptiveProcess(
@@ -27,7 +27,7 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
         string stopCommandFullExePath = null,
         string stopCommandArgs = null)
     {
-        if (fullExePath == null) throw new ArgumentNullException(nameof(fullExePath));
+        ArgumentNullException.ThrowIfNull(fullExePath);
         _captureOutput = captureOutput;
         _stopCommandFullExePath = stopCommandFullExePath;
         _stopCommandArgs = stopCommandArgs;
@@ -111,11 +111,11 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
 
         if (_captureOutput)
         {
-            if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(1)))
-                throw new IOException("STDOUT did not complete in the fixed 1 second window.");
+            if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(5)))
+                throw new IOException("STDOUT did not complete in the fixed 5-second window.");
                 
-            if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(1)))
-                throw new IOException("STDERR did not complete in the fixed 1 second window.");
+            if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(5)))
+                throw new IOException("STDERR did not complete in the fixed 5-second window.");
         }
 
         return _process.ExitCode;

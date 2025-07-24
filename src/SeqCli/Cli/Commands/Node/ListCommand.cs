@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Node;
 
@@ -25,17 +25,14 @@ namespace SeqCli.Cli.Commands.Node;
     Example = "seqcli node list --json")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _name, _id;
         
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliOutputConfig outputConfig)
+    public ListCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            
         Options.Add(
             "n=|name=",
             "The name of the cluster node to list",
@@ -46,20 +43,22 @@ class ListCommand : Command
             "The id of a single cluster node to list",
             id => _id = id);
             
-        _output = Enable(new OutputFormatFeature(outputConfig));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
         
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var list = _id != null ?
-            new[] { await connection.Cluster.FindAsync(_id) } :
+        var list = _id != null ? [await connection.Cluster.FindAsync(_id)]
+            :
             (await connection.Cluster.ListAsync())
             .Where(n => _name == null || _name == n.Name);
 
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
             
         return 0;
     }

@@ -3,7 +3,7 @@
   "profiles": {
     "SeqCli": {
       "commandName": "Project",
-      "commandLineArgs": "config -k connection.apiKey -v test"
+      "commandLineArgs": "forwarder run --pre"
     }
   }
 }

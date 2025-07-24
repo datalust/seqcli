@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using SeqCli.Sample.Loader;
 
 namespace SeqCli.Cli.Commands.Sample;
@@ -25,19 +26,17 @@ namespace SeqCli.Cli.Commands.Sample;
     Example = "seqcli sample ingest")]
 class IngestCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly ConfirmFeature _confirm;
     readonly BatchSizeFeature _batchSize;
-
+    readonly StoragePathFeature _storagePath;
+    
     bool _quiet;
     bool _setup;
     int _simulations = 1;
 
-    public IngestCommand(SeqConnectionFactory connectionFactory)
+    public IngestCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _confirm = Enable<ConfirmFeature>();
         _connection = Enable<ConnectionFeature>();
 
@@ -47,11 +46,13 @@ class IngestCommand : Command
             v => _simulations = int.Parse(v));
             
         _batchSize = Enable<BatchSizeFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
         
     protected override async Task<int> Run()
     {
-        var (url, apiKey) = _connectionFactory.GetConnectionDetails(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var (url, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
         var batchSize = _batchSize.Value;
 
         if (!_confirm.TryConfirm(_setup
@@ -62,7 +63,7 @@ class IngestCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         if (_setup)
         {

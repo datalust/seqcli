@@ -29,8 +29,8 @@ public class TemplateWriterTests
             Id = "test-stuff",
             Name = "Test Stuff",
             ReferencedId = "test-ref",
-            Numbers = new List<int> { 1, 2, 3 },
-            Strings = new List<string> { "test" },
+            Numbers = [1, 2, 3],
+            Strings = ["test"],
             Dictionary = new Dictionary<string, string>{ ["First"] = "a" }
         };
 

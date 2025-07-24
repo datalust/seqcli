@@ -17,44 +17,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Indexes;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Index;
 
 [Command("index", "list", "List indexes", Example="seqcli index list")]
 class ListCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
+    readonly StoragePathFeature _storagePath;
+    
     string? _id;
 
-    public ListCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ListCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        
         Options.Add(
             "i=|id=",
             "The id of a single index to list",
             id => _id = id);
 
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var list = _id is not null 
             ? [await connection.Indexes.FindAsync(_id)]
             : await connection.Indexes.ListAsync();
         
-        _output.ListEntities(list);
+        _output.GetOutputFormat(config).ListEntities(list);
         
         return 0;
     }

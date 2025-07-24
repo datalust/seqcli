@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 
 namespace SeqCli.Cli;
@@ -21,5 +20,5 @@ abstract class CommandFeature
 {
     public abstract void Enable(OptionSet options);
 
-    public virtual IEnumerable<string> GetUsageErrors() => Array.Empty<string>();
+    public virtual IEnumerable<string> GetUsageErrors() => [];
 }

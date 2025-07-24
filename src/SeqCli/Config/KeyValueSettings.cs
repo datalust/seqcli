@@ -57,7 +57,7 @@ static class KeyValueSettings
         // would be more robust.
         var targetProperty = receiver.GetType().GetTypeInfo().DeclaredProperties
             .Where(p => p is { CanRead: true, CanWrite: true } && p.GetMethod!.IsPublic && p.SetMethod!.IsPublic && !p.GetMethod.IsStatic)
-            .SingleOrDefault(p => Camelize(p.Name) == steps[^1]);
+            .SingleOrDefault(p => Camelize(GetUserFacingName(p)) == steps[^1]);
 
         if (targetProperty == null)
             throw new ArgumentException("The key could not be found; run `seqcli config list` to view all keys.");

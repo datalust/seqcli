@@ -13,13 +13,12 @@
 // limitations under the License.
 
 using Seq.Api;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Feed;
 
 [Command("feed", "update",
     "Update an existing NuGet feed",
     Example="seqcli feed update --json '{...}'")]
-class UpdateCommand(SeqConnectionFactory connectionFactory):
-    Shared.UpdateCommand(connectionFactory, "feed", nameof(SeqConnection.Feeds), "NuGet feed");
+class UpdateCommand():
+    Shared.UpdateCommand("feed", nameof(SeqConnection.Feeds), "NuGet feed");
     

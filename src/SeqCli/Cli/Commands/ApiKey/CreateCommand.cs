@@ -19,9 +19,9 @@ using Seq.Api;
 using Seq.Api.Model.LogEvents;
 using Seq.Api.Model.Security;
 using Seq.Api.Model.Shared;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Levels;
 using SeqCli.Util;
 using Serilog;
@@ -32,20 +32,17 @@ namespace SeqCli.Cli.Commands.ApiKey;
     Example = "seqcli apikey create -t 'Test API Key' -p Environment=Test")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly PropertiesFeature _properties;
     readonly OutputFormatFeature _output;
+    readonly StoragePathFeature _storagePath;
 
     string? _title, _token, _filter, _level, _connectUsername, _connectPassword;
     string[]? _permissions;
     bool _useServerTimestamps, _connectPasswordStdin;
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the API key",
@@ -94,12 +91,15 @@ class CreateCommand : Command
             _ => _connectPasswordStdin = true);
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = await TryConnectAsync();
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        
+        var connection = await TryConnectAsync(config);
         if (connection == null)
             return 1;
             
@@ -149,19 +149,21 @@ class CreateCommand : Command
 
         apiKey = await connection.ApiKeys.AddAsync(apiKey);
 
-        if (_token == null && !_output.Json)
+        var output = _output.GetOutputFormat(config);
+
+        if (_token == null && !output.Json)
         {
             Console.WriteLine(apiKey.Token);
         }
         else
         {
-            _output.WriteEntity(apiKey);
+            output.WriteEntity(apiKey);
         }
 
         return 0;
     }
 
-    async Task<SeqConnection?> TryConnectAsync()
+    async Task<SeqConnection?> TryConnectAsync(SeqCliConfig config)
     {
         SeqConnection connection;
         if (_connectUsername != null)
@@ -183,13 +185,13 @@ class CreateCommand : Command
                 _connectPassword = await Console.In.ReadLineAsync();
             }
 
-            var (url, _) = _connectionFactory.GetConnectionDetails(_connection);
+            var (url, _) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
             connection = new SeqConnection(url);
             await connection.Users.LoginAsync(_connectUsername, _connectPassword ?? "");
         }
         else
         {
-            connection = _connectionFactory.Connect(_connection);
+            connection = SeqConnectionFactory.Connect(_connection, config);
         }
 
         return connection;

@@ -14,13 +14,13 @@ public class ProfileCreateListRemoveTestCase : ICliTestCase
         Assert.Equal(0, create);
 
         Assert.Equal(0, runner.Exec("profile list", disconnected: true));
-        Assert.Contains("test (https://seq.example.com)", runner.LastRunProcess.Output);
+        Assert.Contains("test (https://seq.example.com)", runner.LastRunProcess!.Output);
 
         Assert.Equal(0, runner.Exec("config", disconnected: true));
         Assert.Contains("profiles[test].serverUrl", runner.LastRunProcess.Output);
         Assert.Contains("https://seq.example.com", runner.LastRunProcess.Output);
         Assert.Contains("profiles[test].apiKey", runner.LastRunProcess.Output);
-        Assert.Contains("123", runner.LastRunProcess.Output);
+        Assert.Contains("pd.", runner.LastRunProcess.Output);
 
         var remove = runner.Exec("profile remove", "-n Test", disconnected: true);
         Assert.Equal(0, remove);

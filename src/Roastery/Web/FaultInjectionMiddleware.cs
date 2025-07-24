@@ -18,15 +18,15 @@ class FaultInjectionMiddleware: HttpServer
     {
         _logger = logger.ForContext<FaultInjectionMiddleware>();
         _next = next;
-        _faults = new Func<HttpRequest, Task<HttpResponse>>[]
-        {
+        _faults =
+        [
             Unauthorized,
             Unauthorized,
             Unauthorized,
             Timeout,
             Timeout,
             Disposed
-        };
+        ];
     }
 
     Task<HttpResponse> Unauthorized(HttpRequest request)

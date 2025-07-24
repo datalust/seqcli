@@ -15,8 +15,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Signal;
@@ -25,19 +26,17 @@ namespace SeqCli.Cli.Commands.Signal;
     Example = "seqcli signal remove -t 'Test Signal'")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly EntityIdentityFeature _entityIdentity;
     readonly ConnectionFeature _connection;
     readonly EntityOwnerFeature _entityOwner;
-
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    readonly StoragePathFeature _storagePath;
+    
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
         _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -48,10 +47,11 @@ class RemoveCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var toRemove = _entityIdentity.Id != null ?
-            new[] { await connection.Signals.FindAsync(_entityIdentity.Id) } :
+        var toRemove = _entityIdentity.Id != null ? [await connection.Signals.FindAsync(_entityIdentity.Id)]
+            :
             (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
             .Where(signal => _entityIdentity.Title == signal.Title)
             .ToArray();

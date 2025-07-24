@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Util;
 
 // ReSharper disable once UnusedType.Global
@@ -15,19 +15,16 @@ namespace SeqCli.Cli.Commands.Workspace;
     Example = "seqcli workspace create -t 'My Workspace' -c signal-314159 -c dashboard-628318")]
 class CreateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _title, _description;
     bool _isProtected;
     readonly List<string?> _include = new();
 
-    public CreateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public CreateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "t=|title=",
             "A title for the workspace",
@@ -49,12 +46,14 @@ class CreateCommand : Command
             _ => _isProtected = true);
 
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var workspace = await connection.Workspaces.TemplateAsync();
         workspace.OwnerId = null;
@@ -69,7 +68,7 @@ class CreateCommand : Command
 
         workspace = await connection.Workspaces.AddAsync(workspace);
 
-        _output.WriteEntity(workspace);
+        _output.GetOutputFormat(config).WriteEntity(workspace);
 
         return 0;
     }

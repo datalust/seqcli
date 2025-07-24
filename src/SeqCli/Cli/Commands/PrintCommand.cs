@@ -34,16 +34,13 @@ class PrintCommand : Command
 {
     readonly FileInputFeature _fileInputFeature;
     readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
+    readonly StoragePathFeature _storage;
 
-    string? _filter, _template = OutputFormatFeature.DefaultOutputTemplate;
-    bool _noColor, _forceColor;
+    string? _filter, _template = OutputFormat.DefaultOutputTemplate;
+    bool? _noColor, _forceColor;
 
-    public PrintCommand(SeqCliOutputConfig outputConfig)
+    public PrintCommand()
     {
-        if (outputConfig == null) throw new ArgumentNullException(nameof(outputConfig));
-        _noColor = outputConfig.DisableColor;
-        _forceColor = outputConfig.ForceColor;
-
         _fileInputFeature = Enable(new FileInputFeature("CLEF file to read", allowMultiple: true));
 
         Options.Add("f=|filter=",
@@ -56,28 +53,32 @@ class PrintCommand : Command
 
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
+        // These should be ported to use `OutputFormatFeature`.
         Options.Add("no-color", "Don't colorize text output", _ => _noColor = true);
-
         Options.Add("force-color",
             "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
             _ => _forceColor = true);
+
+        _storage = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
+        var config = RuntimeConfigurationLoader.Load(_storage);
+        
         var applyThemeToRedirectedOutput
-            = !_noColor && _forceColor;
+            = !(_noColor ?? config.Output.DisableColor) && (_forceColor ?? config.Output.ForceColor);
 
         var theme
-            = _noColor                      ? ConsoleTheme.None
-            :  applyThemeToRedirectedOutput ? OutputFormatFeature.DefaultAnsiTheme
-            :                                 OutputFormatFeature.DefaultTheme;
+            = _noColor ?? config.Output.DisableColor                      ? ConsoleTheme.None
+            :  applyThemeToRedirectedOutput ? OutputFormat.DefaultAnsiTheme
+            :                                 OutputFormat.DefaultTheme;
 
         var outputConfiguration = new LoggerConfiguration()
             .MinimumLevel.Is(LevelAlias.Minimum)
             .Enrich.With<RedundantEventTypeRemovalEnricher>()
             .WriteTo.Console(
-                outputTemplate: _template ?? OutputFormatFeature.DefaultOutputTemplate,
+                outputTemplate: _template ?? OutputFormat.DefaultOutputTemplate,
                 theme: theme,
                 applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
 

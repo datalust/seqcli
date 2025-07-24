@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
 
 using System;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Settings;
@@ -23,18 +24,15 @@ namespace SeqCli.Cli.Commands.Settings;
 [Command("setting", "set", "Change a runtime-configurable server setting")]
 class SetCommand: Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
+    readonly StoragePathFeature _storagePath;
     
     string? _value;
     bool _valueSpecified, _readValueFromStdin;
 
-    public SetCommand(SeqConnectionFactory connectionFactory)
+    public SetCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         _name = Enable<SettingNameFeature>();
         
         Options.Add("v|value=",
@@ -51,6 +49,7 @@ class SetCommand: Command
             _ => _readValueFromStdin = true);
 
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -60,8 +59,9 @@ class SetCommand: Command
             Log.Error("A value must be supplied with either `--value=VALUE` or `--value-stdin`.");
             return 1;
         }
-        
-        var connection = _connectionFactory.Connect(_connection);
+
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         var setting = await connection.Settings.FindNamedAsync(_name.Name);
         setting.Value = ReadValue();

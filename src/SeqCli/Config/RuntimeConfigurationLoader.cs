@@ -12,28 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.IO;
+using SeqCli.Cli.Features;
 
 namespace SeqCli.Config;
 
 static class RuntimeConfigurationLoader
 {
-    public static readonly string DefaultConfigFilename =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SeqCli.json");
-
     const string DefaultEnvironmentVariablePrefix = "SEQCLI_";
     
     /// <summary>
     /// This is the method to use when loading configuration for runtime use. It will read the default configuration
     /// file, if any, and apply overrides from the environment.
     /// </summary>
-    public static SeqCliConfig Load()
+    public static SeqCliConfig Load(StoragePathFeature storage)
     {
-        var config = SeqCliConfig.ReadFromFile(DefaultConfigFilename);
+        var config = SeqCliConfig.ReadFromFile(storage.ConfigFilePath);
         
         EnvironmentOverrides.Apply(DefaultEnvironmentVariablePrefix, config);
-            
+        
         return config;
     }    
 }

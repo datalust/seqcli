@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using SeqCli.Templates.Ast;
 using SeqCli.Templates.Export;
 using SeqCli.Templates.Import;
@@ -22,17 +23,16 @@ namespace SeqCli.Cli.Commands.Template;
     Example = "seqcli template import -i ./Templates")]
 class ImportCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly ConnectionFeature _connection;
     readonly PropertiesFeature _args;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _inputDir = ".";
     string? _stateFile;
     bool _merge;
         
-    public ImportCommand(SeqConnectionFactory connectionFactory)
+    public ImportCommand()
     {
-        _connectionFactory = connectionFactory;
             
         Options.Add(
             "i=|input=",
@@ -54,6 +54,7 @@ class ImportCommand : Command
 
         _args = Enable(new PropertiesFeature("g", "arg", "Template arguments, e.g. `-g ownerId=user-314159`"));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -97,7 +98,8 @@ class ImportCommand : Command
                 _ => throw new NotSupportedException("Unexpected property type.")
             }));
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
         var err = await TemplateSetImporter.ImportAsync(templates, connection, args, state, _merge);
 
         await TemplateImportState.SaveAsync(stateFile, state);

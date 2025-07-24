@@ -18,9 +18,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Signals;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Syntax;
 using SeqCli.Util;
 using Serilog;
@@ -33,21 +33,17 @@ class RenderCommand : Command
 {
     const int MaximumReturnedHitRows = 10000;
 
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly DateRangeFeature _range;
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly SignalExpressionFeature _signal;
     readonly TimeoutFeature _timeout;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _id, _lastDuration, _intervalDuration, _chartTitle;
 
-    public RenderCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public RenderCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of a single dashboard to render",
@@ -63,13 +59,15 @@ class RenderCommand : Command
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         if (_id == null)
         {
@@ -158,8 +156,9 @@ class RenderCommand : Command
         var q = BuildSqlQuery(query, rangeStart, rangeEnd, timeGrouping);
 
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
-            
-        if (_output.Json)
+
+        var output = _output.GetOutputFormat(config);
+        if (output.Json)
         {
             var result = await connection.Data.QueryAsync(q, signal: signal, timeout: timeout);
 
@@ -169,7 +168,7 @@ class RenderCommand : Command
         else
         {
             var result = await connection.Data.QueryCsvAsync(q, signal: signal, timeout: timeout);
-            _output.WriteCsv(result);
+            output.WriteCsv(result);
         }
 
         return 0;

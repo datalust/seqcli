@@ -1,4 +1,4 @@
-# `seqcli` [![Build status](https://ci.appveyor.com/api/projects/status/sc3iacxwxqqfjgdh/branch/dev?svg=true)](https://ci.appveyor.com/project/datalust/seqcli/branch/dev) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
+# `seqcli` [![CI](https://github.com/datalust/seqcli/actions/workflows/ci.yml/badge.svg?branch=dev&event=push)](https://github.com/datalust/seqcli/actions/workflows/ci.yml) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
 
 The [Seq](https://datalust.co/seq) client command-line app. Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`), and [much more](https://github.com/datalust/seqcli#commands).
 
@@ -15,11 +15,11 @@ dotnet tool install --global seqcli
 To set a default server URL and API key, run:
 
 ```
-seqcli config -k connection.serverUrl -v https://your-seq-server
-seqcli config -k connection.apiKey -v your-api-key
+seqcli config set -k connection.serverUrl -v https://your-seq-server
+seqcli config set -k connection.apiKey -v your-api-key
 ```
 
-The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is currently stored in plain text. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
+The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is stored in plain text unless an encryptor is defined in `encryption.encryptor`. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
 
 `seqcli` is also available as a Docker container under [`datalust/seqcli`](https://store.docker.com/community/images/datalust/seqcli):
 
@@ -93,92 +93,108 @@ This also works for command groups; to list all `apikey` sub-commands, run:
 seqcli help apikey
 ```
 
-## Available commands
+Available commands:
 
-- `apikey`
-  - [`apikey create`](#apikey-create) &mdash; Create an API key for automation or ingestion.
-  - [`apikey list`](#apikey-list) &mdash; List available API keys.
-  - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
-  - [`apikey update`](#apikey-update) &mdash; Update an existing API key.
-- `app`
-  - [`app define`](#app-define) &mdash; Generate an app definition for a .NET `[SeqApp]` plug-in.
-  - [`app install`](#app-install) &mdash; Install an app package.
-  - [`app list`](#app-list) &mdash; List installed app packages.
-  - [`app run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
-  - [`app uninstall`](#app-uninstall) &mdash; Uninstall an app package.
-  - [`app update`](#app-update) &mdash; Update an installed app package.
-- `appinstance`
-  - [`appinstance create`](#appinstance-create) &mdash; Create an instance of an installed app.
-  - [`appinstance list`](#appinstance-list) &mdash; List instances of installed apps.
-  - [`appinstance remove`](#appinstance-remove) &mdash; Remove an app instance from the server.
-  - [`appinstance update`](#appinstance-update) &mdash; Update an existing app instance.
-- [`bench`](#bench) &mdash; Measure query performance.
-- [`config`](#config) &mdash; View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
-- `dashboard`
-  - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
-  - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
-  - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
-- `expressionindex`
-  - [`expressionindex create`](#expressionindex-create) &mdash; Create an expression index.
-  - [`expressionindex list`](#expressionindex-list) &mdash; List expression indexes.
-  - [`expressionindex remove`](#expressionindex-remove) &mdash; Remove an expression index from the server.
-- `feed`
-  - [`feed create`](#feed-create) &mdash; Create a NuGet feed.
-  - [`feed list`](#feed-list) &mdash; List NuGet feeds.
-  - [`feed remove`](#feed-remove) &mdash; Remove a NuGet feed from the server.
-  - [`feed update`](#feed-update) &mdash; Update an existing NuGet feed.
-- [`help`](#help) &mdash; Show information about available commands.
-- `index`
-  - [`index list`](#index-list) &mdash; List indexes.
-  - [`index suppress`](#index-suppress) &mdash; Suppress an index.
-- [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
-- [`license apply`](#license-apply) &mdash; Apply a license to the Seq server.
-- [`log`](#log) &mdash; Send a structured log event to the server.
-- `node`
-  - [`node demote`](#node-demote) &mdash; Begin demotion of the current leader node.
-  - [`node health`](#node-health) &mdash; Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried.
-  - [`node list`](#node-list) &mdash; List nodes in the Seq cluster.
-- [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
-- `profile`
-  - [`profile create`](#profile-create) &mdash; Create or replace a connection profile.
-  - [`profile list`](#profile-list) &mdash; List connection profiles.
-  - [`profile remove`](#profile-remove) &mdash; Remove a connection profile.
-- [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
-- `retention`
-  - [`retention create`](#retention-create) &mdash; Create a retention policy.
-  - [`retention list`](#retention-list) &mdash; List retention policies.
-  - [`retention remove`](#retention-remove) &mdash; Remove a retention policy from the server.
-  - [`retention update`](#retention-update) &mdash; Update an existing retention policy.
-- `sample`
-  - [`sample ingest`](#sample-ingest) &mdash; Log sample events into a Seq instance.
-  - [`sample setup`](#sample-setup) &mdash; Configure a Seq instance with sample dashboards, signals, users, and so on.
-- [`search`](#search) &mdash; Retrieve log events that match a given filter.
-- `setting`
-  - [`setting clear`](#setting-clear) &mdash; Clear a runtime-configurable server setting.
-  - [`setting names`](#setting-names) &mdash; Print the names of all supported settings.
-  - [`setting set`](#setting-set) &mdash; Change a runtime-configurable server setting.
-  - [`setting show`](#setting-show) &mdash; Print the current value of a runtime-configurable server setting.
-- `signal`
-  - [`signal create`](#signal-create) &mdash; Create a signal.
-  - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
-  - [`signal list`](#signal-list) &mdash; List available signals.
-  - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
-  - [`signal update`](#signal-update) &mdash; Update an existing signal.
-- [`tail`](#tail) &mdash; Stream log events matching a filter.
-- `template`
-  - [`template export`](#template-export) &mdash; Export entities into template files.
-  - [`template import`](#template-import) &mdash; Import entities from template files.
-- `user`
-  - [`user create`](#user-create) &mdash; Create a user.
-  - [`user list`](#user-list) &mdash; List users.
-  - [`user remove`](#user-remove) &mdash; Remove a user from the server.
-  - [`user update`](#user-update) &mdash; Update an existing user.
-- [`version`](#version) &mdash; Print the current executable version.
-- `workspace`
-  - [`workspace create`](#workspace-create) &mdash; Create a workspace.
-  - [`workspace list`](#workspace-list) &mdash; List available workspaces.
-  - [`workspace remove`](#workspace-remove) &mdash; Remove a workspace from the server.
-  - [`workspace update`](#workspace-update) &mdash; Update an existing workspace.
+ - `apikey`
+   - [`apikey create`](#apikey-create) &mdash; Create an API key for automation or ingestion.
+   - [`apikey list`](#apikey-list) &mdash; List available API keys.
+   - [`apikey remove`](#apikey-remove) &mdash; Remove an API key from the server.
+   - [`apikey update`](#apikey-update) &mdash; Update an existing API key.
+ - `app`
+   - [`app define`](#app-define) &mdash; Generate an app definition for a .NET `[SeqApp]` plug-in.
+   - [`app install`](#app-install) &mdash; Install an app package.
+   - [`app list`](#app-list) &mdash; List installed app packages.
+   - [`app run`](#app-run) &mdash; Host a .NET `[SeqApp]` plug-in.
+   - [`app uninstall`](#app-uninstall) &mdash; Uninstall an app package.
+   - [`app update`](#app-update) &mdash; Update an installed app package.
+ - `appinstance`
+   - [`appinstance create`](#appinstance-create) &mdash; Create an instance of an installed app.
+   - [`appinstance list`](#appinstance-list) &mdash; List instances of installed apps.
+   - [`appinstance remove`](#appinstance-remove) &mdash; Remove an app instance from the server.
+   - [`appinstance update`](#appinstance-update) &mdash; Update an existing app instance.
+ - [`bench`](#bench) &mdash; Measure query performance.
+ - [`cluster health`](#cluster-health) &mdash; Probe a Seq node's `/health/cluster` endpoint, and print the returned status. This command can also be used to wait on a timeout until the cluster is healthy..
+ - `config`
+   - [`config clear`](#config-clear) &mdash; Clear fields in the `SeqCli.json` file.
+   - [`config get`](#config-get) &mdash; View a field from the `SeqCli.json` file.
+   - [`config list`](#config-list) &mdash; View all fields in the `SeqCli.json` file.
+   - [`config set`](#config-set) &mdash; Set a field in the `SeqCli.json` file.
+ - `dashboard`
+   - [`dashboard list`](#dashboard-list) &mdash; List dashboards.
+   - [`dashboard remove`](#dashboard-remove) &mdash; Remove a dashboard from the server.
+   - [`dashboard render`](#dashboard-render) &mdash; Produce a CSV or JSON result set from a dashboard chart.
+ - [`diagnostics ingestionlog`](#diagnostics-ingestionlog) &mdash; Retrieve the ingestion log.
+ - `expressionindex`
+   - [`expressionindex create`](#expressionindex-create) &mdash; Create an expression index.
+   - [`expressionindex list`](#expressionindex-list) &mdash; List expression indexes.
+   - [`expressionindex remove`](#expressionindex-remove) &mdash; Remove an expression index from the server.
+ - `feed`
+   - [`feed create`](#feed-create) &mdash; Create a NuGet feed.
+   - [`feed list`](#feed-list) &mdash; List NuGet feeds.
+   - [`feed remove`](#feed-remove) &mdash; Remove a NuGet feed from the server.
+   - [`feed update`](#feed-update) &mdash; Update an existing NuGet feed.
+ - `forwarder`
+   - [`forwarder install`](#forwarder-install) &mdash; Install the forwarder as a Windows service.
+   - [`forwarder restart`](#forwarder-restart) &mdash; Restart the forwarder Windows service.
+   - [`forwarder run`](#forwarder-run) &mdash; Listen on an HTTP endpoint and forward ingested logs to Seq.
+   - [`forwarder start`](#forwarder-start) &mdash; Start the forwarder Windows service.
+   - [`forwarder status`](#forwarder-status) &mdash; Show the status of the forwarder Windows service.
+   - [`forwarder stop`](#forwarder-stop) &mdash; Stop the forwarder Windows service.
+   - [`forwarder truncate`](#forwarder-truncate) &mdash; Empty the forwarder's persistent log buffer.
+   - [`forwarder uninstall`](#forwarder-uninstall) &mdash; Uninstall the forwarder Windows service.
+ - [`help`](#help) &mdash; Show information about available commands.
+ - `index`
+   - [`index list`](#index-list) &mdash; List indexes.
+   - [`index suppress`](#index-suppress) &mdash; Suppress an index.
+ - [`ingest`](#ingest) &mdash; Send log events from a file or `STDIN`.
+ - `license`
+   - [`license apply`](#license-apply) &mdash; Apply a license to the Seq server.
+   - [`license show`](#license-show) &mdash; Shows license applied to the Seq server.
+ - [`log`](#log) &mdash; Send a structured log event to the server.
+ - `node`
+   - [`node health`](#node-health) &mdash; Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried; note that no API key is required.
+   - [`node list`](#node-list) &mdash; List nodes in the Seq cluster.
+ - [`print`](#print) &mdash; Pretty-print events in CLEF/JSON format, from a file or `STDIN`.
+ - `profile`
+   - [`profile create`](#profile-create) &mdash; Create or replace a connection profile.
+   - [`profile list`](#profile-list) &mdash; List connection profiles.
+   - [`profile remove`](#profile-remove) &mdash; Remove a connection profile.
+ - [`query`](#query) &mdash; Execute an SQL query and receive results in CSV format.
+ - `retention`
+   - [`retention create`](#retention-create) &mdash; Create a retention policy.
+   - [`retention list`](#retention-list) &mdash; List retention policies.
+   - [`retention remove`](#retention-remove) &mdash; Remove a retention policy from the server.
+   - [`retention update`](#retention-update) &mdash; Update an existing retention policy.
+ - `sample`
+   - [`sample ingest`](#sample-ingest) &mdash; Log sample events into a Seq instance.
+   - [`sample setup`](#sample-setup) &mdash; Configure a Seq instance with sample dashboards, signals, users, and so on.
+ - [`search`](#search) &mdash; Retrieve log events that match a given filter.
+ - `setting`
+   - [`setting clear`](#setting-clear) &mdash; Clear a runtime-configurable server setting.
+   - [`setting names`](#setting-names) &mdash; Print the names of all supported settings.
+   - [`setting set`](#setting-set) &mdash; Change a runtime-configurable server setting.
+   - [`setting show`](#setting-show) &mdash; Print the current value of a runtime-configurable server setting.
+ - `signal`
+   - [`signal create`](#signal-create) &mdash; Create a signal.
+   - [`signal import`](#signal-import) &mdash; Import signals in newline-delimited JSON format.
+   - [`signal list`](#signal-list) &mdash; List available signals.
+   - [`signal remove`](#signal-remove) &mdash; Remove a signal from the server.
+   - [`signal update`](#signal-update) &mdash; Update an existing signal.
+ - [`tail`](#tail) &mdash; Stream log events matching a filter.
+ - `template`
+   - [`template export`](#template-export) &mdash; Export entities into template files.
+   - [`template import`](#template-import) &mdash; Import entities from template files.
+ - `user`
+   - [`user create`](#user-create) &mdash; Create a user.
+   - [`user list`](#user-list) &mdash; List users.
+   - [`user remove`](#user-remove) &mdash; Remove a user from the server.
+   - [`user update`](#user-update) &mdash; Update an existing user.
+ - [`version`](#version) &mdash; Print the current executable version.
+ - `workspace`
+   - [`workspace create`](#workspace-create) &mdash; Create a workspace.
+   - [`workspace list`](#workspace-list) &mdash; List available workspaces.
+   - [`workspace remove`](#workspace-remove) &mdash; Remove a workspace from the server.
+   - [`workspace update`](#workspace-update) &mdash; Update an existing workspace.
 
 ### `apikey create`
 
@@ -198,7 +214,7 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--filter=VALUE` | A filter to apply to incoming events |
 |       `--minimum-level=VALUE` | The minimum event level/severity to accept; the default is to accept all events |
 |       `--use-server-timestamps` | Discard client-supplied timestamps and use server clock values |
-|       `--permissions=VALUE` | A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project` and `System` |
+|       `--permissions=VALUE` | A comma-separated list of permissions to delegate to the API key; valid permissions are `Ingest` (default), `Read`, `Write`, `Project`, `Organization`, and `System` |
 |       `--connect-username=VALUE` | A username to connect with, useful primarily when setting up the first API key; servers with an 'Individual' subscription only allow one simultaneous request with this option |
 |       `--connect-password=VALUE` | When `connect-username` is specified, a corresponding password |
 |       `--connect-password-stdin` | When `connect-username` is specified, read the corresponding password from `STDIN` |
@@ -208,6 +224,7 @@ seqcli apikey create -t 'Test API Key' -p Environment=Test
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `apikey list`
 
@@ -226,6 +243,7 @@ seqcli apikey list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -247,6 +265,7 @@ seqcli apikey remove -t 'Test API Key'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `apikey update`
 
@@ -265,6 +284,7 @@ seqcli apikey update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `app define`
 
@@ -303,6 +323,7 @@ seqcli app install --package-id 'Seq.App.JsonArchive'
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `app list`
 
@@ -321,6 +342,7 @@ seqcli app list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -364,6 +386,7 @@ seqcli app uninstall --package-id 'Seq.App.JsonArchive'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `app update`
 
@@ -388,6 +411,7 @@ seqcli app update -n 'HTML Email'
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `appinstance create`
 
@@ -412,6 +436,7 @@ seqcli appinstance create -t 'Email Ops' --app hostedapp-314159 -p To=ops@exampl
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `appinstance list`
 
@@ -430,6 +455,7 @@ seqcli appinstance list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -451,6 +477,7 @@ seqcli appinstance remove -t 'Email Ops'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `appinstance update`
 
@@ -469,6 +496,7 @@ seqcli appinstance update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `bench`
 
@@ -483,21 +511,72 @@ Measure query performance.
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--start=VALUE` | ISO 8601 date/time to query from |
 |       `--end=VALUE` | ISO 8601 date/time to query to |
+|       `--timeout=VALUE` | The execution timeout in milliseconds |
 |       `--reporting-server=VALUE` | The address of a Seq server to send bench results to |
 |       `--reporting-apikey=VALUE` | The API key to use when connecting to the reporting server |
 |       `--description=VALUE` | Optional description of the bench test run |
 |       `--with-ingestion` | Should the benchmark include sending events to Seq |
 |       `--with-queries` | Should the benchmark include querying Seq |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
-### `config`
+### `cluster health`
 
-View and set fields in the `SeqCli.json` file; run with no arguments to list all fields.
+Probe a Seq node's `/health/cluster` endpoint, and print the returned status. This command can also be used to wait on a timeout until the cluster is healthy..
+
+Example:
+
+```
+seqcli cluster health -s https://seq.example.com --wait-until-healthy
+```
 
 | Option | Description |
 | ------ | ----------- |
+|       `--wait-until-healthy` | Wait until the cluster returns a status of healthy |
+|       `--timeout=VALUE` | The execution timeout in milliseconds |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `config clear`
+
+Clear fields in the `SeqCli.json` file.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-k`, `--key=VALUE` | The field, for example `connection.serverUrl` |
-| `-v`, `--value=VALUE` | The field value; if not specified, the command will print the current value |
-| `-c`, `--clear` | Clear the field |
+
+### `config get`
+
+View a field from the `SeqCli.json` file.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-k`, `--key=VALUE` | The field, for example `connection.serverUrl` |
+
+### `config list`
+
+View all fields in the `SeqCli.json` file.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `config set`
+
+Set a field in the `SeqCli.json` file.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-k`, `--key=VALUE` | The field, for example `connection.serverUrl` |
+| `-v`, `--value=VALUE` | The field value, comma-separated if multiple values are accepted |
+|       `--value-stdin` | Read the value from `STDIN` |
 
 ### `dashboard list`
 
@@ -517,6 +596,7 @@ seqcli dashboard list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -539,6 +619,7 @@ seqcli dashboard remove -i dashboard-159
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `dashboard render`
 
@@ -563,9 +644,27 @@ seqcli dashboard render -i dashboard-159 -c 'Response Time (ms)' --last 7d --by 
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `diagnostics ingestionlog`
+
+Retrieve the ingestion log.
+
+Example:
+
+```
+seqcli diagnostics ingestionlog
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `expressionindex create`
 
@@ -586,6 +685,7 @@ seqcli expressionindex create --expression "ServerName"
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `expressionindex list`
 
@@ -603,6 +703,7 @@ seqcli expressionindex list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -623,6 +724,7 @@ seqcli expressionindex -i expressionindex-2529
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `feed create`
 
@@ -647,6 +749,7 @@ seqcli feed create -n 'CI' --location="https://f.feedz.io/example/ci" -u Seq --p
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `feed list`
 
@@ -665,6 +768,7 @@ seqcli feed list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -686,6 +790,7 @@ seqcli feed remove -n CI
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `feed update`
 
@@ -704,6 +809,76 @@ seqcli feed update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `forwarder install`
+
+> Preview command: only available when the `--pre` command-line flag is specified. This command is supported on **Windows** platforms only.
+
+Install the forwarder as a Windows service.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-l`, `--listen=VALUE` | Set the address `seqcli forwarder` will listen at; http://127.0.0.1:15341/ is used by default. |
+| `-u`, `--username=VALUE` | The name of a Windows account to run the service under; if not specified the `NT AUTHORITY\LocalService` account will be used |
+| `-p`, `--password=VALUE` | The password for the Windows account to run the service under |
+
+### `forwarder restart`
+
+> Preview command: only available when the `--pre` command-line flag is specified. This command is supported on **Windows** platforms only.
+
+Restart the forwarder Windows service.
+
+### `forwarder run`
+
+> Preview command: only available when the `--pre` command-line flag is specified.
+
+Listen on an HTTP endpoint and forward ingested logs to Seq.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--nologo` |  |
+| `-l`, `--listen=VALUE` | Set the address `seqcli forwarder` will listen at; http://127.0.0.1:15341/ is used by default. |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `forwarder start`
+
+> Preview command: only available when the `--pre` command-line flag is specified. This command is supported on **Windows** platforms only.
+
+Start the forwarder Windows service.
+
+### `forwarder status`
+
+> Preview command: only available when the `--pre` command-line flag is specified. This command is supported on **Windows** platforms only.
+
+Show the status of the forwarder Windows service.
+
+### `forwarder stop`
+
+> Preview command: only available when the `--pre` command-line flag is specified. This command is supported on **Windows** platforms only.
+
+Stop the forwarder Windows service.
+
+### `forwarder truncate`
+
+> Preview command: only available when the `--pre` command-line flag is specified.
+
+Empty the forwarder's persistent log buffer.
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-y`, `--confirm` | Answer [y]es when prompted to continue |
+
+### `forwarder uninstall`
+
+> Preview command: only available when the `--pre` command-line flag is specified. This command is supported on **Windows** platforms only.
+
+Uninstall the forwarder Windows service.
 
 ### `help`
 
@@ -717,6 +892,7 @@ seqcli help search
 
 | Option | Description |
 | ------ | ----------- |
+|       `--pre` | Show preview commands |
 | `-m`, `--markdown` | Generate markdown for use in documentation |
 
 ### `index list`
@@ -735,6 +911,7 @@ seqcli index list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -752,6 +929,7 @@ seqcli index suppress -i index-2191448f1d9b4f22bd32c6edef752748
 | Option | Description |
 | ------ | ----------- |
 | `-i`, `--id=VALUE` | The id of an index to suppress |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -781,6 +959,7 @@ seqcli ingest -i log-*.txt --json --filter="@Level <> 'Debug'" -p Environment=Te
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--batch-size=VALUE` | The maximum number of events to send in each request to the ingestion endpoint; if not specified a value of `100` will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `license apply`
 
@@ -797,9 +976,30 @@ seqcli license apply --certificate="license.txt"
 | `-c`, `--certificate=VALUE` | Certificate file; the file must be UTF-8 text |
 |       `--certificate-stdin` | Read the license certificate from `STDIN` |
 |       `--automatically-refresh` | If the license is for a subscription, periodically check `datalust.co` and automatically refresh the certificate when the subscription is changed or renewed |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `license show`
+
+Shows license applied to the Seq server.
+
+Example:
+
+```
+seqcli license show
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `log`
 
@@ -821,28 +1021,11 @@ seqcli log -m 'Hello, {Name}!' -p Name=World -p App=Test
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
-
-### `node demote`
-
-Begin demotion of the current leader node.
-
-Example:
-
-```
-seqcli node demote --verbose --wait
-```
-
-| Option | Description |
-| ------ | ----------- |
-|       `--wait` | Wait for the leader to be demoted before exiting |
-| `-y`, `--confirm` | Answer [y]es when prompted to continue |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
-|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `node health`
 
-Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried.
+Probe a Seq node's `/health` endpoint, and print the returned HTTP status code, or 'Unreachable' if the endpoint could not be queried; note that no API key is required.
 
 Example:
 
@@ -852,8 +1035,15 @@ seqcli node health -s https://seq-2.example.com
 
 | Option | Description |
 | ------ | ----------- |
+|       `--wait-until-healthy` | Wait until the node returns a status of healthy |
+|       `--timeout=VALUE` | The execution timeout in milliseconds |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `node list`
 
@@ -872,6 +1062,7 @@ seqcli node list --json
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -894,6 +1085,7 @@ seqcli print -i log-20201028.clef
 |       `--invalid-data=VALUE` | Specify how invalid data is handled: `fail` (default) or `ignore` |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `profile create`
 
@@ -910,6 +1102,7 @@ seqcli profile create -n Production -s https://seq.example.com -a th15ISanAPIk3y
 | `-n`, `--name=VALUE` | The name of the connection profile |
 | `-s`, `--server=VALUE` | The URL of the Seq server |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server, if required |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `profile list`
 
@@ -920,6 +1113,10 @@ Example:
 ```
 seqcli profile list
 ```
+
+| Option | Description |
+| ------ | ----------- |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `profile remove`
 
@@ -934,6 +1131,7 @@ seqcli profile remove -n Production
 | Option | Description |
 | ------ | ----------- |
 | `-n`, `--name=VALUE` | The name of the connection profile to remove |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `query`
 
@@ -955,6 +1153,8 @@ seqcli query -q "select count(*) from stream group by @Level" --start="2018-02-2
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+|       `--trace` | Enable detailed (server-side) query tracing |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -980,6 +1180,7 @@ seqcli retention create --after 30d --delete-all-events
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `retention list`
 
@@ -997,6 +1198,7 @@ seqcli retention list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1017,6 +1219,7 @@ seqcli retention remove -i retentionpolicy-17
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `retention update`
 
@@ -1035,6 +1238,7 @@ seqcli retention update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `sample ingest`
 
@@ -1053,7 +1257,10 @@ seqcli sample ingest
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--quiet` | Don't echo ingested events to `STDOUT` |
+|       `--setup` | Configure sample dashboards, signals, users, and so on before starting ingestion |
+|       `--simulations=VALUE` | Number of concurrent simulations to run; the default runs a single simulation |
 |       `--batch-size=VALUE` | The maximum number of events to send in each request to the ingestion endpoint; if not specified a value of `100` will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `sample setup`
 
@@ -1071,6 +1278,7 @@ seqcli sample setup
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `search`
 
@@ -1091,8 +1299,11 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 |       `--request-timeout=VALUE` | The time allowed for retrieving each page of events, in milliseconds; the default is 100000 |
+|       `--trace` | Enable detailed (server-side) query tracing |
+|       `--no-websockets` | Do not use WebSocket-driven streaming searches |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1107,6 +1318,7 @@ Clear a runtime-configurable server setting.
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `setting names`
 
@@ -1124,6 +1336,7 @@ Change a runtime-configurable server setting.
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `setting show`
 
@@ -1135,6 +1348,7 @@ Print the current value of a runtime-configurable server setting.
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `signal create`
 
@@ -1161,6 +1375,7 @@ seqcli signal create -t 'Exceptions' -f "@Exception is not null"
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `signal import`
 
@@ -1180,6 +1395,7 @@ seqcli signal import -i ./Exceptions.json
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `signal list`
 
@@ -1199,6 +1415,7 @@ seqcli signal list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1221,6 +1438,7 @@ seqcli signal remove -t 'Test Signal'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `signal update`
 
@@ -1239,24 +1457,7 @@ seqcli signal update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
-
-### `signal update`
-
-Update an existing signal.
-
-Example:
-
-```
-seqcli signal update --json '{...}'
-```
-
-| Option | Description |
-| ------ | ----------- |
-|       `--json=VALUE` | The updated signal in JSON format; this can be produced using `seqcli signal list --json` |
-|       `--json-stdin` | Read the updated signal as JSON from `STDIN` |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
-|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `tail`
 
@@ -1268,6 +1469,7 @@ Stream log events matching a filter.
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 |       `--signal=VALUE` | A signal expression or list of intersected signal ids to apply, for example `signal-1,signal-2` |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
@@ -1290,6 +1492,7 @@ seqcli template export -o ./Templates
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `template import`
 
@@ -1310,6 +1513,7 @@ seqcli template import -i ./Templates
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `user create`
 
@@ -1337,6 +1541,7 @@ seqcli user create -n alice -d 'Alice Example' -r 'User (read/write)' --password
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `user list`
 
@@ -1355,6 +1560,7 @@ seqcli user list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1376,6 +1582,7 @@ seqcli user remove -n alice
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `user update`
 
@@ -1394,6 +1601,7 @@ seqcli user update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `version`
 
@@ -1421,6 +1629,7 @@ seqcli workspace create -t 'My Workspace' -c signal-314159 -c dashboard-628318
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `workspace list`
 
@@ -1440,6 +1649,7 @@ seqcli workspace list
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
@@ -1462,6 +1672,7 @@ seqcli workspace remove -t 'My Workspace'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `workspace update`
 
@@ -1480,24 +1691,7 @@ seqcli workspace update --json '{...}'
 | `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
-
-### `workspace update`
-
-Update an existing workspace.
-
-Example:
-
-```
-seqcli workspace update --json '{...}'
-```
-
-| Option | Description |
-| ------ | ----------- |
-|       `--json=VALUE` | The updated workspace in JSON format; this can be produced using `seqcli workspace list --json` |
-|       `--json-stdin` | Read the updated workspace as JSON from `STDIN` |
-| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
-| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
-|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ## Extraction patterns
 
@@ -1648,3 +1842,101 @@ PS > (echo $warnings | ConvertTo-Json) | seqcli signal update --json-stdin
 PS > seqcli signal list -i signal-m33302 --json                                 
 {"Title": "Alarms", "Description": "Automatically created", "Filters": [{"De...
 ```
+
+## Store-and-forward ingestion proxy (preview)
+
+The `seqcli forwarder` family of commands provide simple, durable ingestion buffering for occasionally-connected and
+intermittently-disconnected systems. The forwarder implements the Seq ingestion API, so applications that write
+directly to Seq can instead write to the forwarder, which will persist data locally until it can be sent to the
+destination Seq server.
+
+> [!NOTE]
+> 
+> Forwarder is designed for local use in isolated environments &mdash; for example, locally on a firewalled machine, or
+> within a secured container network.
+> 
+> The forwarder HTTP API does not authenticate incoming requests. By default, only the ingestion endpoint is exposed,
+> but if you opt into additional APIs such as the ingestion log, ensure the API is not reachable externally. Even in the
+> default configuration, be aware that clients may trigger disk space exhaustion and other issues by sending
+> excessive or maliciously-crafted ingestion traffic.
+
+### Running the forwarder
+
+To start a forwarder instance at the terminal, listening on port 5341 and forwarding to `seq.example.com`, run:
+
+```shell
+seqcli forwarder run --pre --listen http://127.0.0.1:5341 -s https://seq.example.com
+```
+
+> While the `forwarder` command group is in preview, all `forwarder` commands require the `--pre` switch; you'll
+> also need to supply `--pre` when requesting help, e.g. `seqcli help forwarder run --pre`.
+
+You can test your forwarder using the `seqcli log` command:
+
+```shell
+seqcli log -m Test -s http://127.0.0.1:5341
+```
+
+If forwarding is successful, the event will appear in the target Seq instance within a few seconds. If it isn't,
+and `seqcli log` didn't report an error, run through these troubleshooting steps:
+
+ 1. Read the output of the `seqcli forwarder run` command: are the paths and URLs in there the ones you expect?
+ 2. Check the destination Seq server's ingestion log; if the payload is being rejected by Seq, its likely you need to configure an API key for the forwarder's outbound connections, or API key forwarding (see below).
+ 3. Check the forwarder's log file; this will be in the `SeqCli/Logs` subdirectory of the forwarder's storage path, which will be your user's home directory unless you overrode it with `--storage` or `SEQCLI_STORAGE_PATH`.
+ 4. Enable the forwarder's ingestion log temporarily, ensuring this isn't accessible to untrusted callers.
+
+### The forwarder's ingestion log
+
+The ingestion log records ingestion issues in a short in-memory buffer, so repetitive ingestion issues don't chew up
+disk space. The ingestion log may contain fragments of event data so it's not enabled by default; you can turn it on
+with:
+
+```shell
+SEQCLI_FORWARDER_DIAGNOSTICS_EXPOSEINGESTIONLOG=True seqcli forwarder run <other args>
+```
+
+The log can be retrieved by pointing `seqcli` at the forwarder:
+
+```shell
+seqcli diagnostics ingestionlog -s http://127.0.0.1:5341
+```
+
+If the ingestion log contains relevant entries but doesn't include enough information to track down the issue, you
+can opt in to showing even more information with `SEQCLI_FORWARDER_DIAGNOSTICS_INGESTIONLOGSHOWDETAIL=True`.
+
+### Configuring the forwarder
+
+The forwarder reads its configuration from the environment and the `SeqCli.json` file. Run `seqcli config` to view
+all of the supported `forwarder.*` (`SEQCLI_FORWARDER_*`) settings.
+
+Locally buffered events are stored in the `SeqCli/Buffer` subdirectory of the directory containing `SeqCli.json`. By 
+default, this will be your user account's home folder.
+
+To change the location of the `SeqCli.json` config file and local buffers, specify the `--storage` argument
+or set the `SEQCLI_STORAGE_PATH` environment variable when configuring and running the forwarder.
+
+### Connection authentication and API key forwarding
+
+When connecting to Seq, `seqcli forwarder` will ignore any API keys attached to incoming payloads, and instead use the server URL 
+and API key stored in `SeqCli.json`, in the `SEQCLI_CONNECTION_*` environment variables, or passed on 
+the `forwarder run` command line.
+
+To use the API keys from incoming payloads instead, set `forwarder.useApiKeyForwarding` or `SEQCLI_FORWARDER_USEAPIKEYFORWARDING`
+to `True`.
+
+> [!WARNING]
+> 
+> In order for durable buffering to work, `seqcli forwarder` needs to store the incoming API keys in its local buffer
+> storage.
+> 
+> On Windows, these will be encrypted using machine-scoped DPAPI by default, and on other platforms they'll be saved
+> as plain text. To perform encryption of stored API keys, supply shell scripts in the `encryption.encryptor` and
+> `encryption.decryptor` (`SEQCLI_ENCRYPTION_ENCRYPTOR` and `SEQCLI_ENCRYPTION_DECRYPTOR`) configuration entries. The scripts
+> will need to process data on `STDIN` and `STDOUT`: you can verify their effects by examining the `api.key` files stored
+> in subdirectories of `SeqCli/Buffer`.
+
+### Windows service installation
+
+On Windows it's possible to install the forwarder as a service, using the `seqcli forwarder install` command. Pass
+a directory to make readable by the service in the `--storage` argument when installing the it. Make sure this directory
+is also passed in `--storage` when configuring the forwarder.

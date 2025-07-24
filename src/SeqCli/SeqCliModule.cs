@@ -15,8 +15,6 @@
 using System.Reflection;
 using Autofac;
 using SeqCli.Cli;
-using SeqCli.Config;
-using SeqCli.Connection;
 
 namespace SeqCli;
 
@@ -28,9 +26,5 @@ class SeqCliModule : Autofac.Module
         builder.RegisterAssemblyTypes(typeof(Program).GetTypeInfo().Assembly)
             .As<Command>()
             .WithMetadataFrom<CommandAttribute>();
-        builder.RegisterType<SeqConnectionFactory>();
-        builder.Register(c => RuntimeConfigurationLoader.Load()).SingleInstance();
-        builder.Register(c => c.Resolve<SeqCliConfig>().Connection).SingleInstance();
-        builder.Register(c => c.Resolve<SeqCliConfig>().Output).SingleInstance();
     }
 }

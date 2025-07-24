@@ -1,4 +1,4 @@
-﻿// Copyright Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 using SeqCli.Util;
 using Serilog;
 
@@ -28,18 +28,15 @@ namespace SeqCli.Cli.Commands.App;
 // ReSharper disable once UnusedType.Global
 class UpdateCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
-
+    readonly StoragePathFeature _storagePath;
+    
     string? _id, _name, _version;
     bool _all, _force;
 
-    public UpdateCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public UpdateCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "i=|id=",
             "The id of a single installed app to update",
@@ -67,7 +64,8 @@ class UpdateCommand : Command
             _ => _force = true);
         
         _connection = Enable<ConnectionFeature>();
-        _output = Enable(new OutputFormatFeature(config.Output));
+        _output = Enable<OutputFormatFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -90,8 +88,10 @@ class UpdateCommand : Command
             Log.Error("One of `id`, `name`, or `all` must be specified");
             return 1;
         }
-        
-        var connection = _connectionFactory.Connect(_connection);
+
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
+        var output = _output.GetOutputFormat(config);
 
         var apps = await connection.Apps.ListAsync();
         foreach (var app in apps)
@@ -99,7 +99,7 @@ class UpdateCommand : Command
             if (_all || app.Id == _id || _name != null && _name.Equals(app.Name, StringComparison.OrdinalIgnoreCase))
             {
                 var updated = await connection.Apps.UpdatePackageAsync(app, _version, _force);
-                _output.WriteEntity(updated);
+                output.WriteEntity(updated);
             }
         }
 

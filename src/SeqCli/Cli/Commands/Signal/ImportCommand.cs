@@ -18,9 +18,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Seq.Api.Model.Signals;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Connection;
 
 namespace SeqCli.Cli.Commands.Signal;
 
@@ -28,11 +28,11 @@ namespace SeqCli.Cli.Commands.Signal;
     Example="seqcli signal import -i ./Exceptions.json")]
 class ImportCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
     readonly FileInputFeature _fileInputFeature;
     readonly EntityOwnerFeature _entityOwner;
     readonly ConnectionFeature _connection;
-
+    readonly StoragePathFeature _storagePath;
+    
     bool _merge;
 
     readonly JsonSerializer _serializer = JsonSerializer.Create(
@@ -40,11 +40,8 @@ class ImportCommand : Command
             Converters = { new StringEnumConverter() }
         });
 
-    public ImportCommand(SeqConnectionFactory connectionFactory, SeqCliConfig config)
+    public ImportCommand()
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "merge",
             "Update signals that have ids matching those in the imported data; the default is to always create new signals",
@@ -53,11 +50,13 @@ class ImportCommand : Command
         _fileInputFeature = Enable(new FileInputFeature("File to import"));
         _entityOwner = Enable(new EntityOwnerFeature("signal", "import", "imported"));
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
         using var input = _fileInputFeature.OpenSingleInput();
         var line = await input.ReadLineAsync();

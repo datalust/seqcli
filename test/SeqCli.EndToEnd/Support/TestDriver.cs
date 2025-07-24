@@ -26,17 +26,18 @@ class TestDriver
         int count = 0, passedCount = 0, skippedCount = 0;
         var failed = new List<string>();
 
-        foreach (var testCaseFactory in _cases.OrderBy(_ => Guid.NewGuid()))
+        await Parallel.ForEachAsync(_cases.OrderBy(_ => Guid.NewGuid()), async (testCaseFactory, _) =>
         {
             count++;
 
             await using var testCase = testCaseFactory.Value();
-                
+
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine($"RUNNING {testCase.Value.Description,-50}");
             Console.ResetColor();
 
-            var isMultiuser = testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) && true.Equals(multiuser);
+            var isMultiuser = testCaseFactory.Metadata.TryGetValue("Multiuser", out var multiuser) &&
+                              true.Equals(multiuser);
             testCaseFactory.Metadata.TryGetValue("MinimumApiVersion", out var minSeqVersion);
             if (isMultiuser != testCase.Value.Configuration.IsMultiuser || minSeqVersion != null &&
                 !await testCase.Value.IsSupportedApiVersion((string)minSeqVersion))
@@ -44,9 +45,9 @@ class TestDriver
                 skippedCount++;
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("SKIP");
-                continue;
+                return;
             }
-                
+
             try
             {
                 await testCase.Value.ExecuteTestCaseAsync();
@@ -66,7 +67,7 @@ class TestDriver
                 Console.WriteLine(ex);
                 Console.ResetColor();
             }
-        }
+        });
 
         var (color, failMsg) = failed.Count != 0 ? (ConsoleColor.Red, "Failures:") : (ConsoleColor.Green, "");
         Console.ForegroundColor = color;

@@ -15,8 +15,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SeqCli.Api;
 using SeqCli.Cli.Features;
-using SeqCli.Connection;
+using SeqCli.Config;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Feed;
@@ -25,16 +26,13 @@ namespace SeqCli.Cli.Commands.Feed;
     Example="seqcli feed remove -n CI")]
 class RemoveCommand : Command
 {
-    readonly SeqConnectionFactory _connectionFactory;
-        
     readonly ConnectionFeature _connection;
-        
+    readonly StoragePathFeature _storagePath;
+    
     string? _name, _id;
         
-    public RemoveCommand(SeqConnectionFactory connectionFactory)
+    public RemoveCommand()
     {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
         Options.Add(
             "n=|name=",
             "The name of the feed to remove",
@@ -46,6 +44,7 @@ class RemoveCommand : Command
             id => _id = id);
             
         _connection = Enable<ConnectionFeature>();
+        _storagePath = Enable<StoragePathFeature>();
     }
 
     protected override async Task<int> Run()
@@ -56,10 +55,11 @@ class RemoveCommand : Command
             return 1;
         }
 
-        var connection = _connectionFactory.Connect(_connection);
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var toRemove = _id != null ?
-            new[] {await connection.Feeds.FindAsync(_id)} :
+        var toRemove = _id != null ? [await connection.Feeds.FindAsync(_id)]
+            :
             (await connection.Feeds.ListAsync())
             .Where(f => _name == f.Name) 
             .ToArray();

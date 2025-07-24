@@ -8,6 +8,10 @@
       "commandName": "Project",
       "commandLineArgs": "--docker-server"
     },
+    "SeqCli.EndToEnd (datalust/seq:latest, podman)": {
+      "commandName": "Project",
+      "commandLineArgs": "--docker-server --podman"
+    },
     "SeqCli.EndToEnd (datalust/seq:preview)": {
       "commandName": "Project",
       "commandLineArgs": "--docker-server --pre"

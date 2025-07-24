@@ -20,4 +20,6 @@ public class CommandMetadata : ICommandMetadata
     public string? SubCommand { get; set; }
     public required string HelpText { get; set; }
     public string? Example { get; set; }
+    public FeatureVisibility Visibility { get; set; }
+    public SupportedPlatforms Platforms { get; set; }
 }
