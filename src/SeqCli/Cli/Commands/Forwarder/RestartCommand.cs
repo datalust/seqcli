@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if WINDOWS
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.ServiceProcess;
@@ -24,7 +22,7 @@ using SeqCli.Forwarder.ServiceProcess;
 
 namespace SeqCli.Cli.Commands.Forwarder;
 
-[Command("forwarder", "restart", "Restart the forwarder Windows service", Visibility = FeatureVisibility.Preview)]
+[Command("forwarder", "restart", "Restart the forwarder Windows service", Visibility = FeatureVisibility.Preview, Platforms = SupportedPlatforms.Windows)]
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 class RestartCommand : Command
 {
@@ -80,5 +78,3 @@ class RestartCommand : Command
         }
     }
 }
-
-#endif

@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if WINDOWS
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
@@ -29,7 +28,7 @@ namespace SeqCli.Cli.Commands.Forwarder;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
-[Command("forwarder", "install", "Install the forwarder as a Windows service", Visibility = FeatureVisibility.Preview)]
+[Command("forwarder", "install", "Install the forwarder as a Windows service", Visibility = FeatureVisibility.Preview, Platforms = SupportedPlatforms.Windows)]
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 class InstallCommand : Command
 {
@@ -100,7 +99,7 @@ class InstallCommand : Command
         if (netshResult != 0)
             Console.WriteLine($"Could not add URL reservation for {listenUri}: `netsh` returned {netshResult}; ignoring");
 
-        var exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Program.BinaryName);
+        var exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Program.WindowsBinaryName);
         var forwarderRunCmdline = $"\"{exePath}\" forwarder run --pre --storage=\"{_storagePath.StorageRootPath}\"";
 
         var binPath = forwarderRunCmdline.Replace("\"", "\\\"");
@@ -149,5 +148,3 @@ class InstallCommand : Command
         return listenUri;
     }
 }
-
-#endif

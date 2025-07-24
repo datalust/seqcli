@@ -1,6 +1,4 @@
-﻿#if WINDOWS
-using SeqCli.Forwarder.Util;
-#endif
+﻿using System.Runtime.InteropServices;
 
 namespace SeqCli.Forwarder.Util;
 
@@ -12,12 +10,13 @@ static class ExecutionEnvironment
     {
         get
         {
-#if WINDOWS
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
                 var parent = WindowsProcess.GetParentProcess();
                 return parent?.ProcessName == "services";
-#else
+            }
+
             return false;
-#endif
         }
     }
 }

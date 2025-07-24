@@ -1,9 +1,7 @@
 using System;
 using System.IO;
-
-#if WINDOWS
+using System.Runtime.InteropServices;
 using SeqCli.Forwarder.ServiceProcess;
-#endif
 
 namespace SeqCli.Cli.Features;
 
@@ -63,12 +61,13 @@ class StoragePathFeature : CommandFeature
 
     static string? TryQueryInstalledStorageRoot()
     {
-#if WINDOWS
-        if (Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
-            SeqCliForwarderWindowsService.WindowsServiceName, out var storage))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+            Forwarder.Util.ServiceConfiguration.GetServiceStoragePath(
+                SeqCliForwarderWindowsService.WindowsServiceName, out var storage))
+        {
             return storage;
-#endif
-            
+        }
+
         return null;
     }
 }

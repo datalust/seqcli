@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>seqcli</AssemblyName>
     <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;linux-musl-x64;osx-x64;linux-arm64;linux-musl-arm64;osx-arm64</RuntimeIdentifiers>
@@ -16,22 +16,7 @@
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
-    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
-    <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsWindows)'=='true'">
-    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsOSX)'=='true'">
-    <DefineConstants>$(DefineConstants);OSX</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsLinux)'=='true'">
-    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsWindows)'!='true'">
-    <DefineConstants>$(DefineConstants);UNIX</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />

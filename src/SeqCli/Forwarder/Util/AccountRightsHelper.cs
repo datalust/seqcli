@@ -3,8 +3,6 @@
 // http://www.codeproject.com/Articles/4863/LSA-Functions-Privileges-and-Impersonation
 // Modified and reformatted.
 
-#if WINDOWS
-
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -189,5 +187,3 @@ namespace SeqCli.Forwarder.Util
         }
     }
 }
-
-#endif

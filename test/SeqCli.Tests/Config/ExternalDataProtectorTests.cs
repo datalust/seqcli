@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using SeqCli.Encryptor;
 using SeqCli.Tests.Support;
@@ -17,10 +18,11 @@ public class ExternalDataProtectorTests
         Assert.Throws<Win32Exception>(() => protector.Encrypt(Some.Bytes(200)));
     }
 
-#if UNIX
     [Fact]
     public void IfEncryptorFailsEncryptThrows()
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         var protector = new ExternalDataProtector("bash", "-c \"exit 1\"", Some.String(), null);
         // May be `Exception` or `IOException`.
         Assert.ThrowsAny<Exception>(() => protector.Encrypt(Some.Bytes(200)));
@@ -29,6 +31,8 @@ public class ExternalDataProtectorTests
     [Fact]
     public void EncryptCallsEncryptor()
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         const string prefix = "123";
         
         var encoding = new UTF8Encoding(false);
@@ -47,6 +51,8 @@ public class ExternalDataProtectorTests
     [Fact]
     public void EncryptionRoundTrips()
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         const string echo = "bash";
         const string echoArgs = "-c \"cat -\"";
         var protector = new ExternalDataProtector(echo, echoArgs, echo, echoArgs);
@@ -54,5 +60,4 @@ public class ExternalDataProtectorTests
         var actual = protector.Decrypt(protector.Encrypt(expected));
         Assert.Equal(expected, actual);
     }
-#endif
 }

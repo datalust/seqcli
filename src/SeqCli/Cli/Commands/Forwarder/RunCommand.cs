@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -36,10 +37,8 @@ using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 
-#if WINDOWS
 using System.Security.Cryptography.X509Certificates;
 using SeqCli.Forwarder.ServiceProcess;
-#endif
 
 // ReSharper disable UnusedType.Global
 
@@ -134,12 +133,16 @@ class RunCommand : Command
                 {
                     options.Listen(ipAddress, apiListenUri.Port, listenOptions =>
                     {
-#if WINDOWS
-                        listenOptions.UseHttps(StoreName.My, apiListenUri.Host,
-                            location: StoreLocation.LocalMachine, allowInvalid: true);
-#else
-                        listenOptions.UseHttps();
-#endif
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        {
+                            listenOptions.UseHttps(StoreName.My, apiListenUri.Host,
+                                location: StoreLocation.LocalMachine, allowInvalid: true);
+                        }
+                        else
+                        {
+                            listenOptions.UseHttps();
+                        }
+
                     });
                 }
                 else
@@ -193,14 +196,14 @@ class RunCommand : Command
     // ReSharper disable once UnusedParameter.Local
     static int RunService(ServerService service)
     {
-#if WINDOWS
-            System.ServiceProcess.ServiceBase.Run([
-                new SeqCliForwarderWindowsService(service)
-            ]);
-            return 0;
-#else
-        throw new NotSupportedException("Windows services are not supported on this platform.");            
-#endif
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            throw new NotSupportedException("Windows services are not supported on this platform.");            
+
+
+        System.ServiceProcess.ServiceBase.Run([
+            new SeqCliForwarderWindowsService(service)
+        ]);
+        return 0;
     }
         
     static async Task<int> RunStandardIOAsync(ServerService service, TextWriter cout)

@@ -1,6 +1,4 @@
-﻿#if WINDOWS
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -47,5 +45,3 @@ namespace SeqCli.Forwarder.Util
         }
     }
 }
-
-#endif

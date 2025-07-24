@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using CommandList = System.Collections.Generic.List<Autofac.Features.Metadata.Meta<System.Lazy<SeqCli.Cli.Command>, SeqCli.Cli.CommandMetadata>>;
@@ -25,10 +26,14 @@ namespace SeqCli.Cli.Commands;
 [Command("help", "Show information about available commands", Example = "seqcli help search")]
 class HelpCommand : Command
 {
+    readonly SupportedPlatforms _currentPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? SupportedPlatforms.Windows
+        : SupportedPlatforms.Posix;
+
     readonly IEnumerable<Meta<Lazy<Command>, CommandMetadata>> _allCommands;
     bool _markdown;
     FeatureVisibility _included = FeatureVisibility.Visible;
-
+    
     public HelpCommand(IEnumerable<Meta<Lazy<Command>, CommandMetadata>> allCommands)
     {
         _allCommands = allCommands.OrderBy(c => c.Metadata.Name).ToList();
@@ -38,12 +43,12 @@ class HelpCommand : Command
         Options.Add("m|markdown", "Generate markdown for use in documentation", _ => _markdown = true);
     }
 
-    IEnumerable<Meta<Lazy<Command>, CommandMetadata>> AvailableCommands() =>
-        _allCommands.Where(c => _included.HasFlag(c.Metadata.Visibility));
+    IEnumerable<Meta<Lazy<Command>, CommandMetadata>> AvailableCommands(SupportedPlatforms platform, FeatureVisibility visibility) =>
+        _allCommands.Where(c => (c.Metadata.Platforms & platform) != SupportedPlatforms.None && visibility.HasFlag(c.Metadata.Visibility));
 
     protected override Task<int> Run(string[] unrecognized)
     {
-        var orderedCommands = AvailableCommands()
+        var orderedCommands = (_markdown ? AvailableCommands(SupportedPlatforms.All, FeatureVisibility.Visible | FeatureVisibility.Preview) : AvailableCommands(_currentPlatform, _included))
             .OrderBy(c => c.Metadata.Name)
             .ThenBy(c => c.Metadata.SubCommand)
             .ToList();
@@ -142,6 +147,23 @@ class HelpCommand : Command
             else
                 Console.WriteLine($"### `{cmd.Metadata.Name}`");
             Console.WriteLine();
+            if (cmd.Metadata.Platforms != SupportedPlatforms.All ||
+                cmd.Metadata.Visibility == FeatureVisibility.Preview)
+            {
+                Console.Write(">");
+                if (cmd.Metadata.Visibility == FeatureVisibility.Preview)
+                {
+                    Console.Write(" Preview command: only available when the `--pre` command-line flag is specified.");
+                }
+
+                if (cmd.Metadata.Platforms != SupportedPlatforms.All)
+                {
+                    Console.Write($" This command is supported on **{cmd.Metadata.Platforms}** platforms only.");
+                }
+                Console.WriteLine();
+                Console.WriteLine();
+            }
+            
             Console.WriteLine(cmd.Metadata.HelpText + ".");
             Console.WriteLine();
 

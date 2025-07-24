@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Autofac.Features.Metadata;
 using Serilog.Core;
@@ -55,8 +56,12 @@ class CommandLineHost
             if (args.Any(a => a.Trim() is prereleaseArg))
                 featureVisibility |= FeatureVisibility.Preview;
             
+            var currentPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? SupportedPlatforms.Windows
+                : SupportedPlatforms.Posix;
+            
             var cmd = _availableCommands.SingleOrDefault(c =>
-                featureVisibility.HasFlag(c.Metadata.Visibility) &&
+                c.Metadata.Platforms.HasFlag(currentPlatform) && featureVisibility.HasFlag(c.Metadata.Visibility) &&
                 c.Metadata.Name == commandName &&
                 (c.Metadata.SubCommand == subCommandName || c.Metadata.SubCommand == null));
                 

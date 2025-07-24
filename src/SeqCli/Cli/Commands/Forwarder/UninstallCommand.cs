@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if WINDOWS
-
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -22,7 +20,7 @@ using SeqCli.Forwarder.Util;
 
 namespace SeqCli.Cli.Commands.Forwarder;
 
-[Command("forwarder", "uninstall", "Uninstall the forwarder Windows service", Visibility = FeatureVisibility.Preview)]
+[Command("forwarder", "uninstall", "Uninstall the forwarder Windows service", Visibility = FeatureVisibility.Preview, Platforms = SupportedPlatforms.Windows)]
 class UninstallCommand : Command
 {
     protected override Task<int> Run()
@@ -46,5 +44,3 @@ class UninstallCommand : Command
         }
     }
 }
-
-#endif

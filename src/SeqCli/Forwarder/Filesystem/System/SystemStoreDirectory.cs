@@ -21,9 +21,7 @@ using System.Text;
 using SeqCli.Config;
 using Serilog;
 
-#if UNIX
 using SeqCli.Forwarder.Filesystem.System.Unix;
-#endif
 
 namespace SeqCli.Forwarder.Filesystem.System;
 
@@ -145,7 +143,8 @@ sealed class SystemStoreDirectory : StoreDirectory
 
     static void Dirsync(string directoryPath)
     {
-#if UNIX
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         var dir = Libc.open(directoryPath, 0);
         if (dir == -1) return;
 
@@ -155,6 +154,5 @@ sealed class SystemStoreDirectory : StoreDirectory
         Libc.fsync(dir);
         Libc.close(dir);
 #pragma warning restore CA1806
-#endif
     }
 }
