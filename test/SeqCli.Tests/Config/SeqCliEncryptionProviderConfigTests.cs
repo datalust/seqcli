@@ -8,27 +8,27 @@ namespace SeqCli.Tests.Config;
 
 public class SeqCliEncryptionProviderConfigTests
 {
-#if WINDOWS
     [Fact]
     public void DefaultDataProtectorOnWindowsIsDpapi()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         Assert.True(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         
         var config = new SeqCliEncryptionProviderConfig();
         var provider = config.DataProtector();
         Assert.IsType<WindowsNativeDataProtector>(provider);
     }
-#else
+
     [Fact]
     public void DefaultDataProtectorOnUnixIsPlaintext()
     {
-        Assert.False(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         
         var config = new SeqCliEncryptionProviderConfig();
         var provider = config.DataProtector();
         Assert.IsType<PlaintextDataProtector>(provider);
     }
-#endif
 
     [Fact]
     public void SpecifyingEncryptorRequiresDecryptor()

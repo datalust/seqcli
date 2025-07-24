@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Superpower;
@@ -36,13 +37,11 @@ class FrameReader
         _frameStart = frameStart ?? throw new ArgumentNullException(nameof(frameStart));
         _trailingLineArrivalDeadline = trailingLineArrivalDeadline;
 
-#if WINDOWS
         // Somehow, PowerShell manages to send a UTF-8 BOM when piping a command's output to us
         // via STDIN, regardless of how we set Console.InputEncoding. This hackily skips the BOM,
         // while we all live in hope of some brighter future.
-        if (_source.Peek() == 65279)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _source.Peek() == 65279)
             _source.Read();
-#endif
     }
 
     public async Task<Frame> TryReadAsync()

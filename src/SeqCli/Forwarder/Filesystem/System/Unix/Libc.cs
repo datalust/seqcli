@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if UNIX
 using System.Runtime.InteropServices;
 
 namespace SeqCli.Forwarder.Filesystem.System.Unix;
@@ -28,4 +27,3 @@ static class Libc
     [DllImport("libc")]
     public static extern int fsync(int fd);
 }
-#endif

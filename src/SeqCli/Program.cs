@@ -27,9 +27,7 @@ namespace SeqCli;
 
 class Program
 {
-#if WINDOWS
-    public const string BinaryName = "seqcli.exe";
-#endif   
+    public const string WindowsBinaryName = "seqcli.exe";
     
     static async Task<int> Main(string[] args)
     {

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if WINDOWS
-
 using SeqCli.Cli;
 
 namespace SeqCli.Forwarder.Cli.Features
@@ -38,5 +36,3 @@ namespace SeqCli.Forwarder.Cli.Features
         }
     }
 }
-
-#endif

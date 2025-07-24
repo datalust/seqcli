@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.InteropServices;
 using SeqCli.Encryptor;
 
 namespace SeqCli.Config;
@@ -38,10 +39,6 @@ class SeqCliEncryptionProviderConfig
             return new ExternalDataProtector(Encryptor, EncryptorArgs, Decryptor, DecryptorArgs);
         }
 
-#if WINDOWS
-        return new WindowsNativeDataProtector();
-#else
-        return new PlaintextDataProtector();
-#endif
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new WindowsNativeDataProtector() : new PlaintextDataProtector();
     }
 }
