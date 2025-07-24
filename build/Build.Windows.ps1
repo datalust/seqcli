@@ -38,7 +38,7 @@ function Create-ArtifactDir
 
 function Publish-Archives($version)
 {
-    $rids = $([xml](Get-Content .\src\SeqCli\SeqCli.csproj)).Project.PropertyGroup.RuntimeIdentifiers[0].Split(';')
+    $rids = $([xml](Get-Content .\src\SeqCli\SeqCli.csproj)).Project.PropertyGroup.RuntimeIdentifiers.Split(';')
     foreach ($rid in $rids) {
         $tfm = $framework
 
