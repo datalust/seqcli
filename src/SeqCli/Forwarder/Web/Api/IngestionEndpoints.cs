@@ -70,21 +70,23 @@ class IngestionEndpoints : IMapEndpoints
     
     async Task<IResult> IngestCompactFormatAsync(HttpContext context)
     {
+        byte[]? rented = null;
+        
         try
         {
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
             cts.CancelAfter(TimeSpan.FromSeconds(5));
-            
+
             var requestApiKey = GetApiKey(context.Request);
-            var log = _forwardingChannels.GetForwardingChannel(requestApiKey); 
-            
+            var log = _forwardingChannels.GetForwardingChannel(requestApiKey);
+
             // Add one for the extra newline that we have to insert at the end of batches.
             var bufferSize = _config.Connection.BatchSizeLimitBytes + 1;
-            var rented = ArrayPool<byte>.Shared.Rent(bufferSize);
-            var buffer = rented[..bufferSize];
+            rented = ArrayPool<byte>.Shared.Rent(bufferSize);
+            var buffer = new ArraySegment<byte>(rented, 0, bufferSize);
             var writeHead = 0;
             var readHead = 0;
-            
+
             var done = false;
             while (!done)
             {
@@ -92,30 +94,30 @@ class IngestionEndpoints : IMapEndpoints
                 // size of write batches.
                 while (!done)
                 {
-                    var remaining = buffer.Length - 1 - writeHead;
+                    var remaining = buffer.Count - 1 - writeHead;
                     if (remaining == 0)
                     {
                         IngestionLog.ForClient(context.Connection.RemoteIpAddress)
                             .Error("An incoming request exceeded the configured batch size limit");
                         return Error(HttpStatusCode.RequestEntityTooLarge, "the request is too large to process");
                     }
-                    
+
                     var read = await context.Request.Body.ReadAsync(buffer.AsMemory(writeHead, remaining), cts.Token);
                     if (read == 0)
                     {
                         done = true;
                     }
-            
+
                     writeHead += read;
-                    
+
                     // Ingested batches must be terminated with `\n`, but this isn't an API requirement.
-                    if (done && writeHead > 0 && writeHead < buffer.Length && buffer[writeHead - 1] != (byte)'\n')
+                    if (done && writeHead > 0 && writeHead < buffer.Count && buffer[writeHead - 1] != (byte)'\n')
                     {
                         buffer[writeHead] = (byte)'\n';
                         writeHead += 1;
                     }
                 }
-                
+
                 // Validate what we read, marking out a batch of one or more complete newline-delimited events.
                 var batchStart = readHead;
                 var batchEnd = readHead;
@@ -123,14 +125,14 @@ class IngestionEndpoints : IMapEndpoints
                 {
                     var eventStart = batchEnd;
                     var nlIndex = buffer.AsSpan()[eventStart..].IndexOf((byte)'\n');
-                
+
                     if (nlIndex == -1)
                     {
                         break;
                     }
-            
+
                     var eventEnd = eventStart + nlIndex + 1;
-            
+
                     batchEnd = eventEnd;
                     readHead = batchEnd;
 
@@ -142,12 +144,12 @@ class IngestionEndpoints : IMapEndpoints
                         return Error(HttpStatusCode.BadRequest, $"Payload validation failed: {error}.");
                     }
                 }
-            
+
                 if (batchStart != batchEnd)
                 {
-                    await Write(log, ArrayPool<byte>.Shared, buffer, batchStart..batchEnd, cts.Token);
+                    await log.WriteAsync(buffer[batchStart..batchEnd], cts.Token);
                 }
-            
+
                 // Copy any unprocessed data into our buffer and continue
                 if (!done && readHead != 0)
                 {
@@ -157,10 +159,7 @@ class IngestionEndpoints : IMapEndpoints
                     writeHead = retain;
                 }
             }
-            
-            // Exception cases are handled by `Write`
-            ArrayPool<byte>.Shared.Return(rented);
-            
+
             return SuccessfulIngestion();
         }
         catch (Exception ex)
@@ -168,6 +167,13 @@ class IngestionEndpoints : IMapEndpoints
             IngestionLog.ForClient(context.Connection.RemoteIpAddress)
                 .Error(ex, "Ingestion failed");
             return Error(HttpStatusCode.InternalServerError, "Ingestion failed.");
+        }
+        finally
+        {
+            if (rented != null)
+            {
+                ArrayPool<byte>.Shared.Return(rented);
+            }
         }
     }
 
@@ -262,19 +268,6 @@ class IngestionEndpoints : IMapEndpoints
 
         errorFragment = null;
         return true;
-    }
-
-    static async Task Write(ForwardingChannel forwardingChannel, ArrayPool<byte> pool, byte[] storage, Range range, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await forwardingChannel.WriteAsync(storage, range, cancellationToken);
-        }
-        catch
-        {
-            pool.Return(storage);
-            throw;
-        }
     }
     
     static IResult Error(HttpStatusCode statusCode, string message)
