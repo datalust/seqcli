@@ -21,10 +21,10 @@ public class CommandLineHostTests
         {
             new(
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test"))),
-                new CommandMetadata {Name = "test", HelpText = "help"}),
+                new CommandMetadata {Name = "test", HelpText = "help", Platforms = SupportedPlatforms.All}),
             new(
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test2"))),
-                new CommandMetadata {Name = "test2", HelpText = "help"})
+                new CommandMetadata {Name = "test2", HelpText = "help", Platforms = SupportedPlatforms.All})
         };
         var commandLineHost = new CommandLineHost(availableCommands);
         await commandLineHost.Run(["test"],new LoggingLevelSwitch());
@@ -40,7 +40,7 @@ public class CommandLineHostTests
         {
             new(
                 new Lazy<Command>(() => new ActionCommand(() => executed.Add("test"))),
-                new CommandMetadata {Name = "test", HelpText = "help", Visibility = FeatureVisibility.Preview}),
+                new CommandMetadata {Name = "test", HelpText = "help", Visibility = FeatureVisibility.Preview, Platforms = SupportedPlatforms.All}),
         };
         var commandLineHost = new CommandLineHost(availableCommands);
         var exit = await commandLineHost.Run(["test"],new LoggingLevelSwitch());
@@ -61,10 +61,10 @@ public class CommandLineHostTests
             {
                 new(
                     new Lazy<Command>(() => new ActionCommand(() => executed.Add("test-subcommand1"))),
-                    new CommandMetadata {Name = "test", SubCommand = "subcommand1", HelpText = "help"}),
+                    new CommandMetadata {Name = "test", SubCommand = "subcommand1", HelpText = "help", Platforms = SupportedPlatforms.All}),
                 new(
                     new Lazy<Command>(() => new ActionCommand(() => executed.Add("test-subcommand2"))),
-                    new CommandMetadata {Name = "test", SubCommand = "subcommand2", HelpText = "help"})
+                    new CommandMetadata {Name = "test", SubCommand = "subcommand2", HelpText = "help", Platforms = SupportedPlatforms.All})
             };
         var commandLineHost = new CommandLineHost(availableCommands);
         await commandLineHost.Run(["test", "subcommand2"], new LoggingLevelSwitch());
@@ -82,7 +82,7 @@ public class CommandLineHostTests
             {
                 new(
                     new Lazy<Command>(() => new ActionCommand(() => { })),
-                    new CommandMetadata {Name = "test", HelpText = "help"})
+                    new CommandMetadata {Name = "test", HelpText = "help", Platforms = SupportedPlatforms.All})
             };
             
         var commandLineHost = new CommandLineHost(availableCommands);
