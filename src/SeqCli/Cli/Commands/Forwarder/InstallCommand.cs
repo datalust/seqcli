@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading.Tasks;
 using SeqCli.Cli.Features;
@@ -27,7 +28,7 @@ namespace SeqCli.Cli.Commands.Forwarder;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 
-[Command("forwarder", "install", "Install the forwarder as a Windows service", Visibility = FeatureVisibility.Preview)]
+[Command("forwarder", "install", "Install the forwarder as a Windows service", Visibility = FeatureVisibility.Preview, Platforms = SupportedPlatforms.Windows)]
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 class InstallCommand : Command
 {

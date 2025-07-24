@@ -24,12 +24,14 @@ public class CommandAttribute : Attribute, ICommandMetadata
     public string HelpText { get; }
     public string? Example { get; set; }
     public FeatureVisibility Visibility { get; set; }
+    public SupportedPlatforms Platforms { get; set; }
 
     public CommandAttribute(string name, string helpText)
     {
         Name = name;
         HelpText = helpText;
         Visibility = FeatureVisibility.Visible;
+        Platforms = SupportedPlatforms.All;
     }
 
     public CommandAttribute(string name, string subCommand, string helpText) : this(name, helpText)
