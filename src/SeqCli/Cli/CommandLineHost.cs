@@ -58,7 +58,7 @@ class CommandLineHost
             
             var currentPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? SupportedPlatforms.Windows
-                : SupportedPlatforms.Unix;
+                : SupportedPlatforms.Posix;
             
             var cmd = _availableCommands.SingleOrDefault(c =>
                 c.Metadata.Platforms.HasFlag(currentPlatform) && featureVisibility.HasFlag(c.Metadata.Visibility) &&

@@ -7,6 +7,6 @@ public enum SupportedPlatforms
 {
     None,
     Windows,
-    Unix,
-    All = Windows | Unix
+    Posix,
+    All = Windows | Posix
 }

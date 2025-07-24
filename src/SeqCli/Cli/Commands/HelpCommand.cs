@@ -28,7 +28,7 @@ class HelpCommand : Command
 {
     readonly SupportedPlatforms _currentPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? SupportedPlatforms.Windows
-        : SupportedPlatforms.Unix;
+        : SupportedPlatforms.Posix;
 
     readonly IEnumerable<Meta<Lazy<Command>, CommandMetadata>> _allCommands;
     bool _markdown;
