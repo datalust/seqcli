@@ -11,8 +11,8 @@
       "notes": "Reducer performance. Percentile is excluded because it prevents parallelization unless time-grouped."
     },
     {
-      "id": "percentile-by-12h",
-      "query": "select percentile(@Timestamp % 1ms, 90) from stream where @Timestamp >= now() - 30d group by @Level, time(12h) for no_cache",
+      "id": "percentile-by-time",
+      "query": "select percentile(@Timestamp % 1ms, 90) from stream where @Timestamp >= now() - 2h group by @Level, time(2m) for no_cache",
       "notes": "Common reducer/grouping combination used when monitoring performance."
     },
     {
