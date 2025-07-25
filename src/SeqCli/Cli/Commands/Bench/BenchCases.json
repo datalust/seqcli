@@ -2,12 +2,12 @@
   "cases": [
     {
       "id": "count-all",
-      "query": "select count(*) from stream where @Timestamp >= now() - 30d for no_cache",
+      "query": "select count(*) from stream where @Timestamp >= now() - 2h for no_cache",
       "notes": "Tests page traversal performance only; avoids data copies, serialization, and evaluation."
     },
     {
       "id": "multiple-reductions",
-      "query": "select count(*), sum(A), min(B), max(C) from stream where @Timestamp >= now() - 30d for no_cache",
+      "query": "select count(*), sum(A), min(B), max(C) from stream where @Timestamp >= now() - 2h for no_cache",
       "notes": "Reducer performance. Percentile is excluded because it prevents parallelization unless time-grouped."
     },
     {
@@ -17,42 +17,42 @@
     },
     {
       "id": "count-with-request-id",
-      "query": "select count(*) from stream where RequestId is not null and @Timestamp >= now() - 30d for no_cache",
+      "query": "select count(*) from stream where RequestId is not null and @Timestamp >= now() - 2h for no_cache",
       "notes": "Tests sparse deserialization and condition evaluation atop basic page traversal."
     },
     {
       "id": "count-exception-starts-with-sys",
-      "query": "select count(*) from stream where @Exception like 'Sys%' and @Timestamp >= now() - 30d for no_cache",
+      "query": "select count(*) from stream where @Exception like 'Sys%' and @Timestamp >= now() - 2h for no_cache",
       "notes": "Text search performance. Chooses 'Sys' because in .NET data there should be some hits."
     },
     {
       "id": "count-message-starts-with-fai",
-      "query": "select count(*) from stream where @Message like 'Fai%' and @Timestamp >= now() - 30d for no_cache",
+      "query": "select count(*) from stream where @Message like 'Fai%' and @Timestamp >= now() - 2h for no_cache",
       "notes": "Text search performance; worse on @Message than other properties because fragment pre-filtering is not used."
     },
     {
       "id": "group-by-level",
-      "query": "select count(*) from stream where @Timestamp >= now() - 30d group by @Level for no_cache",
+      "query": "select count(*) from stream where @Timestamp >= now() - 2h group by @Level for no_cache",
       "notes": "Grouping performance, strings, small number of groups."
     },
     {
       "id": "group-by-millisecond",
-      "query": "select count(*) from stream where @Timestamp >= now() - 30d group by @Timestamp % 1ms limit 100 for no_cache",
+      "query": "select count(*) from stream where @Timestamp >= now() - 2h group by @Timestamp % 1ms limit 100 for no_cache",
       "notes": "Grouping performance, numbers, up to 10000 groups."
     },
     {
-      "id": "group-by-12h",
-      "query": "select count(*) from stream where @Timestamp >= now() - 30d group by time(12h) for no_cache",
+      "id": "group-by-time",
+      "query": "select count(*) from stream where @Timestamp >= now() - 2h group by time(2m) for no_cache",
       "notes": "Time partitioning performance."
     },
     {
       "id": "distinct-exception-20ch-limit-100",
-      "query": "select distinct(substring(@Exception, 0, 20)) from stream where @Exception is not null and @Timestamp >= now() - 30d limit 100",
+      "query": "select distinct(substring(@Exception, 0, 20)) from stream where @Exception is not null and @Timestamp >= now() - 2h limit 100",
       "notes": "Distinct on computed text."
     },
     {
       "id": "order-by-ts-mod-10k",
-      "query": "select @Timestamp from stream where @Timestamp >= now() - 30d order by @Timestamp % 1ms limit 10",
+      "query": "select @Timestamp from stream where @Timestamp >= now() - 2h order by @Timestamp % 1ms limit 10",
       "notes": "Tests performance of limited sort."
     },
     {
@@ -67,7 +67,7 @@
     },
     {
       "id": "count-where-heavy-predicate",
-      "query": "select count(*) from stream where (A = 1 or B = '2' or C or D <> null or length(E) > 5 or F = {f: 6} or G = '7' or H like '8%' or I > 9 or J % 10 = 0) and @Timestamp >= now() - 30d for no_cache",
+      "query": "select count(*) from stream where (A = 1 or B = '2' or C or D <> null or length(E) > 5 or F = {f: 6} or G = '7' or H like '8%' or I > 9 or J % 10 = 0) and @Timestamp >= now() - 2h for no_cache",
       "notes": "Tests expression evaluation performance."
     }
   ]
