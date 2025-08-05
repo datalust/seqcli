@@ -16,93 +16,56 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.ServiceProcess;
 using System.Text;
-using SeqCli.Forwarder.Util;
+using Serilog;
 
-namespace SeqCli.Forwarder.Util
+namespace SeqCli.Forwarder.Util;
+
+[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+public static class ServiceConfiguration
 {
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
-    public static class ServiceConfiguration
+    static bool GetServiceCommandLine(string serviceName, [MaybeNullWhen(false)] out string path)
     {
-        public static bool GetServiceBinaryPath(ServiceController controller, [MaybeNullWhen(false)] out string path)
+        var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
+
+        var config = new StringBuilder();
+        if (0 != CaptiveProcess.Run(sc, "qc \"" + serviceName + "\"", l => config.AppendLine(l), Console.WriteLine))
         {
-            var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
-
-            var config = new StringBuilder();
-            if (0 != CaptiveProcess.Run(sc, "qc \"" + controller.ServiceName + "\"", l => config.AppendLine(l), Console.WriteLine))
-            {
-                Console.WriteLine("Could not query service path; ignoring.");
-                path = null;
-                return false;
-            }
-
-            var lines = config.ToString()
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(l => l.Trim());
-
-            var line = lines
-                .SingleOrDefault(l => l.StartsWith("BINARY_PATH_NAME   : "));
-
-            if (line == null)
-            {
-                Console.WriteLine("No existing binary path could be determined.");
-                path = null;
-                return false;
-            }
-
-            path = line.Replace("BINARY_PATH_NAME   : ", "");
-            return true;
-        }
-
-        static bool GetServiceCommandLine(string serviceName, [MaybeNullWhen(false)] out string path)
-        {
-            if (serviceName == null) throw new ArgumentNullException(nameof(serviceName));
-
-            var sc = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sc.exe");
-
-            var config = new StringBuilder();
-            if (0 != CaptiveProcess.Run(sc, "qc \"" + serviceName + "\"", l => config.AppendLine(l), Console.WriteLine))
-            {
-                Console.WriteLine("Could not query service path; ignoring.");
-                path = null;
-                return false;
-            }
-
-            var lines = config.ToString()
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(l => l.Trim());
-
-            var line = lines
-                .SingleOrDefault(l => l.StartsWith("BINARY_PATH_NAME   : "));
-
-            if (line == null)
-            {
-                Console.WriteLine("No existing binary path could be determined.");
-                path = null;
-                return false;
-            }
-
-            path = line.Replace("BINARY_PATH_NAME   : ", "");
-            return true;
-        }
-
-        public static bool GetServiceStoragePath(string serviceName, out string? storage)
-        {
-            if (serviceName == null) throw new ArgumentNullException(nameof(serviceName));
-
-            if (GetServiceCommandLine(serviceName, out var binpath) &&
-                binpath.Contains("--storage=\""))
-            {
-                var start = binpath.IndexOf("--storage=\"", StringComparison.Ordinal) + 11;
-                var chop = binpath.Substring(start);
-                storage = chop.Substring(0, chop.IndexOf('"'));
-                return true;
-            }
-
-            storage = null;
+            Log.Debug("Could not query service path; ignoring.");
+            path = null;
             return false;
         }
+
+        var lines = config.ToString()
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => l.Trim());
+
+        var line = lines
+            .SingleOrDefault(l => l.StartsWith("BINARY_PATH_NAME   : "));
+
+        if (line == null)
+        {
+            Log.Debug("No existing binary path could be determined.");
+            path = null;
+            return false;
+        }
+
+        path = line.Replace("BINARY_PATH_NAME   : ", "");
+        return true;
+    }
+
+    public static bool GetServiceStoragePath(string serviceName, out string? storage)
+    {
+        if (GetServiceCommandLine(serviceName, out var binpath) &&
+            binpath.Contains("--storage=\""))
+        {
+            var start = binpath.IndexOf("--storage=\"", StringComparison.Ordinal) + 11;
+            var chop = binpath.Substring(start);
+            storage = chop.Substring(0, chop.IndexOf('"'));
+            return true;
+        }
+
+        storage = null;
+        return false;
     }
 }
-
