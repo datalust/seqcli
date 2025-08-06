@@ -53,6 +53,9 @@ public class TestConfiguration
             return new CaptiveProcess(containerRuntime, $"run --name {containerName} -d -e ACCEPT_EULA=Y -e SEQ_FIRSTRUN_NOAUTHENTICATION=True -p {_serverListenPort}:80 datalust/seq:{imageTag}", stopCommandFullExePath: containerRuntime, stopCommandArgs: $"rm -f {containerName}");
         }
         
-        return new CaptiveProcess("seq", commandWithArgs);
+        return new CaptiveProcess("seq", commandWithArgs, environment: new Dictionary<string, string>
+            {
+                { "SEQ_FIRSTRUN_NOAUTHENTICATION", "True" }
+            });
     }
 }

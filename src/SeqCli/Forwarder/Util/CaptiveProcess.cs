@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace SeqCli.Forwarder.Util;
@@ -25,7 +26,8 @@ public static class CaptiveProcess
         string? args = null,
         Action<string>? writeStdout = null,
         Action<string>? writeStderr = null, 
-        string? workingDirectory = null)
+        string? workingDirectory = null,
+        Dictionary<string, string>? environment = null)
     {
         if (fullExePath == null) throw new ArgumentNullException(nameof(fullExePath));
 
@@ -47,6 +49,14 @@ public static class CaptiveProcess
             
         if (!string.IsNullOrEmpty(workingDirectory))
             startInfo.WorkingDirectory = workingDirectory;
+
+        if (environment != null)
+        {
+            foreach (var (k, v) in environment)
+            {
+                startInfo.EnvironmentVariables.Add(k, v);
+            }
+        }
 
         using var process = Process.Start(startInfo)!;
         using var outputComplete = new ManualResetEvent(false);
