@@ -31,6 +31,7 @@ function Execute-Tests($version)
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 
     choco install seq
+    $env:PATH="C:\Program Files\Seq;$env:PATH"
 
     cd ./test/SeqCli.EndToEnd/
     & dotnet run -f $framework
