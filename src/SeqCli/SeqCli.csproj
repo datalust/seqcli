@@ -32,7 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Seq.Api" Version="2025.2.1" />
+    <PackageReference Include="Seq.Api" Version="2025.2.2-dev-00263" />
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
