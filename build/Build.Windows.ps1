@@ -29,6 +29,18 @@ function Execute-Tests($version)
 {
     & dotnet test ./test/SeqCli.Tests/SeqCli.Tests.csproj -c Release --framework "$framework" /p:Configuration=Release /p:Platform=x64 /p:VersionPrefix=$version
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
+
+    choco install seq
+    $env:PATH="C:\Program Files\Seq;$env:PATH"
+
+    cd ./test/SeqCli.EndToEnd/
+    & dotnet run -f $framework
+    if ($LASTEXITCODE -ne 0)
+    { 
+        cd ../..
+        exit 1 
+    }
+    cd ../..
 }
 
 function Create-ArtifactDir
