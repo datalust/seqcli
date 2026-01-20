@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Net;
 using System.Threading.Tasks;
+using Roastery.Metrics;
 using Serilog;
 using Serilog.Context;
 using Serilog.Events;
@@ -12,23 +15,29 @@ class RequestLoggingMiddleware : HttpServer
 {
     readonly HttpServer _next;
     readonly ILogger _logger;
-
-    public RequestLoggingMiddleware(ILogger logger, HttpServer next)
+    readonly RoasteryMetrics _metrics;
+    
+    public RequestLoggingMiddleware(ILogger logger, RoasteryMetrics metrics, HttpServer next)
     {
         _next = next;
         _logger = logger.ForContext<RequestLoggingMiddleware>();
+        _metrics = metrics;
     }
 
     public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
     {
         using var _ = LogContext.PushProperty("RequestId", request.RequestId);
 
+        var requestTiming = Stopwatch.StartNew();
         using var activity = _logger.StartActivity("HTTP {RequestMethod} {RequestPath}", request.Method, request.Path);
 
         try
         {
             var response = await _next.InvokeAsync(request);
+
             LogCompletion(activity, null, response.StatusCode);
+            _metrics.RecordRequestDuration(new RoasteryMetrics.RequestDurationKey(request.Path, (int)response.StatusCode), requestTiming.ElapsedMilliseconds);
+
             return response;
         }
         catch (Exception ex1) when (LogCompletion(activity, ex1, HttpStatusCode.InternalServerError))
@@ -38,7 +47,10 @@ class RequestLoggingMiddleware : HttpServer
         }
         catch
         {
-            return new HttpResponse(HttpStatusCode.InternalServerError, "An error occurred.");
+            var statusCode = HttpStatusCode.InternalServerError;
+
+            _metrics.RecordRequestDuration(new RoasteryMetrics.RequestDurationKey(request.Path, (int)statusCode), requestTiming.ElapsedMilliseconds);
+            return new HttpResponse(statusCode, "An error occurred.");
         }
     }
 

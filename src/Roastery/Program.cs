@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Roastery.Agents;
 using Roastery.Api;
 using Roastery.Data;
 using Roastery.Fake;
+using Roastery.Metrics;
 using Roastery.Util;
 using Roastery.Web;
 using Serilog;
@@ -17,7 +19,19 @@ public static class Program
 {
     public static async Task Main(ILogger logger, CancellationToken cancellationToken = default)
     {
+        var metrics = new RoasteryMetrics();
+        
         var webApplicationLogger = logger.ForContext("Application", "Roastery Web Frontend");
+
+        // Sample metrics
+        var periodicSample = RoasteryMetrics.PeriodicSample(metrics, TimeSpan.FromSeconds(5), (sample, ct) =>
+        {
+            webApplicationLogger
+                .ForContext("Sample", sample, true)
+                .Information("Metrics sampled");
+            
+            return Task.CompletedTask;
+        }, cancellationToken);
 
         var database = new Database(webApplicationLogger, "roastery");
         DatabaseMigrator.Populate(database);
@@ -25,7 +39,7 @@ public static class Program
         var client = new HttpClient(
             "https://roastery.datalust.co",
             new NetworkLatencyMiddleware(
-                new RequestLoggingMiddleware(webApplicationLogger,
+                new RequestLoggingMiddleware(webApplicationLogger, metrics,
                     new SchedulingLatencyMiddleware(
                         new FaultInjectionMiddleware(webApplicationLogger,
                             new Router([
@@ -46,5 +60,6 @@ public static class Program
         agents.Add(new ArchivingBatch(client, batchApplicationLogger));
 
         await Task.WhenAll(agents.Select(a => Agent.Run(a, cancellationToken)));
+        await periodicSample;
     }
 }
