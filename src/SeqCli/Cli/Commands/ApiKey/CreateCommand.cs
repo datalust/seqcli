@@ -22,7 +22,7 @@ using Seq.Api.Model.Shared;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using SeqCli.Util;
 using Serilog;
 

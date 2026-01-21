@@ -17,18 +17,19 @@ namespace Roastery;
 // Named this way to make stack traces a little more believable :-)
 public static class Program
 {
-    public static async Task Main(ILogger logger, CancellationToken cancellationToken = default)
+    public static async Task Main(ILogger logger, PropertyNameMapping propertyNameMapping, CancellationToken cancellationToken = default)
     {
         var metrics = new RoasteryMetrics();
         
         var webApplicationLogger = logger.ForContext("Application", "Roastery Web Frontend");
 
         // Sample metrics
-        var periodicSample = RoasteryMetrics.PeriodicSample(metrics, TimeSpan.FromSeconds(5), (sample, ct) =>
+        var periodicSample = RoasteryMetrics.PeriodicSample(metrics, TimeSpan.FromSeconds(5), (timestamp, sample, ct) =>
         {
-            webApplicationLogger
-                .ForContext("Sample", sample, true)
-                .Information("Metrics sampled");
+            foreach (var evt in sample.ToLogEvents(webApplicationLogger, propertyNameMapping, timestamp))
+            {
+                webApplicationLogger.Write(evt);
+            }
             
             return Task.CompletedTask;
         }, cancellationToken);

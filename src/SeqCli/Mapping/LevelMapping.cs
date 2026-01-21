@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using Serilog.Events;
 
-namespace SeqCli.Levels;
+namespace SeqCli.Mapping;
 
 public static class LevelMapping
 {

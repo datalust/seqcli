@@ -17,8 +17,16 @@ public class ExponentialHistogram
     int _scale;
     Dictionary<double, ulong> _buckets;
 
+    double _min;
+    double _max;
+    ulong _total;
+
     public void Record(double rawValue)
     {
+        _min = Math.Min(_min, rawValue);
+        _max = Math.Max(_max, rawValue);
+        _total += 1;
+        
         var midpoint = Midpoint(_scale, rawValue);
         _buckets.TryAdd(midpoint, 0);
         _buckets[midpoint] += 1;
@@ -50,4 +58,8 @@ public class ExponentialHistogram
 
     public IReadOnlyDictionary<double, ulong> Buckets => _buckets;
     public int Scale => _scale;
+    
+    public double Min => _min;
+    public double Max => _max;
+    public ulong Total => _total;
 }

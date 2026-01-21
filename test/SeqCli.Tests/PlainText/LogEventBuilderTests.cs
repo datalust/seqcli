@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SeqCli.Levels;
 using SeqCli.PlainText.LogEvents;
 using Serilog.Events;
 using Superpower.Model;

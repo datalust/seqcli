@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using SeqCli.Util;
 using Serilog.Events;
 using Serilog.Parsing;
