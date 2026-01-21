@@ -12,7 +12,7 @@ $version = Get-SemVer
 
 Write-Output "Building version $version"
 
-$framework = 'net9.0'
+$framework = 'net10.0'
 
 function Clean-Output
 {
