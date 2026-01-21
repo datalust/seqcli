@@ -24,8 +24,8 @@ public class RoasteryMetrics
         */
         
         // `http.request.duration`: histogram
-        public record struct RequestDurationKey(string Path, int StatusCode);
-        public readonly Dictionary<RequestDurationKey, ExponentialHistogram> RequestDuration = new();
+        public record struct HttpRequestDurationKey(string Path, int StatusCode);
+        public readonly Dictionary<HttpRequestDurationKey, ExponentialHistogram> HttpRequestDuration = new();
         
         // `orders.created`: counter
         public ulong OrdersCreated;
@@ -37,7 +37,7 @@ public class RoasteryMetrics
 
         public IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp)
         {
-            foreach (var (key, metric) in RequestDuration)
+            foreach (var (key, metric) in HttpRequestDuration)
             {
                 yield return ToLogEvent(
                     logger,
@@ -105,14 +105,14 @@ public class RoasteryMetrics
     readonly Lock _lock = new();
     Sample _current = new();
 
-    public void RecordRequestDuration(Sample.RequestDurationKey key, double rawValue)
+    public void RecordHttpRequestDuration(Sample.HttpRequestDurationKey key, double rawValue)
     {
         lock (_lock)
         {
-            if (!_current.RequestDuration.TryGetValue(key, out var metric))
+            if (!_current.HttpRequestDuration.TryGetValue(key, out var metric))
             {
                 metric = new ExponentialHistogram();
-                _current.RequestDuration.Add(key, metric);
+                _current.HttpRequestDuration.Add(key, metric);
             }
 
             metric.Record(rawValue);
