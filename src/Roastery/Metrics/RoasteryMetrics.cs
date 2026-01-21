@@ -23,14 +23,14 @@ public class RoasteryMetrics
         4. Add support in `ToLogEvents` for the new metric.
         */
         
-        // `http.request.duration`: histogram
+        // `HttpRequestDuration`: histogram
         public record struct HttpRequestDurationKey(string Path, int StatusCode);
         public readonly Dictionary<HttpRequestDurationKey, ExponentialHistogram> HttpRequestDuration = new();
         
-        // `orders.created`: counter
+        // `OrdersCreated`: counter
         public ulong OrdersCreated;
         
-        // `orders.shipped`: counter
+        // `OrdersShipped`: counter
         public ulong OrdersShipped;
         
         static readonly MessageTemplate Template = new MessageTemplateParser().Parse("Metrics sampled");
@@ -45,27 +45,20 @@ public class RoasteryMetrics
                     timestamp,
                     new Dictionary<string, object>
                     {
-                        { "http.request.duration", new { kind = "Exponential", unit = "ms", description = "The time taken to fully process a request" } }
+                        { "HttpRequestDuration", new { kind = "Exponential", unit = "ms", description = "The time taken to fully process a request" } }
                     },
                     new
                     {
-                        http = new
-                        {
-                            request = new
-                            {
-                                duration = new
-                                {
-                                    buckets = metric.Buckets
-                                        .Select(bucket => new { midpoint = bucket.Key, count = bucket.Value }).ToArray(),
-                                    scale = metric.Scale,
-                                    min = metric.Min,
-                                    max = metric.Max,
-                                    count = metric.Total
-                                }
-                            }
+                        HttpRequestDuration = new {
+                            buckets = metric.Buckets
+                                .Select(bucket => new { midpoint = bucket.Key, count = bucket.Value }).ToArray(),
+                            scale = metric.Scale,
+                            min = metric.Min,
+                            max = metric.Max,
+                            count = metric.Total
                         },
-                        path = key.Path,
-                        statusCode = key.StatusCode
+                        key.Path,
+                        key.StatusCode
                     }
                 );
             }
@@ -76,16 +69,13 @@ public class RoasteryMetrics
                 timestamp,
                 new Dictionary<string, object>
                 {
-                    { "orders.created", new { kind = "Counter", unit = "orders", description = "The total number of orders created in the system" } },
-                    { "orders.shipped", new { kind = "Counter", unit = "orders", description = "The total number of orders shipped in the system" } }
+                    { "OrdersCreated", new { kind = "Counter", unit = "orders", description = "The total number of orders created in the system" } },
+                    { "OrdersShipped", new { kind = "Counter", unit = "orders", description = "The total number of orders shipped in the system" } }
                 },
                 new
                 {
-                    orders = new
-                    {
-                        created = OrdersCreated,
-                        shipped = OrdersShipped
-                    }
+                    OrdersCreated,
+                    OrdersShipped
                 }
             );
         }
