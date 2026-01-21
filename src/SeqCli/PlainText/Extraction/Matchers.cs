@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using SeqCli.PlainText.Parsers;
 using Superpower;
 using Superpower.Model;

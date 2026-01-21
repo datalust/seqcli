@@ -14,8 +14,10 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Roastery.Metrics;
 using Seq.Api;
 using SeqCli.Ingestion;
+using SeqCli.Mapping;
 using Serilog;
 
 namespace SeqCli.Sample.Loader;
@@ -37,7 +39,7 @@ static class Simulation
         var ship = Task.Run(() => LogShipper.ShipEventsAsync(connection, apiKey, buffer,
             InvalidDataHandling.Fail, SendFailureHandling.Continue, batchSize, null, cancellationToken), cancellationToken);
 
-        await Roastery.Program.Main(logger, cancellationToken);
+        await Roastery.Program.Main(logger, new PropertyNameMapping(MetricsMapping.SurrogateDefinitionsProperty, MetricsMapping.SurrogateSamplesProperty), cancellationToken);
         await logger.DisposeAsync();
         await ship;
     }

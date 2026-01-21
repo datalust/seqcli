@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;

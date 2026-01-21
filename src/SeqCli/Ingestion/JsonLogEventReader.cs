@@ -18,7 +18,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using SeqCli.PlainText.Framing;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;

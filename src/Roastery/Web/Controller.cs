@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Roastery.Metrics;
 using Serilog;
 
 namespace Roastery.Web;
@@ -6,10 +7,12 @@ namespace Roastery.Web;
 abstract class Controller
 {
     protected ILogger Log { get; }
-        
-    protected Controller(ILogger logger)
+    protected RoasteryMetrics Metrics { get; }
+    
+    protected Controller(ILogger logger, RoasteryMetrics metrics)
     {
         Log = logger.ForContext(GetType());
+        Metrics = metrics;
     }
 
     protected static HttpResponse Json(object? body, HttpStatusCode statusCode = HttpStatusCode.OK)

@@ -20,7 +20,7 @@ using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Ingestion;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using SeqCli.PlainText;
 using SeqCli.Syntax;
 using Serilog;
