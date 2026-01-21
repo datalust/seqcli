@@ -23,9 +23,15 @@ public class RoasteryMetrics
         4. Add support in `ToLogEvents` for the new metric.
         */
         
-        // `http.request.duration`: Histogram
+        // `http.request.duration`: histogram
         public record struct RequestDurationKey(string Path, int StatusCode);
         public readonly Dictionary<RequestDurationKey, ExponentialHistogram> RequestDuration = new();
+        
+        // `orders.created`: counter
+        public ulong OrdersCreated;
+        
+        // `orders.shipped`: counter
+        public ulong OrdersShipped;
         
         static readonly MessageTemplate Template = new MessageTemplateParser().Parse("Metrics sampled");
 
@@ -33,38 +39,61 @@ public class RoasteryMetrics
         {
             foreach (var (key, metric) in RequestDuration)
             {
-                var metricName = "http.request.duration";
-                var metricDefinition = new { kind = "Exponential", unit = "ms", description = "The time taken to fully process a request" };
-                var sample = new
-                {
-                    http = new
+                yield return ToLogEvent(
+                    logger,
+                    propertyNameMapping,
+                    timestamp,
+                    new Dictionary<string, object>
                     {
-                        request = new
-                        {
-                            duration = new
-                            {
-                                buckets = metric.Buckets
-                                    .Select(bucket => new { midpoint = bucket.Key, count = bucket.Value }).ToArray(),
-                                scale = metric.Scale,
-                                min = metric.Min,
-                                max = metric.Max,
-                                count = metric.Total
-                            }
-                        }
+                        { "http.request.duration", new { kind = "Exponential", unit = "ms", description = "The time taken to fully process a request" } }
                     },
-                    path = key.Path,
-                    statusCode = key.StatusCode
-                };
-
-                yield return ToLogEvent(logger, propertyNameMapping, timestamp, metricName, metricDefinition, sample);
+                    new
+                    {
+                        http = new
+                        {
+                            request = new
+                            {
+                                duration = new
+                                {
+                                    buckets = metric.Buckets
+                                        .Select(bucket => new { midpoint = bucket.Key, count = bucket.Value }).ToArray(),
+                                    scale = metric.Scale,
+                                    min = metric.Min,
+                                    max = metric.Max,
+                                    count = metric.Total
+                                }
+                            }
+                        },
+                        path = key.Path,
+                        statusCode = key.StatusCode
+                    }
+                );
             }
+            
+            yield return ToLogEvent(
+                logger,
+                propertyNameMapping,
+                timestamp,
+                new Dictionary<string, object>
+                {
+                    { "orders.created", new { kind = "Counter", unit = "orders", description = "The total number of orders created in the system" } },
+                    { "orders.shipped", new { kind = "Counter", unit = "orders", description = "The total number of orders shipped in the system" } }
+                },
+                new
+                {
+                    orders = new
+                    {
+                        created = OrdersCreated,
+                        shipped = OrdersShipped
+                    }
+                }
+            );
         }
 
-        static LogEvent ToLogEvent(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp, string metricName,
-            object metricDefinition, object sample)
+        static LogEvent ToLogEvent(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp, Dictionary<string, object> definitions, object samples)
         {
-            logger.BindProperty(propertyNameMapping.MetricDefinitions, new Dictionary<string, object> { { metricName, metricDefinition } }, true, out var definitionsProperty);
-            logger.BindProperty(propertyNameMapping.MetricSamples, sample, true, out var sampleProperty);
+            logger.BindProperty(propertyNameMapping.MetricDefinitions, definitions, true, out var definitionsProperty);
+            logger.BindProperty(propertyNameMapping.MetricSamples, samples, true, out var sampleProperty);
 
             return new LogEvent(timestamp, LogEventLevel.Information, null, Template,
                 [definitionsProperty!, sampleProperty!]);
@@ -87,6 +116,22 @@ public class RoasteryMetrics
             }
 
             metric.Record(rawValue);
+        }
+    }
+
+    public void RecordOrderCreated()
+    {
+        lock (_lock)
+        {
+            _current.OrdersCreated += 1;
+        }
+    }
+
+    public void RecordOrderShipped()
+    {
+        lock (_lock)
+        {
+            _current.OrdersShipped += 1;
         }
     }
 

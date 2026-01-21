@@ -44,8 +44,8 @@ public static class Program
                     new SchedulingLatencyMiddleware(
                         new FaultInjectionMiddleware(webApplicationLogger,
                             new Router([
-                                new OrdersController(logger, database),
-                                new ProductsController(logger, database)
+                                new OrdersController(logger, metrics, database),
+                                new ProductsController(logger, metrics, database)
                             ], webApplicationLogger))))));
 
         var agents = new List<Agent>();

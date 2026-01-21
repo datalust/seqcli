@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Roastery.Data;
+using Roastery.Metrics;
 using Roastery.Model;
 using Roastery.Web;
 using Serilog;
@@ -12,8 +13,8 @@ class ProductsController : Controller
 {
     readonly Database _database;
 
-    public ProductsController(ILogger logger, Database database)
-        : base(logger)
+    public ProductsController(ILogger logger, RoasteryMetrics metrics, Database database)
+        : base(logger, metrics)
     {
         _database = database;
     }
