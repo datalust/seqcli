@@ -22,7 +22,6 @@ static class PasswordHash
         if (password == null) throw new ArgumentNullException(nameof(password));
         if (salt == null) throw new ArgumentNullException(nameof(salt));
 
-        using var algorithm = new Rfc2898DeriveBytes(password, salt, HashIter, HashAlgorithmName.SHA512);
-        return algorithm.GetBytes(HashSize);
+        return Rfc2898DeriveBytes.Pbkdf2(password, salt, HashIter, HashAlgorithmName.SHA512, HashSize);
     }
 }
