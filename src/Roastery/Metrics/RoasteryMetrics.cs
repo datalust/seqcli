@@ -69,8 +69,8 @@ public class RoasteryMetrics
                 timestamp,
                 new Dictionary<string, object>
                 {
-                    { "OrdersCreated", new { kind = "Counter", unit = "orders", description = "The total number of orders created in the system" } },
-                    { "OrdersShipped", new { kind = "Counter", unit = "orders", description = "The total number of orders shipped in the system" } }
+                    { "OrderCreated", new { kind = "Sum", unit = "orders", description = "An order was created" } },
+                    { "OrderShipped", new { kind = "Sum", unit = "orders", description = "An order was shipped" } }
                 },
                 new
                 {
