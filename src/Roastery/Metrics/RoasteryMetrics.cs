@@ -49,7 +49,7 @@ public class RoasteryMetrics
                         {
                             kind = "Exponential",
                             unit = "ms",
-                            description = "The time taken to fully process a request"
+                            description = "The time taken to fully process a request."
                         }
                     },
                     new Dictionary<string, object>
@@ -78,13 +78,13 @@ public class RoasteryMetrics
                     {
                         kind = "Sum",
                         unit = "order",
-                        description = "An order was created"
+                        description = "An order was created."
                     },
                     [nameof(OrderShipped)] = new
                     {
                         kind = "Sum",
                         unit = "order",
-                        description = "An order was shipped"
+                        description = "An order was shipped."
                     }
                 },
                 new Dictionary<string, object>
