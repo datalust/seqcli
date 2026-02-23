@@ -27,11 +27,11 @@ public class RoasteryMetrics
         public record struct HttpRequestDurationKey(string Path, int StatusCode);
         public readonly Dictionary<HttpRequestDurationKey, ExponentialHistogram> HttpRequestDuration = new();
         
-        // `OrdersCreated`: counter
-        public ulong OrdersCreated;
+        // `OrderCreated`: counter
+        public ulong OrderCreated;
         
-        // `OrdersShipped`: counter
-        public ulong OrdersShipped;
+        // `OrderShipped`: counter
+        public ulong OrderShipped;
         
         static readonly MessageTemplate Template = new MessageTemplateParser().Parse("Metrics sampled");
 
@@ -45,11 +45,16 @@ public class RoasteryMetrics
                     timestamp,
                     new Dictionary<string, object>
                     {
-                        { "HttpRequestDuration", new { kind = "Exponential", unit = "ms", description = "The time taken to fully process a request" } }
+                        [nameof(HttpRequestDuration)] = new
+                        {
+                            kind = "Exponential",
+                            unit = "ms",
+                            description = "The time taken to fully process a request."
+                        }
                     },
-                    new
+                    new Dictionary<string, object>
                     {
-                        HttpRequestDuration = new {
+                        [nameof(HttpRequestDuration)] = new {
                             buckets = metric.Buckets
                                 .Select(bucket => new { midpoint = bucket.Key, count = bucket.Value }).ToArray(),
                             scale = metric.Scale,
@@ -57,8 +62,8 @@ public class RoasteryMetrics
                             max = metric.Max,
                             count = metric.Total
                         },
-                        key.Path,
-                        key.StatusCode
+                        [nameof(key.Path)] = key.Path,
+                        [nameof(key.StatusCode)] = key.StatusCode
                     }
                 );
             }
@@ -69,24 +74,46 @@ public class RoasteryMetrics
                 timestamp,
                 new Dictionary<string, object>
                 {
-                    { "OrderCreated", new { kind = "Sum", unit = "orders", description = "An order was created" } },
-                    { "OrderShipped", new { kind = "Sum", unit = "orders", description = "An order was shipped" } }
+                    [nameof(OrderCreated)] = new
+                    {
+                        kind = "Sum",
+                        unit = "order",
+                        description = "An order was created."
+                    },
+                    [nameof(OrderShipped)] = new
+                    {
+                        kind = "Sum",
+                        unit = "order",
+                        description = "An order was shipped."
+                    }
                 },
-                new
+                new Dictionary<string, object>
                 {
-                    OrdersCreated,
-                    OrdersShipped
+                    [nameof(OrderCreated)] = OrderCreated,
+                    [nameof(OrderShipped)] = OrderShipped
                 }
             );
         }
 
-        static LogEvent ToLogEvent(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp, Dictionary<string, object> definitions, object samples)
+        static LogEvent ToLogEvent(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp, Dictionary<string, object> definitions, Dictionary<string, object> samples)
         {
-            logger.BindProperty(propertyNameMapping.MetricDefinitions, definitions, true, out var definitionsProperty);
-            logger.BindProperty(propertyNameMapping.MetricSamples, samples, true, out var sampleProperty);
+            var properties = new List<LogEventProperty>();
 
-            return new LogEvent(timestamp, LogEventLevel.Information, null, Template,
-                [definitionsProperty!, sampleProperty!]);
+            if (logger.BindProperty(propertyNameMapping.MetricDefinitions, definitions, true,
+                    out var definitionsProperty))
+            {
+                properties.Add(definitionsProperty);
+            }
+
+            foreach (var (key, value) in samples)
+            {
+                if (logger.BindProperty(key, value, true, out var sample))
+                {
+                    properties.Add(sample);
+                }
+            }
+
+            return new LogEvent(timestamp, LogEventLevel.Information, null, Template, properties);
         }
     }
     
@@ -113,7 +140,7 @@ public class RoasteryMetrics
     {
         lock (_lock)
         {
-            _current.OrdersCreated += 1;
+            _current.OrderCreated += 1;
         }
     }
 
@@ -121,7 +148,7 @@ public class RoasteryMetrics
     {
         lock (_lock)
         {
-            _current.OrdersShipped += 1;
+            _current.OrderShipped += 1;
         }
     }
 

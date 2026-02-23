@@ -15,7 +15,7 @@ static class OutputFormatter
         $"{{ " +
             $"if {MetricsMapping.SurrogateDefinitionsProperty} is not null then " +
                 // Emit a metric sample
-                $"{{@t, @l: undefined(), @d: {MetricsMapping.SurrogateDefinitionsProperty}, ..{MetricsMapping.SurrogateSamplesProperty}, ..rest()}} " +
+                $"{{@t, @l: undefined(), @d: {MetricsMapping.SurrogateDefinitionsProperty}, ..rest()}} " +
             $"else " +
                 // Emit a log or span
                 $"{{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} " +
