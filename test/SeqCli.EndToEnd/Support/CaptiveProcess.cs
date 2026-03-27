@@ -111,11 +111,12 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
 
         if (_captureOutput)
         {
-            if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(5)))
-                throw new IOException("STDOUT did not complete in the fixed 5-second window.");
+            const int secondsWait = 15;
+            if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(secondsWait)))
+                throw new IOException($"STDOUT did not complete in the fixed {secondsWait}-second window.");
                 
-            if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(5)))
-                throw new IOException("STDERR did not complete in the fixed 5-second window.");
+            if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(secondsWait)))
+                throw new IOException($"STDERR did not complete in the fixed {secondsWait}-second window.");
         }
 
         return _process.ExitCode;
