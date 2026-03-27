@@ -35,5 +35,6 @@ class InMemoryStoreFileAppender : StoreFileAppender
 
     public override void Dispose()
     {
+        _storeFile.CloseAppender();
     }
 }

@@ -30,13 +30,24 @@ class InMemoryStoreDirectory : StoreDirectory
 
     public override bool TryDelete(string name)
     {
+        var existing = _files[name];
+
+        if (!existing.CanDelete())
+        {
+            throw new InvalidOperationException($"Cannot delete {name} with active handles");
+        }
+        
         return _files.Remove(name);
     }
 
     public override InMemoryStoreFile Replace(string toReplace, string replaceWith)
     {
         _files[toReplace] = _files[replaceWith];
-        _files.Remove(replaceWith);
+
+        if (!TryDelete(toReplace))
+        {
+            throw new InvalidOperationException($"Failed to replace {toReplace} with {replaceWith}");
+        }
 
         return _files[toReplace];
     }
