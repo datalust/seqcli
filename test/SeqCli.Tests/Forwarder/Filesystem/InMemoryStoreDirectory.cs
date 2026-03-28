@@ -49,7 +49,7 @@ class InMemoryStoreDirectory : StoreDirectory
             throw new InvalidOperationException($"Failed to replace {toReplace} with {replaceWith}");
         }
 
-        return _files[toReplace];
+        return _files[replaceWith];
     }
 
     public override IEnumerable<(string Name, StoreFile File)> List(Func<string, bool> predicate)
