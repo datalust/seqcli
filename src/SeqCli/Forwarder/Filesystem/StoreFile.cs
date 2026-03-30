@@ -44,6 +44,23 @@ abstract class StoreFile
     }
 
     /// <summary>
+    ///     Append the contents of the supplied buffer to the end of the file.
+    /// </summary>
+    public virtual void Append(Span<byte> buffer)
+    {
+        if (!TryOpenAppend(out var opened))
+        {
+            throw new Exception("Failed to open the file for appending");
+        }
+
+        using var appender = opened;
+        
+        appender.Append(buffer);
+        appender.Commit();
+        appender.Sync();
+    }
+
+    /// <summary>
     ///     Try open a reader to the file.
     /// </summary>
     /// <returns>

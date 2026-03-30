@@ -102,11 +102,11 @@ sealed class SystemStoreDirectory : StoreDirectory
         }
     }
 
-    public override SystemStoreFile Replace(string toReplace, string replaceWith)
+    public override SystemStoreFile Replace(string destinationPath, string sourcePath)
     {
-        var filePath = Path.Combine(_directoryPath, toReplace);
+        var filePath = Path.Combine(_directoryPath, destinationPath);
 
-        File.Replace(Path.Combine(_directoryPath, replaceWith), filePath, null);
+        File.Replace(Path.Combine(_directoryPath, sourcePath), filePath, null);
 
         return new SystemStoreFile(filePath);
     }

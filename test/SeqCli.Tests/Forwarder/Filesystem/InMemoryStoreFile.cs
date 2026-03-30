@@ -19,7 +19,7 @@ class InMemoryStoreFile : StoreFile
         return true;
     }
 
-    public void Append(Span<byte> incoming)
+    public override void Append(Span<byte> incoming)
     {
         var newContents = new byte[Contents.Length + incoming.Length];
 

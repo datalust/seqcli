@@ -20,7 +20,7 @@ class InMemoryStoreDirectory : StoreDirectory
         return _files[name];
     }
 
-    public InMemoryStoreFile Create(string name, Span<byte> contents)
+    public override InMemoryStoreFile Create(string name, Span<byte> contents)
     {
         var file = Create(name);
         file.Append(contents);
@@ -40,16 +40,16 @@ class InMemoryStoreDirectory : StoreDirectory
         return _files.Remove(name);
     }
 
-    public override InMemoryStoreFile Replace(string toReplace, string replaceWith)
+    public override InMemoryStoreFile Replace(string destinationPath, string sourcePath)
     {
-        _files[toReplace] = _files[replaceWith];
+        _files[destinationPath] = _files[sourcePath];
 
-        if (!TryDelete(toReplace))
+        if (!TryDelete(sourcePath))
         {
-            throw new InvalidOperationException($"Failed to replace {toReplace} with {replaceWith}");
+            throw new InvalidOperationException($"Failed to replace {destinationPath} with {sourcePath}");
         }
 
-        return _files[replaceWith];
+        return _files[destinationPath];
     }
 
     public override IEnumerable<(string Name, StoreFile File)> List(Func<string, bool> predicate)

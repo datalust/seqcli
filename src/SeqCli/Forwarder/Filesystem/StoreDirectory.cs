@@ -34,6 +34,15 @@ abstract class StoreDirectory
         var tmpName = $"rc{Guid.NewGuid():N}.tmp";
         return (tmpName, Create(tmpName));
     }
+    
+    /// <summary>
+    ///     Create a new file with the given contents.
+    /// </summary>
+    public virtual StoreFile Create(string name, Span<byte> contents)
+    {
+        Create(name);
+        return ReplaceContents(name, contents);
+    }
 
     /// <summary>
     ///     Delete a file with the given name, returning whether the file was deleted.
@@ -43,7 +52,7 @@ abstract class StoreDirectory
     /// <summary>
     ///     Atomically replace the contents of one file with another, creating it if it doesn't exist and deleting the other.
     /// </summary>
-    public abstract StoreFile Replace(string toReplace, string replaceWith);
+    public abstract StoreFile Replace(string destinationPath, string sourcePath);
 
     /// <summary>
     ///     Atomically replace the contents of a file.
@@ -73,9 +82,17 @@ abstract class StoreDirectory
     }
 
     /// <summary>
-    ///     List all files in unspecified order.
+    ///     List all files matching the given predicate in unspecified order.
     /// </summary>
     public abstract IEnumerable<(string Name, StoreFile File)> List(Func<string, bool> predicate);
+
+    /// <summary>
+    ///     List all files in unspecified order.
+    /// </summary>
+    public virtual IEnumerable<(string Name, StoreFile File)> ListAll()
+    {
+        return List(_ => true);
+    }
 
     /// <summary>
     ///     Try get a file by name.
