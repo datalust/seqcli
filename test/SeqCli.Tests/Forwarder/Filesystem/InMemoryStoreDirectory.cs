@@ -20,7 +20,7 @@ class InMemoryStoreDirectory : StoreDirectory
         return _files[name];
     }
 
-    public InMemoryStoreFile Create(string name, Span<byte> contents)
+    public override InMemoryStoreFile Create(string name, Span<byte> contents)
     {
         var file = Create(name);
         file.Append(contents);
@@ -30,15 +30,26 @@ class InMemoryStoreDirectory : StoreDirectory
 
     public override bool TryDelete(string name)
     {
+        var existing = _files[name];
+
+        if (!existing.CanDelete())
+        {
+            throw new InvalidOperationException($"Cannot delete {name} with active handles");
+        }
+        
         return _files.Remove(name);
     }
 
-    public override InMemoryStoreFile Replace(string toReplace, string replaceWith)
+    public override InMemoryStoreFile Replace(string destinationPath, string sourcePath)
     {
-        _files[toReplace] = _files[replaceWith];
-        _files.Remove(replaceWith);
+        _files[destinationPath] = _files[sourcePath];
 
-        return _files[toReplace];
+        if (!TryDelete(sourcePath))
+        {
+            throw new InvalidOperationException($"Failed to replace {destinationPath} with {sourcePath}");
+        }
+
+        return _files[destinationPath];
     }
 
     public override IEnumerable<(string Name, StoreFile File)> List(Func<string, bool> predicate)

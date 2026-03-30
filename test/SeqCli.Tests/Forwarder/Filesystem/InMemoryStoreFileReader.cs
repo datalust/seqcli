@@ -25,5 +25,6 @@ class InMemoryStoreFileReader : StoreFileReader
 
     public override void Dispose()
     {
+        _storeFile.CloseReader();
     }
 }
