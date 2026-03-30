@@ -32,7 +32,14 @@ readonly record struct BufferReaderChunkExtents
         WriteHead = writeHead;
     }
     
+    /// <summary>
+    ///     The inclusive start of the range.
+    /// </summary>
     public long CommitHead { get; }
+    
+    /// <summary>
+    ///     The exclusive end of the range.
+    /// </summary>
     public long WriteHead { get; }
     
     public long Unadvanced => Math.Max(0, WriteHead - CommitHead);

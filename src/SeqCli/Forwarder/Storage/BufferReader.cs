@@ -99,7 +99,7 @@ sealed class BufferReader
                 // Try read to the end of the chunk
                 //
                 // If reading the chunk length fails then advance over it
-                if (!chunk.Chunk.TryGetLength(out var length))
+                if (!chunk.File.TryGetLength(out var length))
                 {
                     chunkIndex += 1;
 
@@ -193,14 +193,14 @@ sealed class BufferReader
             {
                 // The chunk is the one we're currently reading; resume from where we left off
                 // If the file was truncated externally then we'll treat it as complete
-                chunkHead = chunk.Chunk.TryGetLength(out var length)
+                chunkHead = chunk.File.TryGetLength(out var length)
                     ? new BufferReaderChunkExtents(Math.Min(_readHead.Offset, length.Value), length.Value)
                     : new BufferReaderChunkExtents(_readHead.Offset, _readHead.Offset);
             }
             else
             {
                 // The chunk is not the one we've been reading; start from the beginning
-                chunk.Chunk.TryGetLength(out var length);
+                chunk.File.TryGetLength(out var length);
                 chunkHead = new BufferReaderChunkExtents(0, length ?? 0);
             }
 
