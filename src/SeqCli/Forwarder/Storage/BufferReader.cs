@@ -297,6 +297,7 @@ sealed class BufferReader
             // The remainder of the chunk is being skipped
             if (chunk.Name.Id < newReaderHead.ChunkId)
             {
+                chunk.Dispose();
                 _storeDirectory.TryDelete(chunk.Name.ToString());
             }
             else
