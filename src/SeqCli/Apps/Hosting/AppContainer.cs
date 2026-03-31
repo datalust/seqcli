@@ -15,6 +15,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -29,10 +30,12 @@ using Serilog.Formatting.Compact.Reader;
 
 namespace SeqCli.Apps.Hosting;
 
-class AppContainer : IAppHost, IDisposable
+partial class AppContainer : IAppHost, IDisposable
 {
     readonly SeqApp _seqApp;
     readonly AppLoader _loader;
+
+    static readonly Regex HexDigits = HexDigitsRegex();
 
     readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
     {
@@ -143,6 +146,8 @@ class AppContainer : IAppHost, IDisposable
             jobject.Add("@l", new JValue(LevelMapping.ToSerilogLevel(levelToken.Value<string>()!).ToString()));
         }
 
+        SanitizeTraceIdentifiers(jobject);
+
         var raw = LogEventReader.ReadFromJObject(jobject);
 
         eventId = "event-0";
@@ -158,6 +163,29 @@ class AppContainer : IAppHost, IDisposable
         return raw;
     }
 
+    internal static void SanitizeTraceIdentifiers(JObject jobject)
+    {
+        // Serilog.Formatting.Compact.Reader constructs LogEvents which use the System.Diagnostics ActivityTraceId
+        // and ActivitySpanId types; these throw when constructed with invalid inputs.
+        
+        if (jobject.TryGetValue("@tr", out var traceIdToken) && !IsValidHexIdentifier(traceIdToken, 32))
+            jobject.Remove("@tr");
+        
+        if (jobject.TryGetValue("@sp", out var spanIdToken) && !IsValidHexIdentifier(spanIdToken, 16))
+            jobject.Remove("@sp");
+        
+        if (jobject.TryGetValue("@ps", out var parentSpanIdToken) && !IsValidHexIdentifier(parentSpanIdToken, 16))
+            jobject.Remove("@ps");
+    }
+
+    static bool IsValidHexIdentifier(JToken? value, int requiredChars)
+    {
+        if (value?.Value<string>() is not { } id)
+            return false;
+
+        return id.Length == requiredChars && HexDigits.IsMatch(id);
+    }
+
     public void StartPublishing(TextWriter inputWriter)
     {
         if (_seqApp is IPublishJson pjson)
@@ -169,4 +197,8 @@ class AppContainer : IAppHost, IDisposable
         if (_seqApp is IPublishJson pjson)
             pjson.Stop();
     }
+
+    // Technically, 
+    [GeneratedRegex("^[0-9a-f]*$")]
+    private static partial Regex HexDigitsRegex();
 }

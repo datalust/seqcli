@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json.Linq;
 using Seq.Apps;
 using SeqCli.Apps.Hosting;
 using SeqCli.Tests.Support;
@@ -36,5 +37,47 @@ public class AppContainerTests
             new Host(Some.UriString(), null));
 
         appContainer.Dispose();
+    }
+
+    [Fact]
+    public void RemovesInvalidTraceAndSpanIds()
+    {
+        var jo = new JObject
+        {
+            ["@tr"] = "A234567890123456A234567890123456",
+            ["@sp"] = "A234567890123456",
+            ["@ps"] = "A234567890123456"
+        };
+        Assert.NotEmpty(jo);
+        AppContainer.SanitizeTraceIdentifiers(jo);
+        Assert.Empty(jo);
+    }
+
+    [Fact]
+    public void RemovesShortTraceAndSpanIds()
+    {
+        var jo = new JObject
+        {
+            ["@tr"] = "234567890123456234567890123456",
+            ["@sp"] = "234567890123456",
+            ["@ps"] = "234567890123456"
+        };
+        Assert.NotEmpty(jo);
+        AppContainer.SanitizeTraceIdentifiers(jo);
+        Assert.Empty(jo);
+    }
+
+    [Fact]
+    public void PreservesValidTraceAndSpanIds()
+    {
+        var jo = new JObject
+        {
+            ["@tr"] = "a234567890123456a234567890123456",
+            ["@sp"] = "a234567890123456",
+            ["@ps"] = "a234567890123456"
+        };
+        Assert.Equal(3, jo.Count);
+        AppContainer.SanitizeTraceIdentifiers(jo);
+        Assert.Equal(3, jo.Count);
     }
 }
