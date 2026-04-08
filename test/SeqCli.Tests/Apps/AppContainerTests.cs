@@ -68,6 +68,20 @@ public class AppContainerTests
     }
 
     [Fact]
+    public void RemovesZeroTraceAndSpanIds()
+    {
+        var jo = new JObject
+        {
+            ["@tr"] = "00000000000000000000000000000000",
+            ["@sp"] = "0000000000000000",
+            ["@ps"] = "0000000000000000"
+        };
+        Assert.NotEmpty(jo);
+        AppContainer.SanitizeTraceIdentifiers(jo);
+        Assert.Empty(jo);
+    }
+
+    [Fact]
     public void PreservesValidTraceAndSpanIds()
     {
         var jo = new JObject

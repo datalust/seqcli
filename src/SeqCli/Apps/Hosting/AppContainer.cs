@@ -15,6 +15,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -35,7 +36,7 @@ partial class AppContainer : IAppHost, IDisposable
     readonly SeqApp _seqApp;
     readonly AppLoader _loader;
 
-    static readonly Regex HexDigits = HexDigitsRegex();
+    static readonly Regex NonZeroHex = NonZeroHexRegex();
 
     readonly JsonSerializer _serializer = JsonSerializer.Create(new JsonSerializerSettings
     {
@@ -183,7 +184,7 @@ partial class AppContainer : IAppHost, IDisposable
         if (value?.Value<string>() is not { } id)
             return false;
 
-        return id.Length == requiredChars && HexDigits.IsMatch(id);
+        return id.Length == requiredChars && NonZeroHex.IsMatch(id);
     }
 
     public void StartPublishing(TextWriter inputWriter)
@@ -198,7 +199,6 @@ partial class AppContainer : IAppHost, IDisposable
             pjson.Stop();
     }
 
-    // Technically, 
-    [GeneratedRegex("^[0-9a-f]*$")]
-    private static partial Regex HexDigitsRegex();
+    [GeneratedRegex("^0*[1-9a-f][0-9a-f]*$")]
+    private static partial Regex NonZeroHexRegex();
 }
