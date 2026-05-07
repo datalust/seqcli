@@ -7,6 +7,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Dashboard;
 
+[CliTestCase(MinimumApiVersion = "2026.1.0")]
 public class RenderTestCase : ICliTestCase
 {
     public Task ExecuteAsync(

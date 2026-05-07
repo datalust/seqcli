@@ -7,6 +7,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Workspace;
 
+[CliTestCase(MinimumApiVersion = "2026.1.0")]
 class WorkspaceBasicsTestCase : ICliTestCase
 {
     public async Task ExecuteAsync(
