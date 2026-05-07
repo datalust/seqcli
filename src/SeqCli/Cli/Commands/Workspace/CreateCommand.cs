@@ -37,7 +37,7 @@ class CreateCommand : Command
 
         Options.Add(
             "c=|content=",
-            "The id of a dashboard, signal, or saved query to include in the workspace",
+            "The id of a dashboard, signal, saved query, or view to include in the workspace",
             d => _include.Add(ArgumentString.Normalize(d)));
 
         Options.Add(
@@ -65,6 +65,7 @@ class CreateCommand : Command
         workspace.Content.DashboardIds.AddRange(_include.Where(s => s?.StartsWith("dashboard-") ?? false));
         workspace.Content.QueryIds.AddRange(_include.Where(s => s?.StartsWith("sqlquery-") ?? false));
         workspace.Content.SignalIds.AddRange(_include.Where(s => s?.StartsWith("signal-") ?? false));
+        workspace.Content.ViewIds.AddRange(_include.Where(s => s?.StartsWith("view-") ?? false));
 
         workspace = await connection.Workspaces.AddAsync(workspace);
 

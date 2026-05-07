@@ -21,18 +21,18 @@ namespace SeqCli.Syntax;
 
 class QueryBuilder
 {
-    readonly List<(string, string)> _columns = new();
+    readonly List<(string, string?)> _columns = new();
     readonly List<string> _where = new();
     readonly List<string> _groupBy = new();
     readonly List<string> _having = new();
 
-    public void Select(string value, string label)
+    public void Select(string value, string? label)
     {
         if (value == null) throw new ArgumentNullException(nameof(value));
         _columns.Add((value, label));
     }
 
-    public bool FromStream { get; set; }
+    public string? From { get; set; }
 
     public void Where(string predicate)
     {
@@ -74,8 +74,8 @@ class QueryBuilder
                 result.Append($" as {label}");
         }
 
-        if (FromStream)
-            result.Append(" from stream");
+        if (From is {} from)
+            result.Append($" from {from}");
 
         if (_where.Any())
         {
