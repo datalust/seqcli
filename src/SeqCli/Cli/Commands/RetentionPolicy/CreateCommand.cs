@@ -122,7 +122,7 @@ class CreateCommand : Command
             return 1;
         }
         
-        if (!Enum.TryParse(_dataSource, out DataSource dataSource))
+        if (!Enum.TryParse(_dataSource, ignoreCase: true, out DataSource dataSource))
         {
             Log.Error("The `--data-source` option supports `stream` and `series`");
             return 1;
