@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -181,7 +181,7 @@ class RenderCommand : Command
         foreach (var measurement in query.Measurements)
             sql.Select(measurement.Value, measurement.Label);
 
-        sql.FromStream = true;
+        sql.From = query.DataSource.ToString().ToLowerInvariant();
 
         sql.Where($"@Timestamp >= DateTime('{rangeStart:O}')");
         sql.Where($"@Timestamp < DateTime('{rangeEnd:O}')");

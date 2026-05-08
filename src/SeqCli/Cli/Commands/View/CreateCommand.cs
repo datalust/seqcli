@@ -22,57 +22,47 @@ using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Util;
+using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal;
+namespace SeqCli.Cli.Commands.View;
 
-[Command("signal", "create", "Create a signal",
-    Example = "seqcli signal create -t 'Exceptions' -f \"@Exception is not null\"")]
+[Command("view", "create", "Create a metrics view",
+    Example = "seqcli view create -t 'API' -g '@Scope.name' -f \"@Resource.service.name = 'seq_cafe_web'\"")]
 class CreateCommand : Command
 {
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     
-    readonly List<string> _columns = new();
-
-    string? _title, _description, _filter, _group;
-    bool _isProtected, _noGrouping;
+    string? _title, _description, _filter;
+    readonly List<string> _groups = [];
+    bool _isProtected;
 
     public CreateCommand()
     {
         Options.Add(
             "t=|title=",
-            "A title for the signal",
+            "A title for the view",
             t => _title = ArgumentString.Normalize(t));
 
         Options.Add(
             "description=",
-            "A description for the signal",
+            "A description for the view",
             d => _description = ArgumentString.Normalize(d));
 
         Options.Add(
             "f=|filter=",
-            "Filter to associate with the signal",
+            "Expression filter to associate with the view",
             f => _filter = ArgumentString.Normalize(f));
 
         Options.Add(
-            "c=|column=",
-            "Column to associate with the signal; this argument can be used multiple times",
-            c => _columns.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Columns require a value.")));
-
-        Options.Add(
-            "group=",
-            "An explicit group name to associate with the signal; the default is to infer the group from the filter",
-            g => _group = ArgumentString.Normalize(g));
-
-        Options.Add(
-            "no-group",
-            "Specify that no group should be inferred; the default is to infer the group from the filter",
-            _ => _noGrouping = true);
+            "g=|group=",
+            "Group key expression to associate with the view; this argument can be used multiple times",
+            c => _groups.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Group keys require a value.")));
 
         Options.Add(
             "protected",
-            "Specify that the signal is editable only by administrators",
+            "Specify that the view is editable only by administrators",
             _ => _isProtected = true);
 
         _connection = Enable<ConnectionFeature>();
@@ -84,31 +74,23 @@ class CreateCommand : Command
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
         var connection = SeqConnectionFactory.Connect(_connection, config);
-
-        var signal = await connection.Signals.TemplateAsync();
-        signal.OwnerId = null;
-
-        signal.Title = _title;
-        signal.Description = _description;
-        signal.IsProtected = _isProtected;
-
-        if (_noGrouping)
+        
+        if (string.IsNullOrEmpty(_title))
         {
-            signal.Grouping = SignalGrouping.None;
+            Log.Error("A title must be specified");
+            return 1;
         }
-        else if (_group != null)
-        {
-            signal.Grouping = SignalGrouping.Explicit;
-            signal.ExplicitGroupName = _group;
-        }
-        else
-        {
-            signal.Grouping = SignalGrouping.Inferred;
-        }
+
+        var view = await connection.Views.TemplateAsync();
+        view.OwnerId = null;
+
+        view.Title = _title;
+        view.Description = _description;
+        view.IsProtected = _isProtected;
 
         if (_filter != null)
         {
-            signal.Filters = new[]
+            view.Filters = new[]
             {
                 new DescriptiveFilterPart
                 {
@@ -118,12 +100,12 @@ class CreateCommand : Command
             }.ToList();
         }
 
-        foreach (var column in _columns)
-            signal.Columns.Add(new SignalColumnPart { Expression = column });
+        foreach (var group in _groups)
+            view.GroupKeyExpressions.Add(group);
 
-        signal = await connection.Signals.AddAsync(signal);
+        view = await connection.Views.AddAsync(view);
 
-        _output.GetOutputFormat(config).WriteEntity(signal);
+        _output.GetOutputFormat(config).WriteEntity(view);
 
         return 0;
     }

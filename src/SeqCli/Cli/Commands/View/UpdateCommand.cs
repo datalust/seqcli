@@ -1,4 +1,4 @@
-﻿// Copyright © Datalust and contributors.
+// Copyright © Datalust Pty Ltd and Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
+using Seq.Api;
 
-namespace SeqCli.Apps.Definitions;
+namespace SeqCli.Cli.Commands.View;
 
-class AppSettingValue
-{
-    public string? Value { get; set; }
-        
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-    public string? Description { get; set; }
-}
+[Command("view", "update",
+    "Update an existing metrics view",
+    Example="seqcli view update --json '{...}'")]
+class UpdateCommand():
+    Shared.UpdateCommand("view", nameof(SeqConnection.Views));
+    

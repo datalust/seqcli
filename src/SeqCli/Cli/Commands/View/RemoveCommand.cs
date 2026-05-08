@@ -20,10 +20,10 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal;
+namespace SeqCli.Cli.Commands.View;
 
-[Command("signal", "remove", "Remove a signal from the server",
-    Example = "seqcli signal remove -t 'Test Signal'")]
+[Command("view", "remove", "Remove a metrics view from the server",
+    Example = "seqcli view remove -t 'Test View'")]
 class RemoveCommand : Command
 {
     readonly EntityIdentityFeature _entityIdentity;
@@ -33,8 +33,8 @@ class RemoveCommand : Command
     
     public RemoveCommand()
     {
-        _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
-        _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", "removed", _entityIdentity));
+        _entityIdentity = Enable(new EntityIdentityFeature("view", "remove"));
+        _entityOwner = Enable(new EntityOwnerFeature("view", "remove", "removed", _entityIdentity));
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
     }
@@ -50,20 +50,20 @@ class RemoveCommand : Command
         var config = RuntimeConfigurationLoader.Load(_storagePath);
         var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var toRemove = _entityIdentity.Id != null ? [await connection.Signals.FindAsync(_entityIdentity.Id)]
+        var toRemove = _entityIdentity.Id != null ? [await connection.Views.FindAsync(_entityIdentity.Id)]
             :
-            (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
+            (await connection.Views.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
             .Where(signal => _entityIdentity.Title == signal.Title)
             .ToArray();
 
         if (!toRemove.Any())
         {
-            Log.Error("No matching signal was found");
+            Log.Error("No matching view was found");
             return 1;
         }
 
         foreach (var signal in toRemove)
-            await connection.Signals.RemoveAsync(signal);
+            await connection.Views.RemoveAsync(signal);
 
         return 0;
     }

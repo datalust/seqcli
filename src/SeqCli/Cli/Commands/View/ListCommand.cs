@@ -18,52 +18,38 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using Serilog;
 
-namespace SeqCli.Cli.Commands.Signal;
+namespace SeqCli.Cli.Commands.View;
 
-[Command("signal", "remove", "Remove a signal from the server",
-    Example = "seqcli signal remove -t 'Test Signal'")]
-class RemoveCommand : Command
+[Command("view", "list", "List available metrics views", Example="seqcli view list")]
+class ListCommand : Command
 {
     readonly EntityIdentityFeature _entityIdentity;
     readonly ConnectionFeature _connection;
+    readonly OutputFormatFeature _output;
     readonly EntityOwnerFeature _entityOwner;
     readonly StoragePathFeature _storagePath;
     
-    public RemoveCommand()
+    public ListCommand()
     {
-        _entityIdentity = Enable(new EntityIdentityFeature("signal", "remove"));
-        _entityOwner = Enable(new EntityOwnerFeature("signal", "remove", "removed", _entityIdentity));
-        _connection = Enable<ConnectionFeature>();
+        _entityIdentity = Enable(new EntityIdentityFeature("view", "list"));
+        _entityOwner = Enable(new EntityOwnerFeature("view", "list", "listed", _entityIdentity));
+        _output = Enable<OutputFormatFeature>();
         _storagePath = Enable<StoragePathFeature>();
+        _connection = Enable<ConnectionFeature>();
     }
 
     protected override async Task<int> Run()
     {
-        if (_entityIdentity.Title == null && _entityIdentity.Id == null)
-        {
-            Log.Error("A `title` or `id` must be specified");
-            return 1;
-        }
-
         var config = RuntimeConfigurationLoader.Load(_storagePath);
         var connection = SeqConnectionFactory.Connect(_connection, config);
 
-        var toRemove = _entityIdentity.Id != null ? [await connection.Signals.FindAsync(_entityIdentity.Id)]
+        var list = _entityIdentity.Id != null ? [await connection.Views.FindAsync(_entityIdentity.Id)]
             :
-            (await connection.Signals.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
-            .Where(signal => _entityIdentity.Title == signal.Title)
-            .ToArray();
+            (await connection.Views.ListAsync(ownerId: _entityOwner.OwnerId, shared: _entityOwner.IncludeShared))
+            .Where(signal => _entityIdentity.Title == null || _entityIdentity.Title == signal.Title);
 
-        if (!toRemove.Any())
-        {
-            Log.Error("No matching signal was found");
-            return 1;
-        }
-
-        foreach (var signal in toRemove)
-            await connection.Signals.RemoveAsync(signal);
+        _output.GetOutputFormat(config).ListEntities(list);
 
         return 0;
     }
