@@ -59,9 +59,9 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     {
         if (!string.IsNullOrWhiteSpace(predicate))
         {
-            if (!predicate.Contains("@Timestamp") &&
-                !predicate.Contains("@Id") &&
-                !predicate.Contains("@TraceId"))
+            if (!predicate.Contains("@Timestamp", StringComparison.OrdinalIgnoreCase) &&
+                !predicate.Contains("@Id", StringComparison.OrdinalIgnoreCase) &&
+                !predicate.Contains("@TraceId", StringComparison.OrdinalIgnoreCase))
             {
                 return SimpleTextResult("The predicate doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
                                    "To avoid consuming excessive resources, add a time bound such as `@Timestamp >= now() - 1d`.", isError: true);
@@ -250,9 +250,9 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         string query,
         CancellationToken cancellationToken)
     {
-        if (!query.Contains("@Timestamp") &&
-            !query.Contains("@Id") &&
-            !query.Contains("@TraceId"))
+        if (!query.Contains("@Timestamp", StringComparison.OrdinalIgnoreCase) &&
+            !query.Contains("@Id", StringComparison.OrdinalIgnoreCase) &&
+            !query.Contains("@TraceId", StringComparison.OrdinalIgnoreCase))
         {
             return SimpleTextResult("The query doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
                                     "To avoid consuming excessive resources, add a time bound such as `where @Timestamp >= now() - 1d`.", isError: true);
