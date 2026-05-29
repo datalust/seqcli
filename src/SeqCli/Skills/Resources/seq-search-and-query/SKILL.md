@@ -12,8 +12,7 @@ compute tabular, aggregate results from the same data.
 ## Data Model
 
 All events stored in Seq use the same data model. Spans are only distinguished from log events by the presence of the
-`@Start` property. The following built-in properties are supported. The type column uses `?` to indicate properties that
-may be undefined for some events.
+`@Start` property. The following built-in properties are supported.
 
 | Built in property name | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -38,349 +37,103 @@ may be undefined for some events.
 
 ## Type System
 
-Stored data and intermediate values in expression evaluation are typed dynamically. Values are one of the following types.
-
-| Type name  | Description                                                            | Example literals                                                             |
-|------------|------------------------------------------------------------------------|------------------------------------------------------------------------------|
-| **null**   | The atom `null`. Null is a value in Seq's type system.                 | `null`                                                                       |
-| **bool**   | The atoms `true` and `false`.                                          | `true`, `false`                                                              |
-| **number** | Decimal numbers with the range and precision of .NET's `decimal` type. | `0`, `12.34`, `56ms`, `DateTime('2026-05-29T10:56:01.43278Z')`, `0xa1b234ff` |
-| **array**  | An ordered array of values.                                            | `[]`, `[17, null, {a: 'test'}]`                                              |
-| **object** | An unordered set of name/value pairs.                                  | `{}`, `{a: 'test', 'b c': 17, d: []}`                                        |
-
-In expression evaluation, Seq does not perform any type coercion. Functions and operators that receive invalid arguments
-evaluate to _undefined_, which is the absence of a value (_undefined_ has roughly the same semantics as `NULL` in standard SQL).
-
-## Scalar Functions
-
-These built-in functions and operators work with individual values. See Aggregate Functions for information on functions like count() and distinct() that work with sets of values.
-
-| Function signature | Description | Result type |
-| --- | --- | --- |
-| `Arrived(eventId)` | Evaluates to the arrival order encoded in eventId. The arrival order is a hint that preserves the order of events from the same source that have the same timestamp. If any argument is null, the result is undefined. | `number` |
-
-Bucket(number, err)
-
-Reduce precision by computing the midpoint of the closest logarithmic bucket. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-
-Example
-
-Bucket(3.141592, 0.001)
-
-Coalesce(arg0, arg1, ...)
-
-Evaluates to the first defined, non-null argument. If no argument meets this requirement, Coalesce returns the value of its final argument.
-
-Result type: any
-Concat(str0, str1, ...)
-
-Concatenate all string arguments. No type coercion is performed: the result is undefined if any argument is not a string. If any argument is null, the result is undefined.
-
-Result type: any
-Contains(text, substring)
-
-Evaluates to true if text contains substring. Accepts a /regular expression/ in place of substring. If any argument is null, the result is undefined.
-
-Result type: bool
-Supports the ci modifier?: Yes
-DatePart(datetime, part, offset)
-
-Compute the value of part for the date/time datetime at time zone offset offset. Both datetime and offset are 100-nanosecond tick values. If part is not a string, or not a recognized part name, the result is undefined. See the documentation section on date and time handling for more information. If any argument is null, the result is undefined.
-
-Result type: number
-
-Example
-
-DatePart(Now(), 'weekday', OffsetIn('Australia/Brisbane', Now()))
-
-DateTime(str)
-
-Attempt to parse the date/time value encoded in the string str. If the value cannot be parsed as a date/time, the result is undefined. If any argument is null, the result is undefined.
-
-Result type: number
-ElementAt(collection, index)
-
-Access the element of the array or object collection at the index or key index. If any argument is null, the result is undefined.
-
-Result type: any
-Supports the ci modifier?: Yes
-EndsWith(text, substring)
-
-Evaluates to true if text ends with substring. Accepts a /regular expression/ in place of substring. If any argument is null, the result is undefined.
-
-Result type: bool
-Supports the ci modifier?: Yes
-Every(collection, predicate)
-
-Evaluates to true if the function predicate evaluates to true for all elements of the array or object collection. If any argument is null, the result is undefined.
-
-Result type: bool
-
-Example
-
-Every(['0.1', '0.1-pre'], |tag| StartsWith(tag, '0.'))
-
-FromJson(json)
-
-Parse the JSON-encoded string json. If json is not a string, or is not valid JSON, the result is undefined. This function has a high runtime cost and should be avoided when possible. If any argument is null, the result is undefined.
-
-Result type: any
-Has(arg)
-
-Evaluates to true if arg is defined. Otherwise, if arg is undefined, the result is false.
-
-Result type: bool
-IndexOf(text, substring)
-
-Return the zero-based index of the first occurrence of substring in text. Accepts a /regular expression/ in place of substring. If substring is not present in text, the result is -1. If any argument is null, the result is undefined.
-
-Result type: number
-Supports the ci modifier?: Yes
-Keys(obj)
-
-Evaluates to an array containing the keys of the object obj. The result is undefined if obj is not an object. If any argument is null, the result is undefined.
-
-Result type: array
-LastIndexOf(text, substring)
-
-Return the zero-based index of the last occurrence of substring in text. Accepts a /regular expression/ in place of substring. If substring is not present in text, the result is -1. If any argument is null, the result is undefined.
-
-Result type: number
-Supports the ci modifier?: Yes
-Length(arg)
-
-Evaluates to the length of the string or array arg. If any argument is null, the result is undefined.
-
-Result type: number
-Now()
-
-Evaluates to the current time, as 100-nanosecond ticks since 00:00:00 on 0001-01-01. If any argument is null, the result is undefined.
-
-Result type: number
-OffsetIn(timezone, instant)
-
-Determine the offset from UTC in time zone timezone at instant instant. The time zone name must be an IANA time zone name. The instant value is specified in 100-nanosecond ticks. See the documentation section on date and time handling for more information. If any argument is null, the result is undefined.
-
-Result type: number
-
-Example
-
-OffsetIn('Australia/Brisbane', Now())
-
-Replace(text, substring, replacement)
-
-Replace all occurrences of substring in text with replacement. Accepts a /regular expression/ in place of substring, in which case replacement may use $0 to refer to the match, $1 the first capturing group, and so on. Regular expression replacements use $$ to escape a single dollar sign. If any argument is null, the result is undefined.
-
-Result type: number
-Supports the ci modifier?: Yes
-Round(value, places)
-
-Round value to specified number of decimal places. Midpoint values (0.5) are rounded up. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-
-Example
-
-// Evaluates to 123.5
-Round(123.456, 1)
-
-Some(collection, predicate)
-
-Evaluates to true if the function predicate evaluates to true for any element of the array or object collection. If any argument is null, the result is undefined.
-
-Result type: bool
-
-Example
-
-Some(['0.1', '0.1-pre'], |tag| EndsWith(tag, '-pre'))
-
-StartsWith(text, substring)
-
-Evaluates to true if text starts with substring. Accepts a /regular expression/ in place of substring. If any argument is null, the result is undefined.
-
-Result type: bool
-Supports the ci modifier?: Yes
-Substring(str, start, length)
-
-Evaluates to the substring of string str from the zero-based index start, of length characters. If length is not specified, or exceeds the number of characters remaining after start, the result is the remainder of the string. The result is undefined if start is out of bounds, or if either start or length is negative. If any argument is undefined, the result is undefined.
-
-Result type: any
-TimeOfDay(datetime, offsetHours)
-
-Compute the time of day of the date/time datetime in the time zone offset offsetHours. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-
-Example
-
-TimeOfDay(Now(), -7)
-
-TimeSpan(str)
-
-Attempt to parse the d.HH:mm:ss.f formatted time value encoded in the string str. If the value cannot be parsed as a time, the result is undefined. If any argument is null, the result is undefined.
-
-Result type: number
-
-Example
-
-TimeSpan('1.1:59:59.123')
-
-ToEventType(str)
-
-Compute the event type that Seq automatically assigns to @EventType from the message template str. If any argument is null, the result is undefined.
-
-Result type: any
-ToHexString(num)
-
-Format num as a hexadecimal string, including leading 0x. Decimal digits are discarded. If any argument is non-numeric, the result is undefined.
-
-Result type: string
-ToIsoString(datetime, offset)
-
-Format datetime as an ISO-8601 string, with an optional time zone offset. Both the datetime and offset arguments are interpreted as 100-nanosecond ticks since the epoch. If any argument is non-numeric, the result is undefined. The offset argument defaults to 0, or UTC. Output is given with the UTC or full time zone designator, i.e. Z or ±hh:mm. If any argument is non-numeric, the result is undefined.
-
-Result type: string
-
-Example
-
-ToIsoString(DateTime('2023-12-20'), 10h)
-
-ToJson(arg)
-
-Convert the value arg to JSON. If the argument is undefined, the result is undefined. Can be used to convert a value (e.g. number) to a string. If any argument is undefined, the result is undefined.
-
-Result type: string
-ToLower(str)
-
-Convert string str to lowercase. To compare strings in a case-insensitive manner, use the equality operator and ci modifier instead. The result is undefined if str is not a string. If any argument is null, the result is undefined.
-
-Result type: string
-ToNumber(str)
-
-Parse string str as a number. If any argument is null, the result is undefined.
-
-Result type: number
-TotalMilliseconds(timespan)
-
-Evaluates to the total number of milliseconds represented by the time span timespan. If timespan is a number, it will be interpreted as containing 100-nanosecond ticks. If timespan is a string, it will be parsed in the same manner as performed by TimeSpan(). If any argument is null, the result is undefined.
-
-Result type: number
-
-Example
-
-TotalMilliseconds(1s)
-
-ToTimeString(timespan)
-
-Format timespan as an d.HH:mm:ss.f string. The timespan argument is interpreted as 100-nanosecond ticks. The inverse of TimeSpan. If any argument is non-numeric, the result is undefined.
-
-Result type: string
-
-Example
-
-ToTimeString(1h)
-
-ToUpper(str)
-
-Convert string str to uppercase. To compare strings in a case-insensitive manner, use the equality operator and ci modifier instead. The result is undefined if str is not a string. If any argument is null, the result is undefined.
-
-Result type: string
-TypeOf(arg)
-
-Returns the type of value, either 'object', 'array', 'string', 'number', 'bool', 'null', or 'undefined'.
-
-Result type: string
-Values(obj)
-
-Evaluates to an array containing the values of the members of object obj. The result is undefined if obj is not an object. If any argument is null, the result is undefined.
-
-Result type: array
-Operator -
-
-Subtract one number from another. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator - (prefix)
-
-Negate a number. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator *
-
-Multiply two numbers. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator /
-
-Divide one number by another. If the right-hand operand is zero, the result is undefined. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator %
-
-Compute the remainder after dividing the left-hand operand by the right. If the right-hand operand is zero, the result is undefined. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator ^
-
-Raise a number to the specified power. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator +
-
-Add two numbers. If any argument is non-numeric, the result is undefined.
-
-Result type: number
-Operator <
-
-Compare two numbers and return true if the left-hand operand is less than the right-hand operand. If any argument is non-numeric, the result is undefined.
-
-Result type: bool
-Operator <=
-
-Compare two numbers and return true if the left-hand operand is less than or equal to the right-hand operand. If any argument is non-numeric, the result is undefined.
-
-Result type: bool
-Operator <>
-
-Compare two values, returning true if the values are unequal, and false otherwise. Structural comparison is supported, so the values may be of any type including objects and arrays. If the right-hand operand is a /regular expression/, the result is true if the left-hand operand is a string that is an exact match for the regular expression. If any argument is undefined, the result is undefined.
-
-Result type: any
-Supports the ci modifier?: Yes
-Operator =
-
-Compare two values, returning true if the values are equal, and false otherwise. Structural comparison is supported, so the values may be of any type including objects and arrays. If any argument is undefined, the result is undefined.
-
-Result type: any
-Supports the ci modifier?: Yes
-Operator >
-
-Compare two numbers and return true if the left-hand operand is greater than the right-hand operand. If any argument is non-numeric, the result is undefined.
-
-Result type: bool
-Operator >=
-
-Compare two numbers and return true if the left-hand operand is greater than or equal to the right-hand operand. If any argument is non-numeric, the result is undefined.
-
-Result type: bool
-Operator and
-
-The logical AND operator. The result of a and b is true if and only if both a and b are true; the result is otherwise false. Type coercion is not performed. If any argument is non-Boolean, the result is undefined.
-
-Result type: bool
-Operator not (prefix)
-
-Logical NOT. Evaluates to true only if the operand is false, or if the operand is undefined. Type coercion is not performed. If any argument is non-Boolean, the result is undefined.
-
-Result type: bool
-Operator or
-
-The logical OR operator. The result of a or b is true if either a or b is true; otherwise the result is false. Type coercion is not performed. If any argument is non-Boolean, the result is undefined.
-
-Result type: bool
-
-## Aggregate Functions (Queries Only)
+Stored data and intermediate values in expression evaluation are typed dynamically. Values are always one of the following types.
+
+| Type name   | Description                                                            | Example literals                                                             |
+|-------------|------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| **null**    | The atom `null`. Null is a value in Seq's type system.                 | `null`                                                                       |
+| **boolean** | The atoms `true` and `false`.                                          | `true`, `false`                                                              |
+| **number**  | Decimal numbers with the range and precision of .NET's `decimal` type. | `0`, `12.34`, `56ms`, `DateTime('2026-05-29T10:56:01.43278Z')`, `0xa1b234ff` |
+| **array**   | An ordered array of values.                                            | `[]`, `[17, null, {a: 'test'}]`                                              |
+| **object**  | An unordered set of name/value pairs.                                  | `{}`, `{a: 'test', 'b c': 17, d: []}`                                        |
+
+In expression evaluation, Seq does not perform any type coercion.
+
+The results of functions and operators that receive invalid arguments are undefined, which is the absence of a value 
+(_undefined_ has roughly the same "poison" semantics as `NULL` in standard SQL).
+
+Type notation in this document column uses the suffix `?` on a type name to indicate values that may be undefined.
+The synthetic type name `any` is used as an alias for `null | boolean | number | array | object`.
+
+## Scalar Functions and Operators
+
+These built-in functions and operators work with individual values. See Aggregate Functions for information on functions like `count()` and `distinct()` that work with sets of values.
+
+| Function signature                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                    | Result type |
+|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `Arrived(eventId: string): number?`          | Evaluates to the arrival order encoded in `eventId`. The arrival order is a hint that preserves the order of events from the same source that have the same timestamp.                                                                                                                                                                                                                                                                         | `number`    |
+| `Bucket(n: number, err: number?): number`    | Reduce precision of `n` by computing the midpoint of the closest logarithmic bucket. The optional `err` parameter specifies the maximum permissible error fraction.                                                                                                                                                                                                                                                                                                                           | `number`    |
+| `Coalesce(arg0: any?, arg1: any?, ...): any?` | Evaluates to the first defined, non-`null` argument. If no argument meets this requirement, `Coalesce` returns the value of its final argument.                                                                                                                                                                                                                                                                                                  | `any`       |
+| `Concat(str0, str1, ...)`                    | Concatenate all string arguments. No type coercion is performed: the result is undefined if any argument is not a string. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                  | `any`       |
+| `Contains(text, substring)`                  | Evaluates to `true` if text contains substring. Accepts a `/regular expression/` in place of `substring`. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                                                                                                                                                                                                                                      | `bool`      |
+| `DatePart(datetime, part, offset)`           | Compute the value of part for the date/time `datetime` at time zone offset offset. Both `datetime` and `offset` are 100-nanosecond tick values. If part is not a string, or not a recognized part name, the result is undefined. See the documentation section on date and time handling for more information. If any argument is `null`, the result is undefined.                                                                             | `number`    |
+| `DateTime(str)`                              | Attempt to parse the date/time value encoded in the string `str`. If the value cannot be parsed as a date/time, the result is undefined. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                   | `number`    |
+| `ElementAt(collection, index)`               | Access the element of the array or object collection at the index or key index. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                                                                                                                                                                                                                                                                | `any`       |
+| `EndsWith(text, substring)`                  | Evaluates to `true` if text ends with substring. Accepts a /regular expression/ in place of substring. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                                                                                                                                                                                                                                         | `bool`      |
+| `Every(collection, predicate)`               | Evaluates to `true` if the function predicate evaluates to `true` for all elements of the array or object collection. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                      | `bool`      |
+| `FromJson(json)`                             | Parse the JSON-encoded string json. If json is not a string, or is not valid JSON, the result is undefined. This function has a high runtime cost and should be avoided when possible. If any argument is `null`, the result is undefined.                                                                                                                                                                                                     | `any`       |
+| `Has(arg)`                                   | Evaluates to `true` if `arg` is defined. Otherwise, if `arg` is undefined, the result is `false`.                                                                                                                                                                                                                                                                                                                                              | `bool`      |
+| `IndexOf(text, substring)`                   | Return the zero-based index of the first occurrence of `substring` in `text`. Accepts a `/regular expression/` in place of `substring`. If substring is not present in text, the result is `-1`. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                                                                                                                                               | `number`    |
+| `Keys(obj)`                                  | Evaluates to an array containing the keys of the object `obj`. The result is undefined if `obj` is not an object. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                          | `array`     |
+| `LastIndexOf(text, substring)`               | Return the zero-based index of the last occurrence of substring in `text`. Accepts a `/regular expression/` in place of substring. If substring is not present in text, the result is `-1`. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                                                                                                                                                    | `number`    |
+| `Length(arg)`                                | Evaluates to the length of the string or array `arg`. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                                                                                      | `number`    |
+| `Now()`                                      | Evaluates to the current time, as 100-nanosecond ticks since 00:00:00 on 0001-01-01. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                                                       | `number`    |
+| `OffsetIn(timezone, instant)`                | Determine the offset from UTC in time zone `timezone` at instant `instant`. The time zone name must be an IANA time zone name. The instant value is specified in 100-nanosecond ticks. See the documentation section on date and time handling for more information. If any argument is `null`, the result is undefined.                                                                                                                       | `number`    |
+| `Replace(text, substring, replacement)`      | Replace all occurrences of `substring` in `text` with `replacement`. Accepts a `/regular expression/` in place of `substring`, in which case replacement may use `$0` to refer to the match, `$1` the first capturing group, and so on. Regular expression replacements use `$$` to escape a single dollar sign. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                               | `number`    |
+| `Round(value, places)`                       | Round `value` to specified number of decimal places. Midpoint values (0.5) are rounded up. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                            | `number`    |
+| `Some(collection, predicate)`                | Evaluates to `true` if the function predicate evaluates to `true` for any element of the array or object collection. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                       | `bool`      |
+| `StartsWith(text, substring)`                | Evaluates to `true` if text starts with substring. Accepts a /regular expression/ in place of substring. If any argument is `null`, the result is undefined. Supports the `ci` modifier.                                                                                                                                                                                                                                                       | `bool`      |
+| `Substring(str, start, length)`              | Evaluates to the substring of string `str` from the zero-based index `start`, of `length` characters. If `length` is not specified, or exceeds the number of characters remaining after `start`, the result is the remainder of the string. The result is undefined if `start` is out of bounds, or if either `start` or `length` is negative. If any argument is undefined, the result is undefined.                                          | `any`       |
+| `TimeOfDay(datetime, offsetHours)`           | Compute the time of day of the date/time `datetime` in the time zone offset `offsetHours`. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                            | `number`    |
+| `TimeSpan(str)`                              | Attempt to parse the d.HH:mm:ss.f formatted time value encoded in the string `str`. If the value cannot be parsed as a time, the result is undefined. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                      | `number`    |
+| `ToEventType(str)`                           | Compute the event type that Seq automatically assigns to `@EventType` from the message template `str`. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                                     | `any`       |
+| `ToHexString(num)`                           | Format `num` as a hexadecimal string, including leading `0x`. Decimal digits are discarded. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                           | `string`    |
+| `ToIsoString(datetime, offset)`              | Format `datetime` as an ISO-8601 string, with an optional time zone offset. Both the datetime and offset arguments are interpreted as 100-nanosecond ticks since the epoch. If any argument is non-numeric, the result is undefined. The offset argument defaults to 0, or UTC. Output is given with the UTC or full time zone designator, i.e. Z or ±hh:mm. If any argument is non-numeric, the result is undefined.                          | `string`    |
+| `ToJson(arg)`                                | Convert the value `arg` to JSON. Can be used to convert a value (e.g. number) to a string. If any argument is undefined, the result is undefined.                                                                                                                                                                                                                                                                                              | `string`    |
+| `ToLower(str)`                               | Convert string `str` to lowercase. To compare strings in a case-insensitive manner, use the equality operator and `ci` modifier instead. The result is undefined if `str` is not a string.                                                                                                                                                                                                                                                     | `string`    |
+| `ToNumber(str)`                              | Parse string str as a number. If any argument is `null`, the result is undefined.                                                                                                                                                                                                                                                                                                                                                              | `number`    |
+| `TotalMilliseconds(timespan)`                | Evaluates to the total number of milliseconds represented by the time span timespan. If `timespan` is a number, it will be interpreted as containing 100-nanosecond ticks. If `timespan` is a string, it will be parsed in the same manner as performed by `TimeSpan()`. If any argument is `null`, the result is undefined.                                                                                                                   | `number`    |
+| `ToTimeString(timespan)`                     | Format `timespan` as an `d.HH:mm:ss.f` string. The `timespan` argument is interpreted as 100-nanosecond ticks. The inverse of TimeSpan. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                               | `string`    |
+| `ToUpper(str)`                               | Convert string `str` to uppercase. To compare strings in a case-insensitive manner, use the equality operator and `ci` modifier instead. The result is undefined if str is not a string.                                                                                                                                                                                                                                                       | `string`    |
+| `TypeOf(arg)`                                | Returns the type of value, either `'object'`, `'array'`, `'string'`, `'number'`, `'bool'`, `'null'`, or `'undefined'`.                                                                                                                                                                                                                                                                                                                         | `string`    |
+| `Values(obj)`                                | Evaluates to an array containing the values of the members of object `obj`. The result is undefined if `obj` is not an object.                                                                                                                                                                                                                                                                                                                 | `array`     |
+| Operator `-`                                 | Subtract one number from another. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                                                                                     | `number`    |
+| Operator `-` (prefix)                        | Negate a number. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                                                                                                      | `number`    |
+| Operator `*`                                 | Multiply two numbers. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                                                                                                 | `number`    |
+| Operator `/`                                 | Divide one number by another. If the right-hand operand is zero, the result is undefined. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                             | `number`    |
+| Operator `%`                                 | Compute the remainder after dividing the left-hand operand by the right. If the right-hand operand is zero, the result is undefined. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                  | `number`    |
+| Operator `^`                                 | Raise a number to the specified power. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                                                                                | `number`    |
+| Operator `+`                                 | Add two numbers. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                                                                                                      | `number`    |
+| Operator `<`                                 | Compare two numbers and return `true` if the left-hand operand is less than the right-hand operand. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                   | `bool`      |
+| Operator `<=`                                | Compare two numbers and return `true` if the left-hand operand is less than or equal to the right-hand operand. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                       | `bool`      |
+| Operator `<>`                                | Compare two values, returning `true` if the values are unequal, and `false` otherwise. Structural comparison is supported, so the values may be of any type including objects and arrays. If the right-hand operand is a /regular expression/, the result is `true` if the left-hand operand is a string that is an exact match for the regular expression. If any argument is undefined, the result is undefined. Supports the `ci` modifier. | `any`       |
+| Operator `=`                                 | Compare two values, returning `true` if the values are equal, and `false` otherwise. Structural comparison is supported, so the values may be of any type including objects and arrays. If any argument is undefined, the result is undefined. Supports the `ci` modifier.                                                                                                                                                                     | `any`       |
+| Operator `>`                                 | Compare two numbers and return `true` if the left-hand operand is greater than the right-hand operand. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                                | `bool`      |
+| Operator `>=`                                | Compare two numbers and return `true` if the left-hand operand is greater than or equal to the right-hand operand. If any argument is non-numeric, the result is undefined.                                                                                                                                                                                                                                                                    | `bool`      |
+| Operator `and`                               | The logical AND operator. The result of `a and b` is `true` if and only if both `a` and `b` are `true`; the result is otherwise `false`. Type coercion is not performed. If any argument is non-Boolean, the result is undefined.                                                                                                                                                                                                              | `bool`      |
+| Operator `not` (prefix)                      | Logical NOT. Evaluates to `true` if the operand is `false`, or if the operand is undefined. Type coercion is not performed. If any argument is non-Boolean, the result is undefined.                                                                                                                                                                                                                                                           | `bool`      |
+| Operator `or`                                | The logical OR operator. The result of `a or b` is `true` if either `a` or `b` is `true`; otherwise the result is `false`. Type coercion is not performed. If any argument is non-Boolean, the result is undefined.                                                                                                                                                                                                                            | `bool`      |
+
+## Aggregate Functions
+
+`select` queries (see grammar below) have access to the following aggregate functions.
+
+| Aggregate function signature | Description                                                                                  | Example                 |                                                                                                                                                                                                                                                                                                                                                                                                                                   | Result type |
+|------------------------------|----------------------------------------------------------------------------------------------|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `all(expr)`                  | Given an expression, return `true` if the expression is `true` for all events in the stream. | `all(@Level = 'Error')` |
+| `any(expr)` | Given an expression, return `true` if the expression is `true` for any event in the stream. | `any(@Level = 'Error')` |
+| `bottom(expr, n)` | Given an expression, compute the last N values that appear for that expression. The `bottom` function cannot appear with any other aggregate functions. The default ordering for `select` queries on `stream` is time-ascending. See also: `top()`, `first()`, `last()`. | `bottom(StatusCode, 5)` |
+| `count(property)` | Given a property name, computes the number of events that have a non-null value for that property. The special property name `*` can be used to count all events. | `count(*)` |
+| `distinct(expr)` | Given a property name or expression, computes the set of distinct values for that expression. The `distinct` function cannot appear with any other aggregate functions. `distinct()` and `count()` can be combined to count distinct values without returning them all. | `distinct(ExceptionType)` |
+| `first(expr)` | Given an expression, returns the value of that expression applied to the first events in the target range. | `first(Elapsed)` |
+| `last(expr)` | Given an expression, returns the value of that expression applied to the last events in the target range. | `last(Elapsed)` |
+| `interval()` | In a query that groups by time, the duration of each time slice. | `count(*) / (interval() / 1d)` |
+| `min(expr)` | Given a numeric expression or property name, computes the smallest value for that expression. | `min(Elapsed / 1000)` |
+| `max(expr)` | Given a numeric expression or property name, computes the largest value for that expression. | `max(Elapsed / 1000)` |
+| `mean(expr)` | Computes the arithmetic mean (average) of a numeric expression or property, i.e. `sum(expr) / count(expr)`. Events where the expression is `null` or not numeric are ignored and do not contribute to the final result. | `mean(ItemCount)` |
+| `percentile(expr, p [, err])` | Given an expression and a percentage `p`, calculates the value of the expression at or below which `p` percent of the results fall. The optional `err` parameter specifies the maximum permissible error fraction. Higher error values reduce compute and memory resource consumption. | `percentile(ResponseTime, 95 [, err = 0.01])` |
+| `sum(expr)` | Given an expression or property name, calculates the sum of that value. Non-numeric results are ignored. | `sum(ItemsOrdered)` |
+| `top(expr, n)` | Select the first N values of an expression. The `top` function cannot appear with any other aggregate functions. | `top(StatusCode, 5)` |
 
 ## Cheat Sheet
 

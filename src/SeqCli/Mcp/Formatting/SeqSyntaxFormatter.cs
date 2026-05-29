@@ -188,4 +188,19 @@ static partial class SeqSyntaxFormatter
     {
         WriteObject(output, false, members.Select(m => (m.Name, (object?)m.Value)));
     }
+
+    public static string MakeIdentifier(string prefixPath, bool optionalPrefix, string propertyName)
+    {
+        if (IdentifierRegex().IsMatch(propertyName))
+        {
+            // TODO, exclude keywords here.
+            if (optionalPrefix)
+                return propertyName;
+            return $"{prefixPath}.{propertyName}";
+        }
+
+        var sw = new StringWriter();
+        WriteValue(sw, propertyName);
+        return $"{prefixPath}[{sw}]";
+    }
 }

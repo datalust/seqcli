@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
@@ -254,5 +255,14 @@ class SearchTool(McpSession session, SeqConnection connection)
                 }
             ]
         });
+    }
+
+    [McpServerTool(Name = "seq_inspect_schema", ReadOnly = true, Title = "Inspect Event Schema")]
+    [Description("List the user-defined top-level, scope, and resource property names observed on events " +
+                 "so far in this session. Only events retrieved in search results are considered.")]
+    [return: Description("A list containing Seq syntax-formatted property names.")]
+    public Task<string[]> InspectSchema()
+    {
+        return Task.FromResult(session.EnumerateUserPropertyNames().OrderBy(n => n).ToArray());
     }
 }

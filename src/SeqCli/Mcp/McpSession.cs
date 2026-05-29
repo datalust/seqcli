@@ -4,6 +4,9 @@ using System.Globalization;
 using System.Threading;
 using Seq.Api.Model.Events;
 using System;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using SeqCli.Mcp.Formatting;
 
 namespace SeqCli.Mcp;
 
@@ -71,6 +74,51 @@ class McpSession
             result = pair.Item2;
             error = null;
             return true;
+        }
+    }
+
+    public IEnumerable<string> EnumerateUserPropertyNames()
+    {
+        List<EventEntity> all;
+        lock (_sync)
+        {
+            all = _eventIdToResult.Values.Select(pair => pair.Item2).ToList();
+        }
+
+        var seen = new HashSet<string>();
+        foreach (var evt in all)
+        {
+            foreach (var property in evt.Properties)
+            {
+                foreach (var unique in EnumerateUnique(seen, "@Properties", true, property.Name, property.Value, 1))
+                    yield return unique;
+            }
+            foreach (var property in evt.Scope)
+            {
+                foreach (var unique in EnumerateUnique(seen, "@Scope", false, property.Name, property.Value, 1))
+                    yield return unique;
+            }
+            foreach (var property in evt.Resource)
+            {
+                foreach (var unique in EnumerateUnique(seen, "@Resource", false, property.Name, property.Value, 1))
+                    yield return unique;
+            }
+        }
+    }
+
+    static IEnumerable<string> EnumerateUnique(HashSet<string> seen, string prefixPath, bool optionalPrefix, string propertyName, object? propertyValue, int depth)
+    {
+        var name = SeqSyntaxFormatter.MakeIdentifier(prefixPath, optionalPrefix, propertyName);
+        if (seen.Add(name))
+            yield return name;
+        
+        if (depth < 5 && propertyValue is JObject jo)
+        {
+            foreach (var child in jo.Properties())
+            {
+                foreach (var childName in EnumerateUnique(seen, name, false, child.Name, child.Value, depth + 1))
+                    yield return childName;
+            }
         }
     }
 }
