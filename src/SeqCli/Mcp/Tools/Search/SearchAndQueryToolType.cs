@@ -250,9 +250,11 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         string query,
         CancellationToken cancellationToken)
     {
-        if (!query.Contains("@Timestamp", StringComparison.OrdinalIgnoreCase) &&
+        if (query.Contains("from", StringComparison.OrdinalIgnoreCase) &&
+            (!query.Contains("where", StringComparison.OrdinalIgnoreCase) ||
+            !query.Contains("@Timestamp", StringComparison.OrdinalIgnoreCase) &&
             !query.Contains("@Id", StringComparison.OrdinalIgnoreCase) &&
-            !query.Contains("@TraceId", StringComparison.OrdinalIgnoreCase))
+            !query.Contains("@TraceId", StringComparison.OrdinalIgnoreCase)))
         {
             return SimpleTextResult("The query doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
                                     "To avoid consuming excessive resources, add a time bound such as `where @Timestamp >= now() - 1d`.", isError: true);

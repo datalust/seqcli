@@ -306,8 +306,8 @@ metric samples.
  - Queries without `from stream` or `from series` are scalar (can't project out fields or compute aggregations).
  - Searches and queries should always constrain results using `@Timestamp`, `@TraceId`, or `@Id`.
  - `group by time(..)` requires an inclusive lower time bound on `@Timestamp`.
- - Group keys are automatically included in result rowsets and shouldn't be explicitly included in the `select` list.
  - Queries impose a default limit of 1024 rows, which can be changed with the `limit` clause. Set smaller limits to
    conserve resources when speculatively exploring.
  - Use `ToIsoString()` and `ToTimeString()` to make timestamps or durations (even computed ones) readable. If you forget,
    you can convert individual values cheaply with a scalar query like `ToIsoString(12345)`.
+ - Group keys are automatically included in result rowsets and **must not** be explicitly included in the `select` list.
