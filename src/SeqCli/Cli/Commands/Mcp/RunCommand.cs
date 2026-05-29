@@ -50,7 +50,7 @@ class RunCommand: Command
             .AddMcpServer()
             .WithStdioServerTransport()
             .WithTools([
-                typeof(SearchTool)
+                typeof(SearchAndQueryToolType)
             ]);
 
         await builder.Build().RunAsync();

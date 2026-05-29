@@ -19,6 +19,13 @@ static partial class SeqSyntaxFormatter
     
     [GeneratedRegex("[_a-zA-Z][_a-zA-Z0-9]*")]
     private static partial Regex IdentifierRegex();
+
+    static readonly HashSet<string> Keywords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "and", "ci", "else", "false", "if", "in", "is", "let", "like", "not", "null", "or", "then", "true",
+        "analyze", "as", "asc", "by", "desc", "explain", "for", "from", "group", "having", "into", "lateral",
+        "limit", "lower", "order", "select", "where"
+    };
     
     public static void FormatAsObjectLiteral(EventEntity evt, TextWriter output)
     {
@@ -193,8 +200,7 @@ static partial class SeqSyntaxFormatter
     {
         if (IdentifierRegex().IsMatch(propertyName))
         {
-            // TODO, exclude keywords here.
-            if (optionalPrefix)
+            if (optionalPrefix && !Keywords.Contains(propertyName))
                 return propertyName;
             return $"{prefixPath}.{propertyName}";
         }

@@ -23,7 +23,7 @@ using Serilog.Events;
 namespace SeqCli.Mcp.Tools.Search;
 
 [McpServerToolType]
-class SearchTool(McpSession session, SeqConnection connection)
+class SearchAndQueryToolType(McpSession session, SeqConnection connection)
 {
     const string ResultIdPropertyName = "__seqcli_ResultId";
     static readonly ExpressionTemplate SearchResultFormatter = new (
@@ -36,7 +36,7 @@ class SearchTool(McpSession session, SeqConnection connection)
                  "viewed in full using the `seq_read_search_result` tool. Use the `seq-search-and-query` " +
                  "skill when calling this tool.")]
     [return: Description("Search results and status information.")]
-    public async Task<CallToolResult> SearchEvents(
+    public async Task<CallToolResult> SearchEventsAsync(
         [Description("The maximum number of events to return.")]
         [Range(1, 1000)]
         int limit,
@@ -222,7 +222,7 @@ class SearchTool(McpSession session, SeqConnection connection)
                  "values and a complete stack trace (if present). The event is formatted precisely as a Seq syntax literal, " +
                  "using Seq's native data model.")]
     [return: Description("A Seq-native object literal representation of the event data.")]
-    public Task<CallToolResult> ReadSearchResultJson(
+    public Task<CallToolResult> ReadSearchResultJsonAsync(
         [Description("The result id from the `seq_search` tool.")]
         // ReSharper disable once InconsistentNaming
         string result_id)
@@ -261,8 +261,30 @@ class SearchTool(McpSession session, SeqConnection connection)
     [Description("List the user-defined top-level, scope, and resource property names observed on events " +
                  "so far in this session. Only events retrieved in search results are considered.")]
     [return: Description("A list containing Seq syntax-formatted property names.")]
-    public Task<string[]> InspectSchema()
+    public Task<string[]> InspectSchemaAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult(session.EnumerateUserPropertyNames().OrderBy(n => n).ToArray());
+        return Task.FromResult(session.EnumerateUserPropertyNames(cancellationToken).OrderBy(n => n).ToArray());
+    }
+
+    [McpServerTool(Name = "seq_query", ReadOnly = true, Title = "Evaluate a Query over Logs, Spans, or Metric Samples")]
+    [Description("Evaluate a Seq query, producing tabular results. Use the `seq-search-and-query` " +
+                 "skill when calling this tool.")]
+    [return: Description("Query results and status information.")]
+    public async Task<CallToolResult> QueryAsync(
+        [Description("A Seq query language query.")]
+        string query,
+        CancellationToken cancellationToken)
+    {
+        return new CallToolResult
+        {
+            IsError = true,
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = "The query tool is not implemented."
+                }
+            ]
+        };
     }
 }

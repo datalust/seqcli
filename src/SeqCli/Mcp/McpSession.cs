@@ -77,7 +77,7 @@ class McpSession
         }
     }
 
-    public IEnumerable<string> EnumerateUserPropertyNames()
+    public IEnumerable<string> EnumerateUserPropertyNames(CancellationToken cancellationToken)
     {
         List<EventEntity> all;
         lock (_sync)
@@ -88,6 +88,8 @@ class McpSession
         var seen = new HashSet<string>();
         foreach (var evt in all)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             foreach (var property in evt.Properties)
             {
                 foreach (var unique in EnumerateUnique(seen, "@Properties", true, property.Name, property.Value, 1))

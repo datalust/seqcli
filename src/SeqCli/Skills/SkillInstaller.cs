@@ -41,7 +41,7 @@ static class SkillInstaller
         
         foreach (var file in Directory.EnumerateFiles(source))
         {
-            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)));
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
         }
 
         foreach (var directory in Directory.EnumerateDirectories(source))
