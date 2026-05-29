@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,30 +31,55 @@ class RunCommand: Command
 {
     readonly ConnectionFeature _connection;
     readonly StoragePathFeature _storagePath;
+    bool _debug;
 
     public RunCommand()
     {
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
+        Options.Add("debug", "Write diagnostic messages from the MCP server back through the connection.",
+            _ => _debug = true);
     }
 
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storagePath);
-        
-        var builder = Host.CreateApplicationBuilder();
-        builder.ConfigureContainer(new AutofacServiceProviderFactory());
-        builder.Services.AddSerilog();
-        builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
-        builder.Services.AddSingleton<McpSession>();
-        builder.Services
-            .AddMcpServer()
-            .WithStdioServerTransport()
-            .WithTools([
-                typeof(SearchAndQueryToolType)
-            ]);
 
-        await builder.Build().RunAsync();
+        if (_debug)
+        {
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.WithProperty("Application", "seqcli")
+                .WriteTo.Seq(config.Connection.ServerUrl, apiKey: config.Connection.DecodeApiKey(config.Encryption.DataProtector()))
+                .CreateLogger();
+            
+            Log.Information("seqcli MCP server starting up");
+        }
+
+        try
+        {
+            var builder = Host.CreateApplicationBuilder();
+            builder.ConfigureContainer(new AutofacServiceProviderFactory());
+            builder.Services.AddSerilog();
+            builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
+            builder.Services.AddSingleton<McpSession>();
+            builder.Services
+                .AddMcpServer()
+                .WithStdioServerTransport()
+                .WithTools([
+                    typeof(SearchAndQueryToolType)
+                ]);
+
+            await builder.Build().RunAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Unhandled exception");
+            return 1;
+        }
+        finally
+        {
+            await Log.CloseAndFlushAsync();
+        }
         return 0;
     }
 }

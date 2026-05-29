@@ -6,7 +6,7 @@ metadata:
   author: Datalust and Contributors
 ---
 
-Seq is a database containing log and trace telemetry. Search Seq to retrieve matching log events and spans. Query Seq to
+Seq is a storage service for log and trace telemetry. Search Seq to retrieve matching log events and spans. Query Seq to
 compute tabular, aggregate results from the same data.
 
 > This skill does not currently cover interactions with metrics (the `series` storage object).
@@ -268,15 +268,17 @@ ForOption = identifier , [ '(' , [ Expr , { ',' , Expr } ] , ')' ] ;
 Keywords are case-insensitive. The `stream` source contains log events and spans. The `series` source contains
 metric samples.
 
-## Search Expression Examples
+## Expression Examples
 
-| Example | Effect                                              |
-|---|-----------------------------------------------------|
-| `@Timestamp >= now() - 10m` | Match events that occurred in the last ten minutes. |
-| `@TraceId = '0af7651916cd43dd8448eb211c80319c'` | Match all events (both spans and log events) belonging to the given trace. |
-| `Has(@Start)` | Match all spans (excludes log events). |
+| Example                                                      | Effect                                                                                       |
+|--------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| `@Timestamp >= now() - 10m`                                  | Match events that occurred in the last ten minutes.                                          |
+| `@TraceId = '0af7651916cd43dd8448eb211c80319c'`              | Match all events (both spans and log events) belonging to the given trace.                   |
+| `Has(@Start)`                                                | Match all spans (excludes log events).                                                       |
 | `@Message like '%overflow%' or @Exception like '%overflow%'` | Given a piece of text, find events with that text in their message or exception/stack trace. |
-| `Items[?] = 'coffee'` | Wildcard "any" - check if element appears in collection. |
+| `Items[?] = 'coffee'`                                        | Wildcard "any" - check if element appears in collection.                                     |
+| `ToIsoString(@Timestamp)`                                    | Render a numeric timestamp as ISO-8601.                                                      |
+| `ToTimeString(@Elapsed)`                                     | Render a numeric duration value as a human-readable time string.                             |
 
 ## Gotchas
 
@@ -301,4 +303,7 @@ metric samples.
  - The expression `null = null` is `true` in Seq's type system; `null` is just a regular value.
  - Timestamp bounds with inclusive starts and exclusive ends are the most efficient for Seq to work with.
  - Regular expression evaluation is extremely expensive, avoid these as much as possible.
- 
+ - Queries without `from stream` or `from series` are scalar (can't project out fields or compute aggregations).
+ - Searches and queries should always constrain results using `@Timestamp`, `@TraceId`, or `@Id`.
+ - `group by time(..)` requires an inclusive lower time bound on `@Timestamp`.
+ - Group keys are automatically included in result rowsets and shouldn't be explicitly included in the `select` list.

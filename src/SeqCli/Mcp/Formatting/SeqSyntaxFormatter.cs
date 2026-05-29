@@ -59,7 +59,7 @@ static partial class SeqSyntaxFormatter
 
     static string ReconstructTemplate(IEnumerable<MessageTemplateTokenPart> tokens)
     {
-        return string.Concat(tokens.Select(t => t.RawText));
+        return string.Concat(tokens.Select(t => t.RawText ?? t.Text ?? $"{{{t.PropertyName}}}"));
     }
 
     static void WriteObject(TextWriter output, bool topLevel, params IEnumerable<(string, object?)> members)
@@ -99,7 +99,7 @@ static partial class SeqSyntaxFormatter
         output.Write('}');
     }
 
-    static void WriteValue(TextWriter output, object? value)
+    public static void WriteValue(TextWriter output, object? value)
     {
         if (value == UndefinedValue)
         {
@@ -147,6 +147,7 @@ static partial class SeqSyntaxFormatter
         if (value is DateTime dt)
         {
             output.Write($"DateTime('{dt:O}')");
+            return;
         }
         
         if (value is JArray ja)

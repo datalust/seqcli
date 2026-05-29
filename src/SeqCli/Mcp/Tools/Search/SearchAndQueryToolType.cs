@@ -2,13 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using Newtonsoft.Json;
 using Seq.Api;
+using Seq.Api.Client;
+using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Expressions;
 using Seq.Syntax.Templates;
@@ -27,12 +33,19 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
 {
     const string ResultIdPropertyName = "__seqcli_ResultId";
     static readonly ExpressionTemplate SearchResultFormatter = new (
-        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{Substring(ToString(@x), 0, 140)}}"
+        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}\n{{#end}}"
     );
+    
+    static readonly JsonSerializer Serializer = JsonSerializer.Create(new JsonSerializerSettings
+    {
+        DateParseHandling = DateParseHandling.None,
+        Culture = CultureInfo.InvariantCulture,
+        FloatParseHandling = FloatParseHandling.Decimal,
+    });
     
     [McpServerTool(Name = "seq_search", ReadOnly = true, Title = "Search Events")]
     [Description("Search Seq for log events and spans matching given criteria. Each result is prefixed with " +
-                 "a `result_id` of the form `E..` which is valid in the current MCP session. Individual events can be " +
+                 "a `result_id` of the form `R#####` which is valid in the current MCP session. Individual events can be " +
                  "viewed in full using the `seq_read_search_result` tool. Use the `seq-search-and-query` " +
                  "skill when calling this tool.")]
     [return: Description("Search results and status information.")]
@@ -42,27 +55,16 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         int limit,
         [Description("A Seq search expression evaluated over event properties.")]
         string? predicate = null,
-        [Description("The search timeout, in seconds; the default is 45.")]
-        [Range(5, 180)]
-        int timeoutSeconds = 45,
         CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(predicate))
         {
-            if (!predicate.Contains("@Timestamp") || predicate.Contains("@Id"))
+            if (!predicate.Contains("@Timestamp") &&
+                !predicate.Contains("@Id") &&
+                !predicate.Contains("@TraceId"))
             {
-                return new CallToolResult
-                {
-                    IsError = true,
-                    Content =
-                    [
-                        new TextContentBlock
-                        {
-                            Text = "The predicate doesn't adequately constrain the search range (by `@Timestamp` or `@Id`). " +
-                                   "To avoid consuming excessive resources, add a time bound such as `@Timestamp >= now() - 1d`.",
-                        }
-                    ]
-                };
+                return SimpleTextResult("The predicate doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
+                                   "To avoid consuming excessive resources, add a time bound such as `@Timestamp >= now() - 1d`.", isError: true);
             }
             
             ExpressionPart strict;
@@ -90,24 +92,15 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
             }
             if (strict.MatchedAsText)
             {
-                return new CallToolResult
-                {
-                    IsError = true,
-                    Content =
-                    [
-                        new TextContentBlock
-                        {
-                            Text = $"The search expression was rejected by the Seq server. {strict.ReasonIfMatchedAsText}"
-                        }
-                    ],
-                };
+                return SimpleTextResult($"The search expression was rejected by the Seq server. {strict.ReasonIfMatchedAsText}",
+                    isError: true);
             }
         }
 
         var resultsLock = new Lock();
-        Exception? error = null;
+        string? error = null;
         var results = new List<EventEntity>();
-        var timeout = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds), cancellationToken);
+        var timeout = Task.Delay(TimeSpan.FromSeconds(45), cancellationToken);
         using var cancelEnumerate = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var cancelEnumerateToken = cancelEnumerate.Token;
         var enumerate = Task.Run(async () =>
@@ -117,6 +110,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
                 await foreach (var evt in connection.Events.EnumerateAsync(
                                    filter: predicate,
                                    count: limit,
+                                   render: true,
                                    cancellationToken: cancelEnumerateToken))
                 {
                     lock (resultsLock)
@@ -134,7 +128,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
 
                 lock (resultsLock)
                 {
-                    error = ex;
+                    error = ex.GetBaseException() is SeqApiException ? ex.GetBaseException().Message : ex.ToString();
                 }
             }
 
@@ -144,7 +138,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         await cancelEnumerate.CancelAsync();
 
         EventEntity[] takenResults;
-        Exception? takenError;
+        string? takenError;
         lock (resultsLock)
         {
             takenResults = results.ToArray();
@@ -166,7 +160,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
             }
             else
             {
-                resultSetStatus = $"The search failed after retrieving {takenResults.Length} matching event(s). {takenError.Message}";
+                resultSetStatus = $"The search failed after retrieving {takenResults.Length} matching event(s). {takenError}";
             }
         }
         else if (completed)
@@ -229,37 +223,18 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     {
         if (!session.TryGetSearchResult(result_id, out var result, out var error))
         {
-            return Task.FromResult(new CallToolResult
-            {
-                IsError = true,
-                Content =
-                [
-                    new TextContentBlock
-                    {
-                        Text = error
-                    }
-                ]
-            });
+            return Task.FromResult(SimpleTextResult(error, isError: true));
         }
 
         var resultText = new StringWriter();
         SeqSyntaxFormatter.FormatAsObjectLiteral(result, resultText);
 
-        return Task.FromResult(new CallToolResult
-        {
-            Content =
-            [
-                new TextContentBlock
-                {
-                    Text = resultText.ToString()
-                }
-            ]
-        });
+        return Task.FromResult(SimpleTextResult(resultText.ToString()));
     }
 
-    [McpServerTool(Name = "seq_inspect_schema", ReadOnly = true, Title = "Inspect Event Schema")]
+    [McpServerTool(Name = "seq_inspect_result_schema", ReadOnly = true, Title = "Inspect Search Result Schema")]
     [Description("List the user-defined top-level, scope, and resource property names observed on events " +
-                 "so far in this session. Only events retrieved in search results are considered.")]
+                 "in search results so far in this session. Only events retrieved in search results are considered.")]
     [return: Description("A list containing Seq syntax-formatted property names.")]
     public Task<string[]> InspectSchemaAsync(CancellationToken cancellationToken)
     {
@@ -275,14 +250,194 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         string query,
         CancellationToken cancellationToken)
     {
+        if (!query.Contains("@Timestamp") &&
+            !query.Contains("@Id") &&
+            !query.Contains("@TraceId"))
+        {
+            return SimpleTextResult("The query doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
+                                    "To avoid consuming excessive resources, add a time bound such as `where @Timestamp >= now() - 1d`.", isError: true);
+        }
+
+        QueryResultPart result;
+        try
+        {
+            var request = new HttpRequestMessage
+            {
+                RequestUri = new Uri("api/data?q=" + Uri.EscapeDataString(query)),
+                Method = HttpMethod.Post, Content = new StringContent("{}", new UTF8Encoding(false), "application/json")
+            };
+            var response = await connection.Client.HttpClient.SendAsync(request, cancellationToken);
+            result = Serializer.Deserialize<QueryResultPart>(
+                new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync(cancellationToken))))!;
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetBaseException() is not OperationCanceledException)
+            {
+                Log.Error(ex, "Exception thrown during query execution");
+            }
+            
+            var error = ex.GetBaseException() is SeqApiException ? ex.GetBaseException().Message : ex.ToString();
+            return SimpleTextResult($"The search failed. {error}", isError: true);
+        }
+
+        if (result.Error != null)
+        {
+            return new CallToolResult
+            {
+                IsError = true,
+                Content =
+                [
+                    new TextContentBlock
+                    {
+                        Text = $"The query could not be executed. {result.Error}"
+                    },
+                    new TextContentBlock
+                    {
+                        Text = string.Join(" ", result.Reasons)
+                    },
+                    new TextContentBlock
+                    {
+                        Text = result.Suggestion != null ? $"Did you mean: {result.Suggestion}?" : ""
+                    }
+                ]
+            };
+        }
+
+        var output = new StringWriter();
+        var first = true;
+        FlattenResult(result, row =>
+        {
+            if (first)
+            {
+                first = false;
+                var firstCol = true;
+                foreach (var heading in row)
+                {
+                    if (firstCol)
+                        firstCol = false;
+                    else
+                        output.Write(' ');
+                    output.Write(heading);
+                }
+                output.WriteLine();
+                output.WriteLine();
+            }
+            else
+            {
+                var firstCol = true;
+                foreach (var value in row)
+                {
+                    if (firstCol)
+                        firstCol = false;
+                    else
+                        output.Write(' ');
+                    SeqSyntaxFormatter.WriteValue(output, value);
+                }
+                output.WriteLine();
+            }
+        });
+
         return new CallToolResult
         {
-            IsError = true,
             Content =
             [
                 new TextContentBlock
                 {
-                    Text = "The query tool is not implemented."
+                    Text = output.ToString()
+                }
+            ]
+        };
+    }
+    
+    static void FlattenResult(QueryResultPart result, Action<IEnumerable<object?>> writeRow)
+    {
+        if (result.Error != null)
+            return;
+                
+        if (result.Rows != null)
+        {
+            writeRow(result.Columns!);
+            foreach (var row in result.Rows)
+            {
+                writeRow(row);
+            }
+        }
+        else if (result.Slices != null)
+        {
+            writeRow(new object[] {"time"}.Concat(result.Columns!));
+
+            var empty = result.Columns!.Select(_ => "").ToArray();
+            foreach (var slice in result.Slices)
+            {
+                var any = false;
+                foreach (var row in slice.Rows)
+                {
+                    any = true;
+                    writeRow(new object[] { DateTimeOffset.Parse(slice.Time).UtcDateTime }.Concat(row));
+                }
+                if (!any)
+                {
+                    writeRow(new object[] { DateTimeOffset.Parse(slice.Time).UtcDateTime }.Concat(empty));
+                }
+            }
+        }
+        else if (result.Series != null)
+        {
+            writeRow(MergeColumns(result.Columns!, result.Series.FirstOrDefault()));
+            foreach (var series in result.Series)
+            {
+                foreach (var slice in series.Slices)
+                {
+                    var empty = result.Columns!.Take(series.Key.Length).Select(_ => (object?)null).ToArray();
+                    var any = false;
+                    foreach (var row in slice.Rows)
+                    {
+                        any = true;
+                        writeRow(series.Key.Concat([DateTimeOffset.Parse(slice.Time).UtcDateTime]).Concat(row));
+                    }
+                    if (!any)
+                    {
+                        writeRow(series.Key.Concat([DateTimeOffset.Parse(slice.Time).UtcDateTime]).Concat(empty));
+                    }
+                }
+            }
+        }
+        else
+        {
+            throw new NotImplementedException("Query result set does not conform to any expected pattern.");
+        }            
+    }
+    
+    static IEnumerable<object> MergeColumns(IReadOnlyList<string> columns, TimeseriesPart? firstSeries)
+    {
+        if (firstSeries == null)
+            yield break;
+
+        var i = 0;
+        for (; i < firstSeries.Key.Length; ++i)
+        {
+            yield return columns[i];
+        }
+
+        yield return "time";
+
+        for (; i < columns.Count; ++i)
+        {
+            yield return columns[i];
+        }
+    }
+    
+    static CallToolResult SimpleTextResult(string resultText, bool isError = false)
+    {
+        return new CallToolResult
+        {
+            IsError = isError,
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = resultText
                 }
             ]
         };

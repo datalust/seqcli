@@ -31,14 +31,14 @@ class McpSession
         }
     }
 
-    static string FormatResultId(int resultId)
+    internal static string FormatResultId(int resultId)
     {
-        return "E" + resultId.ToString("X5");
+        return "R" + resultId.ToString("X5");
     }
 
-    static bool TryParseResultId(string formatted, [NotNullWhen(true)] out int? resultId)
+    internal static bool TryParseResultId(string formatted, [NotNullWhen(true)] out int? resultId)
     {
-        if (!formatted.StartsWith('E') || !int.TryParse(formatted.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsed))
+        if (!formatted.StartsWith('R') || !int.TryParse(formatted.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsed))
         {
             resultId = null;
             return false;
@@ -54,7 +54,7 @@ class McpSession
         {
             result = null;
             error =
-                "The result id is not correctly formatted; result ids are strings beginning with `E`, followed by a short character string.";
+                "The result id is not correctly formatted; result ids are strings beginning with `R`, followed by a short character string.";
             return false;
         }
         
@@ -90,17 +90,17 @@ class McpSession
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-            foreach (var property in evt.Properties)
+            foreach (var property in evt.Properties ?? [])
             {
                 foreach (var unique in EnumerateUnique(seen, "@Properties", true, property.Name, property.Value, 1))
                     yield return unique;
             }
-            foreach (var property in evt.Scope)
+            foreach (var property in evt.Scope ?? [])
             {
                 foreach (var unique in EnumerateUnique(seen, "@Scope", false, property.Name, property.Value, 1))
                     yield return unique;
             }
-            foreach (var property in evt.Resource)
+            foreach (var property in evt.Resource ?? [])
             {
                 foreach (var unique in EnumerateUnique(seen, "@Resource", false, property.Name, property.Value, 1))
                     yield return unique;

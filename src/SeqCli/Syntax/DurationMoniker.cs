@@ -31,7 +31,7 @@ static class DurationMoniker
             Component(timeSpan.TotalMinutes, "m"),
             Component(timeSpan.TotalSeconds, "s"),
             Component(timeSpan.TotalMilliseconds, "ms")
-        }.First(c => c != "");
+        }.FirstOrDefault(c => c != "", $"{timeSpan.TotalMilliseconds}ms");
     }
 
     static string Component(double value, string moniker)
