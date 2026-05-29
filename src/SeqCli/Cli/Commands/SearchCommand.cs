@@ -128,7 +128,7 @@ class SearchCommand : Command
         }
     }
 
-    LogEvent ToSerilogEvent(EventEntity evt)
+    internal static LogEvent ToSerilogEvent(EventEntity evt)
     {
         return new LogEvent(
             DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
@@ -149,12 +149,12 @@ class SearchCommand : Command
         return new PropertyToken(token.PropertyName, token.RawText ?? $"{{{token.PropertyName}}}");
     }
 
-    LogEventProperty CreateProperty(string name, object value)
+    static LogEventProperty CreateProperty(string name, object value)
     {
         return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
     }
 
-    LogEventPropertyValue CreatePropertyValue(object value)
+    static LogEventPropertyValue CreatePropertyValue(object value)
     {
         switch (value)
         {

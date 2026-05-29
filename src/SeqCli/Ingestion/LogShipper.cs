@@ -181,7 +181,7 @@ static class LogShipper
                         if (isLast || batch.Count != 0 || totalWaitMS > maxWaitMS)
                             break;
 
-                        // Nothing to to ship; wait to try to fill a batch.
+                        // Nothing to ship; wait to try to fill a batch.
                         await Task.Delay(idleWaitMS);
                         totalWaitMS += idleWaitMS;
                         continue;

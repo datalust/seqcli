@@ -1,0 +1,191 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
+using Seq.Api.Model.Events;
+using Seq.Api.Model.Shared;
+using SeqCli.Syntax;
+
+namespace SeqCli.Mcp.Formatting;
+
+// Constructs Seq syntax literals from API events. This provides a language model client with strong cues as
+// to how the properties of an event should be incorporated into future queries/expressions.
+static partial class SeqSyntaxFormatter
+{
+    static readonly object UndefinedValue = new();
+    
+    [GeneratedRegex("[_a-zA-Z][_a-zA-Z0-9]*")]
+    private static partial Regex IdentifierRegex();
+    
+    public static void FormatAsObjectLiteral(EventEntity evt, TextWriter output)
+    {
+        WriteObject(
+            output,
+            true,
+            ("@Id", evt.Id),
+            ("@Timestamp", DateTimeOffset.Parse(evt.Timestamp).UtcDateTime),
+            ("@Level", evt.Level ?? "Information"),
+            ("@Message", evt.RenderedMessage),
+            ("@MessageTemplate", ReconstructTemplate(evt.MessageTemplateTokens)),
+            ("@EventType", ParseEventType(evt.EventType)),
+            ("@Exception", evt.Exception ?? UndefinedValue),
+            ("@Elapsed", evt.Elapsed ?? UndefinedValue),
+            ("@TraceId", evt.TraceId ?? UndefinedValue),
+            ("@SpanId", evt.SpanId ?? UndefinedValue),
+            ("@SpanKind", evt.SpanKind ?? UndefinedValue),
+            ("@Start", evt.Start != null ? DateTimeOffset.Parse(evt.Start).UtcDateTime : UndefinedValue),
+            ("@ParentId", evt.ParentId ?? UndefinedValue),
+            ("@Properties", evt.Properties?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Properties)) : UndefinedValue),
+            ("@Scope", evt.Scope?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Scope)) : UndefinedValue),
+            ("@Resource", evt.Resource?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Resource)) : UndefinedValue),
+            ("@Definitions", evt.Definitions?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Definitions)) : UndefinedValue)
+        );
+    }
+
+    static uint ParseEventType(string dollarPrefixedHex)
+    {
+        return uint.Parse(dollarPrefixedHex.TrimStart('$'), NumberStyles.HexNumber);
+    }
+
+    static string ReconstructTemplate(IEnumerable<MessageTemplateTokenPart> tokens)
+    {
+        return string.Concat(tokens.Select(t => t.RawText));
+    }
+
+    static void WriteObject(TextWriter output, bool topLevel, params IEnumerable<(string, object?)> members)
+    {
+        output.Write('{');
+        var first = true;
+        foreach (var (name, value) in members)
+        {
+            if (value == UndefinedValue)
+                continue;
+
+            if (first)
+                first = false;
+            else
+                output.Write(", ");
+
+            if (topLevel)
+            {
+                output.Write(name);
+            }
+            else
+            {
+                WriteMemberName(output, name);
+            }
+
+            output.Write(": ");
+
+            if (value is Action<TextWriter> valueWriter)
+            {
+                valueWriter(output);
+            }
+            else
+            {
+                WriteValue(output, value);
+            }
+        }
+        output.Write('}');
+    }
+
+    static void WriteValue(TextWriter output, object? value)
+    {
+        if (value == UndefinedValue)
+        {
+            // This should never occur, but works in case it becomes necessary.
+            output.Write("@Undefined");
+            return;
+        }
+
+        switch (value)
+        {
+            case null:
+                output.Write("null");
+                return;
+            case true:
+                output.Write("true");
+                return;
+            case false:
+                output.Write("false");
+                return;
+        }
+
+        if (value is string s)
+        {
+            output.Write('\'');
+            output.Write(s.Replace("'", "''"));
+            output.Write('\'');
+            return;
+        }
+
+        if (value is decimal
+            or double or float or Half
+            or byte or ushort or uint or ulong or UInt128 or
+            sbyte or short or int or long or Int128)
+        {
+            output.Write(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture));
+            return;
+        }
+
+        if (value is TimeSpan ts)
+        {
+            output.Write(DurationMoniker.FromTimeSpan(ts));
+            return;
+        }
+
+        if (value is DateTime dt)
+        {
+            output.Write($"DateTime('{dt:O}')");
+        }
+        
+        if (value is JArray ja)
+        {
+            var first = false;
+            output.Write('[');
+            foreach (var element in ja)
+            {
+                if (first)
+                    first = false;
+                else
+                    output.Write(", ");
+                WriteValue(output, element);
+            }
+            output.Write(']');
+            return;
+        }
+
+        if (value is JObject jo)
+        {
+            WriteObject(output, false, jo.Properties().Select(p => (p.Name, (object?)p.Value)));
+        }
+
+        if (value is JValue jt)
+        {
+            WriteValue(output, jt.Value);
+            return;
+        }
+        
+        WriteValue(output, value.ToString());
+    }
+
+    static void WriteMemberName(TextWriter output, string name)
+    {
+        if (IdentifierRegex().IsMatch(name))
+        {
+            output.Write(name);
+        }
+        else
+        {
+            WriteValue(output, name);
+        }
+    }
+
+    static void WritePropertiesObject(TextWriter output, List<EventPropertyPart> members)
+    {
+        WriteObject(output, false, members.Select(m => (m.Name, (object?)m.Value)));
+    }
+}

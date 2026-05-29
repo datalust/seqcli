@@ -59,7 +59,7 @@ static class LogEventBuilder
             m is TextSpan ts)
         {
             var text = ts.ToStringValue();
-            return new MessageTemplate(new MessageTemplateToken[] {new TextToken(text) });
+            return new MessageTemplate([new TextToken(text)]);
         }
 
         return NoMessage;

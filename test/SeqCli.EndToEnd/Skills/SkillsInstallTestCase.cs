@@ -19,7 +19,7 @@ public class SkillsInstallTestCase : ICliTestCase
         {
             var exit = runner.Exec("skills install -a test-agent");
             Assert.Equal(0, exit);
-            Assert.True(File.Exists(Path.Combine(tmp.Path, ".test-agent/skills/seq-query-grammar/SKILL.md")));
+            Assert.True(File.Exists(Path.Combine(tmp.Path, ".test-agent/skills/seq-search-and-query/SKILL.md")));
         }
         finally
         {
