@@ -33,7 +33,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
 {
     const string ResultIdPropertyName = "__seqcli_ResultId";
     static readonly ExpressionTemplate SearchResultFormatter = new (
-        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}\n{{#end}}"
+        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}...\n{{#end}}"
     );
     
     static readonly JsonSerializer Serializer = JsonSerializer.Create(new JsonSerializerSettings
@@ -263,7 +263,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         {
             var request = new HttpRequestMessage
             {
-                RequestUri = new Uri("api/data?q=" + Uri.EscapeDataString(query)),
+                RequestUri = new Uri("api/data?q=" + Uri.EscapeDataString(query), UriKind.Relative),
                 Method = HttpMethod.Post, Content = new StringContent("{}", new UTF8Encoding(false), "application/json")
             };
             var response = await connection.Client.HttpClient.SendAsync(request, cancellationToken);

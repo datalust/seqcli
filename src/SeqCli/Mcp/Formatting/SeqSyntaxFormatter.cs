@@ -169,6 +169,7 @@ static partial class SeqSyntaxFormatter
         if (value is JObject jo)
         {
             WriteObject(output, false, jo.Properties().Select(p => (p.Name, (object?)p.Value)));
+            return;
         }
 
         if (value is JValue jt)

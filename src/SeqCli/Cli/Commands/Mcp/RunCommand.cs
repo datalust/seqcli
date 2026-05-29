@@ -48,11 +48,11 @@ class RunCommand: Command
         if (_debug)
         {
             Log.Logger = new LoggerConfiguration()
-                .Enrich.WithProperty("Application", "seqcli")
+                .Enrich.WithProperty("Application", "seqcli mcp run")
                 .WriteTo.Seq(config.Connection.ServerUrl, apiKey: config.Connection.DecodeApiKey(config.Encryption.DataProtector()))
                 .CreateLogger();
             
-            Log.Information("seqcli MCP server starting up");
+            Log.Information("Seq MCP server starting up");
         }
 
         try
