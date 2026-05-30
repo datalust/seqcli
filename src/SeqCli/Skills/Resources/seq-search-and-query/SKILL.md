@@ -255,11 +255,13 @@ LateralJoin = 'lateral' , Expr , 'as' , identifier ;
 WhereClause = 'where' , Expr ;
 GroupByClause = 'group' , 'by' , Grouping , { ',' , Grouping } ;
 Grouping      = TimeGrouping
-              | Expr , [ 'ci' ] , [ 'as' , identifier ] , [ 'ci' ] ;
+              | Expr , [ 'ci' ] , [ 'as' , identifier ] ;
 TimeGrouping  = 'time' , '(' , duration , ')' ;
 HavingClause = 'having' , Expr ;
 OrderByClause = 'order' , 'by' , Ordering , { ',' , Ordering } ;
-Ordering      = Expr , [ 'ci' ] , [ 'asc' | 'desc' ] , [ 'ci' ] ;
+Ordering      = TimeOrdering
+              | Expr , [ 'ci' ] , [ 'asc' | 'desc' ] ;
+TimeOrdering  = 'time' ;
 LimitClause = 'limit' , natural ;
 ForClause = 'for' , ForOption , { ',' , ForOption } ;
 ForOption = identifier , [ '(' , [ Expr , { ',' , Expr } ] , ')' ] ;
@@ -314,3 +316,5 @@ metric samples.
  - Group keys are automatically included in result rowsets and **must not** be explicitly included in the `select` list.
  - OpenTelemetry dotted property names correspond to property accessor paths in Seq, so `@Resource.service.name` and 
    `http.response.status_code` are written exactly like this.
+ - When grouping by `time(..)`, the time ordering leaves of the interval - just `order by time`, the interval isn't
+   re-specified.
