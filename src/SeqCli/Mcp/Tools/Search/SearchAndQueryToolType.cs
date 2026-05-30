@@ -227,7 +227,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         }
 
         var resultText = new StringWriter();
-        SeqSyntaxFormatter.FormatAsObjectLiteral(result, resultText);
+        SeqSyntaxFormatter.WriteEvent(resultText, result);
 
         return Task.FromResult(SimpleTextResult(resultText.ToString()));
     }

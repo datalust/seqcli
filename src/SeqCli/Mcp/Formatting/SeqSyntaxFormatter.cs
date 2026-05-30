@@ -11,13 +11,15 @@ using SeqCli.Syntax;
 
 namespace SeqCli.Mcp.Formatting;
 
-// Constructs Seq syntax literals from API events. This provides a language model client with strong cues as
-// to how the properties of an event should be incorporated into future queries/expressions.
+/// <summary>
+/// Constructs Seq syntax literals from API events. This provides a language model client with strong cues as
+/// to how the properties of an event should be incorporated into future queries/expressions.
+/// </summary>
 static partial class SeqSyntaxFormatter
 {
     static readonly object UndefinedValue = new();
     
-    [GeneratedRegex("[_a-zA-Z][_a-zA-Z0-9]*")]
+    [GeneratedRegex("^[_a-zA-Z][_a-zA-Z0-9]*$")]
     private static partial Regex IdentifierRegex();
 
     static readonly HashSet<string> Keywords = new(StringComparer.OrdinalIgnoreCase)
@@ -26,8 +28,22 @@ static partial class SeqSyntaxFormatter
         "analyze", "as", "asc", "by", "desc", "explain", "for", "from", "group", "having", "into", "lateral",
         "limit", "lower", "order", "select", "where"
     };
+
+    public static string MakeIdentifier(string prefixPath, string propertyName, bool prefixIsOptional)
+    {
+        if (IdentifierRegex().IsMatch(propertyName))
+        {
+            if (prefixIsOptional && !Keywords.Contains(propertyName))
+                return propertyName;
+            return $"{prefixPath}.{propertyName}";
+        }
+
+        var sw = new StringWriter();
+        WriteValue(sw, propertyName);
+        return $"{prefixPath}[{sw}]";
+    }
     
-    public static void FormatAsObjectLiteral(EventEntity evt, TextWriter output)
+    public static void WriteEvent(TextWriter output, EventEntity evt)
     {
         WriteObject(
             output,
@@ -50,53 +66,6 @@ static partial class SeqSyntaxFormatter
             ("@Resource", evt.Resource?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Resource)) : UndefinedValue),
             ("@Definitions", evt.Definitions?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Definitions)) : UndefinedValue)
         );
-    }
-
-    static uint ParseEventType(string dollarPrefixedHex)
-    {
-        return uint.Parse(dollarPrefixedHex.TrimStart('$'), NumberStyles.HexNumber);
-    }
-
-    static string ReconstructTemplate(IEnumerable<MessageTemplateTokenPart> tokens)
-    {
-        return string.Concat(tokens.Select(t => t.RawText ?? t.Text ?? $"{{{t.PropertyName}}}"));
-    }
-
-    static void WriteObject(TextWriter output, bool topLevel, params IEnumerable<(string, object?)> members)
-    {
-        output.Write('{');
-        var first = true;
-        foreach (var (name, value) in members)
-        {
-            if (value == UndefinedValue)
-                continue;
-
-            if (first)
-                first = false;
-            else
-                output.Write(", ");
-
-            if (topLevel)
-            {
-                output.Write(name);
-            }
-            else
-            {
-                WriteMemberName(output, name);
-            }
-
-            output.Write(": ");
-
-            if (value is Action<TextWriter> valueWriter)
-            {
-                valueWriter(output);
-            }
-            else
-            {
-                WriteValue(output, value);
-            }
-        }
-        output.Write('}');
     }
 
     public static void WriteValue(TextWriter output, object? value)
@@ -198,17 +167,50 @@ static partial class SeqSyntaxFormatter
         WriteObject(output, false, members.Select(m => (m.Name, (object?)m.Value)));
     }
 
-    public static string MakeIdentifier(string prefixPath, bool optionalPrefix, string propertyName)
+    static uint ParseEventType(string dollarPrefixedHex)
     {
-        if (IdentifierRegex().IsMatch(propertyName))
-        {
-            if (optionalPrefix && !Keywords.Contains(propertyName))
-                return propertyName;
-            return $"{prefixPath}.{propertyName}";
-        }
+        return uint.Parse(dollarPrefixedHex.TrimStart('$'), NumberStyles.HexNumber);
+    }
 
-        var sw = new StringWriter();
-        WriteValue(sw, propertyName);
-        return $"{prefixPath}[{sw}]";
+    static string ReconstructTemplate(IEnumerable<MessageTemplateTokenPart> tokens)
+    {
+        return string.Concat(tokens.Select(t => t.RawText ?? t.Text ?? $"{{{t.PropertyName}}}"));
+    }
+
+    static void WriteObject(TextWriter output, bool topLevel, params IEnumerable<(string, object?)> members)
+    {
+        output.Write('{');
+        var first = true;
+        foreach (var (name, value) in members)
+        {
+            if (value == UndefinedValue)
+                continue;
+
+            if (first)
+                first = false;
+            else
+                output.Write(", ");
+
+            if (topLevel)
+            {
+                output.Write(name);
+            }
+            else
+            {
+                WriteMemberName(output, name);
+            }
+
+            output.Write(": ");
+
+            if (value is Action<TextWriter> valueWriter)
+            {
+                valueWriter(output);
+            }
+            else
+            {
+                WriteValue(output, value);
+            }
+        }
+        output.Write('}');
     }
 }

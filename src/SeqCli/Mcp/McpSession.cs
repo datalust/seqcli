@@ -5,8 +5,7 @@ using System.Threading;
 using Seq.Api.Model.Events;
 using System;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using SeqCli.Mcp.Formatting;
+using SeqCli.Mcp.Schema;
 
 namespace SeqCli.Mcp;
 
@@ -16,7 +15,7 @@ class McpSession
     int _nextId = 1;
     readonly Dictionary<int, string> _resultIdToEventId = new();
     readonly Dictionary<string, (int, EventEntity)> _eventIdToResult = new();
-    
+
     public string ImportSearchResult(EventEntity evt)
     {
         lock (_sync)
@@ -38,7 +37,8 @@ class McpSession
 
     internal static bool TryParseResultId(string formatted, [NotNullWhen(true)] out int? resultId)
     {
-        if (!formatted.StartsWith('R') || !int.TryParse(formatted.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsed))
+        if (!formatted.StartsWith('R') || !int.TryParse(formatted.Substring(1), NumberStyles.HexNumber,
+                CultureInfo.InvariantCulture, out var parsed))
         {
             resultId = null;
             return false;
@@ -48,7 +48,8 @@ class McpSession
         return true;
     }
 
-    public bool TryGetSearchResult(string resultId, [NotNullWhen(true)] out EventEntity? result, [NotNullWhen(false)] out string? error)
+    public bool TryGetSearchResult(string resultId, [NotNullWhen(true)] out EventEntity? result,
+        [NotNullWhen(false)] out string? error)
     {
         if (!TryParseResultId(resultId, out var parsed))
         {
@@ -57,7 +58,7 @@ class McpSession
                 "The result id is not correctly formatted; result ids are strings beginning with `R`, followed by a short character string.";
             return false;
         }
-        
+
         lock (_sync)
         {
             if (!_resultIdToEventId.TryGetValue(parsed.Value, out var eventId))
@@ -89,37 +90,13 @@ class McpSession
         foreach (var evt in all)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
-            foreach (var property in evt.Properties ?? [])
-            {
-                foreach (var unique in EnumerateUnique(seen, "@Properties", true, property.Name, property.Value, 1))
-                    yield return unique;
-            }
-            foreach (var property in evt.Scope ?? [])
-            {
-                foreach (var unique in EnumerateUnique(seen, "@Scope", false, property.Name, property.Value, 1))
-                    yield return unique;
-            }
-            foreach (var property in evt.Resource ?? [])
-            {
-                foreach (var unique in EnumerateUnique(seen, "@Resource", false, property.Name, property.Value, 1))
-                    yield return unique;
-            }
-        }
-    }
 
-    static IEnumerable<string> EnumerateUnique(HashSet<string> seen, string prefixPath, bool optionalPrefix, string propertyName, object? propertyValue, int depth)
-    {
-        var name = SeqSyntaxFormatter.MakeIdentifier(prefixPath, optionalPrefix, propertyName);
-        if (seen.Add(name))
-            yield return name;
-        
-        if (depth < 5 && propertyValue is JObject jo)
-        {
-            foreach (var child in jo.Properties())
+            foreach (var accessor in EventEntitySchema.EnumeratePropertyAccessorPaths(evt))
             {
-                foreach (var childName in EnumerateUnique(seen, name, false, child.Name, child.Value, depth + 1))
-                    yield return childName;
+                if (seen.Add(accessor))
+                {
+                    yield return accessor;
+                }
             }
         }
     }
