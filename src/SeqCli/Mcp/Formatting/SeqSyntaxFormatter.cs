@@ -121,7 +121,7 @@ static partial class SeqSyntaxFormatter
         
         if (value is JArray ja)
         {
-            var first = false;
+            var first = true;
             output.Write('[');
             foreach (var element in ja)
             {

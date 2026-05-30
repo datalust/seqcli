@@ -37,7 +37,7 @@ class McpSession
 
     internal static bool TryParseResultId(string formatted, [NotNullWhen(true)] out int? resultId)
     {
-        if (!formatted.StartsWith('R') || !int.TryParse(formatted.Substring(1), NumberStyles.HexNumber,
+        if (!formatted.StartsWith('R') || !int.TryParse(formatted[1..], NumberStyles.HexNumber,
                 CultureInfo.InvariantCulture, out var parsed))
         {
             resultId = null;
