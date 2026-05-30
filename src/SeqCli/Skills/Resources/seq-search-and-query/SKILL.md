@@ -279,6 +279,7 @@ metric samples.
 | `Items[?] = 'coffee'`                                        | Wildcard "any" - check if element appears in collection.                                     |
 | `ToIsoString(@Timestamp)`                                    | Render a numeric timestamp as ISO-8601.                                                      |
 | `ToTimeString(@Elapsed)`                                     | Render a numeric duration value as a human-readable time string.                             |
+| `@Resource.service.name = 'unknown_service'`                 | Match events from a specific service (OpenTelemetry semantic convention)                     |
 
 ## Gotchas
 
@@ -311,3 +312,5 @@ metric samples.
  - Use `ToIsoString()` and `ToTimeString()` to make timestamps or durations (even computed ones) readable. If you forget,
    you can convert individual values cheaply with a scalar query like `ToIsoString(12345)`.
  - Group keys are automatically included in result rowsets and **must not** be explicitly included in the `select` list.
+ - OpenTelemetry dotted property names correspond to property accessor paths in Seq, so `@Resource.service.name` and 
+   `http.response.status_code` are written exactly like this.
