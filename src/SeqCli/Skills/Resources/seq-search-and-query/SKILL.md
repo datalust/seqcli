@@ -276,9 +276,12 @@ Seq servers are compatible with a vast array of data sources. They may use a mix
 framework/ecosystem-specific property names, and may do so inconsistently. When exploring, **always use the MCP schema
 tool** to inspect the actual properties appearing on search results, cross-referencing with source code where necessary.
 
+In particular, don't skip using the schema tool early in investigations just because you've seen a few events. Events are
+inconsistent! Use the schema tool at least once just to be safe.
+
 ## Example Expressions
 
-| Example                                                            | Purpose~~~~                                                                                      |
+| Example                                                            | Purpose                                                                                      |
 |--------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
 | `@Timestamp >= now() - 10m`                                        | Match events that occurred in the last ten minutes.                                          |
 | `@TraceId = '0af7651916cd43dd8448eb211c80319c'`                    | Match all events (both spans and log events) belonging to the given trace.                   |
