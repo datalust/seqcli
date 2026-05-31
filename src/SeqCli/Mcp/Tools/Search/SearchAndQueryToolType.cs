@@ -1,17 +1,27 @@
+// Copyright © Datalust and contributors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Newtonsoft.Json;
 using Seq.Api;
 using Seq.Api.Client;
 using Seq.Api.Model.Data;
@@ -20,6 +30,7 @@ using Seq.Api.Model.Expressions;
 using Seq.Syntax.Templates;
 using SeqCli.Cli.Commands;
 using SeqCli.Mapping;
+using SeqCli.Mcp.Data;
 using SeqCli.Mcp.Formatting;
 using Serilog;
 using Serilog.Events;
@@ -35,13 +46,6 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     static readonly ExpressionTemplate SearchResultFormatter = new (
         $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}...\n{{#end}}"
     );
-    
-    static readonly JsonSerializer Serializer = JsonSerializer.Create(new JsonSerializerSettings
-    {
-        DateParseHandling = DateParseHandling.None,
-        Culture = CultureInfo.InvariantCulture,
-        FloatParseHandling = FloatParseHandling.Decimal,
-    });
     
     [McpServerTool(Name = "seq_search", ReadOnly = true, Title = "Search Events")]
     [Description("Search Seq for log events and spans matching given criteria. Each result is prefixed with " +
@@ -263,14 +267,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         QueryResultPart result;
         try
         {
-            var request = new HttpRequestMessage
-            {
-                RequestUri = new Uri("api/data?q=" + Uri.EscapeDataString(query), UriKind.Relative),
-                Method = HttpMethod.Post, Content = new StringContent("{}", new UTF8Encoding(false), "application/json")
-            };
-            var response = await connection.Client.HttpClient.SendAsync(request, cancellationToken);
-            result = Serializer.Deserialize<QueryResultPart>(
-                new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync(cancellationToken))))!;
+            result = await DataResourceGroupHelper.QueryPreserveErrorResponsesAsync(connection, query, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -308,7 +305,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
 
         var output = new StringWriter();
         var first = true;
-        FlattenResult(result, row =>
+        QueryResultHelper.Flatten(result, row =>
         {
             if (first)
             {
@@ -323,7 +320,6 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
                     output.Write(heading);
                 }
                 output.WriteLine();
-                output.WriteLine();
             }
             else
             {
@@ -336,20 +332,12 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
                         output.Write(' ');
                     SeqSyntaxFormatter.WriteValue(output, value);
                 }
-                output.WriteLine();
             }
+
+            output.WriteLine();
         });
 
-        return new CallToolResult
-        {
-            Content =
-            [
-                new TextContentBlock
-                {
-                    Text = output.ToString()
-                }
-            ]
-        };
+        return SimpleTextResult(output.ToString());
     }
     
     [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
@@ -359,85 +347,6 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         _ = cancellationToken;
         session.Clear();
         return Task.CompletedTask;
-    }
-
-    
-    static void FlattenResult(QueryResultPart result, Action<IEnumerable<object?>> writeRow)
-    {
-        if (result.Error != null)
-            return;
-                
-        if (result.Rows != null)
-        {
-            writeRow(result.Columns!);
-            foreach (var row in result.Rows)
-            {
-                writeRow(row);
-            }
-        }
-        else if (result.Slices != null)
-        {
-            writeRow(new object[] {"time"}.Concat(result.Columns!));
-
-            var empty = result.Columns!.Select(_ => "").ToArray();
-            foreach (var slice in result.Slices)
-            {
-                var any = false;
-                foreach (var row in slice.Rows)
-                {
-                    any = true;
-                    writeRow(new object[] { DateTimeOffset.Parse(slice.Time).UtcDateTime }.Concat(row));
-                }
-                if (!any)
-                {
-                    writeRow(new object[] { DateTimeOffset.Parse(slice.Time).UtcDateTime }.Concat(empty));
-                }
-            }
-        }
-        else if (result.Series != null)
-        {
-            writeRow(MergeColumns(result.Columns!, result.Series.FirstOrDefault()));
-            foreach (var series in result.Series)
-            {
-                foreach (var slice in series.Slices)
-                {
-                    var empty = result.Columns!.Take(series.Key.Length).Select(_ => (object?)null).ToArray();
-                    var any = false;
-                    foreach (var row in slice.Rows)
-                    {
-                        any = true;
-                        writeRow(series.Key.Concat([DateTimeOffset.Parse(slice.Time).UtcDateTime]).Concat(row));
-                    }
-                    if (!any)
-                    {
-                        writeRow(series.Key.Concat([DateTimeOffset.Parse(slice.Time).UtcDateTime]).Concat(empty));
-                    }
-                }
-            }
-        }
-        else
-        {
-            throw new NotImplementedException("Query result set does not conform to any expected pattern.");
-        }            
-    }
-    
-    static IEnumerable<object> MergeColumns(IReadOnlyList<string> columns, TimeseriesPart? firstSeries)
-    {
-        if (firstSeries == null)
-            yield break;
-
-        var i = 0;
-        for (; i < firstSeries.Key.Length; ++i)
-        {
-            yield return columns[i];
-        }
-
-        yield return "time";
-
-        for (; i < columns.Count; ++i)
-        {
-            yield return columns[i];
-        }
     }
     
     static CallToolResult SimpleTextResult(string resultText, bool isError = false)
