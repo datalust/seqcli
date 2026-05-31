@@ -260,7 +260,7 @@ TimeGrouping  = 'time' , '(' , duration , ')' ;
 HavingClause = 'having' , Expr ;
 OrderByClause = 'order' , 'by' , Ordering , { ',' , Ordering } ;
 Ordering      = TimeOrdering
-              | Expr , [ 'ci' ] , [ 'asc' | 'desc' ] ;
+              | identifier , [ 'ci' ] , [ 'asc' | 'desc' ] ; (* identifier must be a selected column or group key alias *)
 TimeOrdering  = 'time' ;
 LimitClause = 'limit' , natural ;
 ForClause = 'for' , ForOption , { ',' , ForOption } ;
@@ -270,9 +270,15 @@ ForOption = identifier , [ '(' , [ Expr , { ',' , Expr } ] , ')' ] ;
 Keywords are case-insensitive. The `stream` source contains log events and spans. The `series` source contains
 metric samples.
 
-## Expression Examples
+## Schema
 
-| Example                                                      | Effect                                                                                       |
+Seq servers are compatible with a vast array of data sources. They may use a mix of OpenTelemetry and
+framework/ecosystem-specific property names, and may do so inconsistently. When exploring, **always use the MCP schema
+tool** to inspect the actual properties appearing on search results, cross-referencing with source code where necessary.
+
+## Example Expressions
+
+| Example                                                      | Purpose~~~~                                                                                      |
 |--------------------------------------------------------------|----------------------------------------------------------------------------------------------|
 | `@Timestamp >= now() - 10m`                                  | Match events that occurred in the last ten minutes.                                          |
 | `@TraceId = '0af7651916cd43dd8448eb211c80319c'`              | Match all events (both spans and log events) belonging to the given trace.                   |
@@ -282,22 +288,81 @@ metric samples.
 | `ToIsoString(@Timestamp)`                                    | Render a numeric timestamp as ISO-8601.                                                      |
 | `ToTimeString(@Elapsed)`                                     | Render a numeric duration value as a human-readable time string.                             |
 | `@Resource.service.name = 'unknown_service'`                 | Match events from a specific service (OpenTelemetry semantic convention)                     |
+| `@TraceId = '...' and @SpanId = '...' and Has(@Start)`       | Retrieve a specific trace span using a search expression                                     |
+
+## Example Queries
+
+Grouped query with ordering:
+
+```
+select count(*)
+from stream
+group by @Resource.service.name as service
+order by service
+```
+
+## Tracing Tactics
+
+Reconstruct a trace in execution (start-time) order:
+
+```
+select
+   @SpanId as span_id,
+   @ParentId as parent_id,
+   @Resource.service.name as service,
+   @Message as span_name,
+   @SpanKind as kind,
+   @Start as start,                    -- raw ticks — order by THIS column
+   ToIsoString(@Start) as start_iso,   -- readable copy, for display only
+   TotalMilliseconds(@Elapsed) as ms
+from stream
+where @TraceId = '<paste-trace-id>' and Has(@Start)
+order by start asc
+limit 1000                             -- traces can be large; if the result looks truncated, raise this
+```
+
+This orders rows by start time; it does NOT build the hierarchy. The call tree is assembled from `parent_id` (each row's 
+`@ParentId` = its parent's `@SpanId`; the root's is null).
+
+Note that you'll need to use the "retrieve a specific trace span" search recipe to see more about a span appearing in
+these results.
+
+Rank services by span latency over a window:
+
+```
+select
+   count(*) as spans,
+   Round(TotalMilliseconds(percentile(@Elapsed, 95)), 2) as p95_ms,
+   Round(TotalMilliseconds(max(@Elapsed)), 2) as max_ms
+from stream
+where @Timestamp >= now() - 30m and Has(@Start)
+group by @Resource.service.name as service     -- group key: alias it, do NOT put it in the select list
+having spans > 50                              -- filter groups by the select alias, NOT by count(*) directly
+order by p95_ms desc                           -- order by a selected aggregate's alias
+limit 100
+```
 
 ## Gotchas
 
+ - Group keys are automatically included in result rowsets and **must not** be explicitly included in the `select` list.
+ - To order by group keys, apply an alias with `group by <expr> as <alias>` and use `order by <alias>`. Never add the
+  group key to the `select` list, this will fail.
+ - OpenTelemetry dotted property names correspond to property accessor paths in Seq, so `@Resource.service.name` and
+  `http.response.status_code` are written exactly like this.
+ - **Never** put a dotted OTel name inside `[...]`. `@Resource['a.b.c']` is a single literal key (almost always undefined);
+  use `@Resource.a.b.c` for path navigation.
  - Seq expression literals are not JSON, take care to use the Seq expression syntax when formatting literal values.
  - Seq queries are not SQL. Don't expect standard SQL syntax, operators, or semantics to apply, always use the grammar
    and built-ins described above.
  - Seq searches work backwards through the event stream and always return results in reverse-chronological order, from
    **most recent** to least recent.
- - Data in Seq servers don't always use OpenTelemetry semantic conventions. When searching or querying, only use property
-   names from the built-ins described above, that appear on search results, or that are returned from the search result
-   schema tool.
+ - Data in Seq servers doesn't always use OpenTelemetry semantic conventions. When searching or querying, only use property
+   names from the built-ins described above, that appear on search results, or that are returned from the schema tool.
  - Bare identifiers like `SomeName` are synonymous with `@Properties['SomeName']`. The latter form allows irregular names
    to be used.
  - The only escape sequence allowed and required in Seq strings is a doubled single quote - `''` - which evaluates to an 
    embedded literal single quote. Backslash escaping is not recognized.
- - `@Timestamp`, `@Start`, and `@Elapsed` are internally represented as .NET `DateTime` ticks (`ulong` with 100 ns 
+ - `@Timestamp`, `@Start`, and `@Elapsed` are internally represented as .NET `DateTime` ticks (100 ns 
    resolution) in order to support consistent timestamp/duration math. Comparing these properties with strings will 
    fail: use duration literals for durations, and the `DateTime` function
    to convert from ISO-8601 strings.
@@ -313,8 +378,5 @@ metric samples.
    conserve resources when speculatively exploring.
  - Use `ToIsoString()` and `ToTimeString()` to make timestamps or durations (even computed ones) readable. If you forget,
    you can convert individual values cheaply with a scalar query like `ToIsoString(12345)`.
- - Group keys are automatically included in result rowsets and **must not** be explicitly included in the `select` list.
- - OpenTelemetry dotted property names correspond to property accessor paths in Seq, so `@Resource.service.name` and 
-   `http.response.status_code` are written exactly like this.
  - When grouping by `time(..)`, the time ordering leaves of the interval - just `order by time`, the interval isn't
    re-specified.

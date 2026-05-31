@@ -56,6 +56,15 @@ static class McpServerInstaller
                         "VS Code stores user-level MCP servers in settings.json; install into a project with `seqcli mcp install --agent vscode` instead.")
                     : Path.Combine(Environment.CurrentDirectory, ".vscode", "mcp.json"),
                 "servers"),
+
+            // Qwen Code reads MCP servers from the `mcpServers` key of its `settings.json`,
+            // both user-global (`~/.qwen`) and per-project (`.qwen`) - not a standalone `mcp.json`.
+            ["qwen"] = new(
+                global => Path.Combine(
+                    global ? UserProfile : Environment.CurrentDirectory,
+                    ".qwen",
+                    "settings.json"),
+                "mcpServers"),
         };
 
     public static void Install(string? agent, bool global, string? profileName = null)

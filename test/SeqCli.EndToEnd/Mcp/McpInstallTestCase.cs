@@ -51,6 +51,15 @@ public class McpInstallTestCase : ICliTestCase
         Assert.Contains("\"--profile\"", profileConfig);
         Assert.Contains("\"Production\"", profileConfig);
 
+        // Qwen Code reads MCP servers from `mcpServers` in its `settings.json`, not an `mcp.json`.
+        var qwenExit = runner.Exec("mcp install -a qwen", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(0, qwenExit);
+
+        var qwenConfig = File.ReadAllText(Path.Combine(tmp.Path, ".qwen/settings.json"));
+        Assert.Contains("\"mcpServers\"", qwenConfig);
+        Assert.Contains("\"seq\"", qwenConfig);
+        Assert.False(File.Exists(Path.Combine(tmp.Path, ".qwen/mcp.json")));
+
         // VS Code has no supported user-global merge target.
         var vscodeGlobalExit = runner.Exec("mcp install -a vscode --global", disconnected: true, workingDirectory: tmp.Path);
         Assert.Equal(1, vscodeGlobalExit);
