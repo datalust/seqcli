@@ -352,6 +352,16 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         };
     }
     
+    [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
+    [Description("Call this before interacting with Seq tools for the first time (optimizes resource usage by clearing caches).")]
+    public Task NewSessionAsync(CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        session.Clear();
+        return Task.CompletedTask;
+    }
+
+    
     static void FlattenResult(QueryResultPart result, Action<IEnumerable<object?>> writeRow)
     {
         if (result.Error != null)

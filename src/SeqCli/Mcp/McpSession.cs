@@ -16,6 +16,16 @@ class McpSession
     readonly Dictionary<int, string> _resultIdToEventId = new();
     readonly Dictionary<string, (int, EventEntity)> _eventIdToResult = new();
 
+    public void Clear()
+    {
+        lock (_sync)
+        {
+            _resultIdToEventId.Clear();
+            _eventIdToResult.Clear();
+            // Note that `_nextId` is intentionally preserved.
+        }
+    }
+
     public string ImportSearchResult(EventEntity evt)
     {
         lock (_sync)

@@ -65,6 +65,13 @@ public partial class McpSessionBasicsTestCase : ICliTestCase
             new Dictionary<string, object> { ["query"] = query }));
         Assert.Contains("Total", queryResult);
         Assert.Contains("6", queryResult);
+
+        await client.CallToolAsync("seq_new_session");
+
+        var staleResult = await client.CallToolAsync(
+            "seq_read_search_result",
+            new Dictionary<string, object> { ["result_id"] = resultIds[0] });
+        Assert.True(staleResult.IsError ?? false);
     }
 
     static string AssertTextResult(CallToolResult callToolResult)

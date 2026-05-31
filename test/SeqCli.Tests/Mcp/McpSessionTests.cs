@@ -136,4 +136,30 @@ public class McpSessionTests
         Assert.Throws<OperationCanceledException>(
             () => session.EnumerateUserPropertyNames(cts.Token).ToList());
     }
+
+    [Fact]
+    public void ClearForgetsImportedResults()
+    {
+        var session = new McpSession();
+        var resultId = session.ImportSearchResult(Some.MakeEvent());
+
+        session.Clear();
+
+        Assert.False(session.TryGetSearchResult(resultId, out var result, out var error));
+        Assert.Null(result);
+        Assert.NotNull(error);
+        Assert.Empty(session.EnumerateUserPropertyNames(CancellationToken.None));
+    }
+
+    [Fact]
+    public void ClearPreservesTheResultIdSequence()
+    {
+        var session = new McpSession();
+        var first = session.ImportSearchResult(Some.MakeEvent(e => e.Id = "event-1"));
+
+        session.Clear();
+
+        var second = session.ImportSearchResult(Some.MakeEvent(e => e.Id = "event-1"));
+        Assert.NotEqual(first, second);
+    }
 }
