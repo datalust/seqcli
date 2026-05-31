@@ -316,7 +316,7 @@ select
    ToIsoString(@Start) as start_iso,   -- readable copy, for display only
    TotalMilliseconds(@Elapsed) as ms
 from stream
-where @TraceId = '<paste-trace-id>' and Has(@Start)
+where @TraceId = '0af7651916cd43dd8448eb211c80319c' and Has(@Start)
 order by start asc
 limit 1000                             -- traces can be large; if the result looks truncated, raise this
 ```
