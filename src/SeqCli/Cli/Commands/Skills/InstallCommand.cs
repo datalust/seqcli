@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.IO;
 using System.Threading.Tasks;
 using SeqCli.Skills;
 using SeqCli.Util;
-using Serilog;
 
 namespace SeqCli.Cli.Commands.Skills;
 
@@ -43,14 +40,7 @@ class InstallCommand : Command
 
     protected override Task<int> Run()
     {
-        var skillsPath = Path.Combine(
-            _global ? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) : Environment.CurrentDirectory,
-            $".{_agent?.ToLowerInvariant() ?? "agents"}",
-            "skills");
-        
-        Log.Information("Installing skills to {SkillsPath}", skillsPath);
-        SkillInstaller.Install(skillsPath);
-
+        SkillInstaller.Install(_agent?.ToLowerInvariant(), _global);
         return Task.FromResult(0);
     }
 }

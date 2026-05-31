@@ -51,6 +51,15 @@ public class McpInstallTestCase : ICliTestCase
         Assert.Contains("\"--profile\"", profileConfig);
         Assert.Contains("\"Production\"", profileConfig);
 
+        // VS Code has no supported user-global merge target.
+        var vscodeGlobalExit = runner.Exec("mcp install -a vscode --global", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(1, vscodeGlobalExit);
+
+        var vscodeGlobalOutput = runner.LastRunProcess!.Output;
+        Assert.Contains("VS Code stores user-level MCP servers", vscodeGlobalOutput);
+        Assert.Contains("seqcli mcp install --agent vscode", vscodeGlobalOutput);
+        Assert.DoesNotContain("NotSupportedException", vscodeGlobalOutput);
+
         return Task.CompletedTask;
     }
 }

@@ -20,20 +20,31 @@ namespace SeqCli.Skills;
 
 static class SkillInstaller
 {
-    public static void Install(string destinationPath)
+    public static void Install(string? agent, bool global)
     {
+        agent ??= "agents";
+
+        var destinationPath = Path.Combine(
+            global ? UserProfile : Environment.CurrentDirectory,
+            $".{agent}",
+            "skills");
+
+        Log.Information("Installing skills to {SkillsPath}", destinationPath);
+
         var sourcePath = Path.Combine(AppContext.BaseDirectory, "Skills");
-        
+
         foreach (var skillSourceDirectory in Directory.EnumerateDirectories(sourcePath))
         {
             var skillName = Path.GetFileName(skillSourceDirectory);
             var destination = Path.Combine(destinationPath, skillName);
-            
+
             Log.Information("Installing skill {SkillName} to destination path {SkillPath}", skillName, destinationPath);
-            
+
             CopyFilesRecursive(skillSourceDirectory, destination);
         }
     }
+
+    static string UserProfile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
     static void CopyFilesRecursive(string source, string destination)
     {

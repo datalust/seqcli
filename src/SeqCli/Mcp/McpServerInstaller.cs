@@ -58,8 +58,10 @@ static class McpServerInstaller
                 "servers"),
         };
 
-    public static void Install(string agent, bool global, string? profileName = null)
+    public static void Install(string? agent, bool global, string? profileName = null)
     {
+        agent ??= "agents";
+
         var target = KnownAgents.TryGetValue(agent, out var known) ? known : Convention(agent);
         var path = target.ResolvePath(global);
 

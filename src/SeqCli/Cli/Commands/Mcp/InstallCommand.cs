@@ -46,7 +46,7 @@ class InstallCommand : Command
 
     protected override Task<int> Run()
     {
-        McpServerInstaller.Install(_agent?.ToLowerInvariant() ?? "agents", _global, _profile);
+        McpServerInstaller.Install(_agent?.ToLowerInvariant(), _global, _profile);
         return Task.FromResult(0);
     }
 }
