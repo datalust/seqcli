@@ -166,7 +166,7 @@ regex_char          = '\/' | ? any character except '/' ? ;
 
 ### Expression
 
-```
+```ebnf
 Expr = Disjunction ;
 Disjunction = Conjunction , { 'or' , Conjunction } ;
 Conjunction = Comparison , { 'and' , Comparison } ;
@@ -228,7 +228,7 @@ Variable     = variable ;
 **Disambiguation:** The `/` character introduces a regular expression when it appears at the
 start of input, or when the preceding token is an operator or opening delimiter — specifically
 one of: `and`, `or`, `not`, `(`, `[`, `,`, `=`, `<>`, `like`, `>`, `>=`, `<`, `<=`, `in`,
-`is`, `&&`, `||`, `!=`, `==`, `!`, `if`, `then`, `else`, `:`. In all other positions, `/` is
+`is`, `!`, `if`, `then`, `else`, `:`. In all other positions, `/` is
 the division operator.
 
 ### Queries
