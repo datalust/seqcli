@@ -31,15 +31,15 @@ public class TestConfiguration
 
     public bool IsMultiuser => _args.Multiuser();
 
-    public CaptiveProcess SpawnCliProcess(string command, string additionalArgs = null, Dictionary<string, string> environment = null, bool skipServerArg = false, bool supplyInput = false)
+    public CaptiveProcess SpawnCliProcess(string command, string additionalArgs = null, Dictionary<string, string> environment = null, bool skipServerArg = false, bool supplyInput = false, string workingDirectory = null)
     {
         if (command == null) throw new ArgumentNullException(nameof(command));
 
         var commandWithArgs = $"{command} {additionalArgs}";
         if (!skipServerArg)
             commandWithArgs += $" --server=\"{ServerListenUrl}\"";
-            
-        return new CaptiveProcess("dotnet", $"{TestedBinary} {commandWithArgs}", environment, supplyInput: supplyInput);
+
+        return new CaptiveProcess("dotnet", $"{TestedBinary} {commandWithArgs}", environment, supplyInput: supplyInput, workingDirectory: workingDirectory);
     }
         
     public CaptiveProcess SpawnServerProcess(string storagePath)

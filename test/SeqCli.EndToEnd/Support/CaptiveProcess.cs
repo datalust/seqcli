@@ -25,7 +25,8 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
         bool captureOutput = true,
         bool supplyInput = false,
         string stopCommandFullExePath = null,
-        string stopCommandArgs = null)
+        string stopCommandArgs = null,
+        string workingDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(fullExePath);
         _captureOutput = captureOutput;
@@ -42,7 +43,9 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
             CreateNoWindow = true,
             ErrorDialog = false,
             FileName = fullExePath,
-            Arguments = args ?? ""
+            Arguments = args ?? "",
+            // An empty working directory means the child inherits the parent process's current directory.
+            WorkingDirectory = workingDirectory ?? ""
         };
             
         if (environment != null)

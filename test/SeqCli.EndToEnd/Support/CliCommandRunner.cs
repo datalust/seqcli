@@ -17,15 +17,15 @@ public class CliCommandRunner(TestConfiguration configuration, TestDataFolder te
         
     public ITestProcess? LastRunProcess { get; private set; }
 
-    public int Exec(string command, string? args = null, bool disconnected = false, Dictionary<string, string>? environment = null, TimeSpan? timeout = null)
+    public int Exec(string command, string? args = null, bool disconnected = false, Dictionary<string, string>? environment = null, TimeSpan? timeout = null, string? workingDirectory = null)
     {
-        using var process = Spawn(command, args, disconnected, environment);
+        using var process = Spawn(command, args, disconnected, environment, workingDirectory);
         return process.WaitForExit(timeout ?? DefaultExecTimeout);
     }
 
-    public CaptiveProcess Spawn(string command, string? args = null, bool disconnected = false, Dictionary<string, string>? environment = null)
+    public CaptiveProcess Spawn(string command, string? args = null, bool disconnected = false, Dictionary<string, string>? environment = null, string? workingDirectory = null)
     {
-        var process = configuration.SpawnCliProcess(command, args, environment, skipServerArg: disconnected);
+        var process = configuration.SpawnCliProcess(command, args, environment, skipServerArg: disconnected, workingDirectory: workingDirectory);
         LastRunProcess = process;
         return process;
     }

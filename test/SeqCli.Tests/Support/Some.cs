@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using Seq.Api.Model.Events;
+using Seq.Api.Model.Shared;
 using Serilog.Events;
 using Serilog.Parsing;
 
@@ -29,7 +32,7 @@ static class Some
 
     public static string UriString()
     {
-        return "http://example.com";
+        return "https://example.com";
     }
 
     public static byte[] Bytes(int count)
@@ -38,9 +41,21 @@ static class Some
         Rng.GetBytes(bytes);
         return bytes;
     }
-
-    public static string ApiKey()
+    
+    public static EventEntity MakeEvent(Action<EventEntity>? configure = null)
     {
-        return string.Join("", Bytes(8).Select(v => v.ToString("x2")).ToArray());
+        var evt = new EventEntity
+        {
+            Id = $"event-{String()}",
+            Timestamp = "2024-01-01T00:00:00.0000000Z",
+            RenderedMessage = "Hello",
+            MessageTemplateTokens = [new MessageTemplateTokenPart { Text = "Hello" }],
+            EventType = "$00000000",
+        };
+        configure?.Invoke(evt);
+        return evt;
     }
+
+    public static List<EventPropertyPart> MakeProperties(params (string Name, object? Value)[] items) =>
+        items.Select(i => new EventPropertyPart(i.Name, i.Value)).ToList();
 }
