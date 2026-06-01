@@ -20,7 +20,11 @@ using Seq.Api.Model.Data;
 namespace SeqCli.Mcp.Data;
 
 public static class QueryResultHelper
-{ 
+{
+    /// <summary>
+    /// Convert <paramref name="result"/> into a flat table. Seq reduces browser-side processing and optimizes
+    /// response sizes by constructing result trees for some grouped/time-sliced query results.
+    /// </summary>
     public static void Flatten(QueryResultPart result, Action<IEnumerable<object?>> writeRow)
     {
         if (result.Error != null)

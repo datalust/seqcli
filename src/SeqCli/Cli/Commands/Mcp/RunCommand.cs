@@ -37,7 +37,7 @@ class RunCommand: Command
     {
         _connection = Enable<ConnectionFeature>();
         _storagePath = Enable<StoragePathFeature>();
-        Options.Add("debug", "Write diagnostic messages from the MCP server back through the connection.",
+        Options.Add("debug", "Write diagnostic messages from the MCP server back through the connection",
             _ => _debug = true);
     }
 
