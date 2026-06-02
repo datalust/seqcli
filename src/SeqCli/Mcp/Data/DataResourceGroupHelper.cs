@@ -34,16 +34,22 @@ public static class DataResourceGroupHelper
         FloatParseHandling = FloatParseHandling.Decimal,
     });
 
-    public static async Task<QueryResultPart> QueryPreserveErrorResponsesAsync(SeqConnection connection, string query, CancellationToken cancellationToken = default)
+    public static async Task<QueryResultPart> QueryPreserveErrorResponsesAsync(SeqConnection connection, string? signal, string query, CancellationToken cancellationToken = default)
     {
         // Unfortunately, the `Data.QueryAsync()` API throws when the server 400s, making this case tricky. Suggests
         // we should make some API client improvements...
+        var queryUri = "api/data?q=" + Uri.EscapeDataString(query);
+        if (signal != null)
+            queryUri += "&" + Uri.EscapeDataString(signal);
+        
         var request = new HttpRequestMessage
         {
-            RequestUri = new Uri("api/data?q=" + Uri.EscapeDataString(query), UriKind.Relative),
+            RequestUri = new Uri(queryUri, UriKind.Relative),
             Method = HttpMethod.Post, Content = new StringContent("{}", new UTF8Encoding(false), "application/json")
         };
+        
         var response = await connection.Client.HttpClient.SendAsync(request, cancellationToken);
+        
         return Serializer.Deserialize<QueryResultPart>(
             new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync(cancellationToken))))!;
     }
