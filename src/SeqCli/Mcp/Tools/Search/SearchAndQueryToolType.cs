@@ -331,7 +331,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         return Task.CompletedTask;
     }
 
-    [McpServerTool(Name = "seq_list_signals", ReadOnly = true, Title = "List Signals")]
+    [McpServerTool(Name = "seq_list_signals", ReadOnly = true, Title = "List Signals", UseStructuredContent = true)]
     [Description("List available signals. Use signals when searching and querying to efficiently work with well-known " +
                  "event streams while dramatically improving response times.")]
     public async Task<SignalSummary[]> ListSignalsAsync(CancellationToken cancellationToken)
