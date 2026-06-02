@@ -13,6 +13,20 @@ Seq's query language is **not SQL** — assuming SQL semantics will produce erro
 Seq's query language. **Always** use the grammar, rules, and examples in this document as a basis for Seq queries and
 searches.
 
+## Starting a Diagnostic Session
+
+Being "confidently wrong" is the most common and worst failure mode when working with diagnostic data. EVERY diagnostic
+session MUST begin with the following steps:
+
+1. Check for relevant signals. Many event filtering problems have already been solved and the resulting filters saved as efficiently indexed signals.
+2. Retrieve a sample of relevant events.
+3. Confirm the schema of the search results (important!).
+4. Inspect a subset of relevant events in full.
+5. Determine how the correctness of any conclusions can be verified using real diagnostic data.
+
+DO NOT skip steps just because early results suggest a quicker path to a solution: this is often the path to being
+confidently wrong!
+
 ## Event Data Model
 
 All events stored in Seq use the same data model. Spans are only distinguished from log events by the presence of the

@@ -40,7 +40,7 @@ public static class DataResourceGroupHelper
         // we should make some API client improvements...
         var queryUri = "api/data?q=" + Uri.EscapeDataString(query);
         if (signal != null)
-            queryUri += "&" + Uri.EscapeDataString(signal);
+            queryUri += "&signal=" + Uri.EscapeDataString(signal);
         
         var request = new HttpRequestMessage
         {

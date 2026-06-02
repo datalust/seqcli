@@ -263,8 +263,8 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     public async Task<CallToolResult> QueryAsync(
         [Description("A Seq query language query.")]
         string query,
-        [Description("A signal expression identifying the events over which the query will run. Multiple " +
-                     "signals are intersected with commas, and unioned with `|`, for example, `signal-1,(signal-2|signal-3)`.")]
+        [Description("A signal expression restricting the search space. Multiple " +
+                     "signals are intersected with commas, and unioned with tilde, for example, `signal-1,(signal-2~signal-3)`.")]
         string? signal = null,
         CancellationToken cancellationToken = default)
     {
