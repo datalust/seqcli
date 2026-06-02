@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -43,7 +41,7 @@ class QueryCommand : Command
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable<OutputFormatFeature>();
+        _output = Enable(new OutputFormatFeature(supportNative: true));
         _storagePath = Enable<StoragePathFeature>();
         Options.Add("trace", "Enable detailed (server-side) query tracing", _ => _trace = true);
         _connection = Enable<ConnectionFeature>();
@@ -63,17 +61,16 @@ class QueryCommand : Command
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         var output = _output.GetOutputFormat(config);
-        if (output.Json)
+        if (output.Text)
         {
-            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-
-            // Some friendlier JSON output is definitely possible here
-            Console.WriteLine(JsonConvert.SerializeObject(result));
+            // We can fold this into the `WriteQueryResult` case once that path supports themes.
+            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
+            output.WriteCsv(result);
         }
         else
         {
-            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-            output.WriteCsv(result);
+            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
+            output.WriteQueryResult(result);
         }
 
         return 0;

@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
-using SeqCli.Mcp.Formatting;
 using SeqCli.Tests.Support;
 using Xunit;
+using NativeFormatter = SeqCli.Output.NativeFormatter;
 
-namespace SeqCli.Tests.Mcp;
+namespace SeqCli.Tests.Output;
 
-public class SeqSyntaxFormatterTests
+public class NativeFormatterTests
 {
     [Theory]
     [InlineData("@Properties", "a", true, "a")]
@@ -21,7 +21,7 @@ public class SeqSyntaxFormatterTests
     [InlineData("@Resource", "and", false, "@Resource.and")]
     public void IdentifiersAreIdiomaticallyFormatted(string prefix, string name, bool prefixIsOptional, string expected)
     {
-        var actual = SeqSyntaxFormatter.MakeIdentifier(prefix, name, prefixIsOptional);
+        var actual = NativeFormatter.MakeIdentifier(prefix, name, prefixIsOptional);
         Assert.Equal(expected, actual);
     }
 
@@ -62,6 +62,8 @@ public class SeqSyntaxFormatterTests
         [Some.MakeEvent(e => e.Timestamp = "2024-01-01T12:00:00+02:00"), "@Timestamp: DateTime('2024-01-01T10:00:00.0000000Z')"
         ],
         [Some.MakeEvent(e => e.MessageTemplateTokens = [new MessageTemplateTokenPart { PropertyName = "X" }]), "@MessageTemplate: '{X}'"
+        ],
+        [Some.MakeEvent(e => e.MessageTemplateTokens = [new MessageTemplateTokenPart { Text = "{bracketed}" }]), "@MessageTemplate: '{{bracketed}}'"
         ],
         [Some.MakeEvent(e => e.Properties = Some.MakeProperties(("request id", 5))), "@Properties: {'request id': 5}"],
         [Some.MakeEvent(e => e.Properties = Some.MakeProperties(("n", 42))), "@Properties: {n: 42}"],
@@ -141,7 +143,7 @@ public class SeqSyntaxFormatterTests
     static string Render(EventEntity evt)
     {
         var output = new StringWriter();
-        SeqSyntaxFormatter.WriteEvent(output, evt);
+        NativeFormatter.WriteEvent(output, evt);
         return output.ToString();
     }
 }

@@ -22,6 +22,7 @@ using Seq.Api;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Node;

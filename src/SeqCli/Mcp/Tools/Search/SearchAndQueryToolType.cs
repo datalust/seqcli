@@ -28,12 +28,12 @@ using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Expressions;
 using Seq.Syntax.Templates;
-using SeqCli.Cli.Commands;
 using SeqCli.Mapping;
 using SeqCli.Mcp.Data;
-using SeqCli.Mcp.Formatting;
+using SeqCli.Output;
 using Serilog;
 using Serilog.Events;
+using NativeFormatter = SeqCli.Output.NativeFormatter;
 
 // ReSharper disable UnusedMember.Global
 
@@ -198,7 +198,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         foreach (var result in takenResults)
         {
             var resultId = session.ImportSearchResult(result);
-            var serilogEvent = SearchCommand.ToSerilogEvent(result);
+            var serilogEvent = OutputFormat.ToSerilogEvent(result);
             serilogEvent.AddOrUpdateProperty(new LogEventProperty(ResultIdPropertyName, new ScalarValue(resultId)));
             serilogEvent.AddOrUpdateProperty(new LogEventProperty(LevelMapping.SurrogateLevelProperty, new ScalarValue(result.Level ?? "Information")));
             SearchResultFormatter.Format(serilogEvent, responseText);
@@ -231,14 +231,15 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         }
 
         var resultText = new StringWriter();
-        SeqSyntaxFormatter.WriteEvent(resultText, result);
+        NativeFormatter.WriteEvent(resultText, result);
 
         return Task.FromResult(SimpleTextResult(resultText.ToString()));
     }
 
     [McpServerTool(Name = "seq_inspect_result_schema", ReadOnly = true, Title = "Inspect Search Result Schema")]
     [Description("List the user-defined top-level, scope, and resource property names observed on events " +
-                 "in search results so far in this session. Only events retrieved in search results are considered.")]
+                 "in search results so far in this session. Only events retrieved in search results are considered. " +
+                 "Critically important for task accuracy.")]
     [return: Description("A list containing Seq syntax-formatted property names.")]
     public Task<string[]> InspectSchemaAsync(CancellationToken cancellationToken)
     {
@@ -304,39 +305,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         }
 
         var output = new StringWriter();
-        var first = true;
-        QueryResultHelper.Flatten(result, row =>
-        {
-            if (first)
-            {
-                first = false;
-                var firstCol = true;
-                foreach (var heading in row)
-                {
-                    if (firstCol)
-                        firstCol = false;
-                    else
-                        output.Write(' ');
-                    output.Write(heading);
-                }
-                output.WriteLine();
-            }
-            else
-            {
-                var firstCol = true;
-                foreach (var value in row)
-                {
-                    if (firstCol)
-                        firstCol = false;
-                    else
-                        output.Write(' ');
-                    SeqSyntaxFormatter.WriteValue(output, value);
-                }
-            }
-
-            output.WriteLine();
-        });
-
+        NativeFormatter.WriteQueryResult(output, result);
         return SimpleTextResult(output.ToString());
     }
     

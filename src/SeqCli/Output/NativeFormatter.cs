@@ -19,17 +19,19 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
+using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Shared;
+using SeqCli.Mcp.Data;
 using SeqCli.Syntax;
 
-namespace SeqCli.Mcp.Formatting;
+namespace SeqCli.Output;
 
 /// <summary>
 /// Constructs Seq syntax literals from API events. This provides a language model client with strong cues as
 /// to how the properties of an event should be incorporated into future queries/expressions.
 /// </summary>
-static partial class SeqSyntaxFormatter
+static partial class NativeFormatter
 {
     static readonly object UndefinedValue = new();
     
@@ -188,7 +190,10 @@ static partial class SeqSyntaxFormatter
 
     static string ReconstructTemplate(IEnumerable<MessageTemplateTokenPart> tokens)
     {
-        return string.Concat(tokens.Select(t => t.RawText ?? t.Text ?? $"{{{t.PropertyName}}}"));
+        return string.Concat(tokens.Select(t =>
+            t.RawText ??
+            t.Text?.Replace("{", "{{").Replace("}", "}}") ??
+            $"{{{t.PropertyName}}}"));
     }
 
     static void WriteObject(TextWriter output, bool topLevel, params IEnumerable<(string, object?)> members)
@@ -226,5 +231,41 @@ static partial class SeqSyntaxFormatter
             }
         }
         output.Write('}');
+    }
+
+    public static void WriteQueryResult(TextWriter output, QueryResultPart result)
+    {
+        var first = true;
+        QueryResultHelper.Flatten(result, row =>
+        {
+            if (first)
+            {
+                first = false;
+                var firstCol = true;
+                foreach (var heading in row)
+                {
+                    if (firstCol)
+                        firstCol = false;
+                    else
+                        output.Write(' ');
+                    output.Write(heading);
+                }
+                output.WriteLine();
+            }
+            else
+            {
+                var firstCol = true;
+                foreach (var value in row)
+                {
+                    if (firstCol)
+                        firstCol = false;
+                    else
+                        output.Write(' ');
+                    WriteValue(output, value);
+                }
+            }
+
+            output.WriteLine();
+        });
     }
 }
