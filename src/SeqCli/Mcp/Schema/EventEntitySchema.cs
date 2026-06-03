@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
-using SeqCli.Mcp.Formatting;
+using SeqCli.Output;
 
 namespace SeqCli.Mcp.Schema;
 
@@ -46,7 +46,7 @@ static class EventEntitySchema
 
     static IEnumerable<string> EnumerateAccessorPaths(string prefixPath, bool optionalPrefix, string propertyName, object? propertyValue, int depth)
     {
-        var name = SeqSyntaxFormatter.MakeIdentifier(prefixPath, propertyName, optionalPrefix);
+        var name = NativeFormatter.MakeIdentifier(prefixPath, propertyName, optionalPrefix);
         yield return name;
         
         if (depth < MaxAccessorPathDepth && propertyValue is JObject jo)

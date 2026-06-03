@@ -27,13 +27,15 @@ using Seq.Api.Client;
 using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Expressions;
+using Seq.Api.Model.Signals;
 using Seq.Syntax.Templates;
-using SeqCli.Cli.Commands;
 using SeqCli.Mapping;
 using SeqCli.Mcp.Data;
-using SeqCli.Mcp.Formatting;
+using SeqCli.Output;
+using SeqCli.Signals;
 using Serilog;
 using Serilog.Events;
+using NativeFormatter = SeqCli.Output.NativeFormatter;
 
 // ReSharper disable UnusedMember.Global
 
@@ -59,6 +61,9 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         int limit,
         [Description("A Seq search expression evaluated over event properties.")]
         string? predicate = null,
+        [Description("A signal expression restricting the search space. Multiple " +
+                     "signals are intersected with commas, and unioned with tilde, for example, `signal-1,(signal-2~signal-3)`.")]
+        string? signal = null,
         CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(predicate))
@@ -101,6 +106,10 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
             }
         }
 
+        SignalExpressionPart? parsedSignalExpression = null;
+        if (!string.IsNullOrWhiteSpace(signal))
+            parsedSignalExpression = SignalExpressionParser.ParseExpression(signal);
+
         var resultsLock = new Lock();
         string? error = null;
         var results = new List<EventEntity>();
@@ -115,6 +124,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
                                    filter: predicate,
                                    count: limit,
                                    render: true,
+                                   signal: parsedSignalExpression,
                                    cancellationToken: cancelEnumerateToken))
                 {
                     lock (resultsLock)
@@ -198,7 +208,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         foreach (var result in takenResults)
         {
             var resultId = session.ImportSearchResult(result);
-            var serilogEvent = SearchCommand.ToSerilogEvent(result);
+            var serilogEvent = OutputFormat.ToSerilogEvent(result);
             serilogEvent.AddOrUpdateProperty(new LogEventProperty(ResultIdPropertyName, new ScalarValue(resultId)));
             serilogEvent.AddOrUpdateProperty(new LogEventProperty(LevelMapping.SurrogateLevelProperty, new ScalarValue(result.Level ?? "Information")));
             SearchResultFormatter.Format(serilogEvent, responseText);
@@ -231,14 +241,15 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         }
 
         var resultText = new StringWriter();
-        SeqSyntaxFormatter.WriteEvent(resultText, result);
+        NativeFormatter.WriteEvent(resultText, result);
 
         return Task.FromResult(SimpleTextResult(resultText.ToString()));
     }
 
     [McpServerTool(Name = "seq_inspect_result_schema", ReadOnly = true, Title = "Inspect Search Result Schema")]
     [Description("List the user-defined top-level, scope, and resource property names observed on events " +
-                 "in search results so far in this session. Only events retrieved in search results are considered.")]
+                 "in search results so far in this session. Only events retrieved in search results are considered. " +
+                 "Critically important for task accuracy.")]
     [return: Description("A list containing Seq syntax-formatted property names.")]
     public Task<string[]> InspectSchemaAsync(CancellationToken cancellationToken)
     {
@@ -252,7 +263,10 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     public async Task<CallToolResult> QueryAsync(
         [Description("A Seq query language query.")]
         string query,
-        CancellationToken cancellationToken)
+        [Description("A signal expression restricting the search space. Multiple " +
+                     "signals are intersected with commas, and unioned with tilde, for example, `signal-1,(signal-2~signal-3)`.")]
+        string? signal = null,
+        CancellationToken cancellationToken = default)
     {
         if (query.Contains("from", StringComparison.OrdinalIgnoreCase) &&
             (!query.Contains("where", StringComparison.OrdinalIgnoreCase) ||
@@ -267,7 +281,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         QueryResultPart result;
         try
         {
-            result = await DataResourceGroupHelper.QueryPreserveErrorResponsesAsync(connection, query, cancellationToken);
+            result = await DataResourceGroupHelper.QueryPreserveErrorResponsesAsync(connection, signal, query, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -304,39 +318,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         }
 
         var output = new StringWriter();
-        var first = true;
-        QueryResultHelper.Flatten(result, row =>
-        {
-            if (first)
-            {
-                first = false;
-                var firstCol = true;
-                foreach (var heading in row)
-                {
-                    if (firstCol)
-                        firstCol = false;
-                    else
-                        output.Write(' ');
-                    output.Write(heading);
-                }
-                output.WriteLine();
-            }
-            else
-            {
-                var firstCol = true;
-                foreach (var value in row)
-                {
-                    if (firstCol)
-                        firstCol = false;
-                    else
-                        output.Write(' ');
-                    SeqSyntaxFormatter.WriteValue(output, value);
-                }
-            }
-
-            output.WriteLine();
-        });
-
+        NativeFormatter.WriteQueryResult(output, result);
         return SimpleTextResult(output.ToString());
     }
     
@@ -347,6 +329,16 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         _ = cancellationToken;
         session.Clear();
         return Task.CompletedTask;
+    }
+
+    [McpServerTool(Name = "seq_list_signals", ReadOnly = true, Title = "List Signals", UseStructuredContent = true)]
+    [Description("List available signals. Use signals when searching and querying to efficiently work with well-known " +
+                 "event streams while dramatically improving response times.")]
+    public async Task<SignalSummary[]> ListSignalsAsync(CancellationToken cancellationToken)
+    {
+        return (await connection.Signals.ListAsync(shared: true, partial: true, cancellationToken: cancellationToken))
+            .Select(s => new SignalSummary { Id = s.Id, Title = s.Title })
+            .ToArray();
     }
     
     static CallToolResult SimpleTextResult(string resultText, bool isError = false)

@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
 using Seq.Api;
-using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
 
 namespace SeqCli.EndToEnd.Mcp;
 
 // ReSharper disable once UnusedType.Global
-public partial class McpSessionBasicsTestCase : ICliTestCase
+public class McpSessionBasicsTestCase : McpToolTestCase
 {
-    public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
+    protected override async Task ExecuteAsync(SeqConnection connection, ILogger logger, McpClient client)
     {
         var runId = "mcp-" + Guid.NewGuid().ToString("n");
 
@@ -32,20 +29,11 @@ public partial class McpSessionBasicsTestCase : ICliTestCase
                 order.Number, runId, order.Customer, order.Amount);
         }
 
-        var transport = new StdioClientTransport(new StdioClientTransportOptions
-        {
-            Name = "seqcli mcp run",
-            Command = "dotnet",
-            Arguments = [TestConfiguration.TestedBinary, "mcp", "run", $"--server={connection.Client.ServerUrl}"]
-        });
-
-        await using var client = await McpClient.CreateAsync(transport);
-
         var predicate = $"RunId = '{runId}' and Customer.Tier = 'gold' and @Timestamp >= Now() - 1d";
         var searchResult = AssertTextResult(await client.CallToolAsync(
             "seq_search",
             new Dictionary<string, object> { ["limit"] = 10, ["predicate"] = predicate }));
-        var resultIds = ResultIdRegex().Matches(searchResult).Select(m => m.Value).Distinct().ToArray();
+        var resultIds = OrderedSearchResultIds(searchResult);
         Assert.Equal(orders.Count(o => o.Customer.Tier == "gold"), resultIds.Length);
 
         var detailResult = AssertTextResult(await client.CallToolAsync(
@@ -56,8 +44,13 @@ public partial class McpSessionBasicsTestCase : ICliTestCase
 
         var schemaResult = AssertTextResult(await client.CallToolAsync("seq_inspect_result_schema"));
         foreach (var expectedPath in new[]
-                     { "OrderNumber", "RunId", "Amount", "Customer", "Customer.Name", "Customer.Tier", "Customer.Address.City" })
+                 {
+                     "OrderNumber", "RunId", "Amount", "Customer", "Customer.Name", "Customer.Tier",
+                     "Customer.Address.City"
+                 })
+        {
             Assert.Contains(expectedPath, schemaResult);
+        }
 
         var query = $"select sum(Amount) as Total from stream where RunId = '{runId}' and @Timestamp >= Now() - 1d";
         var queryResult = AssertTextResult(await client.CallToolAsync(
@@ -73,14 +66,4 @@ public partial class McpSessionBasicsTestCase : ICliTestCase
             new Dictionary<string, object> { ["result_id"] = resultIds[0] });
         Assert.True(staleResult.IsError ?? false);
     }
-
-    static string AssertTextResult(CallToolResult callToolResult)
-    {
-        var text = string.Join("\n", callToolResult.Content.OfType<TextContentBlock>().Select(c => c.Text));
-        Assert.False(callToolResult.IsError ?? false, text);
-        return text;
-    }
-
-    [GeneratedRegex("R[0-9a-zA-Z]+")]
-    private static partial Regex ResultIdRegex();
 }

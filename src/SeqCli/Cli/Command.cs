@@ -82,7 +82,7 @@ abstract class Command
     {
         if (unrecognized.Any())
         {
-            ShowUsageErrors(new [] { "Unrecognized options: " + string.Join(", ", unrecognized) });
+            ShowUsageErrors(["Unrecognized options: " + string.Join(", ", unrecognized)]);
             return 1;
         }
 
