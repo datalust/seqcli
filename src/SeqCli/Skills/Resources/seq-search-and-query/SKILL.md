@@ -19,7 +19,7 @@ Being "confidently wrong" is the most common and worst failure mode when working
 session MUST begin with the following steps:
 
 1. Check for relevant signals. Many event filtering problems have already been solved and the resulting filters saved as efficiently indexed signals.
-2. Retrieve a sample of relevant events.
+2. Retrieve a sample of relevant events. Use signals identified in (1) where appropriate, event search and query supports them.
 3. Confirm the schema of the search results (important!).
 4. Inspect a subset of relevant events in full.
 5. Determine how the correctness of any conclusions can be verified using real diagnostic data.
