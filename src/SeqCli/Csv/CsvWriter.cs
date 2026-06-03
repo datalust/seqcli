@@ -34,7 +34,7 @@ static class CsvWriter
                     else
                     {
                         theme.Set(output, ConsoleThemeStyle.TertiaryText);
-                        output.Write(", ");
+                        output.Write(',');
                         theme.Reset(output);
                     }
 
@@ -53,7 +53,7 @@ static class CsvWriter
                     else
                     {
                         theme.Set(output, ConsoleThemeStyle.TertiaryText);
-                        output.Write(", ");
+                        output.Write(',');
                         theme.Reset(output);
                     }
                     
