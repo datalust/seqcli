@@ -19,12 +19,14 @@ public class ExponentialHistogram
 
     double _min;
     double _max;
+    double _sum;
     ulong _total;
 
     public void Record(double rawValue)
     {
         _min = Math.Min(_min, rawValue);
         _max = Math.Max(_max, rawValue);
+        _sum += rawValue;
         _total += 1;
         
         var midpoint = Midpoint(_scale, rawValue);
@@ -61,5 +63,6 @@ public class ExponentialHistogram
     
     public double Min => _min;
     public double Max => _max;
+    public double Sum => _sum;
     public ulong Total => _total;
 }
