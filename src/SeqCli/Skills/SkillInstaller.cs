@@ -56,9 +56,11 @@ static class SkillInstaller
             var skillName = Path.GetFileName(skillSourceDirectory);
             var destination = Path.Combine(destinationPath, skillName);
 
-            Log.Information("Installing skill {SkillName} to destination path {SkillPath}", skillName, destinationPath);
+            Console.Write("Installing skill `{0}` to `{1}`...", skillName, destinationPath);
 
             CopyFilesRecursive(skillSourceDirectory, destination);
+            
+            Console.WriteLine(" Done.");
         }
     }
 

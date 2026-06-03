@@ -136,9 +136,13 @@ static class McpServerInstaller
             ["args"] = args,
         };
 
+        Console.Write("Installing MCP server to `{0}`...", path);
+        
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, root.ToString(Newtonsoft.Json.Formatting.Indented));
 
+        Console.WriteLine(" Done.");
+        
         Log.Information("Installed Seq MCP server for {Agent} to {Path}", agent, path);
     }
 
