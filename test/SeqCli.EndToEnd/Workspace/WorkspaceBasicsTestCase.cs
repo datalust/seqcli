@@ -21,14 +21,14 @@ class WorkspaceBasicsTestCase : ICliTestCase
         exit = runner.Exec("workspace list", "-t Example");
         Assert.Equal(0, exit);
 
-        var output = runner.LastRunProcess.Output;
+        var output = runner.LastRunProcess!.Output;
         Assert.Equal("", output.Trim());
 
         var items = "";
         var dashboard = (await connection.Dashboards.ListAsync(shared: true)).First();
         items += $" --content={dashboard.Id}";
 
-        var query = (await connection.SqlQueries.ListAsync(shared: true)).First();
+        var query = (await connection.Queries.ListAsync(shared: true)).First();
         items += $" --content={query.Id}";
 
         foreach (var signal in (await connection.Signals.ListAsync(shared: true)).Take(2))

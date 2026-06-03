@@ -102,19 +102,6 @@ sealed class OutputFormat
         return outputConfiguration.CreateLogger();
     }
 
-    public void WriteCsv(string csv)
-    {
-        if (_noColor )
-        {
-            Console.Write(csv);
-        }
-        else
-        {
-            var tokens = new CsvTokenizer().Tokenize(csv);
-            CsvWriter.WriteCsv(tokens, Theme, Console.Out, true);
-        }
-    }
-
     public void WriteEntity(Entity entity)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -210,8 +197,7 @@ sealed class OutputFormat
     {
         if (Json)
         {
-            // Some friendlier JSON output is definitely possible here
-            Console.WriteLine(JsonConvert.SerializeObject(result));
+            WriteObject(result);
         }
         else if (Native)
         {
@@ -219,7 +205,7 @@ sealed class OutputFormat
         }
         else
         {
-            throw new InvalidOperationException("Plain text formatting not supported for query results.");
+            CsvWriter.WriteQueryResult(result, Theme, Console.Out);
         }
     }
 

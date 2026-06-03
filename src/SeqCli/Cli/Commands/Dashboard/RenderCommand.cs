@@ -15,7 +15,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Signals;
 using SeqCli.Api;
@@ -158,20 +157,10 @@ class RenderCommand : Command
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         var output = _output.GetOutputFormat(config);
-        if (output.Json)
-        {
-            var result = await connection.Data.QueryAsync(q, signal: signal, timeout: timeout);
-
-            // Some friendlier JSON output is definitely possible here
-            Console.WriteLine(JsonConvert.SerializeObject(result));
-        }
-        else
-        {
-            var result = await connection.Data.QueryCsvAsync(q, signal: signal, timeout: timeout);
-            output.WriteCsv(result);
-        }
-
-        return 0;
+        var result = await connection.Data.TryQueryAsync(q, signal: signal, timeout: timeout);
+        output.WriteQueryResult(result);
+        
+        return string.IsNullOrWhiteSpace(result.Error) ? 0 : 1;
     }
 
     static string BuildSqlQuery(ChartQueryPart query, DateTime rangeStart, DateTime rangeEnd, TimeSpan? timeGrouping)

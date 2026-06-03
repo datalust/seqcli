@@ -17,7 +17,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using SeqCli.Cli;
-using SeqCli.Cli.Features;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Core;

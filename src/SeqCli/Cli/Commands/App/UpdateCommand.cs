@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;

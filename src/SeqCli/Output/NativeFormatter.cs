@@ -235,6 +235,11 @@ static partial class NativeFormatter
 
     public static void WriteQueryResult(TextWriter output, QueryResultPart result)
     {
+        if (!string.IsNullOrWhiteSpace(result.Error))
+        {
+            QueryResultHelper.WriteErrorResult(output, result);
+        }
+        
         var first = true;
         QueryResultHelper.Flatten(result, row =>
         {

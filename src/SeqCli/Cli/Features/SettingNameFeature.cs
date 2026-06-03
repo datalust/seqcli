@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using Seq.Api.Model.Settings;
 using SeqCli.Util;
-using Serilog;
 
 namespace SeqCli.Cli.Features;
 

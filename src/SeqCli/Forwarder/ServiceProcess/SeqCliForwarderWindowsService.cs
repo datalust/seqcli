@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using System.ServiceProcess;
 using SeqCli.Forwarder.Web.Host;
 

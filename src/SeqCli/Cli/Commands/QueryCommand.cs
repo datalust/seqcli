@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Seq.Api.Client;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -24,7 +22,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands;
 
-[Command("query", "Execute an SQL query and receive results in CSV format",
+[Command("query", "Execute a query and receive results in CSV, JSON, or native format",
     Example = "seqcli query -q \"select count(*) from stream group by @Level\" --start=\"2018-02-28T13:00Z\"")]
 class QueryCommand : Command
 {
@@ -39,7 +37,7 @@ class QueryCommand : Command
 
     public QueryCommand()
     {
-        Options.Add("q=|query=", "The query to execute", v => _query = v);
+        Options.Add("q=|query=", "The Seq query to execute", v => _query = v);
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
@@ -63,18 +61,9 @@ class QueryCommand : Command
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         var output = _output.GetOutputFormat(config);
-        if (output.Text)
-        {
-            // We can fold this into the `WriteQueryResult` case once that path supports themes.
-            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-            output.WriteCsv(result);
-        }
-        else
-        {
-            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-            output.WriteQueryResult(result);
-        }
+        var result = await connection.Data.TryQueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
+        output.WriteQueryResult(result);
         
-        return 0;
+        return string.IsNullOrWhiteSpace(result.Error) ? 0 : 1;
     }
 }
