@@ -9,6 +9,7 @@ using Seq.Api.Model;
 using Seq.Api.Model.Alerting;
 using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Indexing;
+using Seq.Api.Model.Metrics;
 using Seq.Api.Model.Retention;
 using Seq.Api.Model.Signals;
 using Seq.Api.Model.Queries;
@@ -86,6 +87,12 @@ class TemplateSetExporter
             expressionIndex => expressionIndex.Expression.All(char.IsLetterOrDigit) 
                 ? expressionIndex.Expression 
                 : expressionIndex.Id.Replace("expressionindex-", ""),
+            templateValueMap);
+        
+        await ExportTemplates<ViewEntity>(
+            id => _connection.Views.FindAsync(id),
+            () => _connection.Views.ListAsync(shared: true),
+            view => view.Title,
             templateValueMap);
     }
 

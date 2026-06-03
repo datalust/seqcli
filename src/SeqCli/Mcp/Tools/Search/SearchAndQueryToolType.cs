@@ -30,7 +30,6 @@ using Seq.Api.Model.Expressions;
 using Seq.Api.Model.Signals;
 using Seq.Syntax.Templates;
 using SeqCli.Mapping;
-using SeqCli.Mcp.Data;
 using SeqCli.Output;
 using SeqCli.Signals;
 using Serilog;
@@ -278,10 +277,14 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
                                     "To avoid consuming excessive resources, add a time bound such as `where @Timestamp >= now() - 1d`.", isError: true);
         }
 
+        SignalExpressionPart? parsedSignalExpression = null;
+        if (!string.IsNullOrWhiteSpace(signal))
+            parsedSignalExpression = SignalExpressionParser.ParseExpression(signal);
+        
         QueryResultPart result;
         try
         {
-            result = await DataResourceGroupHelper.QueryPreserveErrorResponsesAsync(connection, signal, query, cancellationToken);
+            result = await connection.Data.TryQueryAsync(query, signal: parsedSignalExpression, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -291,35 +294,12 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
             }
             
             var error = ex.GetBaseException() is SeqApiException ? ex.GetBaseException().Message : ex.ToString();
-            return SimpleTextResult($"The search failed. {error}", isError: true);
+            return SimpleTextResult($"The query failed. {error}", isError: true);
         }
-
-        if (result.Error != null)
-        {
-            return new CallToolResult
-            {
-                IsError = true,
-                Content =
-                [
-                    new TextContentBlock
-                    {
-                        Text = $"The query could not be executed. {result.Error}"
-                    },
-                    new TextContentBlock
-                    {
-                        Text = string.Join(" ", result.Reasons)
-                    },
-                    new TextContentBlock
-                    {
-                        Text = result.Suggestion != null ? $"Did you mean: {result.Suggestion}?" : ""
-                    }
-                ]
-            };
-        }
-
+        
         var output = new StringWriter();
         NativeFormatter.WriteQueryResult(output, result);
-        return SimpleTextResult(output.ToString());
+        return SimpleTextResult(output.ToString(), isError: !string.IsNullOrWhiteSpace(result.Error));
     }
     
     [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
