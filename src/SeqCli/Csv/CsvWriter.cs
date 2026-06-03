@@ -21,51 +21,29 @@ static class CsvWriter
         var first = true;
         QueryResultHelper.Flatten(result, row =>
         {
-            if (first)
+            var firstCol = true;
+            foreach (var value in row)
             {
-                first = false;
-                var firstCol = true;
-                foreach (var heading in row)
-                {
-                    if (firstCol)
-                    {
-                        firstCol = false;
-                    }
-                    else
-                    {
-                        theme.Set(output, ConsoleThemeStyle.TertiaryText);
-                        output.Write(',');
-                        theme.Reset(output);
-                    }
-
-                    WriteCell(output, theme, heading, isHeadingRow: true);
-                }
+                WriteCell(output, theme, value, ref firstCol, isHeadingRow: first);
             }
-            else
-            {
-                var firstCol = true;
-                foreach (var value in row)
-                {
-                    if (firstCol)
-                    {
-                        firstCol = false;
-                    }
-                    else
-                    {
-                        theme.Set(output, ConsoleThemeStyle.TertiaryText);
-                        output.Write(',');
-                        theme.Reset(output);
-                    }
-                    
-                    WriteCell(output, theme, value);
-                }
-            }
+            first = false;
             output.WriteLine();
         });
     }
 
-    static void WriteCell(TextWriter output, ConsoleTheme theme, object? value, bool isHeadingRow = false)
+    static void WriteCell(TextWriter output, ConsoleTheme theme, object? value, ref bool firstCol, bool isHeadingRow = false)
     {
+        if (firstCol)
+        {
+            firstCol = false;
+        }
+        else
+        {
+            theme.Set(output, ConsoleThemeStyle.TertiaryText);
+            output.Write(',');
+            theme.Reset(output);
+        }
+        
         theme.Set(output, ConsoleThemeStyle.TertiaryText);
         output.Write('"');
         theme.Reset(output);
