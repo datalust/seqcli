@@ -60,14 +60,76 @@ public class McpInstallTestCase : ICliTestCase
         Assert.Contains("\"seq\"", qwenConfig);
         Assert.False(File.Exists(Path.Combine(tmp.Path, ".qwen/mcp.json")));
 
-        // VS Code has no supported user-global merge target.
-        var vscodeGlobalExit = runner.Exec("mcp install -a vscode --global", disconnected: true, workingDirectory: tmp.Path);
-        Assert.Equal(1, vscodeGlobalExit);
+        // VS Code nests servers under a `servers` key in `.vscode/mcp.json`.
+        var vscodeExit = runner.Exec("mcp install -a vscode", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(0, vscodeExit);
 
-        var vscodeGlobalOutput = runner.LastRunProcess!.Output;
-        Assert.Contains("VS Code stores user-level MCP servers", vscodeGlobalOutput);
-        Assert.Contains("seqcli mcp install --agent vscode", vscodeGlobalOutput);
-        Assert.DoesNotContain("NotSupportedException", vscodeGlobalOutput);
+        var vscodeConfig = File.ReadAllText(Path.Combine(tmp.Path, ".vscode/mcp.json"));
+        Assert.Contains("\"servers\"", vscodeConfig);
+        Assert.Contains("\"seq\"", vscodeConfig);
+
+        // Gemini CLI reads `mcpServers` from `.gemini/settings.json`, not an `mcp.json`.
+        var geminiExit = runner.Exec("mcp install -a gemini", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(0, geminiExit);
+
+        var geminiConfig = File.ReadAllText(Path.Combine(tmp.Path, ".gemini/settings.json"));
+        Assert.Contains("\"mcpServers\"", geminiConfig);
+        Assert.Contains("\"seq\"", geminiConfig);
+        Assert.False(File.Exists(Path.Combine(tmp.Path, ".gemini/mcp.json")));
+
+        // Zed embeds servers under `context_servers` in `.zed/settings.json`.
+        var zedExit = runner.Exec("mcp install -a zed", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(0, zedExit);
+
+        var zedConfig = File.ReadAllText(Path.Combine(tmp.Path, ".zed/settings.json"));
+        Assert.Contains("\"context_servers\"", zedConfig);
+        Assert.Contains("\"seq\"", zedConfig);
+
+        // Amazon Q Developer CLI reads a project `.amazonq/mcp.json`.
+        var amazonqExit = runner.Exec("mcp install -a amazonq", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(0, amazonqExit);
+
+        var amazonqConfig = File.ReadAllText(Path.Combine(tmp.Path, ".amazonq/mcp.json"));
+        Assert.Contains("\"mcpServers\"", amazonqConfig);
+        Assert.Contains("\"seq\"", amazonqConfig);
+
+        // Roo Code reads a project `.roo/mcp.json`...
+        var rooExit = runner.Exec("mcp install -a roo", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(0, rooExit);
+        Assert.True(File.Exists(Path.Combine(tmp.Path, ".roo/mcp.json")));
+
+        // ...but has no writable user-global target, so `--global` reports a clean error
+        // (and never leaks the exception type into the output).
+        var rooGlobalExit = runner.Exec("mcp install -a roo --global", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(1, rooGlobalExit);
+
+        var rooGlobalOutput = runner.LastRunProcess!.Output;
+        Assert.Contains("extension storage", rooGlobalOutput);
+        Assert.DoesNotContain("NotSupportedException", rooGlobalOutput);
+
+        // Windsurf is user-global only; a project install is rejected rather than writing
+        // an ignored `.windsurf/mcp.json`.
+        var windsurfExit = runner.Exec("mcp install -a windsurf", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(1, windsurfExit);
+        Assert.Contains("--global", runner.LastRunProcess!.Output);
+        Assert.False(File.Exists(Path.Combine(tmp.Path, ".windsurf/mcp.json")));
+
+        // Codex/Goose/Continue use TOML/YAML config seqcli can't edit; instead of writing
+        // an ignored JSON file, the command prints a copy-paste snippet and fails.
+        var codexExit = runner.Exec("mcp install -a codex", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(1, codexExit);
+        Assert.Contains("config.toml", runner.LastRunProcess!.Output);
+        Assert.False(Directory.Exists(Path.Combine(tmp.Path, ".codex")));
+
+        var gooseExit = runner.Exec("mcp install -a goose", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(1, gooseExit);
+        Assert.Contains("config.yaml", runner.LastRunProcess!.Output);
+        Assert.False(Directory.Exists(Path.Combine(tmp.Path, ".goose")));
+
+        var continueExit = runner.Exec("mcp install -a continue", disconnected: true, workingDirectory: tmp.Path);
+        Assert.Equal(1, continueExit);
+        Assert.Contains("YAML", runner.LastRunProcess!.Output);
+        Assert.False(File.Exists(Path.Combine(tmp.Path, ".continue/mcp.json")));
 
         return Task.CompletedTask;
     }

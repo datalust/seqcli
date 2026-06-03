@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Serilog;
 
@@ -20,14 +21,31 @@ namespace SeqCli.Skills;
 
 static class SkillInstaller
 {
+    static readonly IReadOnlyDictionary<string, SkillTarget> KnownAgents =
+        new Dictionary<string, SkillTarget>
+        {
+            ["copilot"] = new(global => global
+                ? Path.Combine(UserProfile, ".copilot", "skills")
+                : Path.Combine(Environment.CurrentDirectory, ".github", "skills")),
+        };
+
+    static readonly IReadOnlyDictionary<string, string> AgentAliases =
+        new Dictionary<string, string>
+        {
+            ["goose"] = "agents",
+            ["github"] = "copilot",
+            ["codex"] = "agents"
+        };
+
     public static void Install(string? agent, bool global)
     {
         agent ??= "agents";
 
-        var destinationPath = Path.Combine(
-            global ? UserProfile : Environment.CurrentDirectory,
-            $".{agent}",
-            "skills");
+        if (AgentAliases.TryGetValue(agent, out var alias))
+            agent = alias;
+
+        var target = KnownAgents.TryGetValue(agent, out var known) ? known : Convention(agent);
+        var destinationPath = target.ResolveSkillsDirectory(global);
 
         Log.Information("Installing skills to {SkillsPath}", destinationPath);
 
@@ -38,11 +56,19 @@ static class SkillInstaller
             var skillName = Path.GetFileName(skillSourceDirectory);
             var destination = Path.Combine(destinationPath, skillName);
 
-            Log.Information("Installing skill {SkillName} to destination path {SkillPath}", skillName, destinationPath);
+            Console.Write("Installing skill `{0}` to `{1}`...", skillName, destinationPath);
 
             CopyFilesRecursive(skillSourceDirectory, destination);
+            
+            Console.WriteLine(" Done.");
         }
     }
+
+    static SkillTarget Convention(string agent) =>
+        new(global => Path.Combine(
+            global ? UserProfile : Environment.CurrentDirectory,
+            $".{agent}",
+            "skills"));
 
     static string UserProfile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
@@ -60,4 +86,6 @@ static class SkillInstaller
             CopyFilesRecursive(directory, Path.Combine(destination, Path.GetFileName(directory)));
         }
     }
+
+    sealed record SkillTarget(Func<bool, string> ResolveSkillsDirectory);
 }

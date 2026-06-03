@@ -29,9 +29,9 @@ class InstallCommand : Command
     {
         Options.Add(
             "g|global",
-            "Install skills globally, to `~/.{agent}/skills`; the default is to install locally, in `./{agent}/skills`",
+            "Install skills to the agent's user-level directory (e.g. `~/.{agent}/skills`); the default is to install locally, in `./.{agent}/skills`",
             _ => _global = true);
-        
+
         Options.Add(
             "a=|agent=",
             "The agent name to install skills for; the default is the generic name `agents`",
