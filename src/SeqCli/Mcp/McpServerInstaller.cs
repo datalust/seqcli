@@ -26,9 +26,11 @@ static class McpServerInstaller
 
     // Agents whose MCP config location or shape diverges from the common
     // `.{agent}/mcp.json` + `mcpServers` convention. Anything not listed here -
-    // including the default `agents` name and any unknown agent - uses the
-    // convention (see `Convention`), so adding support for a conformant agent
-    // requires no change at all, and a divergent one is a single entry here.
+    // including the default `agents` name, Cursor, and any unknown agent - uses
+    // the convention (see `Convention`), so adding support for a conformant agent
+    // requires no change at all, and a divergent one is a single entry here. Agents
+    // whose config is a format we can't safely edit (TOML/YAML) are listed via
+    // `Unsupported` so the user gets a copy-paste snippet instead of an ignored file.
     static readonly IReadOnlyDictionary<string, AgentTarget> KnownAgents =
         new Dictionary<string, AgentTarget>
         {
@@ -40,20 +42,22 @@ static class McpServerInstaller
                     : Path.Combine(Environment.CurrentDirectory, ".mcp.json"),
                 "mcpServers"),
 
-            // Windsurf keeps a single user-global config under `~/.codeium`.
+            // Windsurf only reads a single user-global config under `~/.codeium`; it has
+            // no project-level MCP file, so a project install would be silently ignored.
             ["windsurf"] = new(
                 global => global
                     ? Path.Combine(UserProfile, ".codeium", "windsurf", "mcp_config.json")
-                    : Path.Combine(Environment.CurrentDirectory, ".windsurf", "mcp.json"),
+                    : throw new NotSupportedException(
+                        "Windsurf only supports a user-global MCP config; re-run with `--global` (seqcli mcp install --global --agent windsurf)."),
                 "mcpServers"),
 
             // VS Code nests servers under a `servers` key. Project config lives in
-            // `.vscode/mcp.json`; the user-global equivalent lives inside `settings.json`,
-            // which is a different merge target and isn't supported here yet.
+            // `.vscode/mcp.json`; the user-global equivalent is a `mcp.json` in the
+            // VS Code user directory (`%APPDATA%\Code\User` on Windows, `~/Library/
+            // Application Support/Code/User` on macOS, `$XDG_CONFIG_HOME/Code/User` otherwise).
             ["vscode"] = new(
                 global => global
-                    ? throw new NotSupportedException(
-                        "VS Code stores user-level MCP servers in settings.json; install into a project with `seqcli mcp install --agent vscode` instead.")
+                    ? Path.Combine(VsCodeUserDir, "mcp.json")
                     : Path.Combine(Environment.CurrentDirectory, ".vscode", "mcp.json"),
                 "servers"),
 
@@ -65,6 +69,51 @@ static class McpServerInstaller
                     ".qwen",
                     "settings.json"),
                 "mcpServers"),
+
+            // Gemini CLI mirrors Qwen Code: `mcpServers` inside `settings.json` under `.gemini`.
+            ["gemini"] = new(
+                global => Path.Combine(
+                    global ? UserProfile : Environment.CurrentDirectory,
+                    ".gemini",
+                    "settings.json"),
+                "mcpServers"),
+
+            // Zed embeds servers in its `settings.json` under a `context_servers` key
+            // (project `.zed/settings.json`; user-global `$XDG_CONFIG_HOME/zed/settings.json`).
+            ["zed"] = new(
+                global => global
+                    ? Path.Combine(XdgConfigHome, "zed", "settings.json")
+                    : Path.Combine(Environment.CurrentDirectory, ".zed", "settings.json"),
+                "context_servers"),
+
+            // Amazon Q Developer CLI uses a standalone `mcp.json`: `.amazonq` per-project,
+            // but `~/.aws/amazonq` for the user-global file.
+            ["amazonq"] = new(
+                global => global
+                    ? Path.Combine(UserProfile, ".aws", "amazonq", "mcp.json")
+                    : Path.Combine(Environment.CurrentDirectory, ".amazonq", "mcp.json"),
+                "mcpServers"),
+
+            // Roo Code reads a project `.roo/mcp.json`; its user-global store lives in
+            // VS Code extension storage, whose path is publisher/platform-specific.
+            ["roo"] = new(
+                global => global
+                    ? throw new NotSupportedException(
+                        "Roo Code stores user-global MCP servers in VS Code extension storage; install into a project instead (seqcli mcp install --agent roo).")
+                    : Path.Combine(Environment.CurrentDirectory, ".roo", "mcp.json"),
+                "mcpServers"),
+
+            // Codex, Goose, and Continue store MCP config in TOML/YAML that seqcli can't
+            // safely edit, so we print the exact config to add by hand rather than writing
+            // a JSON file the agent would ignore.
+            ["codex"] = Unsupported(
+                "Codex reads MCP servers from ~/.codex/config.toml (TOML), which seqcli can't edit automatically. Add this block:\n\n[mcp_servers.seq]\ncommand = \"seqcli\"\nargs = [\"mcp\", \"run\"]"),
+
+            ["goose"] = Unsupported(
+                "Goose reads MCP servers from ~/.config/goose/config.yaml (YAML) under `extensions`, which seqcli can't edit automatically. Add:\n\nextensions:\n  seq:\n    type: stdio\n    cmd: seqcli\n    args: [mcp, run]\n    enabled: true"),
+
+            ["continue"] = Unsupported(
+                "Continue reads MCP servers from YAML, which seqcli can't edit automatically. Create .continue/mcpServers/seq.yaml with:\n\nname: Seq\nversion: 0.0.1\nschema: v1\nmcpServers:\n  - name: seq\n    command: seqcli\n    args:\n      - mcp\n      - run"),
         };
 
     public static void Install(string? agent, bool global, string? profileName = null)
@@ -104,6 +153,11 @@ static class McpServerInstaller
         Log.Information("Installed Seq MCP server for {Agent} to {Path}", agent, path);
     }
 
+    // For agents whose config format we can't write, resolving any path throws with a
+    // copy-paste snippet; the command runner turns this into a clean exit-1 message.
+    static AgentTarget Unsupported(string message) =>
+        new(_ => throw new NotSupportedException(message), "mcpServers");
+
     static AgentTarget Convention(string agent) =>
         new(
             global => Path.Combine(
@@ -113,6 +167,19 @@ static class McpServerInstaller
             "mcpServers");
 
     static string UserProfile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+    static string XdgConfigHome =>
+        Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") is { Length: > 0 } configHome
+            ? configHome
+            : Path.Combine(UserProfile, ".config");
+
+    // VS Code keeps per-user data in an OS-specific directory.
+    static string VsCodeUserDir =>
+        OperatingSystem.IsWindows()
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Code", "User")
+            : OperatingSystem.IsMacOS()
+                ? Path.Combine(UserProfile, "Library", "Application Support", "Code", "User")
+                : Path.Combine(XdgConfigHome, "Code", "User");
 
     sealed record AgentTarget(Func<bool, string> ResolvePath, string ServerMapKey);
 }
