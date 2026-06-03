@@ -21,41 +21,28 @@ namespace SeqCli.Skills;
 
 static class SkillInstaller
 {
-    // Agents whose skills directory diverges from the common `.{agent}/skills` convention.
-    // Anything not listed here - including the default `agents` name, Claude Code, Gemini CLI,
-    // Cursor, Junie, Kiro, and any unknown agent - uses the convention (see `Convention`), so
-    // a conformant agent requires no change at all and a divergent one is a single entry here.
     static readonly IReadOnlyDictionary<string, SkillTarget> KnownAgents =
         new Dictionary<string, SkillTarget>
         {
-            // Codex reads skills only from `.agents/skills` (repo) and `~/.agents/skills`
-            // (user); it has no `.codex` skills dir, so route both scopes to the portable alias.
-            ["codex"] = new(global => Path.Combine(
-                global ? UserProfile : Environment.CurrentDirectory,
-                ".agents",
-                "skills")),
-
-            // GitHub Copilot / VS Code read workspace skills from `.github/skills`, but the
-            // user-global personal skills dir is `~/.copilot/skills` - the namespace differs by scope.
             ["copilot"] = new(global => global
                 ? Path.Combine(UserProfile, ".copilot", "skills")
                 : Path.Combine(Environment.CurrentDirectory, ".github", "skills")),
+        };
 
-            // `github` is the workspace dir name a user may reach for; same targets as copilot.
-            ["github"] = new(global => global
-                ? Path.Combine(UserProfile, ".copilot", "skills")
-                : Path.Combine(Environment.CurrentDirectory, ".github", "skills")),
-
-            // Goose reads a project `.goose/skills`, but its user-global skills live under the
-            // portable `~/.agents/skills` (not `~/.goose`).
-            ["goose"] = new(global => global
-                ? Path.Combine(UserProfile, ".agents", "skills")
-                : Path.Combine(Environment.CurrentDirectory, ".goose", "skills")),
+    static readonly IReadOnlyDictionary<string, string> AgentAliases =
+        new Dictionary<string, string>
+        {
+            ["goose"] = "agents",
+            ["github"] = "copilot",
+            ["codex"] = "agents"
         };
 
     public static void Install(string? agent, bool global)
     {
         agent ??= "agents";
+
+        if (AgentAliases.TryGetValue(agent, out var alias))
+            agent = alias;
 
         var target = KnownAgents.TryGetValue(agent, out var known) ? known : Convention(agent);
         var destinationPath = target.ResolveSkillsDirectory(global);

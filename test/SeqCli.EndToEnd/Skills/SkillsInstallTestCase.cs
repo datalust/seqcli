@@ -1,5 +1,6 @@
 using System.IO;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
@@ -18,8 +19,7 @@ public class SkillsInstallTestCase : ICliTestCase
         Assert.Equal(0, exit);
         Assert.True(File.Exists(Path.Combine(tmp.Path, ".test-agent/skills/seq-search-and-query/SKILL.md")));
 
-        // Conformant agents stay on the convention: Claude Code reads `.claude/skills`, and it
-        // refuses the portable `.agents` alias, so it must keep its own namespace.
+        // Claude Code reads `.claude/skills`, and refuses the portable `.agents` alias, so it must keep its own namespace.
         var claudeExit = runner.Exec("skills install -a claude", disconnected: true, workingDirectory: tmp.Path);
         Assert.Equal(0, claudeExit);
         Assert.True(File.Exists(Path.Combine(tmp.Path, ".claude/skills/seq-search-and-query/SKILL.md")));
@@ -41,10 +41,10 @@ public class SkillsInstallTestCase : ICliTestCase
         Assert.Equal(0, githubExit);
         Assert.True(File.Exists(Path.Combine(tmp.Path, ".github/skills/seq-search-and-query/SKILL.md")));
 
-        // Goose reads a project `.goose/skills`.
+        // Goose uses the `agents` convention.
         var gooseExit = runner.Exec("skills install -a goose", disconnected: true, workingDirectory: tmp.Path);
         Assert.Equal(0, gooseExit);
-        Assert.True(File.Exists(Path.Combine(tmp.Path, ".goose/skills/seq-search-and-query/SKILL.md")));
+        Assert.True(File.Exists(Path.Combine(tmp.Path, ".agents/skills/seq-search-and-query/SKILL.md")));
 
         return Task.CompletedTask;
     }
