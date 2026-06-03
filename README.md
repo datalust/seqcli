@@ -58,6 +58,28 @@ $token = (
 )
 ```
 
+### MCP and agent skills <sup>(preview)</sup>
+
+The 2026.1 preview improves support for agent-driven diagnostics workflows:
+
+```
+dotnet tool install -g seqcli --prerelease
+```
+
+For skill installation:
+
+```
+seqcli skills install -a <agent> [--global]
+```
+
+For local MCP server installation:
+
+```
+seqcli mcp install -a <agent> [--global]
+```
+
+Credentials are set using configuration and environment variables as described above.
+
 ## Contributing
 
 See `CONTRIBUTING.md`.
