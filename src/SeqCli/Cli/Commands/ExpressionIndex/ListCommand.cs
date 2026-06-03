@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;

@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Threading.Tasks;
 using Seq.Apps;
 using Serilog;

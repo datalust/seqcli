@@ -14,12 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Seq.Api.Model.Data;
 
 namespace SeqCli.Mcp.Data;
 
-public static class QueryResultHelper
+static class QueryResultHelper
 {
     /// <summary>
     /// Convert <paramref name="result"/> into a flat table. Seq reduces browser-side processing and optimizes
@@ -100,6 +101,27 @@ public static class QueryResultHelper
         for (; i < columns.Length; ++i)
         {
             yield return columns[i];
+        }
+    }
+
+    public static void WriteErrorResult(TextWriter output, QueryResultPart result)
+    {
+        output.WriteLine(result.Error);
+        output.WriteLine();
+            
+        foreach (var reason in result.Reasons)
+        {
+            output.WriteLine($" - {reason}");
+        }
+            
+        if (result.Reasons.Length > 0)
+            output.WriteLine();
+
+        if (!string.IsNullOrWhiteSpace(result.Suggestion))
+        {
+            output.WriteLine("Perhaps you meant:");
+            output.WriteLine();
+            output.WriteLine(result.Suggestion);
         }
     }
 }

@@ -9,9 +9,10 @@ using Seq.Api.Model;
 using Seq.Api.Model.Alerting;
 using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Indexing;
+using Seq.Api.Model.Metrics;
 using Seq.Api.Model.Retention;
 using Seq.Api.Model.Signals;
-using Seq.Api.Model.SqlQueries;
+using Seq.Api.Model.Queries;
 using Seq.Api.Model.Workspaces;
 using Serilog;
 
@@ -35,7 +36,7 @@ class TemplateSetExporter
         var templateValueMap = new TemplateValueMap();
         templateValueMap.MapNonNullAsArg<DashboardEntity>(nameof(DashboardEntity.OwnerId), "ownerId");
         templateValueMap.MapNonNullAsArg<SignalEntity>(nameof(SignalEntity.OwnerId), "ownerId");
-        templateValueMap.MapNonNullAsArg<SqlQueryEntity>(nameof(SqlQueryEntity.OwnerId), "ownerId");
+        templateValueMap.MapNonNullAsArg<QueryEntity>(nameof(QueryEntity.OwnerId), "ownerId");
         templateValueMap.MapNonNullAsArg<WorkspaceEntity>(nameof(WorkspaceEntity.OwnerId), "ownerId");
         templateValueMap.MapNonNullAsArg<NotificationChannelPart>(nameof(NotificationChannelPart.NotificationAppInstanceId), "notificationAppInstanceId");
         templateValueMap.MapAsReference<SignalExpressionPart>(nameof(SignalExpressionPart.SignalId));
@@ -50,9 +51,9 @@ class TemplateSetExporter
             signal => signal.Title,
             templateValueMap);
             
-        await ExportTemplates<SqlQueryEntity>(
-            id => _connection.SqlQueries.FindAsync(id),
-            () => _connection.SqlQueries.ListAsync(shared: true),
+        await ExportTemplates<QueryEntity>(
+            id => _connection.Queries.FindAsync(id),
+            () => _connection.Queries.ListAsync(shared: true),
             query => query.Title,
             templateValueMap);
             
@@ -87,6 +88,12 @@ class TemplateSetExporter
                 ? expressionIndex.Expression 
                 : expressionIndex.Id.Replace("expressionindex-", ""),
             templateValueMap);
+        
+        await ExportTemplates<ViewEntity>(
+            id => _connection.Views.FindAsync(id),
+            () => _connection.Views.ListAsync(shared: true),
+            view => view.Title,
+            templateValueMap);
     }
 
     async Task ExportTemplates<TEntity>(
@@ -97,7 +104,7 @@ class TemplateSetExporter
         where TEntity : Entity
     {
         List<TEntity> entities;
-        if (!_include.Any())
+        if (_include.Count == 0)
         {
             entities = await listEntities();
         }
