@@ -59,12 +59,6 @@ class DimensionsCommand : Command
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(_metric))
-            {
-                Log.Error("A `--metric` must be specified");
-                return 1;
-            }
-            
             var config = RuntimeConfigurationLoader.Load(_storagePath);
             var output = _output.GetOutputFormat(config);
             var connection = SeqConnectionFactory.Connect(_connection, config);

@@ -156,7 +156,9 @@ sealed class OutputFormat
                 }
             });
             
-            var jo = value is ICollection and not IDictionary ? (JToken)JArray.FromObject(value, settings) : JObject.FromObject(value, settings);
+            var jo = value is ICollection and not (IDictionary or JToken) ?
+                (JToken)JArray.FromObject(value, settings) :
+                JObject.FromObject(value, settings);
 
             // Using the same method of JSON colorization as above
 
