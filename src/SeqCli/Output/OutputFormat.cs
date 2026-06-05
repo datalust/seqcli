@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -146,14 +147,16 @@ sealed class OutputFormat
             
         if (Json)
         {
-            var jo = JObject.FromObject(
-                value,
-                JsonSerializer.CreateDefault(new JsonSerializerSettings {
-                    DateParseHandling = DateParseHandling.None,
-                    Converters = {
-                        new StringEnumConverter()
-                    }
-                }));
+            var settings = JsonSerializer.CreateDefault(new JsonSerializerSettings
+            {
+                DateParseHandling = DateParseHandling.None,
+                Converters =
+                {
+                    new StringEnumConverter()
+                }
+            });
+            
+            var jo = value is ICollection and not IDictionary ? (JToken)JArray.FromObject(value, settings) : JObject.FromObject(value, settings);
 
             // Using the same method of JSON colorization as above
 

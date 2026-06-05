@@ -27,7 +27,7 @@ using Serilog;
 namespace SeqCli.Cli.Commands.Metrics;
 
 [Command("metrics", "search", "List available metric definitions",
-    Example = "seqcli metrics search -f \"@Resource.service.name = 'proxy'\" -c 100")]
+    Example = "seqcli metrics search -f \"@Resource.service.name = 'proxy'\" -c 512")]
 class SearchCommand : Command
 {
     readonly ConnectionFeature _connection;
@@ -36,7 +36,7 @@ class SearchCommand : Command
     readonly StoragePathFeature _storagePath;
     string? _filter;
     readonly List<string> _groups = [];
-    int _count = 1;
+    int _count = 30;
     bool _trace;
 
     public SearchCommand()
@@ -94,7 +94,7 @@ class SearchCommand : Command
             {
                 var row = new List<object?>
                 {
-                    metric.Accessor,
+                    metric.Name ?? metric.Accessor,
                     metric.Kind,
                     metric.Unit,
                     metric.Description
@@ -107,7 +107,7 @@ class SearchCommand : Command
             }
             var asRowset = new QueryResultPart
             {
-                Columns = new[] { "Accessor", "Kind", "Unit", "Description" }.Concat(_groups).ToArray(),
+                Columns = new[] { "Name", "Kind", "Unit", "Description" }.Concat(_groups).ToArray(),
                 Rows = rows.ToArray()
             };
             
