@@ -172,11 +172,12 @@ sealed class OutputFormat
         }
         else if (Text)
         {
-            Console.WriteLine(value.ToString());
+            Console.WriteLine(Stringify(value));
         }
         else
         {
-            throw new InvalidOperationException("Native formatting not supported for raw objects.");
+            NativeFormatter.WriteValue(Console.Out, value);
+            Console.WriteLine();
         }
     }
 
@@ -208,7 +209,7 @@ sealed class OutputFormat
         }
         else
         {
-            CsvWriter.WriteQueryResult(result, Theme, Console.Out);
+            CsvWriter.WriteQueryResult(result, Stringify, Theme, Console.Out);
         }
     }
 
@@ -296,5 +297,23 @@ sealed class OutputFormat
             default:
                 return new ScalarValue(value);
         }
+    }
+    
+    static string Stringify(object? value)
+    {
+        return value switch
+        {
+            null => "null",
+            true => "true",
+            false => "false",
+            decimal
+                or double or float or Half
+                or byte or ushort or uint or ulong or UInt128 or
+                sbyte or short or int or long
+                or Int128 => ((IFormattable)value).ToString(null, CultureInfo.InvariantCulture),
+            DateTime dt => dt.ToString("o"),
+            DateTimeOffset dto => dto.ToString("o"),
+            _ => value.ToString() ?? ""
+        };
     }
 }

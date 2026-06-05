@@ -22,7 +22,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.Metrics;
 
-[Command("metrics", "dimensions", "List the dimensions that apply to a given metric",
+[Command("metrics", "dimensions", "List the dimensions associated with a given metric",
     Example = "seqcli metrics dimensions -m http.response.status_code")]
 class DimensionsCommand : Command
 {
@@ -59,6 +59,12 @@ class DimensionsCommand : Command
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(_metric))
+            {
+                Log.Error("A `--metric` must be specified");
+                return 1;
+            }
+            
             var config = RuntimeConfigurationLoader.Load(_storagePath);
             var output = _output.GetOutputFormat(config);
             var connection = SeqConnectionFactory.Connect(_connection, config);
