@@ -58,7 +58,7 @@ class RenderCommand : Command
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable<OutputFormatFeature>();
+        _output = Enable(new OutputFormatFeature(supportNative: true));
         _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
@@ -191,7 +191,7 @@ class RenderCommand : Command
 
     static SignalExpressionPart? Intersect(params SignalExpressionPart?[] expressions)
     {
-        var result = (SignalExpressionPart?) null;
+        SignalExpressionPart? result = null;
 
         foreach (var s in expressions)
         {
