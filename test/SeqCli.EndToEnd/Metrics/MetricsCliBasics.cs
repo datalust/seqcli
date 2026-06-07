@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
@@ -19,9 +17,9 @@ class MetricsCliBasics: ICliTestCase
 {
     public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
     {
-        await IngestClef(connection, "'a': 1, 'b': 2, '@d': {'a': {'kind': 'Sum', 'description': 'xyz'}}");
-        await IngestClef(connection, "'a': 1, 'c': 3, 'd': 4, '@d': {'a': {'kind': 'Sum','description': 'xyz'}}");
-        await IngestClef(connection, "'a': 1, 'b': 5, 'e': 6, '@d': {'a': {'kind': 'Sum','description': 'xyz'}, 'e': {'kind': 'Sum', 'description': 'ghi'}}");
+        await DirectIngestion.IngestClef(connection, "'a': 1, 'b': 2, '@d': {'a': {'kind': 'Sum', 'description': 'xyz'}}");
+        await DirectIngestion.IngestClef(connection, "'a': 1, 'c': 3, 'd': 4, '@d': {'a': {'kind': 'Sum','description': 'xyz'}}");
+        await DirectIngestion.IngestClef(connection, "'a': 1, 'b': 5, 'e': 6, '@d': {'a': {'kind': 'Sum','description': 'xyz'}, 'e': {'kind': 'Sum', 'description': 'ghi'}}");
         
         Assert.Equal(2, SearchResultLines(runner).Count());
         Assert.Equal(4, SearchResultLines(runner, groups: ["b"]).Count());
@@ -61,14 +59,5 @@ class MetricsCliBasics: ICliTestCase
                 yield return line!;
             }
         }
-    }
-
-    static async Task IngestClef(SeqConnection connection, string fields)
-    {
-        var prefix = $"{{\"@t\":\"{DateTime.UtcNow:o}\",";
-        const string suffix = "}";
-        var content = new StringContent($"{prefix}{fields.Replace("'", "\"")}{suffix}");
-        var response = await connection.Client.HttpClient.PostAsync("ingest/clef", content);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 }
