@@ -20,7 +20,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.Forwarder;
 
-[Command("forwarder", "truncate", "Empty the forwarder's persistent log buffer", Visibility = FeatureVisibility.Preview)]
+[Command("forwarder", "truncate", "Empty the forwarder's persistent log buffer")]
 class TruncateCommand : Command
 {
     readonly StoragePathFeature _storagePath;
