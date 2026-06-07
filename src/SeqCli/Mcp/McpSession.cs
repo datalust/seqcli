@@ -25,6 +25,8 @@ namespace SeqCli.Mcp;
 
 class McpSession
 {
+    public TimeSpan DataToolCallTimeout { get; } = TimeSpan.FromSeconds(45);
+    
     readonly Lock _sync = new();
     int _nextId = 1;
     readonly Dictionary<int, string> _resultIdToEventId = new();

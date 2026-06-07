@@ -21,7 +21,10 @@ using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Mcp;
+using SeqCli.Mcp.Tools.Metrics;
+using SeqCli.Mcp.Tools.Query;
 using SeqCli.Mcp.Tools.Search;
+using SeqCli.Mcp.Tools.Signals;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Mcp;
@@ -66,7 +69,10 @@ class RunCommand: Command
                 .AddMcpServer()
                 .WithStdioServerTransport()
                 .WithTools([
-                    typeof(SearchAndQueryToolType)
+                    typeof(SearchTools),
+                    typeof(MetricsTools),
+                    typeof(QueryTools),
+                    typeof(SignalTools)
                 ]);
 
             await builder.Build().RunAsync();

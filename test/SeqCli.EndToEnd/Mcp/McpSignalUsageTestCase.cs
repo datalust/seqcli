@@ -12,6 +12,7 @@ namespace SeqCli.EndToEnd.Mcp;
 // ReSharper disable once UnusedType.Global
 public class McpSignalUsageTestCase : McpToolTestCase
 {
+    // ReSharper disable once NotAccessedPositionalProperty.Local
     record SignalSummary(string Id, string Title);
 
     // Default signals included in every Seq installation.
@@ -56,7 +57,7 @@ public class McpSignalUsageTestCase : McpToolTestCase
     static async Task<int> CountSearchResultsAsync(McpClient client, string predicate, string signal)
     {
         var searchResult = AssertTextResult(await client.CallToolAsync(
-            "seq_search",
+            "seq_search_events",
             new Dictionary<string, object> { ["limit"] = 10, ["predicate"] = predicate, ["signal"] = signal }));
         return OrderedSearchResultIds(searchResult).Length;
     }

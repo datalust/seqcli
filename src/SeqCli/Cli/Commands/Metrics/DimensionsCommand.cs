@@ -38,7 +38,7 @@ class DimensionsCommand : Command
     {
         Options.Add(
             "m=|metric=",
-            "The metric name, for example `hats-sold` or `http.request.duration`",
+            "A metric name, for example `hats-sold` or `http.request.duration`; omit to list dimensions for all metrics",
             v => _metric= v);
         
         Options.Add(

@@ -24,9 +24,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Seq.Api;
 using Seq.Api.Client;
-using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
-using Seq.Api.Model.Expressions;
 using Seq.Api.Model.Signals;
 using Seq.Syntax.Templates;
 using SeqCli.Mapping;
@@ -41,14 +39,23 @@ using NativeFormatter = SeqCli.Output.NativeFormatter;
 namespace SeqCli.Mcp.Tools.Search;
 
 [McpServerToolType]
-class SearchAndQueryToolType(McpSession session, SeqConnection connection)
+class SearchTools(McpSession session, SeqConnection connection)
 {
     const string ResultIdPropertyName = "__seqcli_ResultId";
     static readonly ExpressionTemplate SearchResultFormatter = new (
         $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}...\n{{#end}}"
     );
     
-    [McpServerTool(Name = "seq_search", ReadOnly = true, Title = "Search Events")]
+    [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
+    [Description("Call this before interacting with Seq tools for the first time (optimizes resource usage by clearing caches).")]
+    public Task NewSessionAsync(CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        session.Clear();
+        return Task.CompletedTask;
+    }
+
+    [McpServerTool(Name = "seq_search_events", ReadOnly = true, Title = "Search Events")]
     [Description("Search Seq for log events and spans matching given criteria. Each result is prefixed with " +
                  "a `result_id` of the form `R#####` which is valid in the current MCP session. Individual events can be " +
                  "viewed in full using the `seq_read_search_result` tool. Use the `seq-search-and-query` " +
@@ -71,36 +78,14 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
                 !predicate.Contains("@Id", StringComparison.OrdinalIgnoreCase) &&
                 !predicate.Contains("@TraceId", StringComparison.OrdinalIgnoreCase))
             {
-                return SimpleTextResult("The predicate doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
+                return McpResults.SimpleText("The predicate doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
                                    "To avoid consuming excessive resources, add a time bound such as `@Timestamp >= now() - 1d`.", isError: true);
             }
             
-            ExpressionPart strict;
-            try
-            {
-                strict = await connection.Expressions.ToStrictAsync(predicate, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                return new CallToolResult
-                {
-                    IsError = true,
-                    Content =
-                    [
-                        new TextContentBlock
-                        {
-                            Text = "The Seq API client failed while attempting to validate the search expression."
-                        },
-                        new TextContentBlock
-                        {
-                            Text = ex.ToString()
-                        }
-                    ],
-                };
-            }
+            var strict = await connection.Expressions.ToStrictAsync(predicate, cancellationToken);
             if (strict.MatchedAsText)
             {
-                return SimpleTextResult($"The search expression was rejected by the Seq server. {strict.ReasonIfMatchedAsText}",
+                return McpResults.SimpleText($"The search expression was rejected by the Seq server. {strict.ReasonIfMatchedAsText}",
                     isError: true);
             }
         }
@@ -112,7 +97,7 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         var resultsLock = new Lock();
         string? error = null;
         var results = new List<EventEntity>();
-        var timeout = Task.Delay(TimeSpan.FromSeconds(45), cancellationToken);
+        var timeout = Task.Delay(session.DataToolCallTimeout, cancellationToken);
         using var cancelEnumerate = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var cancelEnumerateToken = cancelEnumerate.Token;
         var enumerate = Task.Run(async () =>
@@ -141,10 +126,9 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
 
                 lock (resultsLock)
                 {
-                    error = ex.GetBaseException() is SeqApiException ? ex.GetBaseException().Message : ex.ToString();
+                    error = ex.GetBaseException() is SeqApiException ? ex.GetBaseException().Message : "The Seq API call failed.";
                 }
             }
-
         }, cancellationToken);
 
         var completed = await Task.WhenAny(enumerate, timeout) == enumerate;
@@ -167,25 +151,15 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
         }
         else if (takenError != null)
         {
-            if (takenResults.Length == 0)
-            {
-                resultSetStatus = $"The search failed. {takenError}";
-            }
-            else
-            {
-                resultSetStatus = $"The search failed after retrieving {takenResults.Length} matching event(s). {takenError}";
-            }
+            resultSetStatus = takenResults.Length == 0 ? 
+                $"The search failed. {takenError}" : 
+                $"The search failed after retrieving {takenResults.Length} matching event(s). {takenError}";
         }
         else if (completed)
         {
-            if (takenResults.Length == 0)
-            {
-                resultSetStatus = "No events matched the search expression.";
-            }
-            else
-            {
-                resultSetStatus = $"Showing all {takenResults.Length} matching event(s).";
-            }
+            resultSetStatus = takenResults.Length == 0 ?
+                "No events matched the search expression." :
+                $"Showing all {takenResults.Length} matching event(s).";
         }
         else
         {
@@ -225,24 +199,24 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     
     
     [McpServerTool(Name = "seq_read_search_result", ReadOnly = true, Title = "Read Full Event Details")]
-    [Description("Read the full details of an event appearing in `seq_search` results, including all property " +
+    [Description("Read the full details of an event appearing in `seq_search_events` results, including all property " +
                  "values and a complete stack trace (if present). The event is formatted precisely as a Seq syntax literal, " +
                  "using Seq's native data model.")]
     [return: Description("A Seq-native object literal representation of the event data.")]
     public Task<CallToolResult> ReadSearchResultJsonAsync(
-        [Description("The result id from the `seq_search` tool.")]
+        [Description("The result id from the `seq_search_events` tool.")]
         // ReSharper disable once InconsistentNaming
         string result_id)
     {
         if (!session.TryGetSearchResult(result_id, out var result, out var error))
         {
-            return Task.FromResult(SimpleTextResult(error, isError: true));
+            return Task.FromResult(McpResults.SimpleText(error, isError: true));
         }
 
         var resultText = new StringWriter();
         NativeFormatter.WriteEvent(resultText, result);
 
-        return Task.FromResult(SimpleTextResult(resultText.ToString()));
+        return Task.FromResult(McpResults.SimpleText(resultText.ToString()));
     }
 
     [McpServerTool(Name = "seq_inspect_result_schema", ReadOnly = true, Title = "Inspect Search Result Schema")]
@@ -253,86 +227,5 @@ class SearchAndQueryToolType(McpSession session, SeqConnection connection)
     public Task<string[]> InspectSchemaAsync(CancellationToken cancellationToken)
     {
         return Task.FromResult(session.EnumerateUserPropertyNames(cancellationToken).OrderBy(n => n).ToArray());
-    }
-
-    [McpServerTool(Name = "seq_query", ReadOnly = true, Title = "Evaluate a Query over Logs, Spans, or Metric Samples")]
-    [Description("Evaluate a Seq query, producing tabular results. Use the `seq-search-and-query` " +
-                 "skill when calling this tool.")]
-    [return: Description("Query results and status information.")]
-    public async Task<CallToolResult> QueryAsync(
-        [Description("A Seq query language query.")]
-        string query,
-        [Description("A signal expression restricting the search space. Multiple " +
-                     "signals are intersected with commas, and unioned with tilde, for example, `signal-1,(signal-2~signal-3)`.")]
-        string? signal = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (query.Contains("from", StringComparison.OrdinalIgnoreCase) &&
-            (!query.Contains("where", StringComparison.OrdinalIgnoreCase) ||
-            !query.Contains("@Timestamp", StringComparison.OrdinalIgnoreCase) &&
-            !query.Contains("@Id", StringComparison.OrdinalIgnoreCase) &&
-            !query.Contains("@TraceId", StringComparison.OrdinalIgnoreCase)))
-        {
-            return SimpleTextResult("The query doesn't adequately constrain the search range (by `@Timestamp`, `@TraceId`, or `@Id`). " +
-                                    "To avoid consuming excessive resources, add a time bound such as `where @Timestamp >= now() - 1d`.", isError: true);
-        }
-
-        SignalExpressionPart? parsedSignalExpression = null;
-        if (!string.IsNullOrWhiteSpace(signal))
-            parsedSignalExpression = SignalExpressionParser.ParseExpression(signal);
-        
-        QueryResultPart result;
-        try
-        {
-            result = await connection.Data.TryQueryAsync(query, signal: parsedSignalExpression, cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            if (ex.GetBaseException() is not OperationCanceledException)
-            {
-                Log.Error(ex, "Exception thrown during query execution");
-            }
-            
-            var error = ex.GetBaseException() is SeqApiException ? ex.GetBaseException().Message : ex.ToString();
-            return SimpleTextResult($"The query failed. {error}", isError: true);
-        }
-        
-        var output = new StringWriter();
-        NativeFormatter.WriteQueryResult(output, result);
-        return SimpleTextResult(output.ToString(), isError: !string.IsNullOrWhiteSpace(result.Error));
-    }
-    
-    [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
-    [Description("Call this before interacting with Seq tools for the first time (optimizes resource usage by clearing caches).")]
-    public Task NewSessionAsync(CancellationToken cancellationToken)
-    {
-        _ = cancellationToken;
-        session.Clear();
-        return Task.CompletedTask;
-    }
-
-    [McpServerTool(Name = "seq_list_signals", ReadOnly = true, Title = "List Signals", UseStructuredContent = true)]
-    [Description("List available signals. Use signals when searching and querying to efficiently work with well-known " +
-                 "event streams while dramatically improving response times.")]
-    public async Task<SignalSummary[]> ListSignalsAsync(CancellationToken cancellationToken)
-    {
-        return (await connection.Signals.ListAsync(shared: true, partial: true, cancellationToken: cancellationToken))
-            .Select(s => new SignalSummary { Id = s.Id, Title = s.Title })
-            .ToArray();
-    }
-    
-    static CallToolResult SimpleTextResult(string resultText, bool isError = false)
-    {
-        return new CallToolResult
-        {
-            IsError = isError,
-            Content =
-            [
-                new TextContentBlock
-                {
-                    Text = resultText
-                }
-            ]
-        };
     }
 }
