@@ -14,6 +14,10 @@
 
 using System;
 using System.Threading.Tasks;
+using Autofac;
+using Autofac.Builder;
+using Autofac.Core;
+using Autofac.Core.Resolving.Pipeline;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -61,7 +65,20 @@ class RunCommand: Command
         try
         {
             var builder = Host.CreateApplicationBuilder();
-            builder.ConfigureContainer(new AutofacServiceProviderFactory());
+            builder.ConfigureContainer(new AutofacServiceProviderFactory(container =>
+            {
+                // The MCP SDK tries to use the container to resolve any parameter type; Autofac's default collection
+                // registrations cause array parameters to resolve to empty arrays. We thwart this by short-circuiting
+                // the search for matching registrations.
+                var stringArray = new TypedService(typeof(string[]));
+                container.RegisterServiceMiddleware<string[]>(PipelinePhase.ResolveRequestStart, (rr, ctx) =>
+                {
+                    if (rr.Service == stringArray)
+                        return;
+
+                    ctx(rr);
+                });
+            }));
             builder.Services.AddSerilog();
             builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
             builder.Services.AddSingleton<McpSession>();
