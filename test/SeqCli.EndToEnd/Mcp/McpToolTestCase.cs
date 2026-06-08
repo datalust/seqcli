@@ -50,7 +50,7 @@ public abstract partial class McpToolTestCase : ICliTestCase
         // Tools returning non-object values have them wrapped in a `result` property by the MCP
         // SDK, because the protocol requires `structuredContent` to be an object.
         var result = callToolResult.StructuredContent.Value.GetProperty("result");
-        return JsonSerializer.Deserialize<T>(result, JsonSerializerOptions.Web)!;
+        return result.Deserialize<T>(JsonSerializerOptions.Web)!;
     }
 
     protected static string[] OrderedSearchResultIds(string searchResult)
