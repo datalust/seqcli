@@ -96,7 +96,8 @@ HTTP request timing percentiles:
 select
   phist(coalesce((bucket.from + bucket.to) / 2, bucket.from, bucket.to), bucket.count, 95) as p95,
   phist(coalesce((bucket.from + bucket.to) / 2, bucket.from, bucket.to), bucket.count, 99) as p99
-from series lateral unnest(http.server.request.duration.buckets) as bucket 
+from series
+  lateral unnest(http.server.request.duration.buckets) as bucket 
 where Has(http.server.request.duration.buckets)
   and @Resource.service.name = 'cart'
   and @Scope.name = 'Microsoft.AspNetCore.Hosting'
@@ -126,6 +127,22 @@ from series
 where Has(http.server.request.body.size.buckets)
   and @Resource.service.name = 'shipping'
   and @Scope.name = 'opentelemetry-instrumentation-actix-web'
+  and @Timestamp >= now() - 15m
+group by time(1m)
+limit 100
+```
+
+### `Exponential` Query Examples
+
+Commit timing percentiles:
+
+```
+select
+  phist(bucket.midpoint, bucket.count, 95) as p95,
+  phist(bucket.midpoint, bucket.count, 99) as p99
+from series
+  lateral unnest(commit_duration.buckets) as bucket 
+where Has(commit_duration.buckets)
   and @Timestamp >= now() - 15m
 group by time(1m)
 limit 100
