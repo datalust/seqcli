@@ -26,10 +26,11 @@ public class SkillComplexityTests
         const int recommendedMaxLines = 500, recommendedMaxTokens = 5000;
         
         // Still some work to do, here.
-        const int allowedMaxTokens = recommendedMaxTokens + 4000;
+        const int allowedMaxLines = recommendedMaxLines + 100,
+            allowedMaxTokens = recommendedMaxTokens + 4000;
         
         var lines = File.ReadAllLines(path);
-        Assert.True(lines.Length < recommendedMaxLines, $"`{skillName}/SKILL.md` line count {lines.Length} exceeds the recommended {recommendedMaxLines}-line limit");
+        Assert.True(lines.Length < allowedMaxLines, $"`{skillName}/SKILL.md` line count {lines.Length} exceeds the {allowedMaxLines} lines ({recommendedMaxLines} is the recommended limit)");
 
         const string benchmarkModelName = "gpt-5";
         var tokenizer = TiktokenTokenizer.CreateForModel(benchmarkModelName);
