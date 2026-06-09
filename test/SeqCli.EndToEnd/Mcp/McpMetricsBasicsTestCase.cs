@@ -13,7 +13,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Mcp;
 
-//[CliTestCase(MinimumApiVersion = "2026.1.0")]
+[CliTestCase(MinimumApiVersion = "2026.1.0")]
 public class McpMetricsBasicsTestCase : McpToolTestCase
 {
     [UsedImplicitly]

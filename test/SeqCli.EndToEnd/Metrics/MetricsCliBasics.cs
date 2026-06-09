@@ -32,7 +32,7 @@ class MetricsCliBasics: ICliTestCase
         Assert.Equal(0, runner.Exec("metrics dimensions", "--metric e"));
         Assert.Equal("b", runner.LastRunProcess!.Output.Trim());
         
-        Assert.Equal(0, runner.Exec("metrics dimension", "--accessor b"));
+        Assert.Equal(0, runner.Exec("metrics dimensionvalues", "--accessor b"));
         var bValues = runner.LastRunProcess!.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         Assert.All(["2", "5"], value => Assert.Contains(bValues, l => l.Trim() == value));
     }

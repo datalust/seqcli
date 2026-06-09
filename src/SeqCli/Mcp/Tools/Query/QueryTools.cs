@@ -56,6 +56,13 @@ class QueryTools(McpSession session, SeqConnection connection)
                                     "To avoid consuming excessive resources, add a time bound such as `where @Timestamp >= now() - 1d`.", isError: true);
         }
 
+        if (query.Contains("series", StringComparison.OrdinalIgnoreCase) &&
+            query.Contains("@Definitions", StringComparison.OrdinalIgnoreCase))
+        {
+            return McpResults.SimpleText("Queries over the `@Definitions` property are not currently permitted. Use dedicated metrics-oriented " +
+                                         "tools or CLI commands to search for metric definitions.", isError: true);
+        }
+
         SignalExpressionPart? parsedSignalExpression = null;
         if (!string.IsNullOrWhiteSpace(signal))
             parsedSignalExpression = SignalExpressionParser.ParseExpression(signal);

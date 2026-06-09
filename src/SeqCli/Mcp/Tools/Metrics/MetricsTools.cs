@@ -37,7 +37,7 @@ class MetricsTools(McpSession session, SeqConnection connection)
     [return: Description("Matching metric definitions.")]
     public async Task<MetricDefinition[]> SearchMetricsAsync(
         [Description("The maximum number of metric definitions to return.")]
-        [Range(1, 1000)]
+        [Range(1, 512)]
         int limit,
         [Description("A Seq search expression evaluated over metric names (`Keys(@Definitions)[?]`), descriptions " +
                      "(`@Definitions[?].description`), resource attributes, scope attributes, and raw samples.")]
@@ -55,7 +55,7 @@ class MetricsTools(McpSession session, SeqConnection connection)
                     "The predicate doesn't adequately constrain the search range. " +
                     "To avoid consuming excessive resources, add a time bound such as `@Timestamp >= now() - 4h`.");
             }
-
+            
             var strict = await connection.Expressions.ToStrictAsync(predicate, cancellationToken);
             if (strict.MatchedAsText)
             {

@@ -255,7 +255,6 @@ static partial class NativeFormatter
                         output.Write(' ');
                     output.Write(heading);
                 }
-                output.WriteLine();
             }
             else
             {

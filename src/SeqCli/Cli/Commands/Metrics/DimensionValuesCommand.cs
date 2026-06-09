@@ -22,9 +22,9 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands.Metrics;
 
-[Command("metrics", "dimension", "List distinct values for a metric dimension",
-    Example = "seqcli metrics dimension --accessor @Resource.service.name")]
-class DimensionCommand : Command
+[Command("metrics", "dimensionvalues", "List distinct values for a metric dimension",
+    Example = "seqcli metrics dimensionvalues --accessor @Resource.service.name")]
+class DimensionValuesCommand : Command
 {
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
@@ -34,7 +34,7 @@ class DimensionCommand : Command
     int _count = 30;
     bool _trace;
 
-    public DimensionCommand()
+    public DimensionValuesCommand()
     {
         Options.Add(
             "d=|accessor=",

@@ -43,6 +43,15 @@ sealed class OutputFormat
     readonly bool _forceColor;
     readonly Logger _formatter;
 
+    readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
+    {
+        DateParseHandling = DateParseHandling.None,
+        Converters =
+        {
+            new StringEnumConverter()
+        }
+    });
+
     public const string DefaultOutputTemplate =
         "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
 
@@ -109,12 +118,7 @@ sealed class OutputFormat
 
         var jo = JObject.FromObject(
             entity,
-            JsonSerializer.CreateDefault(new JsonSerializerSettings {
-                DateParseHandling = DateParseHandling.None,
-                Converters = {
-                    new StringEnumConverter()
-                }
-            }));
+            _serializer);
             
         if (Json)
         {
@@ -147,18 +151,9 @@ sealed class OutputFormat
             
         if (Json)
         {
-            var settings = JsonSerializer.CreateDefault(new JsonSerializerSettings
-            {
-                DateParseHandling = DateParseHandling.None,
-                Converters =
-                {
-                    new StringEnumConverter()
-                }
-            });
-            
             var jo = value is ICollection and not (IDictionary or JToken) ?
-                (JToken)JArray.FromObject(value, settings) :
-                JObject.FromObject(value, settings);
+                (JToken)JArray.FromObject(value, _serializer) :
+                JObject.FromObject(value, _serializer);
 
             // Using the same method of JSON colorization as above
 
