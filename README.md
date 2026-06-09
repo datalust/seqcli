@@ -1868,7 +1868,7 @@ PS > seqcli signal list -i signal-m33302 --json
 {"Title": "Alarms", "Description": "Automatically created", "Filters": [{"De...
 ```
 
-## Store-and-forward ingestion proxy (preview)
+## Store-and-forward ingestion proxy
 
 The `seqcli forwarder` family of commands provide simple, durable ingestion buffering for occasionally-connected and
 intermittently-disconnected systems. The forwarder implements the Seq ingestion API, so applications that write
@@ -1890,11 +1890,8 @@ destination Seq server.
 To start a forwarder instance at the terminal, listening on port 5341 and forwarding to `seq.example.com`, run:
 
 ```shell
-seqcli forwarder run --pre --listen http://127.0.0.1:5341 -s https://seq.example.com
+seqcli forwarder run --listen http://127.0.0.1:5341 -s https://seq.example.com
 ```
-
-> While the `forwarder` command group is in preview, all `forwarder` commands require the `--pre` switch; you'll
-> also need to supply `--pre` when requesting help, e.g. `seqcli help forwarder run --pre`.
 
 You can test your forwarder using the `seqcli log` command:
 

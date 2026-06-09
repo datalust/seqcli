@@ -14,14 +14,16 @@
 
 using System;
 using System.Threading.Tasks;
-using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Mcp;
+using SeqCli.Mcp.Tools.Metrics;
+using SeqCli.Mcp.Tools.Query;
 using SeqCli.Mcp.Tools.Search;
+using SeqCli.Mcp.Tools.Signals;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Mcp;
@@ -58,7 +60,6 @@ class RunCommand: Command
         try
         {
             var builder = Host.CreateApplicationBuilder();
-            builder.ConfigureContainer(new AutofacServiceProviderFactory());
             builder.Services.AddSerilog();
             builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
             builder.Services.AddSingleton<McpSession>();
@@ -66,7 +67,10 @@ class RunCommand: Command
                 .AddMcpServer()
                 .WithStdioServerTransport()
                 .WithTools([
-                    typeof(SearchAndQueryToolType)
+                    typeof(SearchTools),
+                    typeof(MetricsTools),
+                    typeof(QueryTools),
+                    typeof(SignalTools)
                 ]);
 
             await builder.Build().RunAsync();

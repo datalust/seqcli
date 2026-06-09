@@ -31,7 +31,7 @@ public class McpSessionBasicsTestCase : McpToolTestCase
 
         var predicate = $"RunId = '{runId}' and Customer.Tier = 'gold' and @Timestamp >= Now() - 1d";
         var searchResult = AssertTextResult(await client.CallToolAsync(
-            "seq_search",
+            "seq_search_events",
             new Dictionary<string, object> { ["limit"] = 10, ["predicate"] = predicate }));
         var resultIds = OrderedSearchResultIds(searchResult);
         Assert.Equal(orders.Count(o => o.Customer.Tier == "gold"), resultIds.Length);

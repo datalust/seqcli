@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -41,6 +42,15 @@ sealed class OutputFormat
     readonly bool _noColor;
     readonly bool _forceColor;
     readonly Logger _formatter;
+
+    readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
+    {
+        DateParseHandling = DateParseHandling.None,
+        Converters =
+        {
+            new StringEnumConverter()
+        }
+    });
 
     public const string DefaultOutputTemplate =
         "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
@@ -108,12 +118,7 @@ sealed class OutputFormat
 
         var jo = JObject.FromObject(
             entity,
-            JsonSerializer.CreateDefault(new JsonSerializerSettings {
-                DateParseHandling = DateParseHandling.None,
-                Converters = {
-                    new StringEnumConverter()
-                }
-            }));
+            _serializer);
             
         if (Json)
         {
@@ -146,14 +151,9 @@ sealed class OutputFormat
             
         if (Json)
         {
-            var jo = JObject.FromObject(
-                value,
-                JsonSerializer.CreateDefault(new JsonSerializerSettings {
-                    DateParseHandling = DateParseHandling.None,
-                    Converters = {
-                        new StringEnumConverter()
-                    }
-                }));
+            var jo = value is ICollection and not (IDictionary or JToken) ?
+                (JToken)JArray.FromObject(value, _serializer) :
+                JObject.FromObject(value, _serializer);
 
             // Using the same method of JSON colorization as above
 
@@ -169,11 +169,12 @@ sealed class OutputFormat
         }
         else if (Text)
         {
-            Console.WriteLine(value.ToString());
+            Console.WriteLine(Stringify(value));
         }
         else
         {
-            throw new InvalidOperationException("Native formatting not supported for raw objects.");
+            NativeFormatter.WriteValue(Console.Out, value);
+            Console.WriteLine();
         }
     }
 
@@ -205,7 +206,7 @@ sealed class OutputFormat
         }
         else
         {
-            CsvWriter.WriteQueryResult(result, Theme, Console.Out);
+            CsvWriter.WriteQueryResult(result, Stringify, Theme, Console.Out);
         }
     }
 
@@ -293,5 +294,23 @@ sealed class OutputFormat
             default:
                 return new ScalarValue(value);
         }
+    }
+    
+    static string Stringify(object? value)
+    {
+        return value switch
+        {
+            null => "null",
+            true => "true",
+            false => "false",
+            decimal
+                or double or float or Half
+                or byte or ushort or uint or ulong or UInt128 or
+                sbyte or short or int or long
+                or Int128 => ((IFormattable)value).ToString(null, CultureInfo.InvariantCulture),
+            DateTime dt => dt.ToString("o"),
+            DateTimeOffset dto => dto.ToString("o"),
+            _ => value.ToString() ?? ""
+        };
     }
 }

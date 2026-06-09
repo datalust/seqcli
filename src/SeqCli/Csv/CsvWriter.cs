@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
 using Seq.Api.Model.Data;
 using SeqCli.Mcp.Data;
@@ -9,7 +8,7 @@ namespace SeqCli.Csv;
 
 static class CsvWriter
 {
-    public static void WriteQueryResult(QueryResultPart result, ConsoleTheme theme, TextWriter output)
+    public static void WriteQueryResult(QueryResultPart result, Func<object?, string> stringify, ConsoleTheme theme, TextWriter output)
     {
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
@@ -24,14 +23,14 @@ static class CsvWriter
             var firstCol = true;
             foreach (var value in row)
             {
-                WriteCell(output, theme, value, ref firstCol, isHeadingRow: first);
+                WriteCell(output, theme, value, stringify, ref firstCol, isHeadingRow: first);
             }
             first = false;
             output.WriteLine();
         });
     }
 
-    static void WriteCell(TextWriter output, ConsoleTheme theme, object? value, ref bool firstCol, bool isHeadingRow = false)
+    static void WriteCell(TextWriter output, ConsoleTheme theme, object? value, Func<object?, string> stringify, ref bool firstCol, bool isHeadingRow = false)
     {
         if (firstCol)
         {
@@ -48,19 +47,7 @@ static class CsvWriter
         output.Write('"');
         theme.Reset(output);
 
-        var valueAsString = value switch
-        {
-            null => "null",
-            true => "true",
-            false => "false",
-            decimal
-                or double or float or Half
-                or byte or ushort or uint or ulong or UInt128 or
-                sbyte or short or int or long or Int128 => ((IFormattable)value).ToString(null, CultureInfo.InvariantCulture),
-            DateTime dt => dt.ToString("o"),
-            DateTimeOffset dto => dto.ToString("o"),
-            _ => value.ToString() ?? ""
-        };
+        var valueAsString = stringify(value);
         
         var dataStyle = isHeadingRow ? ConsoleThemeStyle.Name : ConsoleThemeStyle.Text;
         var doubleQuote = valueAsString.IndexOf('"');

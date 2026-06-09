@@ -20,16 +20,15 @@ session MUST begin with the following steps:
 
 1. Check for relevant signals. Many event filtering problems have already been solved and the resulting filters saved as efficiently indexed signals.
 2. Retrieve a sample of relevant events. Use signals identified in (1) where appropriate, event search and query supports them.
-3. Confirm the schema of the search results (important!).
+3. Proactively confirm the schema of the search results using appropriate tools.
 4. Inspect a subset of relevant events in full.
 5. Determine how the correctness of any conclusions can be verified using real diagnostic data.
 
-DO NOT skip steps just because early results suggest a quicker path to a solution: this is often the path to being
-confidently wrong!
+DO NOT skip steps just because early results suggest a quicker path to a solution: this is the path to being confidently wrong!
 
 ## Event Data Model
 
-All events stored in Seq use the same data model. Spans are only distinguished from log events by the presence of the
+All events stored in Seq use the same data model. Spans are distinguished from log events by the presence of the
 `@Start` property. The following built-in properties are supported.
 
 | Built in property name | Type | Description |
@@ -133,7 +132,7 @@ These built-in functions and operators work with individual values. See Aggregat
 
 ## Aggregate Functions
 
-`select` queries (see grammar below) have access to the following aggregate functions.
+`select` queries have access to the following aggregate functions.
 
 | Aggregate function signature | Description | Example |
 |---|---|---|
@@ -149,20 +148,9 @@ These built-in functions and operators work with individual values. See Aggregat
 | `max(expr: number): number` | Computes the largest value for `expr`. | `max(Elapsed / 1000)` |
 | `mean(expr: number): number` | Computes the arithmetic mean (average) of `expr`, i.e. `sum(expr) / count(expr)`. Events where the expression is `null` or not numeric are ignored and do not contribute to the final result. | `mean(ItemCount)` |
 | `percentile(expr: number, p: number [, err: number?]): number` | Given a percentage `p`, calculates the value of `expr` at or below which `p` percent of the results fall. The optional `err` parameter specifies the maximum permissible error fraction. Higher error values reduce compute and memory resource consumption. | `percentile(ResponseTime, 95 , 0.01)` |
+| `phist(expr: number, count: number, p: number): number` | Bucketed (histogram) percentile. | |
 | `sum(expr: number): number` | Calculates the sum of `expr`. Non-numeric values are ignored. | `sum(ItemsOrdered)` |
 | `top(expr: any, n: number): rowset` | Select the first `n` values of `expr`. The `top` function cannot appear with any other aggregate functions. | `top(StatusCode, 5)` |
-
-## Schema
-
-The `stream` source contains log events and spans. The `series` source contains
-metric samples (not discussed in this skill).
-
-Seq servers are compatible with a vast array of data sources. They may use a mix of OpenTelemetry and
-framework/ecosystem-specific property names, and may do so inconsistently.
-
-When available, **always use the MCP schema tool** to inspect the actual properties appearing on search results. In
-particular, don't skip schema checks early in investigations just because you've seen a few events. Events are
-inconsistent! Use the schema tool at least once just to be safe.
 
 ## Base Grammar
 
@@ -291,7 +279,7 @@ Keywords are case-insensitive.
 | `@Timestamp >= Now() - 10m` | Match events that occurred in the last ten minutes. |
 | `@TraceId = '0af7651916cd43dd8448eb211c80319c'` | Match all events (both spans and log events) belonging to the given trace. |
 | `Has(@Start)` | Match all spans (excludes log events). |
-| `@Message like '%overflow%' ci or @Exception like '%overflow%' ci` | Given a piece of text, find events with that text in their message or exception/stack trace. |
+| `@Message like '%overflow%' ci or @Exception like '%overflow%' ci` | Given a piece of text, find events with that text in their message or exception/stack trace, using case-insensitive comparisons. |
 | `Items[?] = 'coffee'` | Wildcard "any" - check if element appears in collection. |
 | `ToIsoString(@Timestamp)` | Render a numeric timestamp as ISO-8601. |
 | `ToTimeString(@Elapsed)` | Render a numeric duration value as a human-readable time string. |
@@ -299,7 +287,7 @@ Keywords are case-insensitive.
 | `@TraceId = '...' and @SpanId = '...' and Has(@Start)` | Retrieve a specific trace span using a search expression |
 | `@Level like 'err%' ci` | Perform a case-insensitive prefix search |
 
-## Example Queries
+## Query Example
 
 Grouped query with ordering:
 
@@ -350,6 +338,15 @@ having spans > 50                              -- filter groups by the select al
 order by p95_ms desc                           -- order by a selected aggregate's alias
 limit 100
 ```
+
+## User-Defined Property Schema
+
+Seq servers are compatible with a vast array of data sources. They may use a mix of OpenTelemetry and
+framework/ecosystem-specific property names, and may do so inconsistently.
+
+When available, **always use the MCP schema tool** to inspect the actual properties appearing on search results. In
+particular, don't skip schema checks early in investigations just because you've seen a few events. Events are
+inconsistent! Use the schema tool at least once just to be safe.
 
 ## Gotchas
 

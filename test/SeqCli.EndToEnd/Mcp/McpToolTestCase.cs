@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Seq.Api;
@@ -15,6 +16,7 @@ namespace SeqCli.EndToEnd.Mcp;
 /// Base class for test cases exercising the tools provided by <c>seqcli mcp run</c>. The MCP server
 /// is spawned over stdio and supplied to the subclass as a connected <see cref="McpClient"/>.
 /// </summary>
+[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
 public abstract partial class McpToolTestCase : ICliTestCase
 {
     public async Task ExecuteAsync(SeqConnection connection, ILogger logger, CliCommandRunner runner)
@@ -48,7 +50,7 @@ public abstract partial class McpToolTestCase : ICliTestCase
         // Tools returning non-object values have them wrapped in a `result` property by the MCP
         // SDK, because the protocol requires `structuredContent` to be an object.
         var result = callToolResult.StructuredContent.Value.GetProperty("result");
-        return JsonSerializer.Deserialize<T>(result, JsonSerializerOptions.Web)!;
+        return result.Deserialize<T>(JsonSerializerOptions.Web)!;
     }
 
     protected static string[] OrderedSearchResultIds(string searchResult)

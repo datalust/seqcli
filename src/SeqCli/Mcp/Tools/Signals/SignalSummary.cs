@@ -14,7 +14,7 @@
 
 using System.ComponentModel;
 
-namespace SeqCli.Mcp.Tools.Search;
+namespace SeqCli.Mcp.Tools.Signals;
 
 [Description("A signal is a saved, indexed filter over log events and spans.")]
 class SignalSummary
