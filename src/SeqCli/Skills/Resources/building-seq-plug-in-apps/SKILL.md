@@ -532,7 +532,7 @@ Take care that the smoke test project doesn't exit or assume completion before a
 ## References
 
 - [CLEF specification](https://clef-json.org) — the Compact Log Event Format (`@t`, `@mt`, `@m`, `@l`, `@x`, `@i`, `@r`)
-- [Posting raw events](https://docs.datalust.co/docs/posting-raw-events) — CLEF reference including Seq trace extensions (`@tr`, `@sp`, `@ps`, `@st`, `@sc`, `@ra`, `@sk`)
+- [Posting raw events](https://docs.datalust.co/docs/posting-raw-events) — CLEF reference including Seq trace extensions (`@tr`, `@sp`, `@ps`, `@st`, `@sa`, `@ra`, `@sk`)
 - [Template syntax](https://docs.datalust.co/docs/template-syntax) — documentation for the Seq template language used in app settings
 - [seq-apps-runtime](https://github.com/datalust/seq-apps-runtime) — source code for the `Seq.Apps` API (`SeqApp`, `ISubscribeToAsync<LogEvent>`, `ISubscribeToJsonAsync`, etc.)
 - [seqcli](https://github.com/datalust/seqcli) — source code for the `seqcli app run` command that Seq uses to host apps at runtime
