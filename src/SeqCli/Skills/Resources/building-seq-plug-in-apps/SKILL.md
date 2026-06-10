@@ -46,6 +46,10 @@ Input apps use `Seq.Input.{Name}` naming.
     <PackageReference Include="Seq.Apps" Version="..." />
     <!-- Add Seq.Syntax (project or package reference) if using the Seq template language -->
   </ItemGroup>
+  <ItemGroup>
+    <!-- Package dependencies into primary NUPKG file, except those shipped in the app host itself -->
+    <None Include="./obj/publish/**/*" Exclude="./obj/publish/$(MSBuildProjectName).dll;./obj/publish/Seq.Apps.dll;./obj/publish/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
+  </ItemGroup>
 </Project>
 ```
 
@@ -521,10 +525,14 @@ Take care that the smoke test project doesn't exit or assume completion before a
 - Default time zone: `Etc/UTC`
 - Default date/time format: `o` (ISO-8601 round-trip)
 
+## Gotchas
+
+- Seq does not resolve package dependencies when installing apps. Apps must package assembly dependencies into their own NUPKG (see CSPROJ conventions above). 
+
 ## References
 
 - [CLEF specification](https://clef-json.org) — the Compact Log Event Format (`@t`, `@mt`, `@m`, `@l`, `@x`, `@i`, `@r`)
-- [Posting raw events](https://docs.datalust.co/docs/posting-raw-events) — CLEF reference including Seq trace extensions (`@tr`, `@sp`, `@ps`, `@st`, `@sc`, `@ra`, `@sk`)
+- [Posting raw events](https://docs.datalust.co/docs/posting-raw-events) — CLEF reference including Seq trace extensions (`@tr`, `@sp`, `@ps`, `@st`, `@sa`, `@ra`, `@sk`)
 - [Template syntax](https://docs.datalust.co/docs/template-syntax) — documentation for the Seq template language used in app settings
 - [seq-apps-runtime](https://github.com/datalust/seq-apps-runtime) — source code for the `Seq.Apps` API (`SeqApp`, `ISubscribeToAsync<LogEvent>`, `ISubscribeToJsonAsync`, etc.)
 - [seqcli](https://github.com/datalust/seqcli) — source code for the `seqcli app run` command that Seq uses to host apps at runtime
