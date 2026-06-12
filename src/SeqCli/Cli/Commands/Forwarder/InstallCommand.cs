@@ -98,7 +98,7 @@ class InstallCommand : Command
         if (netshResult != 0)
             Console.WriteLine($"Could not add URL reservation for {listenUri}: `netsh` returned {netshResult}; ignoring");
 
-        var exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Program.WindowsBinaryName);
+        var exePath = Environment.ProcessPath;
         var forwarderRunCmdline = $"\"{exePath}\" forwarder run --pre --storage=\"{_storagePath.StorageRootPath}\"";
 
         var binPath = forwarderRunCmdline.Replace("\"", "\\\"");
