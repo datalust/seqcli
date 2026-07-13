@@ -58,7 +58,7 @@ $token = (
 )
 ```
 
-### MCP and agent skills <sup>(preview)</sup>
+### MCP and agent skills
 
 The 2026.1 preview improves support for agent-driven diagnostics workflows:
 
