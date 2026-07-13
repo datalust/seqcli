@@ -16,7 +16,7 @@
     <ProjectReference Include="Microsoft.Bcl.Memory" Version="10.0.9" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SeqCli\SeqCli.csproj" />
+    <PackageReference Include="..\..\src\SeqCli\SeqCli.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Apps\HealthCheckBinaries\" />
