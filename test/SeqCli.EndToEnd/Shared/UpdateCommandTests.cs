@@ -37,9 +37,16 @@ class UpdateCommandTests(TestConfiguration configuration): ICliTestCase
         var workspace = await connection.Workspaces.TemplateAsync();
         workspace.OwnerId = null;
         await connection.Workspaces.AddAsync(workspace);
-        
+
+        // One alert...
+        var alert = await connection.Alerts.TemplateAsync();
+        alert.Title = "UpdateTestAlert";
+        alert.OwnerId = null;
+        await connection.Alerts.AddAsync(alert);
+
         foreach (var commandGroup in new[]
                  {
+                     "alert",
                      "apikey",
                      "appinstance",
                      "feed",
