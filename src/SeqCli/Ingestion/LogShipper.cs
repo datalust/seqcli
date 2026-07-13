@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -181,7 +181,7 @@ static class LogShipper
                         if (isLast || batch.Count != 0 || totalWaitMS > maxWaitMS)
                             break;
 
-                        // Nothing to to ship; wait to try to fill a batch.
+                        // Nothing to ship; wait to try to fill a batch.
                         await Task.Delay(idleWaitMS);
                         totalWaitMS += idleWaitMS;
                         continue;

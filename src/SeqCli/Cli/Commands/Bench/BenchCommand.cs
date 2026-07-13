@@ -13,14 +13,12 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Api;
-using Seq.Api.Model.Data;
 using Seq.Api.Model.Signals;
 using SeqCli.Api;
 using SeqCli.Cli.Features;

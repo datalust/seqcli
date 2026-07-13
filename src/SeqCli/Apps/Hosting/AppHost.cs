@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Threading.Tasks;
 using Seq.Apps;
 using Serilog;

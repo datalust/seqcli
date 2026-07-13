@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Ingestion;
 
 namespace SeqCli.Cli.Commands;
 
@@ -39,7 +38,7 @@ class TailCommand : Command
             "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
             v => _filter = v);
 
-        _output = Enable<OutputFormatFeature>();
+        _output = Enable(new OutputFormatFeature(supportNative: true));
         _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _connection = Enable<ConnectionFeature>();
@@ -60,18 +59,17 @@ class TailCommand : Command
             strict = converted.StrictExpression;
         }
         
-        await using var output = _output.GetOutputFormat(config).CreateOutputLogger();
-
+        var output = _output.GetOutputFormat(config);
+        
         try
         {
-            await foreach (var json in connection.Events.StreamDocumentsAsync(
+            await foreach (var evt in connection.Events.StreamAsync(
                                filter: strict,
                                signal: _signal.Signal,
-                               clef: true,
+                               render: true,
                                cancellationToken: cancel.Token))
             {
-                var evt = JsonLogEventReader.ReadFromJson(json);
-                output.Write(evt);
+                output.WriteEventEntity(evt);
             }
         }
         catch (OperationCanceledException)

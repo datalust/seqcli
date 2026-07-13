@@ -22,14 +22,14 @@ namespace SeqCli.Forwarder.Storage;
 /// </summary>
 class BufferReaderChunk : IDisposable
 {
-    public BufferReaderChunk(ChunkName name, StoreFile chunk)
+    public BufferReaderChunk(ChunkName name, StoreFile file)
     {
         Name = name;
-        Chunk = chunk;
+        File = file;
     }
 
     public ChunkName Name { get; }
-    public StoreFile Chunk { get; }
+    public StoreFile File { get; }
 
     (long, StoreFileReader)? _reader;
 
@@ -53,7 +53,7 @@ class BufferReaderChunk : IDisposable
 
         if (_reader == null)
         {
-            if (!Chunk.TryOpenRead(chunkExtents.WriteHead, out var reader)) return false;
+            if (!File.TryOpenRead(chunkExtents.WriteHead, out var reader)) return false;
 
             _reader = (chunkExtents.WriteHead, reader);
         }

@@ -40,7 +40,7 @@ static class TemplateSetImporter
     {
         var ordering = new List<string> {"users", "signals", "apps", "appinstances",
             "dashboards", "sqlqueries", "workspaces", "retentionpolicies",
-            "alerts", "expressionindexes"};
+            "alerts", "expressionindexes", "views"};
 
         var sorted = templates.OrderBy(t => ordering.IndexOf(t.ResourceGroup));
             

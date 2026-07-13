@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Serilog" Version="4.3.0" />
-        <PackageReference Include="SerilogTracing" Version="2.3.1" />
+        <PackageReference Include="Serilog" Version="4.4.0" />
+        <PackageReference Include="SerilogTracing" Version="2.4.0" />
     </ItemGroup>
 
 </Project>

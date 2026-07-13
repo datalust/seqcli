@@ -1,4 +1,4 @@
-﻿// Copyright 2018-2019 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using SeqCli.Cli;
-using SeqCli.Cli.Features;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Core;

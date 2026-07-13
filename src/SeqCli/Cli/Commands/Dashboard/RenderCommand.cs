@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Seq.Api.Model.Dashboarding;
 using Seq.Api.Model.Signals;
 using SeqCli.Api;
@@ -59,7 +58,7 @@ class RenderCommand : Command
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable<OutputFormatFeature>();
+        _output = Enable(new OutputFormatFeature(supportNative: true));
         _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
@@ -158,20 +157,10 @@ class RenderCommand : Command
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         var output = _output.GetOutputFormat(config);
-        if (output.Json)
-        {
-            var result = await connection.Data.QueryAsync(q, signal: signal, timeout: timeout);
-
-            // Some friendlier JSON output is definitely possible here
-            Console.WriteLine(JsonConvert.SerializeObject(result));
-        }
-        else
-        {
-            var result = await connection.Data.QueryCsvAsync(q, signal: signal, timeout: timeout);
-            output.WriteCsv(result);
-        }
-
-        return 0;
+        var result = await connection.Data.TryQueryAsync(q, signal: signal, timeout: timeout);
+        output.WriteQueryResult(result);
+        
+        return string.IsNullOrWhiteSpace(result.Error) ? 0 : 1;
     }
 
     static string BuildSqlQuery(ChartQueryPart query, DateTime rangeStart, DateTime rangeEnd, TimeSpan? timeGrouping)
@@ -181,7 +170,7 @@ class RenderCommand : Command
         foreach (var measurement in query.Measurements)
             sql.Select(measurement.Value, measurement.Label);
 
-        sql.FromStream = true;
+        sql.From = query.DataSource.ToString().ToLowerInvariant();
 
         sql.Where($"@Timestamp >= DateTime('{rangeStart:O}')");
         sql.Where($"@Timestamp < DateTime('{rangeEnd:O}')");
@@ -202,7 +191,7 @@ class RenderCommand : Command
 
     static SignalExpressionPart? Intersect(params SignalExpressionPart?[] expressions)
     {
-        var result = (SignalExpressionPart?) null;
+        SignalExpressionPart? result = null;
 
         foreach (var s in expressions)
         {

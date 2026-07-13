@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using SeqCli.Util;
 using Serilog.Events;
 using Serilog.Parsing;
@@ -59,7 +59,7 @@ static class LogEventBuilder
             m is TextSpan ts)
         {
             var text = ts.ToStringValue();
-            return new MessageTemplate(new MessageTemplateToken[] {new TextToken(text) });
+            return new MessageTemplate([new TextToken(text)]);
         }
 
         return NoMessage;

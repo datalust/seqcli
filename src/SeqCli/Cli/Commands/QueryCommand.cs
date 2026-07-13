@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -24,7 +22,7 @@ using Serilog;
 
 namespace SeqCli.Cli.Commands;
 
-[Command("query", "Execute an SQL query and receive results in CSV format",
+[Command("query", "Execute a query and receive results in CSV, JSON, or native format",
     Example = "seqcli query -q \"select count(*) from stream group by @Level\" --start=\"2018-02-28T13:00Z\"")]
 class QueryCommand : Command
 {
@@ -39,11 +37,11 @@ class QueryCommand : Command
 
     public QueryCommand()
     {
-        Options.Add("q=|query=", "The query to execute", v => _query = v);
+        Options.Add("q=|query=", "The Seq query to execute", v => _query = v);
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable<OutputFormatFeature>();
+        _output = Enable(new OutputFormatFeature(supportNative: true));
         _storagePath = Enable<StoragePathFeature>();
         Options.Add("trace", "Enable detailed (server-side) query tracing", _ => _trace = true);
         _connection = Enable<ConnectionFeature>();
@@ -63,19 +61,9 @@ class QueryCommand : Command
         var timeout = _timeout.ApplyTimeout(connection.Client.HttpClient);
 
         var output = _output.GetOutputFormat(config);
-        if (output.Json)
-        {
-            var result = await connection.Data.QueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-
-            // Some friendlier JSON output is definitely possible here
-            Console.WriteLine(JsonConvert.SerializeObject(result));
-        }
-        else
-        {
-            var result = await connection.Data.QueryCsvAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
-            output.WriteCsv(result);
-        }
-
-        return 0;
+        var result = await connection.Data.TryQueryAsync(_query, _range.Start, _range.End, _signal.Signal, timeout: timeout, trace: _trace);
+        output.WriteQueryResult(result);
+        
+        return string.IsNullOrWhiteSpace(result.Error) ? 0 : 1;
     }
 }

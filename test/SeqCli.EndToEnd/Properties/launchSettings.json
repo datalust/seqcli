@@ -15,6 +15,10 @@
     "SeqCli.EndToEnd (datalust/seq:preview)": {
       "commandName": "Project",
       "commandLineArgs": "--docker-server --pre"
+    },
+    "SeqCli.EndToEnd (McpMetrics*)": {
+      "commandName": "Project",
+      "commandLineArgs": "--docker-server --pre McpMetrics"
     }
   }
 }

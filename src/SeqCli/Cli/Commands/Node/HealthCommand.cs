@@ -22,6 +22,7 @@ using Seq.Api;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Node;
@@ -107,15 +108,16 @@ class HealthCommand : Command
             if (outputFormat.Json)
             {
                 var shouldBeJson = await response.Content.ReadAsStringAsync();
+                object obj;
                 try
                 {
-                    var obj = JsonConvert.DeserializeObject(shouldBeJson) ?? throw new InvalidDataException();
-                    outputFormat.WriteObject(obj);
+                    obj = JsonConvert.DeserializeObject(shouldBeJson) ?? throw new InvalidDataException();
                 }
                 catch
                 {
-                    outputFormat.WriteObject(new { Response = shouldBeJson });
+                    obj = new { Response = shouldBeJson };
                 }
+                outputFormat.WriteObject(obj);
             }
             else
             {

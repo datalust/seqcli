@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Roastery.Agents;
 using Roastery.Api;
 using Roastery.Data;
 using Roastery.Fake;
+using Roastery.Metrics;
 using Roastery.Util;
 using Roastery.Web;
 using Serilog;
@@ -15,9 +17,22 @@ namespace Roastery;
 // Named this way to make stack traces a little more believable :-)
 public static class Program
 {
-    public static async Task Main(ILogger logger, CancellationToken cancellationToken = default)
+    public static async Task Main(ILogger logger, PropertyNameMapping propertyNameMapping, CancellationToken cancellationToken = default)
     {
+        var metrics = new RoasteryMetrics();
+        
         var webApplicationLogger = logger.ForContext("Application", "Roastery Web Frontend");
+
+        // Sample metrics
+        var periodicSample = RoasteryMetrics.PeriodicSample(metrics, TimeSpan.FromSeconds(5), (timestamp, sample, ct) =>
+        {
+            foreach (var evt in sample.ToLogEvents(webApplicationLogger, propertyNameMapping, timestamp))
+            {
+                webApplicationLogger.Write(evt);
+            }
+            
+            return Task.CompletedTask;
+        }, cancellationToken);
 
         var database = new Database(webApplicationLogger, "roastery");
         DatabaseMigrator.Populate(database);
@@ -25,12 +40,12 @@ public static class Program
         var client = new HttpClient(
             "https://roastery.datalust.co",
             new NetworkLatencyMiddleware(
-                new RequestLoggingMiddleware(webApplicationLogger,
+                new RequestLoggingMiddleware(webApplicationLogger, metrics,
                     new SchedulingLatencyMiddleware(
                         new FaultInjectionMiddleware(webApplicationLogger,
                             new Router([
-                                new OrdersController(logger, database),
-                                new ProductsController(logger, database)
+                                new OrdersController(logger, metrics, database),
+                                new ProductsController(logger, metrics, database)
                             ], webApplicationLogger))))));
 
         var agents = new List<Agent>();
@@ -46,5 +61,6 @@ public static class Program
         agents.Add(new ArchivingBatch(client, batchApplicationLogger));
 
         await Task.WhenAll(agents.Select(a => Agent.Run(a, cancellationToken)));
+        await periodicSample;
     }
 }

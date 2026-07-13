@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Roastery.Data;
+using Roastery.Metrics;
 using Roastery.Model;
 using Roastery.Web;
 using Serilog;
@@ -15,8 +16,8 @@ class OrdersController : Controller
 {
     readonly Database _database;
 
-    public OrdersController(ILogger logger, Database database)
-        : base(logger)
+    public OrdersController(ILogger logger, RoasteryMetrics metrics, Database database)
+        : base(logger, metrics)
     {
         _database = database;
     }
@@ -41,7 +42,10 @@ class OrdersController : Controller
         }
             
         await _database.InsertAsync(order);
+        
+        Metrics.RecordOrderCreated();
         Log.Information("Created new order {OrderId} for customer {CustomerName}", order.Id, order.CustomerName);
+        
         return Json(order, HttpStatusCode.Created);
     }
 
@@ -65,7 +69,11 @@ class OrdersController : Controller
         if (order.Status == OrderStatus.PendingShipment)
             Log.Information("Order placed and ready for shipment");
         else if (order.Status == OrderStatus.Shipped)
-            Log.Information("Order shipped to {CustomerName} at {ShippingAddress}", order.CustomerName, order.ShippingAddress);
+        {
+            Metrics.RecordOrderShipped();
+            Log.Information("Order shipped to {CustomerName} at {ShippingAddress}", order.CustomerName,
+                order.ShippingAddress);
+        }
         else
             Log.Information("Order updated");
             

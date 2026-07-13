@@ -19,7 +19,10 @@ seqcli config set -k connection.serverUrl -v https://your-seq-server
 seqcli config set -k connection.apiKey -v your-api-key
 ```
 
-The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is stored in plain text unless an encryptor is defined in `encryption.encryptor`. As an alternative to storing the API key in configuration, it can be passed to each command via the `--apikey=` argument.
+The API key will be stored in your `SeqCli.json` configuration file; on Windows, this is encrypted using DPAPI; on Mac/Linux the key is stored in
+plain text unless an encryptor is defined in `encryption.encryptor`. As an alternative to storing the server URL and API key in configuration, 
+they can be passed to each command via the `--server=` and `--apikey=` arguments, or in the `SEQCLI_CONNECTION_SERVERURL` and 
+`SEQCLI_CONNECTION_APIKEY` environment variables.
 
 `seqcli` is also available as a Docker container under [`datalust/seqcli`](https://store.docker.com/community/images/datalust/seqcli):
 
@@ -54,6 +57,28 @@ $token = (
     --connect-username $user --connect-password-stdin
 )
 ```
+
+### MCP and agent skills
+
+The 2026.1 preview improves support for agent-driven diagnostics workflows:
+
+```
+dotnet tool install -g seqcli --prerelease
+```
+
+For skill installation:
+
+```
+seqcli skills install -a <agent> [--global]
+```
+
+For local MCP server installation:
+
+```
+seqcli mcp install -a <agent> [--global]
+```
+
+Credentials are set using configuration and environment variables as described above.
 
 ## Contributing
 
@@ -1843,7 +1868,7 @@ PS > seqcli signal list -i signal-m33302 --json
 {"Title": "Alarms", "Description": "Automatically created", "Filters": [{"De...
 ```
 
-## Store-and-forward ingestion proxy (preview)
+## Store-and-forward ingestion proxy
 
 The `seqcli forwarder` family of commands provide simple, durable ingestion buffering for occasionally-connected and
 intermittently-disconnected systems. The forwarder implements the Seq ingestion API, so applications that write
@@ -1865,11 +1890,8 @@ destination Seq server.
 To start a forwarder instance at the terminal, listening on port 5341 and forwarding to `seq.example.com`, run:
 
 ```shell
-seqcli forwarder run --pre --listen http://127.0.0.1:5341 -s https://seq.example.com
+seqcli forwarder run --listen http://127.0.0.1:5341 -s https://seq.example.com
 ```
-
-> While the `forwarder` command group is in preview, all `forwarder` commands require the `--pre` switch; you'll
-> also need to supply `--pre` when requesting help, e.g. `seqcli help forwarder run --pre`.
 
 You can test your forwarder using the `seqcli log` command:
 

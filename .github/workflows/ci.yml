@@ -7,11 +7,18 @@ on:
     branches: [ "dev", "main" ]
   pull_request:
     branches: [ "dev", "main" ]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish a GitHub release'
+        type: boolean
+        required: true
+        default: true
 
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
-  CI_PUBLISH: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+  CI_PUBLISH: ${{ (github.event_name == 'push' && github.ref_name == 'main') || inputs.publish }}
 
 jobs:
   build-windows:
@@ -22,11 +29,11 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Build and Publish
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: true
@@ -38,17 +45,17 @@ jobs:
 
   build-linux:
     name: Build (Linux)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Configure Docker
         run: |
           docker run --privileged --rm linuxkit/binfmt:bebbae0c1100ebf7bf2ad4dfb9dfd719cf0ef132

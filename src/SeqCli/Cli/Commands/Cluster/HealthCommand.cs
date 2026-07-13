@@ -21,6 +21,7 @@ using SeqCli.Config;
 using SeqCli.Util;
 using Seq.Api.Model.Cluster;
 using SeqCli.Api;
+using SeqCli.Output;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Cluster;

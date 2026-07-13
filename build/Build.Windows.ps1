@@ -12,7 +12,7 @@ $version = Get-SemVer
 
 Write-Output "Building version $version"
 
-$framework = 'net9.0'
+$framework = 'net10.0'
 
 function Clean-Output
 {
@@ -111,8 +111,13 @@ function Upload-NugetPackages
 function Upload-GitHubRelease($version)
 {
     Write-Output "Creating release for version $version"
+    
+    $prerelease = "";
+    if ($env:CI_TARGET_BRANCH -ne "main") {
+      $prerelease = "--prerelease ";
+    }
 
-    iex "gh release create v$version --title v$version --generate-notes $(get-item ./artifacts/*)"
+    iex "gh release create v$version --title v$version $prerelease--generate-notes $(get-item ./artifacts/*)"
 }
 
 function Remove-GlobalJson

@@ -10,7 +10,7 @@ $version = Get-SemVer
 
 Write-Output "Building version $version"
 
-$framework = "net9.0"
+$framework = "net10.0"
 $image = "datalust/seqcli"
 $archs = @(
     @{ rid = "x64"; platform = "linux/amd64" },

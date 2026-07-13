@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -6,13 +6,13 @@ RUN apt-get update \
         libc6 \
         libgcc1 \
         libgssapi-krb5-2 \
-        libicu70 \
+        libicu-dev \
         libssl3 \
         libstdc++6 \
         zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-COPY src/SeqCli/bin/Release/net9.0/linux-arm64/publish /bin/seqcli
+COPY src/SeqCli/bin/Release/net10.0/linux-arm64/publish /bin/seqcli
 
 ENTRYPOINT ["/bin/seqcli/seqcli"]
 

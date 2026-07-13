@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ static class DurationMoniker
             Component(timeSpan.TotalMinutes, "m"),
             Component(timeSpan.TotalSeconds, "s"),
             Component(timeSpan.TotalMilliseconds, "ms")
-        }.First(c => c != "");
+        }.FirstOrDefault(c => c != "", $"{timeSpan.TotalMilliseconds}ms");
     }
 
     static string Component(double value, string moniker)

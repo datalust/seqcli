@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Datalust Pty Ltd and Contributors
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ using System;
 using System.Threading.Tasks;
 using SeqCli.Apps;
 using SeqCli.Apps.Definitions;
-using SeqCli.Cli.Features;
 using SeqCli.Util;
 
 namespace SeqCli.Cli.Commands.App;

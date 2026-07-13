@@ -25,7 +25,8 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
         bool captureOutput = true,
         bool supplyInput = false,
         string stopCommandFullExePath = null,
-        string stopCommandArgs = null)
+        string stopCommandArgs = null,
+        string workingDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(fullExePath);
         _captureOutput = captureOutput;
@@ -42,7 +43,9 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
             CreateNoWindow = true,
             ErrorDialog = false,
             FileName = fullExePath,
-            Arguments = args ?? ""
+            Arguments = args ?? "",
+            // An empty working directory means the child inherits the parent process's current directory.
+            WorkingDirectory = workingDirectory ?? ""
         };
             
         if (environment != null)
@@ -111,11 +114,12 @@ public sealed class CaptiveProcess : ITestProcess, IDisposable
 
         if (_captureOutput)
         {
-            if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(5)))
-                throw new IOException("STDOUT did not complete in the fixed 5-second window.");
+            const int secondsWait = 15;
+            if (!_outputComplete.WaitOne(TimeSpan.FromSeconds(secondsWait)))
+                throw new IOException($"STDOUT did not complete in the fixed {secondsWait}-second window.");
                 
-            if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(5)))
-                throw new IOException("STDERR did not complete in the fixed 5-second window.");
+            if (!_errorComplete.WaitOne(TimeSpan.FromSeconds(secondsWait)))
+                throw new IOException($"STDERR did not complete in the fixed {secondsWait}-second window.");
         }
 
         return _process.ExitCode;

@@ -1,5 +1,5 @@
 using SeqCli.Ingestion;
-using SeqCli.Levels;
+using SeqCli.Mapping;
 using Serilog.Formatting;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
@@ -12,7 +12,14 @@ static class OutputFormatter
     // the `@sp` property, because it needs to load on older Seq installs with older Serilog versions embedded in the
     // app runner. Once we've updated it, we can switch this to a Seq.Syntax template.
     internal static ITextFormatter Json(TemplateTheme? theme) => new ExpressionTemplate(
-        $"{{ {{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} }}\n",
+        $"{{ " +
+            $"if {MetricsMapping.SurrogateDefinitionsProperty} is not null then " +
+                // Emit a metric sample
+                $"{{@t, @l: undefined(), @d: {MetricsMapping.SurrogateDefinitionsProperty}, ..rest()}} " +
+            $"else " +
+                // Emit a log or span
+                $"{{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} " +
+        $"}}\n",
         theme: theme
     );
 }

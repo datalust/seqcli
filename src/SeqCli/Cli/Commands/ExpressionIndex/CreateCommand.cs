@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Seq.Api.Model.Signals;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Signals;
-using SeqCli.Syntax;
 using SeqCli.Util;
 using Serilog;
 

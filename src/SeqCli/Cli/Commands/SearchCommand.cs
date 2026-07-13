@@ -1,4 +1,4 @@
-﻿// Copyright 2018 Datalust Pty Ltd
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,12 @@
 
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using Seq.Api.Model.Events;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Levels;
-using SeqCli.Util;
 using Serilog;
-using Serilog.Events;
-using Serilog.Parsing;
+
 // ReSharper disable UnusedType.Global
 
 namespace SeqCli.Cli.Commands;
@@ -56,7 +50,7 @@ class SearchCommand : Command
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
         _range = Enable<DateRangeFeature>();
-        _output = Enable<OutputFormatFeature>();
+        _output = Enable(new OutputFormatFeature(supportNative: true));
         _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
 
@@ -77,7 +71,7 @@ class SearchCommand : Command
         try
         {
             var config = RuntimeConfigurationLoader.Load(_storagePath);
-            await using var output = _output.GetOutputFormat(config).CreateOutputLogger();
+            var output = _output.GetOutputFormat(config);
             var connection = SeqConnectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
@@ -95,9 +89,10 @@ class SearchCommand : Command
                                        _count,
                                        fromDateUtc: _range.Start,
                                        toDateUtc: _range.End,
-                                       trace: _trace))
+                                       trace: _trace,
+                                       render: output.RequiresRender))
                     {
-                        output.Write(ToSerilogEvent(evt));
+                        output.WriteEventEntity(evt);
                     }
 
                     return 0;
@@ -114,9 +109,10 @@ class SearchCommand : Command
                                _count,
                                fromDateUtc: _range.Start,
                                toDateUtc: _range.End,
-                               trace: _trace))
+                               trace: _trace,
+                               render: output.RequiresRender))
             {
-                output.Write(ToSerilogEvent(evt));
+                output.WriteEventEntity(evt);
             }
 
             return 0;
@@ -125,52 +121,6 @@ class SearchCommand : Command
         {
             Log.Error(ex, "Could not retrieve search result: {ErrorMessage}", ex.Message);
             return 1;
-        }
-    }
-
-    LogEvent ToSerilogEvent(EventEntity evt)
-    {
-        return new LogEvent(
-            DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
-            LevelMapping.ToSerilogLevel(evt.Level),
-            string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
-            new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
-            evt.Properties
-                .Select(p => CreateProperty(p.Name, p.Value))
-        );
-    }
-
-    static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
-    {
-        // Not ideal, we lose renderings, alignment etc. here.
-
-        if (token.Text != null)
-            return new TextToken(token.Text);
-        return new PropertyToken(token.PropertyName, token.RawText ?? $"{{{token.PropertyName}}}");
-    }
-
-    LogEventProperty CreateProperty(string name, object value)
-    {
-        return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
-    }
-
-    LogEventPropertyValue CreatePropertyValue(object value)
-    {
-        switch (value)
-        {
-            case JObject jo:
-                jo.TryGetValue("$typeTag", out var tt);
-                return new StructureValue(
-                    jo.Properties()
-                        .Where(kvp => kvp.Name != "$typeTag")
-                        .Select(kvp => CreateProperty(kvp.Name, kvp.Value)),
-                    (tt as JValue)?.Value as string);
-
-            case JArray ja:
-                return new SequenceValue(ja.Select(CreatePropertyValue));
-
-            default:
-                return new ScalarValue(value);
         }
     }
 }

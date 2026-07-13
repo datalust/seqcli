@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>seqcli</AssemblyName>
     <ApplicationIcon>..\..\asset\SeqCli.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;linux-x64;linux-musl-x64;osx-x64;linux-arm64;linux-musl-arm64;osx-arm64</RuntimeIdentifiers>
@@ -19,37 +19,37 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" />
-    <Content Include="Attribution\*.txt;..\..\LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Cli\Commands\Bench\BenchCases.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Sample\Templates\*.template">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="..\..\asset\SeqCli.ico" Link="SeqCli.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Attribution\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Cli\Commands\Bench\BenchCases.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Sample\Templates\*.template" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Skills\Resources\**\*" Link="Skills\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="1.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Seq.Api" Version="2025.2.2" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Seq.Api" Version="2026.1.0" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="4.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageReference Include="Autofac" Version="8.4.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="Superpower" Version="3.1.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.10" />
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.10" />
-    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Autofac" Version="9.3.1" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
+    <PackageReference Include="Superpower" Version="3.2.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.9" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.9" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
     <PackageReference Include="Seq.Apps" Version="2023.4.0" />
-    <PackageReference Include="Seq.Syntax" Version="1.1.0" />
+    <PackageReference Include="Seq.Syntax" Version="1.1.1" />
     <PackageReference Include="Tavis.UriTemplates" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Roastery\Roastery.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Update="Skills\Resources\seq-query-grammar" />
   </ItemGroup>
 </Project>

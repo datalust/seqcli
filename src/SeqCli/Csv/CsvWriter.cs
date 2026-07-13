@@ -1,63 +1,76 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using Seq.Api.Model.Data;
+using SeqCli.Mcp.Data;
 using Serilog.Sinks.SystemConsole.Themes;
-using Superpower.Model;
 
 namespace SeqCli.Csv;
 
 static class CsvWriter
 {
-    public static void WriteCsv(IEnumerable<Token<CsvToken>> csv, ConsoleTheme theme, TextWriter output, bool hasHeaderRow)
+    public static void WriteQueryResult(QueryResultPart result, Func<object?, string> stringify, ConsoleTheme theme, TextWriter output)
     {
-        var isHeaderRow = hasHeaderRow;
-            
-        foreach (var token in csv)
+        if (!string.IsNullOrWhiteSpace(result.Error))
         {
-            switch (token.Kind)
-            {
-                case CsvToken.Newline:
-                    output.WriteLine();
-                    isHeaderRow = false;
-                    break;
-                case CsvToken.Comma:
-                    theme.Set(output, ConsoleThemeStyle.TertiaryText);
-                    output.Write(',');
-                    theme.Reset(output);
-                    break;
-                case CsvToken.DoubleQuote:
-                    theme.Set(output, ConsoleThemeStyle.TertiaryText);
-                    output.Write('"');
-                    theme.Reset(output);
-                    break;
-                case CsvToken.Boolean:
-                    theme.Set(output, ConsoleThemeStyle.Boolean);
-                    output.Write(token.ToStringValue());
-                    theme.Reset(output);
-                    break;
-                case CsvToken.Null:
-                    theme.Set(output, ConsoleThemeStyle.Null);
-                    output.Write(token.ToStringValue());
-                    theme.Reset(output);
-                    break;
-                case CsvToken.Number:
-                    theme.Set(output, ConsoleThemeStyle.Number);
-                    output.Write(token.ToStringValue());
-                    theme.Reset(output);
-                    break;
-                case CsvToken.EscapedDoubleQuote:
-                    theme.Set(output, ConsoleThemeStyle.Scalar);
-                    output.Write(token.ToStringValue());
-                    theme.Reset(output);
-                    break;
-                case CsvToken.Text:
-                    theme.Set(output, isHeaderRow ? ConsoleThemeStyle.Name : ConsoleThemeStyle.Text);
-                    output.Write(token.ToStringValue());
-                    theme.Reset(output);
-                    break;
-                default:
-                    throw new ArgumentException($"Unrecognized token `{token}`.");
-            }
+            theme.Set(output, ConsoleThemeStyle.Text);
+            QueryResultHelper.WriteErrorResult(output, result);
+            theme.Reset(output);
         }
+        
+        var first = true;
+        QueryResultHelper.Flatten(result, row =>
+        {
+            var firstCol = true;
+            foreach (var value in row)
+            {
+                WriteCell(output, theme, value, stringify, ref firstCol, isHeadingRow: first);
+            }
+            first = false;
+            output.WriteLine();
+        });
+    }
+
+    static void WriteCell(TextWriter output, ConsoleTheme theme, object? value, Func<object?, string> stringify, ref bool firstCol, bool isHeadingRow = false)
+    {
+        if (firstCol)
+        {
+            firstCol = false;
+        }
+        else
+        {
+            theme.Set(output, ConsoleThemeStyle.TertiaryText);
+            output.Write(',');
+            theme.Reset(output);
+        }
+        
+        theme.Set(output, ConsoleThemeStyle.TertiaryText);
+        output.Write('"');
+        theme.Reset(output);
+
+        var valueAsString = stringify(value);
+        
+        var dataStyle = isHeadingRow ? ConsoleThemeStyle.Name : ConsoleThemeStyle.Text;
+        var doubleQuote = valueAsString.IndexOf('"');
+        while (doubleQuote != -1)
+        {
+            theme.Set(output, dataStyle);
+            output.Write(valueAsString[..doubleQuote]);
+            theme.Reset(output);
+            
+            theme.Set(output, ConsoleThemeStyle.Scalar);
+            output.Write("\"\"");
+            theme.Reset(output);
+
+            valueAsString = valueAsString[(doubleQuote + 1)..];
+            doubleQuote = valueAsString.IndexOf('"');
+        }
+        
+        theme.Set(output, dataStyle);
+        output.Write(valueAsString);
+        theme.Reset(output);
+        
+        theme.Set(output, ConsoleThemeStyle.TertiaryText);
+        output.Write('"');
+        theme.Reset(output);
     }
 }
