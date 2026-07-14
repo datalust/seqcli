@@ -29,6 +29,18 @@ public class AlertBasicsTestCase : ICliTestCase
         var output = runner.LastRunProcess?.Output;
         Assert.Equal($"{alert.Id} TestBasicsAlert", output?.Trim());
 
+        exit = runner.Exec("alert disable", "-t TestBasicsAlert");
+        Assert.Equal(0, exit);
+
+        alert = await connection.Alerts.FindAsync(alert.Id);
+        Assert.True(alert.IsDisabled);
+
+        exit = runner.Exec("alert enable", "-t TestBasicsAlert");
+        Assert.Equal(0, exit);
+
+        alert = await connection.Alerts.FindAsync(alert.Id);
+        Assert.False(alert.IsDisabled);
+
         exit = runner.Exec("alert remove", "-t TestBasicsAlert");
         Assert.Equal(0, exit);
 

@@ -122,6 +122,8 @@ Available commands:
 
  - `alert`
    - [`alert create`](#alert-create) &mdash; Create an alert.
+   - [`alert disable`](#alert-disable) &mdash; Disable one or more alerts.
+   - [`alert enable`](#alert-enable) &mdash; Enable one or more alerts.
    - [`alert list`](#alert-list) &mdash; List alerts.
    - [`alert remove`](#alert-remove) &mdash; Remove an alert from the server.
    - [`alert update`](#alert-update) &mdash; Update an existing alert.
@@ -259,6 +261,46 @@ seqcli alert create -t 'Too many errors' --select "count(*) as errors" --from st
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `alert disable`
+
+Disable one or more alerts.
+
+Example:
+
+```
+seqcli alert disable -t 'Too many errors'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the alert(s) to disable |
+| `-i`, `--id=VALUE` | The id of a single alert to disable |
+| `-o`, `--owner=VALUE` | The id of the user to disable alerts for; by default, shared alerts are disabled |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `alert enable`
+
+Enable one or more alerts.
+
+Example:
+
+```
+seqcli alert enable -t 'Too many errors'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the alert(s) to enable |
+| `-i`, `--id=VALUE` | The id of a single alert to enable |
+| `-o`, `--owner=VALUE` | The id of the user to enable alerts for; by default, shared alerts are enabled |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `alert list`
