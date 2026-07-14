@@ -23,8 +23,8 @@ function Execute-Tests
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     cd ./test/SeqCli.EndToEnd/
-    docker pull datalust/seq:latest
-    & dotnet run -f $framework -- --docker-server
+    docker pull datalust/seq:preview
+    & dotnet run -f $framework -- --docker-server --pre
     if ($LASTEXITCODE -ne 0)
     { 
         cd ../..

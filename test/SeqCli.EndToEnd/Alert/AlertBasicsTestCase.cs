@@ -6,6 +6,7 @@ using Xunit;
 
 namespace SeqCli.EndToEnd.Alert;
 
+[CliTestCase(MinimumApiVersion = "2026.1.0")]
 public class AlertBasicsTestCase : ICliTestCase
 {
     public async Task ExecuteAsync(
