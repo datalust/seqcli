@@ -30,19 +30,20 @@ using SeqCli.Util;
 namespace SeqCli.Cli.Commands.Alert;
 
 [Command("alert", "create", "Create an alert",
-    Example = "seqcli alert create -t 'Too many errors' --signal signal-m33302 --where \"@Level = 'Error'\" " +
-              "--select \"count(*) as errors\" --window 5m --having \"errors > 10\" --level Error --suppression-time 10m")]
+    Example = "seqcli alert create -t 'Too many errors' --select \"count(*) as errors\" --from stream --signal signal-m33302 " +
+              "--where \"@Level = 'Error'\" --window 5m --having \"errors > 10\" --notification-level Error --suppression-time 10m")]
 class CreateCommand : Command
 {
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
 
+    readonly List<string> _lateral = new();
     readonly List<string> _select = new();
     readonly List<string> _groupBy = new();
     readonly List<string> _notificationApps = new();
 
-    string? _title, _description, _signal, _where, _having, _window, _level, _suppressionTime;
+    string? _title, _description, _from, _signal, _where, _having, _window, _notificationLevel, _suppressionTime;
     bool _isProtected, _isDisabled;
 
     public CreateCommand()
@@ -58,9 +59,19 @@ class CreateCommand : Command
             d => _description = ArgumentString.Normalize(d));
 
         Options.Add(
+            "from=",
+            "The data source the alert queries; either `stream` (the default) or `series`",
+            f => _from = ArgumentString.Normalize(f));
+
+        Options.Add(
             "signal=",
             "A signal expression limiting the alert's input, for example `signal-1` or `signal-1,signal-2`",
             s => _signal = ArgumentString.Normalize(s));
+
+        Options.Add(
+            "lateral=",
+            "A lateral join over a set-valued function applied to the data source, in the form `<setFunctionCall> as <alias>`, for example `unnest(http.server.request.duration.buckets) as bucket`; this argument can be used multiple times",
+            l => _lateral.Add(ArgumentString.Normalize(l) ?? throw new ArgumentException("Lateral joins require a value.")));
 
         Options.Add(
             "where=",
@@ -74,7 +85,7 @@ class CreateCommand : Command
 
         Options.Add(
             "group-by=",
-            "An expression to group measurements by, for example `ServiceName`; this argument can be used multiple times",
+            "An expression to group measurements by, for example `ServiceName` or `ServiceName ci as service`; the `ci` modifier makes the grouping case-insensitive; this argument can be used multiple times",
             g => _groupBy.Add(ArgumentString.Normalize(g) ?? throw new ArgumentException("Groupings require a value.")));
 
         Options.Add(
@@ -88,9 +99,9 @@ class CreateCommand : Command
             h => _having = ArgumentString.Normalize(h));
 
         Options.Add(
-            "level=",
-            "The notification level of the alert, for example `Warning` or `Error`",
-            l => _level = ArgumentString.Normalize(l));
+            "notification-level=",
+            "The level of the notifications raised by the alert, for example `Warning` or `Error`",
+            l => _notificationLevel = ArgumentString.Normalize(l));
 
         Options.Add(
             "suppression-time=",
@@ -130,8 +141,18 @@ class CreateCommand : Command
         alert.IsProtected = _isProtected;
         alert.IsDisabled = _isDisabled;
 
+        if (_from != null)
+            alert.DataSource = Enum.Parse<DataSource>(_from, ignoreCase: true);
+
         if (_signal != null)
             alert.SignalExpression = SignalExpressionParser.ParseExpression(_signal);
+
+        if (_lateral.Any())
+        {
+            alert.Joins.Clear();
+            foreach (var lateral in _lateral)
+                alert.Joins.Add(ParseLateral(lateral));
+        }
 
         if (_where != null)
             alert.Where = (await connection.Expressions.ToStrictAsync(_where)).StrictExpression;
@@ -147,7 +168,7 @@ class CreateCommand : Command
         {
             alert.GroupBy.Clear();
             foreach (var grouping in _groupBy)
-                alert.GroupBy.Add(new GroupingColumnPart { Value = grouping });
+                alert.GroupBy.Add(ParseGrouping(grouping));
         }
 
         if (_window != null)
@@ -156,8 +177,8 @@ class CreateCommand : Command
         if (_having != null)
             alert.Having = _having;
 
-        if (_level != null)
-            alert.NotificationLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_level));
+        if (_notificationLevel != null)
+            alert.NotificationLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_notificationLevel));
 
         if (_suppressionTime != null)
             alert.SuppressionTime = DurationMoniker.ToTimeSpan(_suppressionTime);
@@ -183,6 +204,51 @@ class CreateCommand : Command
             {
                 Value = measurement[..index].Trim(),
                 Label = measurement[(index + 4)..].Trim()
+            };
+    }
+
+    static GroupingColumnPart ParseGrouping(string grouping)
+    {
+        // Groupings use the query language's `<expression> [ci] [as <alias>]` form, where the
+        // `ci` modifier — which makes the grouping case-insensitive — appears between the
+        // expression and the optional alias. Split off the alias on the last ` as ` first (so
+        // expressions can contain the keyword), then recognise a trailing ` ci` on what remains.
+        string? alias = null;
+        var expression = grouping.Trim();
+
+        var index = expression.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
+        if (index >= 0)
+        {
+            alias = expression[(index + 4)..].Trim();
+            expression = expression[..index].TrimEnd();
+        }
+
+        var isCaseInsensitive = expression.EndsWith(" ci", StringComparison.OrdinalIgnoreCase);
+        if (isCaseInsensitive)
+            expression = expression[..^3].TrimEnd();
+
+        return new GroupingColumnPart
+        {
+            Value = expression,
+            Label = alias,
+            IsCaseInsensitive = isCaseInsensitive
+        };
+    }
+
+    static JoinPart ParseLateral(string lateral)
+    {
+        // Seq only supports lateral joins today, written `lateral <setFunctionCall> as <alias>`;
+        // the `lateral` keyword is implied by the argument name, and the remainder is specified
+        // in the same `<setFunctionCall> as <alias>` form used in queries. Split on the last
+        // ` as ` so the function call can contain the keyword.
+        var index = lateral.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
+        return index < 0
+            ? new JoinPart { Kind = JoinKind.Lateral, SetFunctionCall = lateral }
+            : new JoinPart
+            {
+                Kind = JoinKind.Lateral,
+                SetFunctionCall = lateral[..index].Trim(),
+                Alias = lateral[(index + 4)..].Trim()
             };
     }
 }

@@ -233,20 +233,22 @@ Create an alert.
 Example:
 
 ```
-seqcli alert create -t 'Too many errors' --signal signal-m33302 --where "@Level = 'Error'" --select "count(*) as errors" --window 5m --having "errors > 10" --level Error --suppression-time 10m
+seqcli alert create -t 'Too many errors' --select "count(*) as errors" --from stream --signal signal-m33302 --where "@Level = 'Error'" --window 5m --having "errors > 10" --notification-level Error --suppression-time 10m
 ```
 
 | Option | Description |
 | ------ | ----------- |
 | `-t`, `--title=VALUE` | A title for the alert |
 |       `--description=VALUE` | A description for the alert |
+|       `--from=VALUE` | The data source the alert queries; either `stream` (the default) or `series` |
 |       `--signal=VALUE` | A signal expression limiting the alert's input, for example `signal-1` or `signal-1,signal-2` |
+|       `--lateral=VALUE` | A lateral join over a set-valued function applied to the data source, in the form `<setFunctionCall> as <alias>`, for example `unnest(http.server.request.duration.buckets) as bucket`; this argument can be used multiple times |
 |       `--where=VALUE` | A predicate that selects the events the alert will consider |
 |       `--select=VALUE` | A measurement the alert condition will test, for example `count(*) as errors`; this argument can be used multiple times |
-|       `--group-by=VALUE` | An expression to group measurements by, for example `ServiceName`; this argument can be used multiple times |
+|       `--group-by=VALUE` | An expression to group measurements by, for example `ServiceName` or `ServiceName ci as service`; the `ci` modifier makes the grouping case-insensitive; this argument can be used multiple times |
 |       `--window=VALUE` | The measurement window over which the alert condition is evaluated, as a duration, for example `1m` or `1h` |
 |       `--having=VALUE` | The alert condition; a predicate over the grouped measurements, for example `errors > 10` |
-|       `--level=VALUE` | The notification level of the alert, for example `Warning` or `Error` |
+|       `--notification-level=VALUE` | The level of the notifications raised by the alert, for example `Warning` or `Error` |
 |       `--suppression-time=VALUE` | A duration for which notifications are suppressed after the alert triggers, for example `10m` or `1h` |
 |       `--notification-app=VALUE` | The id of an app instance that will be notified when the alert triggers; this argument can be used multiple times |
 |       `--protected` | Specify that the alert is editable only by administrators |
