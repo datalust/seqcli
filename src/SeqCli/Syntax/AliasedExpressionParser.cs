@@ -13,46 +13,33 @@
 // limitations under the License.
 
 using System;
-using Superpower;
-using Superpower.Model;
-using Superpower.Parsers;
+using System.Text.RegularExpressions;
 
 namespace SeqCli.Syntax;
 
 /// <summary>
-/// Parses the `&lt;expression&gt; [ci] [as &lt;alias&gt;]` fragment syntax that Seq's query language
+/// Splits the `&lt;expression&gt; [ci] [as &lt;alias&gt;]` fragment syntax that Seq's query language
 /// accepts in `select` columns, `group by` groupings, and lateral joins into an
-/// <see cref="AliasedExpression"/>. Following the pattern used by
-/// <see cref="Signals.SignalExpressionParser"/>, it tokenizes with Superpower so that malformed
-/// input produces a positioned error message rather than being silently misinterpreted.
+/// <see cref="AliasedExpression"/>.
 /// </summary>
+/// <remarks>
+/// This is a deliberately shallow split rather than a parse of Seq's grammar: we only peel a
+/// trailing `as &lt;alias&gt;` (and optional preceding `ci` modifier) off the end, leaving everything
+/// before it as opaque expression text. Requiring the alias to be a bare identifier sitting at the
+/// very end keeps an `as` appearing inside the expression — as in <c>max(a as b)</c> — from being
+/// mistaken for an alias. Seq itself validates the resulting expression, so we don't attempt to
+/// reject every malformed fragment here.
+/// </remarks>
 static class AliasedExpressionParser
 {
-    static readonly AliasedExpressionTokenizer Tokenizer = new();
+    // A trailing `as <alias>`, where the alias is a bare identifier anchored to the end of the
+    // fragment (so an `as` buried inside a function call isn't treated as an alias).
+    static readonly Regex AliasPattern =
+        new(@"\s+as\s+(?<alias>[\p{L}_][\p{L}\p{N}_]*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // `as <alias>`
-    static readonly TokenListParser<AliasedExpressionToken, string?> Alias =
-        from _ in Token.EqualTo(AliasedExpressionToken.As)
-        from alias in Token.EqualTo(AliasedExpressionToken.Identifier).Named("an alias")
-        select (string?)alias.ToStringValue();
-
-    // The grammar used by `group by`: `<expression> [ci] [as <alias>]`, where the `ci` modifier
-    // sits between the expression and the optional alias.
-    static readonly TokenListParser<AliasedExpressionToken, AliasedExpression> CaseInsensitiveAware =
-        (from expression in Token.EqualTo(AliasedExpressionToken.Identifier).AtLeastOnce().Named("an expression")
-            from isCaseInsensitive in Token.EqualTo(AliasedExpressionToken.Ci).Value(true).OptionalOrDefault(false)
-            from alias in Alias.OptionalOrDefault()
-            select new AliasedExpression(SpanText(expression), alias, isCaseInsensitive))
-        .AtEnd();
-
-    // The grammar used by `select` columns and lateral joins: `<expression> [as <alias>]`. Here
-    // `ci` is not a modifier, so a bare `ci` is accepted as ordinary expression text.
-    static readonly TokenListParser<AliasedExpressionToken, AliasedExpression> CaseSensitiveOnly =
-        (from expression in Token.EqualTo(AliasedExpressionToken.Identifier)
-                .Or(Token.EqualTo(AliasedExpressionToken.Ci)).AtLeastOnce().Named("an expression")
-            from alias in Alias.OptionalOrDefault()
-            select new AliasedExpression(SpanText(expression), alias, false))
-        .AtEnd();
+    // A trailing `ci` case-insensitivity modifier.
+    static readonly Regex CiPattern =
+        new(@"\s+ci$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     /// <summary>
     /// Parse a fragment of the form <c>&lt;expression&gt; [as &lt;alias&gt;]</c>, as accepted by query
@@ -60,22 +47,35 @@ static class AliasedExpressionParser
     /// <c>true</c>, the grammar is extended to <c>&lt;expression&gt; [ci] [as &lt;alias&gt;]</c> as used
     /// by `group by`, where the `ci` modifier appears between the expression and the optional alias.
     /// </summary>
-    /// <exception cref="Superpower.ParseException">The fragment is malformed.</exception>
-    public static AliasedExpression Parse(string fragment, bool allowCaseInsensitive = false)
+    /// <exception cref="FormatException">The fragment has no expression before its alias.</exception>
+    public static AliasedExpression ParseExpression(string fragment, bool allowCaseInsensitive = false)
     {
         if (fragment == null) throw new ArgumentNullException(nameof(fragment));
 
-        var tokens = Tokenizer.Tokenize(fragment);
-        var grammar = allowCaseInsensitive ? CaseInsensitiveAware : CaseSensitiveOnly;
-        return grammar.Parse(tokens);
-    }
+        var expression = fragment.Trim();
 
-    static string SpanText(Token<AliasedExpressionToken>[] expression)
-    {
-        // Reconstruct the original expression text, preserving internal spacing, from the first
-        // through last of its tokens.
-        var first = expression[0].Span;
-        var last = expression[^1].Span;
-        return first.Source!.Substring(first.Position.Absolute, last.Position.Absolute + last.Length - first.Position.Absolute);
+        string? alias = null;
+        var aliasMatch = AliasPattern.Match(expression);
+        if (aliasMatch.Success)
+        {
+            alias = aliasMatch.Groups["alias"].Value;
+            expression = expression[..aliasMatch.Index].TrimEnd();
+        }
+
+        var isCaseInsensitive = false;
+        if (allowCaseInsensitive)
+        {
+            var ciMatch = CiPattern.Match(expression);
+            if (ciMatch.Success)
+            {
+                isCaseInsensitive = true;
+                expression = expression[..ciMatch.Index].TrimEnd();
+            }
+        }
+
+        if (expression.Length == 0)
+            throw new FormatException($"The fragment `{fragment}` has no expression.");
+
+        return new AliasedExpression(expression, alias, isCaseInsensitive);
     }
 }

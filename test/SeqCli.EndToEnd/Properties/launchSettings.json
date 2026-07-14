@@ -14,11 +14,11 @@
     },
     "SeqCli.EndToEnd (datalust/seq:preview)": {
       "commandName": "Project",
-      "commandLineArgs": "--docker-server --pre"
+      "commandLineArgs": "--docker-server --docker-tag=preview"
     },
     "SeqCli.EndToEnd (McpMetrics*)": {
       "commandName": "Project",
-      "commandLineArgs": "--docker-server --pre McpMetrics"
+      "commandLineArgs": "--docker-server --docker-tag=preview McpMetrics"
     }
   }
 }

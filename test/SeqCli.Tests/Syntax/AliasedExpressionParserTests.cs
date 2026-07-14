@@ -1,6 +1,5 @@
 using System;
 using SeqCli.Syntax;
-using Superpower;
 using Xunit;
 
 #nullable enable
@@ -14,17 +13,19 @@ public class AliasedExpressionParserTests
     [InlineData("count(*) as errors", "count(*)", "errors")]
     [InlineData("  spaced   as   label  ", "spaced", "label")]
     [InlineData("ServiceName", "ServiceName", null)]
-    // The expression may span several whitespace-separated tokens, and the original internal
-    // spacing is preserved.
+    // The expression may contain internal whitespace, which is preserved.
     [InlineData("phist(bucket.midpoint, bucket.count, 95) as p95", "phist(bucket.midpoint, bucket.count, 95)", "p95")]
     // The `as` keyword is matched case-insensitively.
     [InlineData("x AS y", "x", "y")]
+    // An `as` buried inside the expression is not an alias: the alias must be a bare identifier at
+    // the very end, so `max(a as b)` stays whole rather than being split into `max(a`/`b`.
+    [InlineData("max(a as b)", "max(a as b)", null)]
     // Without opting in, `ci` is not a modifier and stays part of the expression.
     [InlineData("ServiceName ci as service", "ServiceName ci", "service")]
     [InlineData("ServiceName ci", "ServiceName ci", null)]
     public void ParsesExpressionAndAlias(string fragment, string expression, string? alias)
     {
-        var parsed = AliasedExpressionParser.Parse(fragment);
+        var parsed = AliasedExpressionParser.ParseExpression(fragment);
 
         Assert.Equal(expression, parsed.Expression);
         Assert.Equal(alias, parsed.Alias);
@@ -43,7 +44,7 @@ public class AliasedExpressionParserTests
     [InlineData("Name CI", "Name", null, true)]
     public void ParsesCaseInsensitiveModifierWhenAllowed(string fragment, string expression, string? alias, bool isCaseInsensitive)
     {
-        var parsed = AliasedExpressionParser.Parse(fragment, allowCaseInsensitive: true);
+        var parsed = AliasedExpressionParser.ParseExpression(fragment, allowCaseInsensitive: true);
 
         Assert.Equal(expression, parsed.Expression);
         Assert.Equal(alias, parsed.Alias);
@@ -51,35 +52,18 @@ public class AliasedExpressionParserTests
     }
 
     [Theory]
-    // A `ci` following the alias is not the modifier the grammar permits, so it's rejected rather
-    // than silently folded into the alias.
-    [InlineData("ServiceName as service ci")]
-    // An expression cannot contain a bare `as`, since the alias binds to a single trailing token.
-    [InlineData("a as b as c")]
-    // An alias must follow `as`.
-    [InlineData("ServiceName as")]
-    // A grouping must have an expression before the `ci` modifier.
-    [InlineData("ci")]
-    // There must be an expression.
-    [InlineData("as service")]
+    // An empty fragment has no expression; any other malformed fragment is left for Seq to reject
+    // downstream.
+    [InlineData("")]
     [InlineData("   ")]
-    public void RejectsMalformedFragments(string fragment)
+    public void RejectsFragmentsWithNoExpression(string fragment)
     {
-        Assert.Throws<ParseException>(() => AliasedExpressionParser.Parse(fragment, allowCaseInsensitive: true));
-    }
-
-    [Fact]
-    public void ErrorMessageIdentifiesTheProblem()
-    {
-        var ex = Assert.Throws<ParseException>(() => AliasedExpressionParser.Parse("ServiceName as"));
-
-        // Superpower positions the error and names the missing production.
-        Assert.Contains("alias", ex.Message);
+        Assert.Throws<FormatException>(() => AliasedExpressionParser.ParseExpression(fragment, allowCaseInsensitive: true));
     }
 
     [Fact]
     public void ParseRejectsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => AliasedExpressionParser.Parse(null!));
+        Assert.Throws<ArgumentNullException>(() => AliasedExpressionParser.ParseExpression(null!));
     }
 }

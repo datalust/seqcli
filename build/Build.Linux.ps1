@@ -1,3 +1,7 @@
+param(
+    [string] $SeqDockerTag = "latest"
+)
+
 Push-Location $PSScriptRoot/../
 
 . ./build/Build.Common.ps1
@@ -23,8 +27,8 @@ function Execute-Tests
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     cd ./test/SeqCli.EndToEnd/
-    docker pull datalust/seq:preview
-    & dotnet run -f $framework -- --docker-server --pre
+    docker pull datalust/seq:$SeqDockerTag
+    & dotnet run -f $framework -- --docker-server --docker-tag=$SeqDockerTag
     if ($LASTEXITCODE -ne 0)
     { 
         cd ../..
