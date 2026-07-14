@@ -195,60 +195,35 @@ class CreateCommand : Command
 
     static ColumnPart ParseColumn(string measurement)
     {
-        // Measurements are specified in the same `<expression> as <label>` form used
-        // in queries; split on the last ` as ` so expressions can contain the keyword.
-        var index = measurement.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
-        return index < 0
-            ? new ColumnPart { Value = measurement }
-            : new ColumnPart
-            {
-                Value = measurement[..index].Trim(),
-                Label = measurement[(index + 4)..].Trim()
-            };
+        // Measurements use the query language's `<expression> [as <label>]` column form.
+        var parsed = AliasedExpressionParser.Parse(measurement);
+        return new ColumnPart { Value = parsed.Expression, Label = parsed.Alias };
     }
 
     static GroupingColumnPart ParseGrouping(string grouping)
     {
-        // Groupings use the query language's `<expression> [ci] [as <alias>]` form, where the
-        // `ci` modifier — which makes the grouping case-insensitive — appears between the
-        // expression and the optional alias. Split off the alias on the last ` as ` first (so
-        // expressions can contain the keyword), then recognise a trailing ` ci` on what remains.
-        string? alias = null;
-        var expression = grouping.Trim();
-
-        var index = expression.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
-        if (index >= 0)
-        {
-            alias = expression[(index + 4)..].Trim();
-            expression = expression[..index].TrimEnd();
-        }
-
-        var isCaseInsensitive = expression.EndsWith(" ci", StringComparison.OrdinalIgnoreCase);
-        if (isCaseInsensitive)
-            expression = expression[..^3].TrimEnd();
-
+        // Groupings extend the column form with the `ci` case-insensitivity modifier:
+        // `<expression> [ci] [as <alias>]`.
+        var parsed = AliasedExpressionParser.Parse(grouping, allowCaseInsensitive: true);
         return new GroupingColumnPart
         {
-            Value = expression,
-            Label = alias,
-            IsCaseInsensitive = isCaseInsensitive
+            Value = parsed.Expression,
+            Label = parsed.Alias,
+            IsCaseInsensitive = parsed.IsCaseInsensitive
         };
     }
 
     static JoinPart ParseLateral(string lateral)
     {
         // Seq only supports lateral joins today, written `lateral <setFunctionCall> as <alias>`;
-        // the `lateral` keyword is implied by the argument name, and the remainder is specified
-        // in the same `<setFunctionCall> as <alias>` form used in queries. Split on the last
-        // ` as ` so the function call can contain the keyword.
-        var index = lateral.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
-        return index < 0
-            ? new JoinPart { Kind = JoinKind.Lateral, SetFunctionCall = lateral }
-            : new JoinPart
-            {
-                Kind = JoinKind.Lateral,
-                SetFunctionCall = lateral[..index].Trim(),
-                Alias = lateral[(index + 4)..].Trim()
-            };
+        // the `lateral` keyword is implied by the argument name, leaving the `<expression> as
+        // <alias>` column form.
+        var parsed = AliasedExpressionParser.Parse(lateral);
+        return new JoinPart
+        {
+            Kind = JoinKind.Lateral,
+            SetFunctionCall = parsed.Expression,
+            Alias = parsed.Alias
+        };
     }
 }
