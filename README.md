@@ -60,10 +60,10 @@ $token = (
 
 ### MCP and agent skills
 
-The 2026.1 preview improves support for agent-driven diagnostics workflows:
+`seqcli` includes support for agent-driven diagnostic workflows:
 
 ```
-dotnet tool install -g seqcli --prerelease
+dotnet tool install -g seqcli
 ```
 
 For skill installation:
