@@ -19,13 +19,8 @@ using SeqCli.Cli.Features;
 using SeqCli.Config;
 using Serilog;
 
-namespace SeqCli.Cli.Alerts;
+namespace SeqCli.Cli.Commands.Alert;
 
-/// <summary>
-/// Shared implementation for the `alert enable` and `alert disable` commands, which select
-/// alerts using the same `title`/`id` identity convention as `alert remove` and flip their
-/// disabled state.
-/// </summary>
 abstract class SetEnabledCommand : Command
 {
     readonly bool _disable;

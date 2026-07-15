@@ -16,8 +16,6 @@ public class AlertCreateMinimalTestCase : ICliTestCase
         ILogger logger,
         CliCommandRunner runner)
     {
-        // The minimal invocation: only a title is supplied, and every other field falls
-        // back to the server-provided alert template.
         var exit = runner.Exec("alert create", "-t MinimalAlert");
         Assert.Equal(0, exit);
 

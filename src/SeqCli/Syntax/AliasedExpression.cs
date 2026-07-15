@@ -15,31 +15,13 @@
 namespace SeqCli.Syntax;
 
 /// <summary>
-/// An expression paired with the optional alias and case-insensitivity modifier that Seq's query
-/// language accepts in `select` columns, `group by` groupings, and lateral joins. Parse fragments
-/// into this shape with <see cref="AliasedExpressionParser"/>.
+/// A loose and abstract `{expression} ci as {alias}`. 
 /// </summary>
-readonly struct AliasedExpression
+readonly struct AliasedExpression(string expression, string? alias, bool isCaseInsensitive)
 {
-    public AliasedExpression(string expression, string? alias, bool isCaseInsensitive)
-    {
-        Expression = expression;
-        Alias = alias;
-        IsCaseInsensitive = isCaseInsensitive;
-    }
+    public string Expression { get; } = expression;
 
-    /// <summary>
-    /// The expression appearing before any `as` alias.
-    /// </summary>
-    public string Expression { get; }
+    public string? Alias { get; } = alias;
 
-    /// <summary>
-    /// The alias given after `as`, or <c>null</c> when none was specified.
-    /// </summary>
-    public string? Alias { get; }
-
-    /// <summary>
-    /// <c>true</c> when the `ci` case-insensitivity modifier was present.
-    /// </summary>
-    public bool IsCaseInsensitive { get; }
+    public bool IsCaseInsensitive { get; } = isCaseInsensitive;
 }

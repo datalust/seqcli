@@ -14,7 +14,6 @@ public class AlertBasicsTestCase : ICliTestCase
         ILogger logger,
         CliCommandRunner runner)
     {
-        // Unlike signals, there's no seeded default alert, so create one to exercise list/remove.
         var alert = await connection.Alerts.TemplateAsync();
         alert.Title = "TestBasicsAlert";
         alert.OwnerId = null;

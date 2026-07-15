@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using SeqCli.Cli.Alerts;
-
 namespace SeqCli.Cli.Commands.Alert;
 
 [Command("alert", "enable", "Enable one or more alerts",

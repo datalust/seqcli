@@ -195,15 +195,12 @@ class CreateCommand : Command
 
     static ColumnPart ParseColumn(string measurement)
     {
-        // Measurements use the query language's `<expression> [as <label>]` column form.
         var parsed = AliasedExpressionParser.ParseExpression(measurement);
         return new ColumnPart { Value = parsed.Expression, Label = parsed.Alias };
     }
 
     static GroupingColumnPart ParseGrouping(string grouping)
     {
-        // Groupings extend the column form with the `ci` case-insensitivity modifier:
-        // `<expression> [ci] [as <alias>]`.
         var parsed = AliasedExpressionParser.ParseExpression(grouping, allowCaseInsensitive: true);
         return new GroupingColumnPart
         {
@@ -215,9 +212,6 @@ class CreateCommand : Command
 
     static JoinPart ParseLateral(string lateral)
     {
-        // Seq only supports lateral joins today, written `lateral <setFunctionCall> as <alias>`;
-        // the `lateral` keyword is implied by the argument name, leaving the `<expression> as
-        // <alias>` column form.
         var parsed = AliasedExpressionParser.ParseExpression(lateral);
         return new JoinPart
         {

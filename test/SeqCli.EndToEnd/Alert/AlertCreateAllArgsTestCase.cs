@@ -30,8 +30,7 @@ public class AlertCreateAllArgsTestCase : ICliTestCase
 
         var appInstance = (await connection.AppInstances.ListAsync()).Single();
 
-        // Every option the `alert create` command accepts, including the repeatable
-        // `--select`, `--group-by`, and `--notification-app` arguments.
+        // `stream` alert
         exit = runner.Exec("alert create",
             "-t AllArgsAlert --description \"Covers every alert create option\" --from stream " +
             "--signal signal-m33301 --where \"@Level = 'Error'\" " +
@@ -64,9 +63,7 @@ public class AlertCreateAllArgsTestCase : ICliTestCase
         Assert.True(testAlert.IsProtected);
         Assert.True(testAlert.IsDisabled);
 
-        // `--from series` selects the alternative data source, and `--lateral` (a lateral join)
-        // unnests histogram buckets from it; these belong to the metrics-oriented `series` source
-        // rather than the stream-oriented `--signal` above, so they're exercised separately.
+        // `series` alert
         exit = runner.Exec("alert create",
             "-t SeriesAlert --from series --lateral \"unnest(commit_duration.buckets) as bucket\" " +
             "--where \"Has(commit_duration.buckets)\" " +
