@@ -17,8 +17,8 @@ public class ExponentialHistogram
     int _scale;
     Dictionary<double, ulong> _buckets;
 
-    double _min;
-    double _max;
+    double _min = double.PositiveInfinity;
+    double _max = double.NegativeInfinity;
     double _sum;
     ulong _total;
 

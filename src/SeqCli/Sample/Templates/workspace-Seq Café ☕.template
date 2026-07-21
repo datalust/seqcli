@@ -1,27 +1,18 @@
 {
   "$entity": "workspace",
-  "OwnerId": arg("ownerId"),
-  "Title": "Sample",
+  "Title": "Seq Café ☕",
   "Description": "Created by `seqcli sample setup`",
+  "OwnerId": null,
   "IsProtected": false,
   "DefaultSignalExpression": {
-    "SignalId": ref("signal-Sample Data.template"),
-    "Kind": "Signal"
+    "Kind": "Signal",
+    "SignalId": ref("signal-Sample Data.template")
   },
   "Content": {
-    "DashboardIds": [
-      ref("dashboard-Database.template"),
-      ref("dashboard-HTTP Requests.template"),
-      ref("dashboard-Orders.template")
-    ],
-    "QueryIds": [
-      ref("sqlquery-Order Items by Product Size.template"),
-      ref("sqlquery-Route Bindings.template")
-    ],
     "SignalIds": [
-      "signal-m33301",
-      "signal-m33302",
-      "signal-m33303",
+      ref("signal-Errors.template"),
+      ref("signal-Warnings.template"),
+      ref("signal-Exceptions.template"),
       ref("signal-Bad Request.template"),
       ref("signal-Batch Processing.template"),
       ref("signal-Database.template"),
@@ -34,10 +25,21 @@
       ref("signal-Order Created.template"),
       ref("signal-Order Placed.template"),
       ref("signal-Order Shipped.template"),
-      "signal-29",
       ref("signal-Stock Level Warnings.template"),
       ref("signal-Success.template"),
-      ref("signal-Web Frontend.template")
-    ]
+      ref("signal-Web Frontend.template"),
+      ref("signal-Sample Data.template"),
+      ref("signal-Roastery Production.template")
+    ],
+    "QueryIds": [
+      ref("sqlquery-Order Items by Product Size.template"),
+      ref("sqlquery-Route Bindings.template")
+    ],
+    "DashboardIds": [
+      ref("dashboard-Database.template"),
+      ref("dashboard-HTTP Requests.template"),
+      ref("dashboard-Orders.template")
+    ],
+    "ViewIds": []
   }
 }

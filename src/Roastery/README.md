@@ -126,6 +126,28 @@ activities, generally including domain identifiers like `OrderId` for
 some correlation. We might in future use the batch processes as a
 way to illustrate tracing across application boundaries.
 
+## Metrics
+
+Metrics are collected without using the .NET `System.Diagnostics` or
+OpenTelemetry SDKs: metrics are plain dictionaries keyed by record
+structs, so arbitrary (and possibly high-cardinality) attributes like
+`RoastId` are supported with structural equality and no
+pre-registration.
+
+Each simulated application has its own metrics class: web frontend
+metrics (HTTP request durations, order counters) live in
+`RoasteryWebMetrics`, and roasting and ambient environment metrics
+live in `RoasteryProductionMetrics`. Each is sampled independently
+and emitted through its application's logger. The abstract
+`RoasteryMetrics<TSample>` base class provides the shared collection
+infrastructure, and `RoasteryMetricsSample` the conversion of samples
+into `Metrics sampled` events.
+
+Counters and histograms have delta temporality: samples accumulate in
+the current `Sample` instance, which is atomically swapped out every
+five seconds and converted into log events. Gauges are instantaneous
+last-write-wins values within each sampling interval.
+
 ### See also...
 
 This is the data set relied upon by the entities created with

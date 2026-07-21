@@ -1,6 +1,5 @@
 {
   "$entity": "signal",
-  "OwnerId": arg("ownerId"),
   "Title": "Web Frontend",
   "Description": "Created by `seqcli signal setup`",
   "Filters": [
@@ -13,6 +12,8 @@
   ],
   "Columns": [],
   "IsProtected": false,
+  "IsIndexSuppressed": false,
   "Grouping": "Inferred",
-  "ExplicitGroupName": null
+  "ExplicitGroupName": null,
+  "OwnerId": null
 }

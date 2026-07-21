@@ -1,0 +1,19 @@
+{
+  "$entity": "signal",
+  "Title": "Roastery Production",
+  "Description": "Created by `admin`",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "Application = 'Roastery Production'",
+      "FilterNonStrict": "Application = 'Roastery Production'"
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "IsIndexSuppressed": false,
+  "Grouping": "Inferred",
+  "ExplicitGroupName": null,
+  "OwnerId": null
+}

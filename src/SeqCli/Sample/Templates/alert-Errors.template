@@ -1,0 +1,28 @@
+{
+  "$entity": "alert",
+  "Title": "Errors",
+  "Description": null,
+  "OwnerId": null,
+  "IsProtected": false,
+  "IsDisabled": false,
+  "DataSource": "Stream",
+  "Joins": [],
+  "SignalExpression": {
+    "Kind": "Signal",
+    "SignalId": ref("signal-Errors.template")
+  },
+  "Where": null,
+  "GroupBy": [],
+  "TimeGrouping": "00:01:00",
+  "Select": [
+    {
+      "Value": "count(*)",
+      "Label": "count"
+    }
+  ],
+  "Having": "count > 0",
+  "NotificationLevel": "Error",
+  "NotificationProperties": [],
+  "NotificationChannels": [],
+  "SuppressionTime": "00:10:00"
+}

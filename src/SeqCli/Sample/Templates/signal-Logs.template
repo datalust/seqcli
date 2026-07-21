@@ -1,0 +1,19 @@
+{
+  "$entity": "signal",
+  "Title": "Logs",
+  "Description": "Automatically created",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "not(has(@Start))",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "IsIndexSuppressed": false,
+  "Grouping": "Explicit",
+  "ExplicitGroupName": "Kind",
+  "OwnerId": null
+}

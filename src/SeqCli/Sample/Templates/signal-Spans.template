@@ -1,0 +1,19 @@
+{
+  "$entity": "signal",
+  "Title": "Spans",
+  "Description": "Automatically created",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "has(@Start) and has(@SpanId)",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "IsIndexSuppressed": false,
+  "Grouping": "Explicit",
+  "ExplicitGroupName": "Kind",
+  "OwnerId": null
+}

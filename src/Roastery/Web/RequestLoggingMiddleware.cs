@@ -15,9 +15,9 @@ class RequestLoggingMiddleware : HttpServer
 {
     readonly HttpServer _next;
     readonly ILogger _logger;
-    readonly RoasteryMetrics _metrics;
+    readonly RoasteryWebMetrics _metrics;
     
-    public RequestLoggingMiddleware(ILogger logger, RoasteryMetrics metrics, HttpServer next)
+    public RequestLoggingMiddleware(ILogger logger, RoasteryWebMetrics metrics, HttpServer next)
     {
         _next = next;
         _logger = logger.ForContext<RequestLoggingMiddleware>();
@@ -36,7 +36,7 @@ class RequestLoggingMiddleware : HttpServer
             var response = await _next.InvokeAsync(request);
 
             LogCompletion(activity, null, response.StatusCode);
-            _metrics.RecordHttpRequestDuration(new RoasteryMetrics.Sample.HttpRequestDurationKey(request.Path, (int)response.StatusCode), requestTiming.ElapsedMilliseconds);
+            _metrics.RecordHttpRequestDuration(new RoasteryWebMetrics.Sample.HttpRequestDurationKey(request.Path, (int)response.StatusCode), requestTiming.ElapsedMilliseconds);
 
             return response;
         }
@@ -49,7 +49,7 @@ class RequestLoggingMiddleware : HttpServer
         {
             var statusCode = HttpStatusCode.InternalServerError;
 
-            _metrics.RecordHttpRequestDuration(new RoasteryMetrics.Sample.HttpRequestDurationKey(request.Path, (int)statusCode), requestTiming.ElapsedMilliseconds);
+            _metrics.RecordHttpRequestDuration(new RoasteryWebMetrics.Sample.HttpRequestDurationKey(request.Path, (int)statusCode), requestTiming.ElapsedMilliseconds);
             return new HttpResponse(statusCode, "An error occurred.");
         }
     }

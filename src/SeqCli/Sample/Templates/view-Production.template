@@ -1,0 +1,21 @@
+{
+  "$entity": "view",
+  "Title": "Production",
+  "Description": "Created by `admin`",
+  "OwnerId": null,
+  "IsProtected": false,
+  "GroupKeyExpressions": [
+    "MachineId",
+    "RoastProfile"
+  ],
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "Has(MachineId)",
+      "FilterNonStrict": "Has(MachineId)"
+    }
+  ],
+  "DimensionFilters": [],
+  "PinnedMetrics": []
+}

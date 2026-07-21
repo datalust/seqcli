@@ -1,6 +1,5 @@
 {
   "$entity": "signal",
-  "OwnerId": arg("ownerId"),
   "Title": "Information",
   "Description": "Created by `seqcli sample setup`",
   "Filters": [
@@ -13,6 +12,8 @@
   ],
   "Columns": [],
   "IsProtected": false,
+  "IsIndexSuppressed": false,
   "Grouping": "Explicit",
-  "ExplicitGroupName": "@Level"
+  "ExplicitGroupName": "@Level",
+  "OwnerId": null
 }

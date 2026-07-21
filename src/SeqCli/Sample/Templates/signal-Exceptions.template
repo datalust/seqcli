@@ -1,0 +1,19 @@
+{
+  "$entity": "signal",
+  "Title": "Exceptions",
+  "Description": "Automatically created",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@Exception is not null",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "IsIndexSuppressed": false,
+  "Grouping": "Inferred",
+  "ExplicitGroupName": null,
+  "OwnerId": null
+}

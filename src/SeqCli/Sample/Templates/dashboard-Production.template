@@ -1,0 +1,85 @@
+{
+  "$entity": "dashboard",
+  "OwnerId": null,
+  "Title": "Production",
+  "IsProtected": false,
+  "SignalExpression": null,
+  "Charts": [
+    {
+      "Title": "Stock Level (kgs)",
+      "SignalExpression": null,
+      "Queries": [
+        {
+          "DataSource": "Series",
+          "Joins": [],
+          "Measurements": [
+            {
+              "Value": "max(StockLevel)",
+              "Label": "max"
+            }
+          ],
+          "Where": "Has(Blend) and Has(StockLevel)",
+          "SignalExpression": null,
+          "GroupBy": [
+            "Blend"
+          ],
+          "DisplayStyle": {
+            "Type": "Line",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 12,
+        "HeightRows": 2
+      },
+      "Description": ""
+    },
+    {
+      "Title": "Completed Batches",
+      "SignalExpression": null,
+      "Queries": [
+        {
+          "DataSource": "Stream",
+          "Joins": [],
+          "Measurements": [
+            {
+              "Value": "count(*)",
+              "Label": "count"
+            }
+          ],
+          "Where": "@EventType = 0xB0AF9CDC",
+          "SignalExpression": null,
+          "GroupBy": [
+            "RoastProfile"
+          ],
+          "DisplayStyle": {
+            "Type": "Line",
+            "LineFillToZeroY": false,
+            "LineShowMarkers": true,
+            "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
+            "SuppressLegend": false,
+            "Palette": "Default"
+          },
+          "Having": null,
+          "OrderBy": [],
+          "Limit": null
+        }
+      ],
+      "DisplayStyle": {
+        "WidthColumns": 12,
+        "HeightRows": 1
+      },
+      "Description": ""
+    }
+  ]
+}

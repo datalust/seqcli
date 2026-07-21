@@ -1,0 +1,19 @@
+{
+  "$entity": "signal",
+  "Title": "Warnings",
+  "Description": "Automatically created",
+  "Filters": [
+    {
+      "Description": null,
+      "DescriptionIsExcluded": false,
+      "Filter": "@Level in ['w', 'wa', 'war', 'wrn', 'warn', 'warning'] ci",
+      "FilterNonStrict": null
+    }
+  ],
+  "Columns": [],
+  "IsProtected": false,
+  "IsIndexSuppressed": false,
+  "Grouping": "Explicit",
+  "ExplicitGroupName": "@Level",
+  "OwnerId": null
+}
