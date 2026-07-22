@@ -1,6 +1,6 @@
 {
   "$entity": "alert",
-  "Title": "Errors",
+  "Title": "Production Errors",
   "Description": null,
   "OwnerId": null,
   "IsProtected": false,
@@ -8,8 +8,15 @@
   "DataSource": "Stream",
   "Joins": [],
   "SignalExpression": {
-    "Kind": "Signal",
-    "SignalId": ref("signal-Errors.template")
+    "Kind": "Intersection",
+    "Left": {
+      "Kind": "Signal",
+      "SignalId": ref("signal-Errors.template")
+    },
+    "Right": {
+      "Kind": "Signal",
+      "SignalId": ref("signal-Roastery Production.template")
+    }
   },
   "Where": null,
   "GroupBy": [],
