@@ -10,7 +10,13 @@ public class RoasteryProductionMetrics : RoasteryMetrics<RoasteryProductionMetri
     public class Sample : RoasteryMetricsSample
     {
         public record struct RoastKey(string MachineId, string RoastId, string RoastProfile);
-        public record struct RoastTelemetryGauges(double BeanTemperature, double RateOfRise, double BurnerLevel, double DrumSpeed);
+
+        public record struct RoastTelemetryGauges(
+            double BeanTemperature,
+            double RateOfRise,
+            double BurnerLevel,
+            double DrumSpeed);
+
         public readonly Dictionary<RoastKey, RoastTelemetryGauges> RoastTelemetry = new();
 
         public readonly Dictionary<RoastKey, ulong> RoastBatchesStarted = new();
@@ -21,10 +27,16 @@ public class RoasteryProductionMetrics : RoasteryMetrics<RoasteryProductionMetri
         public readonly Dictionary<RoastKey, ExponentialHistogram> RoastWeightLoss = new();
 
         public record struct AmbientKey(string Area);
-        public record struct AmbientGauges(double AmbientTemperature, double AmbientRelativeHumidity, double AmbientBarometricPressure);
+
+        public record struct AmbientGauges(
+            double AmbientTemperature,
+            double AmbientRelativeHumidity,
+            double AmbientBarometricPressure);
+
         public readonly Dictionary<AmbientKey, AmbientGauges> Ambient = new();
 
-        public override IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp)
+        public override IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping,
+            DateTimeOffset timestamp)
         {
             foreach (var (key, gauges) in RoastTelemetry)
             {
@@ -74,8 +86,10 @@ public class RoasteryProductionMetrics : RoasteryMetrics<RoasteryProductionMetri
 
             var counters = new (string Name, string Description, Dictionary<RoastKey, ulong> Counter)[]
             {
-                (nameof(RoastBatchesStarted), "A batch of green beans was charged into a roasting machine.", RoastBatchesStarted),
-                (nameof(RoastBatchesCompleted), "A roast batch was dropped and passed quality control.", RoastBatchesCompleted),
+                (nameof(RoastBatchesStarted), "A batch of green beans was charged into a roasting machine.",
+                    RoastBatchesStarted),
+                (nameof(RoastBatchesCompleted), "A roast batch was dropped and passed quality control.",
+                    RoastBatchesCompleted),
                 (nameof(RoastBatchesRejected), "A roast batch was rejected by quality control.", RoastBatchesRejected)
             };
 
@@ -107,11 +121,15 @@ public class RoasteryProductionMetrics : RoasteryMetrics<RoasteryProductionMetri
                 }
             }
 
-            var histograms = new (string Name, string Unit, string Description, Dictionary<RoastKey, ExponentialHistogram> Histogram)[]
-            {
-                (nameof(RoastDuration), "s", "The time taken to roast a batch, from charge to drop.", RoastDuration),
-                (nameof(RoastWeightLoss), "%", "The percentage of green bean weight lost during roasting.", RoastWeightLoss)
-            };
+            var histograms =
+                new (string Name, string Unit, string Description, Dictionary<RoastKey, ExponentialHistogram> Histogram)
+                    []
+                    {
+                        (nameof(RoastDuration), "s", "The time taken to roast a batch, from charge to drop.",
+                            RoastDuration),
+                        (nameof(RoastWeightLoss), "%", "The percentage of green bean weight lost during roasting.",
+                            RoastWeightLoss)
+                    };
 
             foreach (var (name, unit, description, histogram) in histograms)
             {

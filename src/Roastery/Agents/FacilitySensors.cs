@@ -59,7 +59,8 @@ class FacilitySensors : Agent
         {
             var temperature = area.BaseTemperature + diurnalSwing + Distribution.Uniform(0, 0.8) - 0.4;
             area.RelativeHumidity = Math.Clamp(
-                area.RelativeHumidity + (58 - area.RelativeHumidity) * 0.02 + Distribution.Uniform(0, 2.4) - 1.2, 35, 85);
+                area.RelativeHumidity + (58 - area.RelativeHumidity) * 0.02 + Distribution.Uniform(0, 2.4) - 1.2, 35,
+                85);
 
             _metrics.RecordAmbientConditions(
                 new RoasteryProductionMetrics.Sample.AmbientKey(area.Area),
@@ -69,7 +70,8 @@ class FacilitySensors : Agent
                     Math.Round(_barometricPressure, 1)));
 
             if (area.RelativeHumidity > 75 && Distribution.OnceIn(10))
-                _logger.Warning("Relative humidity in the {Area} has reached {RelativeHumidity:F0}%; green coffee should be stored below 65% RH",
+                _logger.Warning(
+                    "Relative humidity in the {Area} has reached {RelativeHumidity:F0}%; green coffee should be stored below 65% RH",
                     area.Area, area.RelativeHumidity);
         }
 

@@ -6,7 +6,7 @@ coffee beans.
 Customers place orders through the website, and staff fulfill orders
 by shipping them and updating the site.
 
-Back-end batch processes detect abandoned orders, and archive fulfilled 
+Back-end batch processes detect abandoned orders, and archive fulfilled
 orders so that the simulation doesn't exhaust memory :-).
 
 The simulation produces events from an MVC-like web stack and a
@@ -17,7 +17,7 @@ data can be produced.
 
 ## How the simulation works
 
-The simulation centers on a single instance of an in-memory data 
+The simulation centers on a single instance of an in-memory data
 structure modelling the HTTP stack from client through to MVC-style
 "controllers" on the server-side:
 
@@ -59,15 +59,15 @@ abstract class HttpServer
 Between the `HttpClient` that consumes the outermost middleware layer,
 and the `Router` that dispatches requests to controllers, we have:
 
- * `NetworkLatencyMiddleware` &mdash; injects a random delay between
-   the client sending a request, and the server-side middleware receiving it
- * `RequestLoggingMiddleware` &mdash; emits an event with timing 
-   information at the completion of each request, including exception
-   details if the request failed
- * `FaultInjectionMiddleware` &mdash; randomly fails requests by throwing
-   various exceptions
- * `SchedulingLatencyMiddleware` &mdash; slows request processing down,
-   and more so when there are multiple requests executing concurrently
+* `NetworkLatencyMiddleware` &mdash; injects a random delay between
+  the client sending a request, and the server-side middleware receiving it
+* `RequestLoggingMiddleware` &mdash; emits an event with timing
+  information at the completion of each request, including exception
+  details if the request failed
+* `FaultInjectionMiddleware` &mdash; randomly fails requests by throwing
+  various exceptions
+* `SchedulingLatencyMiddleware` &mdash; slows request processing down,
+  and more so when there are multiple requests executing concurrently
 
 The `RequestLoggingMiddleware` pushes `RequestId` onto the log context;
 this tags all events generated during a request with the same id. A user
@@ -89,7 +89,7 @@ context to give some notion of the cause of events like database
 operations deeper in the stack. We might in future emulate Serilog's
 `IDiagnosticContext` and set these properties there instead.
 
-Action methods are decorated with the `[Route]` attribute, are 
+Action methods are decorated with the `[Route]` attribute, are
 asynchronous, accept `HttpRequest`, and return `HttpResponse`.
 
 Controllers tend to log domain-level events: _an order was placed_ and
@@ -101,7 +101,7 @@ The simulated database is a thread-safe in-memory dictionary.
 
 Operations act on the dictionary using simple operations and predicates,
 with additional fake SQL generated and logged to illustrate what's
-going on in the 
+going on in the
 
 Entities are cloned when they're inserted and when they're retrieved,
 so that some hygiene is maintained.

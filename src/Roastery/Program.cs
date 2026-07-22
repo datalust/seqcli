@@ -18,7 +18,8 @@ namespace Roastery;
 // Named this way to make stack traces a little more believable :-)
 public static class Program
 {
-    public static async Task Main(ILogger logger, PropertyNameMapping propertyNameMapping, CancellationToken cancellationToken = default)
+    public static async Task Main(ILogger logger, PropertyNameMapping propertyNameMapping,
+        CancellationToken cancellationToken = default)
     {
         var webMetrics = new RoasteryWebMetrics();
         var productionMetrics = new RoasteryProductionMetrics();
@@ -37,22 +38,23 @@ public static class Program
             return Task.CompletedTask;
         }, cancellationToken);
 
-        var sampleProductionMetrics = productionMetrics.PeriodicSample(TimeSpan.FromSeconds(5), (timestamp, sample, ct) =>
-        {
-            foreach (var evt in sample.ToLogEvents(productionLogger, propertyNameMapping, timestamp))
+        var sampleProductionMetrics = productionMetrics.PeriodicSample(TimeSpan.FromSeconds(5),
+            (timestamp, sample, ct) =>
             {
-                productionLogger.Write(evt);
-            }
+                foreach (var evt in sample.ToLogEvents(productionLogger, propertyNameMapping, timestamp))
+                {
+                    productionLogger.Write(evt);
+                }
 
-            return Task.CompletedTask;
-        }, cancellationToken);
+                return Task.CompletedTask;
+            }, cancellationToken);
 
         var database = new Database(webApplicationLogger, "roastery");
         DatabaseMigrator.Populate(database);
 
         var loadingDock = new LoadingDock();
         var productionSchedule = new ProductionSchedule();
-        
+
         // Schedule the first outage for 2 hours into ingestion
         var maintenanceSchedule = new MaintenanceSchedule(DateTime.UtcNow + TimeSpan.FromHours(2));
 

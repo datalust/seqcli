@@ -7,7 +7,7 @@ namespace Roastery.Model;
 class MaintenanceSchedule
 {
     readonly Lock _sync = new();
-    
+
     DateTime _outageStart;
     DateTime _outageEnd;
 

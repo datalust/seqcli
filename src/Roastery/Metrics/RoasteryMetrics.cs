@@ -91,7 +91,8 @@ public abstract class RoasteryMetricsSample
 {
     static readonly MessageTemplate Template = new MessageTemplateParser().Parse("Metrics sampled");
 
-    public abstract IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp);
+    public abstract IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping,
+        DateTimeOffset timestamp);
 
     protected static object ToHistogramValue(ExponentialHistogram metric)
     {
@@ -106,7 +107,8 @@ public abstract class RoasteryMetricsSample
         };
     }
 
-    protected static LogEvent ToLogEvent(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp, Dictionary<string, object> definitions, Dictionary<string, object> samples)
+    protected static LogEvent ToLogEvent(ILogger logger, PropertyNameMapping propertyNameMapping,
+        DateTimeOffset timestamp, Dictionary<string, object> definitions, Dictionary<string, object> samples)
     {
         var properties = new List<LogEventProperty>();
 

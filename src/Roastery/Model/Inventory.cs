@@ -11,7 +11,9 @@ class Inventory : IIdentifiable
 
     [Obsolete("Serialization constructor.")]
 #pragma warning disable 8618
-    public Inventory() { }
+    public Inventory()
+    {
+    }
 #pragma warning restore 8618
 
     public Inventory(string blend, double quantityKilograms)

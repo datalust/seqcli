@@ -8,7 +8,7 @@ abstract class Controller
 {
     protected ILogger Log { get; }
     protected RoasteryWebMetrics Metrics { get; }
-    
+
     protected Controller(ILogger logger, RoasteryWebMetrics metrics)
     {
         Log = logger.ForContext(GetType());

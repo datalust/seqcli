@@ -10,6 +10,7 @@ public class RoasteryWebMetrics : RoasteryMetrics<RoasteryWebMetrics.Sample>
     public class Sample : RoasteryMetricsSample
     {
         public record struct HttpRequestDurationKey(string Path, int StatusCode);
+
         public readonly Dictionary<HttpRequestDurationKey, ExponentialHistogram> HttpRequestDuration = new();
 
         public ulong OrderCreated;
@@ -17,9 +18,11 @@ public class RoasteryWebMetrics : RoasteryMetrics<RoasteryWebMetrics.Sample>
         public ulong OrderShipped;
 
         public record struct StockLevelKey(string Blend);
+
         public readonly Dictionary<StockLevelKey, double> StockLevel = new();
 
-        public override IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping, DateTimeOffset timestamp)
+        public override IEnumerable<LogEvent> ToLogEvents(ILogger logger, PropertyNameMapping propertyNameMapping,
+            DateTimeOffset timestamp)
         {
             foreach (var (key, metric) in HttpRequestDuration)
             {

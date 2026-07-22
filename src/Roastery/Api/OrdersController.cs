@@ -35,19 +35,19 @@ class OrdersController : Controller
     {
         if (request.Body == null)
             return BadRequest("An order is required.");
-            
-        var order = (Order) request.Body;
+
+        var order = (Order)request.Body;
 
         if (order.CustomerName == null)
         {
             return BadRequest("To create an order, a customer name is required.");
         }
-            
+
         await _database.InsertAsync(order);
-        
+
         Metrics.RecordOrderCreated();
         Log.Information("Created new order {OrderId} for customer {CustomerName}", order.Id, order.CustomerName);
-        
+
         return Json(order, HttpStatusCode.Created);
     }
 
@@ -56,17 +56,18 @@ class OrdersController : Controller
     {
         if (request.Body == null)
             return BadRequest("An order is required.");
-            
-        var order = (Order) request.Body;
+
+        var order = (Order)request.Body;
         using var _ = LogContext.PushProperty("OrderId", order.Id);
 
-        var existing = (await _database.SelectAsync<Order>(o => o.Id == order.Id, $"id = '{order.Id}'")).SingleOrDefault();
+        var existing =
+            (await _database.SelectAsync<Order>(o => o.Id == order.Id, $"id = '{order.Id}'")).SingleOrDefault();
         if (existing == null)
             return NotFound();
 
         if (order.Status == existing.Status)
             return BadRequest($"The order is already in the {order.Status} state");
-            
+
         await _database.UpdateAsync(order, $"status = '{order.Status}'");
         if (order.Status == OrderStatus.PendingShipment)
             Log.Information("Order placed and ready for shipment");
@@ -78,10 +79,10 @@ class OrdersController : Controller
         }
         else
             Log.Information("Order updated");
-            
+
         return OK();
     }
-        
+
     [Route("DELETE", "api/orders/{id}")]
     public async Task<HttpResponse> Delete(HttpRequest request)
     {
@@ -118,39 +119,47 @@ class OrdersController : Controller
         {
             var returnedKilograms = byBlend.Sum(i => products[i.ProductId].SizeInGrams) / 1000.0;
 
-            var inventory = (await _database.SelectAsync<Inventory>(iv => iv.Blend == byBlend.Key, $"blend = '{byBlend.Key}'")).SingleOrDefault();
+            var inventory =
+                (await _database.SelectAsync<Inventory>(iv => iv.Blend == byBlend.Key, $"blend = '{byBlend.Key}'"))
+                .SingleOrDefault();
             if (inventory == null)
                 continue;
 
             inventory.QuantityKilograms = Math.Round(inventory.QuantityKilograms + returnedKilograms, 2);
-            await _database.UpdateAsync(inventory, $"quantitykilograms = {inventory.QuantityKilograms.ToString(CultureInfo.InvariantCulture)}");
+            await _database.UpdateAsync(inventory,
+                $"quantitykilograms = {inventory.QuantityKilograms.ToString(CultureInfo.InvariantCulture)}");
 
-            Metrics.RecordStockLevel(new RoasteryWebMetrics.Sample.StockLevelKey(inventory.Blend), inventory.QuantityKilograms);
+            Metrics.RecordStockLevel(new RoasteryWebMetrics.Sample.StockLevelKey(inventory.Blend),
+                inventory.QuantityKilograms);
             Log.Information("Returned {ReturnedKilograms}kg of {Blend} to stock", returnedKilograms, byBlend.Key);
         }
     }
-        
+
     [Route("POST", "api/orders/{id}/items")]
     public async Task<HttpResponse> AddItem(HttpRequest request)
     {
         if (request.Body == null)
             return BadRequest("An order item is required.");
-            
-        var item = (OrderItem) request.Body;
-        var order = (await _database.SelectAsync<Order>(o => o.Id == item.OrderId, $"id = '{item.OrderId}'")).SingleOrDefault();
+
+        var item = (OrderItem)request.Body;
+        var order = (await _database.SelectAsync<Order>(o => o.Id == item.OrderId, $"id = '{item.OrderId}'"))
+            .SingleOrDefault();
         if (order == null)
             return NotFound();
 
         using var _ = LogContext.PushProperty("OrderId", order.Id);
 
-        var product = (await _database.SelectAsync<Product>(p => p.Id == item.ProductId, $"id = '{item.ProductId}'")).SingleOrDefault();
+        var product = (await _database.SelectAsync<Product>(p => p.Id == item.ProductId, $"id = '{item.ProductId}'"))
+            .SingleOrDefault();
         if (product == null)
             return NotFound();
 
         using var __ = LogContext.PushProperty("ProductId", product.Id);
 
         var requiredKilograms = product.SizeInGrams / 1000.0;
-        var inventory = (await _database.SelectAsync<Inventory>(i => i.Blend == product.Blend, $"blend = '{product.Blend}'")).SingleOrDefault();
+        var inventory =
+            (await _database.SelectAsync<Inventory>(i => i.Blend == product.Blend, $"blend = '{product.Blend}'"))
+            .SingleOrDefault();
         if (inventory == null || inventory.QuantityKilograms < requiredKilograms)
         {
             Log.Warning("Product {ProductId} is out of stock", product.Id);
@@ -158,8 +167,10 @@ class OrdersController : Controller
         }
 
         inventory.QuantityKilograms = Math.Round(inventory.QuantityKilograms - requiredKilograms, 2);
-        await _database.UpdateAsync(inventory, $"quantitykilograms = {inventory.QuantityKilograms.ToString(CultureInfo.InvariantCulture)}");
-        Metrics.RecordStockLevel(new RoasteryWebMetrics.Sample.StockLevelKey(inventory.Blend), inventory.QuantityKilograms);
+        await _database.UpdateAsync(inventory,
+            $"quantitykilograms = {inventory.QuantityKilograms.ToString(CultureInfo.InvariantCulture)}");
+        Metrics.RecordStockLevel(new RoasteryWebMetrics.Sample.StockLevelKey(inventory.Blend),
+            inventory.QuantityKilograms);
 
         await _database.InsertAsync(item);
         Log.Information("Added 1 x product {@Product} to order", new { product.Name, product.SizeInGrams });

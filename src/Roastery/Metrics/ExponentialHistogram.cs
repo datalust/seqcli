@@ -11,7 +11,7 @@ public class ExponentialHistogram
         _targetBuckets = targetBuckets;
         _buckets = new Dictionary<double, ulong>();
     }
-    
+
     readonly int _targetBuckets;
 
     int _scale;
@@ -28,13 +28,13 @@ public class ExponentialHistogram
         _max = Math.Max(_max, rawValue);
         _sum += rawValue;
         _total += 1;
-        
+
         var midpoint = Midpoint(_scale, rawValue);
         _buckets.TryAdd(midpoint, 0);
         _buckets[midpoint] += 1;
 
         if (_buckets.Count <= _targetBuckets) return;
-        
+
         // Rescale
         var newScale = _scale - 1;
         var newBuckets = new Dictionary<double, ulong>();
@@ -54,13 +54,13 @@ public class ExponentialHistogram
     {
         var gamma = Math.Pow(2d, Math.Pow(2d, -scale));
         var index = Math.Abs(Math.Log(rawValue, gamma));
-        
+
         return (Math.Pow(gamma, index - 1) + Math.Pow(gamma, index)) / 2;
     }
 
     public IReadOnlyDictionary<double, ulong> Buckets => _buckets;
     public int Scale => _scale;
-    
+
     public double Min => _min;
     public double Max => _max;
     public double Sum => _sum;

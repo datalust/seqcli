@@ -3,7 +3,7 @@ using Roastery.Data;
 
 namespace Roastery.Model;
 
-class Product: IIdentifiable
+class Product : IIdentifiable
 {
     public string? Id { get; set; }
     public string Blend { get; set; }
@@ -14,7 +14,9 @@ class Product: IIdentifiable
 
     [Obsolete("Serialization constructor.")]
 #pragma warning disable 8618
-    public Product() { }
+    public Product()
+    {
+    }
 #pragma warning restore 8618
 
     public Product(string blend, string name, int sizeInGrams)

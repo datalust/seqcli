@@ -40,19 +40,22 @@ class InventoryController : Controller
         if (request.Body == null)
             return BadRequest("A stock receipt is required.");
 
-        var receipt = (InventoryReceipt) request.Body;
+        var receipt = (InventoryReceipt)request.Body;
         var inventoryId = request.Path.Split('/')[3];
 
-        var inventory = (await _database.SelectAsync<Inventory>(i => i.Id == inventoryId, $"id = '{inventoryId}'")).SingleOrDefault();
+        var inventory = (await _database.SelectAsync<Inventory>(i => i.Id == inventoryId, $"id = '{inventoryId}'"))
+            .SingleOrDefault();
         if (inventory == null)
             return NotFound();
 
         using var _ = LogContext.PushProperty("InventoryId", inventory.Id);
 
         inventory.QuantityKilograms = Math.Round(inventory.QuantityKilograms + receipt.Kilograms, 2);
-        await _database.UpdateAsync(inventory, $"quantitykilograms = {inventory.QuantityKilograms.ToString(CultureInfo.InvariantCulture)}");
+        await _database.UpdateAsync(inventory,
+            $"quantitykilograms = {inventory.QuantityKilograms.ToString(CultureInfo.InvariantCulture)}");
 
-        Metrics.RecordStockLevel(new RoasteryWebMetrics.Sample.StockLevelKey(inventory.Blend), inventory.QuantityKilograms);
+        Metrics.RecordStockLevel(new RoasteryWebMetrics.Sample.StockLevelKey(inventory.Blend),
+            inventory.QuantityKilograms);
         Log.Information("Received {ReceiptKilograms}kg of {Blend} into the warehouse; stock is now {StockKilograms}kg",
             receipt.Kilograms, inventory.Blend, inventory.QuantityKilograms);
 

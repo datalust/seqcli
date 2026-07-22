@@ -18,8 +18,10 @@ class RoastingMachine : Agent
 {
     static readonly RoastProfile[] Profiles =
     [
-        new("1 AM Medium Roast", DropTemperatureCelsius: 210, FinalBurnerLevelPercent: 50, TypicalWeightLossPercent: 13.5),
-        new("Rocket Ship Dark Roast", DropTemperatureCelsius: 224, FinalBurnerLevelPercent: 58, TypicalWeightLossPercent: 16.5)
+        new("1 AM Medium Roast", DropTemperatureCelsius: 210, FinalBurnerLevelPercent: 50,
+            TypicalWeightLossPercent: 13.5),
+        new("Rocket Ship Dark Roast", DropTemperatureCelsius: 224, FinalBurnerLevelPercent: 58,
+            TypicalWeightLossPercent: 16.5)
     ];
 
     // The bean probe reading rises toward the drum environment temperature at a rate
@@ -81,7 +83,8 @@ class RoastingMachine : Agent
             if (!_offlineForServicing)
             {
                 _offlineForServicing = true;
-                _logger.Warning("Roasting machine {MachineId} is offline: the afterburner exhaust system requires servicing; roasting is suspended",
+                _logger.Warning(
+                    "Roasting machine {MachineId} is offline: the afterburner exhaust system requires servicing; roasting is suspended",
                     _machineId);
             }
 
@@ -121,7 +124,8 @@ class RoastingMachine : Agent
         };
 
         _metrics.RecordRoastBatchStarted(key);
-        _logger.Information("Charged {GreenWeightKilograms}kg of green beans for {RoastProfile} at drum temperature {ChargeTemperature:F1}°C",
+        _logger.Information(
+            "Charged {GreenWeightKilograms}kg of green beans for {RoastProfile} at drum temperature {ChargeTemperature:F1}°C",
             greenWeightKilograms, profile.Name, state.BeanTemperature);
 
         var roastTiming = Stopwatch.StartNew();
@@ -155,7 +159,9 @@ class RoastingMachine : Agent
         if (state.HadFault && Distribution.OnceIn(3) || Distribution.OnceIn(70))
         {
             _metrics.RecordRoastBatchRejected(key);
-            _logger.Error("Batch {RoastId} rejected by quality control: uneven development following an unstable roast curve", roastId);
+            _logger.Error(
+                "Batch {RoastId} rejected by quality control: uneven development following an unstable roast curve",
+                roastId);
             activity.Complete(LogEventLevel.Error);
             return;
         }
@@ -165,8 +171,10 @@ class RoastingMachine : Agent
 
         _metrics.RecordRoastBatchCompleted(key, durationSeconds, weightLossPercent);
         _loadingDock.Deliver(profile.Name, roastedWeightKilograms);
-        _logger.Information("Dropped {GreenWeightKilograms}kg batch of {RoastProfile} at {DropTemperature:F1}°C after {RoastDurationSeconds}s with {WeightLossPercent}% weight loss; {RoastedWeightKilograms}kg sent to the loading dock",
-            greenWeightKilograms, profile.Name, dropTemperature, durationSeconds, weightLossPercent, roastedWeightKilograms);
+        _logger.Information(
+            "Dropped {GreenWeightKilograms}kg batch of {RoastProfile} at {DropTemperature:F1}°C after {RoastDurationSeconds}s with {WeightLossPercent}% weight loss; {RoastedWeightKilograms}kg sent to the loading dock",
+            greenWeightKilograms, profile.Name, dropTemperature, durationSeconds, weightLossPercent,
+            roastedWeightKilograms);
     }
 
     async Task AdvancePhaseAsync(
@@ -181,7 +189,8 @@ class RoastingMachine : Agent
 
         while (state.BeanTemperature < targetTemperature || !state.PassedTurningPoint)
         {
-            await Task.Delay((int)Distribution.Uniform(TickMilliseconds - 500, TickMilliseconds + 500), cancellationToken);
+            await Task.Delay((int)Distribution.Uniform(TickMilliseconds - 500, TickMilliseconds + 500),
+                cancellationToken);
 
             if (state is { PassedTurningPoint: true, FaultAtTemperature: not null } &&
                 state.BeanTemperature >= state.FaultAtTemperature)
@@ -189,7 +198,8 @@ class RoastingMachine : Agent
                 state.FaultAtTemperature = null;
                 state.FaultTicksRemaining = (int)Distribution.Uniform(4, 8);
                 state.HadFault = true;
-                _logger.Warning("Burner flame-out detected on {MachineId} during {RoastPhase}; rate of rise is crashing",
+                _logger.Warning(
+                    "Burner flame-out detected on {MachineId} during {RoastPhase}; rate of rise is crashing",
                     _machineId, phaseName);
             }
 
@@ -220,17 +230,20 @@ class RoastingMachine : Agent
         else
         {
             var progress = Math.Clamp(
-                (state.BeanTemperature - TurningPointCelsius) / (profile.DropTemperatureCelsius - TurningPointCelsius), 0, 1);
+                (state.BeanTemperature - TurningPointCelsius) / (profile.DropTemperatureCelsius - TurningPointCelsius),
+                0, 1);
             var targetBurnerLevel = state.FaultTicksRemaining > 0
                 ? 15
                 : InitialBurnerLevelPercent - (InitialBurnerLevelPercent - profile.FinalBurnerLevelPercent) * progress;
 
             state.BurnerLevel = Math.Clamp(
-                state.BurnerLevel + (targetBurnerLevel - state.BurnerLevel) * 0.5 + Distribution.Uniform(0, 4) - 2, 10, 100);
+                state.BurnerLevel + (targetBurnerLevel - state.BurnerLevel) * 0.5 + Distribution.Uniform(0, 4) - 2, 10,
+                100);
 
             var drumEnvironmentTemperature = 175 + state.BurnerLevel * 1.45 + _calibrationBiasCelsius;
             state.RateOfRise = Math.Max(
-                HeatTransferPerMinute * (drumEnvironmentTemperature - state.BeanTemperature) + Distribution.Uniform(0, 1.5) - 0.75,
+                HeatTransferPerMinute * (drumEnvironmentTemperature - state.BeanTemperature) +
+                Distribution.Uniform(0, 1.5) - 0.75,
                 0.3);
 
             if (state.FaultTicksRemaining > 0)

@@ -41,7 +41,8 @@ class CatalogBatch : Agent
 
             foreach (var product in await _httpClient.GetAsync<List<Product>>("api/products"))
             {
-                _logger.Information("Checking product {ProductDescription} ({ProductId})", product.FormatDescription(), product.Id);
+                _logger.Information("Checking product {ProductDescription} ({ProductId})", product.FormatDescription(),
+                    product.Id);
 
                 var stock = stockByBlend.GetValueOrDefault(product.Blend);
                 if (stock < product.SizeInGrams / 1000.0)
