@@ -4,10 +4,6 @@
   "Description": "Created by `seqcli sample setup`",
   "OwnerId": null,
   "IsProtected": false,
-  "DefaultSignalExpression": {
-    "Kind": "Signal",
-    "SignalId": ref("signal-Sample Data.template")
-  },
   "Content": {
     "SignalIds": [
       ref("signal-Errors.template"),
