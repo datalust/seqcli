@@ -47,7 +47,7 @@
         "WidthColumns": 12,
         "HeightRows": 2
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "99th Percentile Response Time",
@@ -86,7 +86,7 @@
         "WidthColumns": 4,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Mean Response Time",
@@ -125,7 +125,7 @@
         "WidthColumns": 4,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Internal Server Errors",
@@ -171,7 +171,7 @@
         "WidthColumns": 4,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

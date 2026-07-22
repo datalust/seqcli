@@ -4,7 +4,7 @@
   "Description": "Automatically created",
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
       "Filter": "@Level in ['w', 'wa', 'war', 'wrn', 'warn', 'warning'] ci",
       "FilterNonStrict": null

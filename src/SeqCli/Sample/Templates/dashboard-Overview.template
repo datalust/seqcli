@@ -39,7 +39,7 @@
         "WidthColumns": 8,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Count by Level",
@@ -77,7 +77,7 @@
         "WidthColumns": 4,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Errors and Exceptions",
@@ -113,7 +113,7 @@
         "WidthColumns": 8,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Distinct Event Types",
@@ -149,7 +149,7 @@
         "WidthColumns": 4,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

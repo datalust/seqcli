@@ -54,7 +54,7 @@
         "WidthColumns": 8,
         "HeightRows": 2
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Product Volume",
@@ -94,7 +94,7 @@
         "WidthColumns": 4,
         "HeightRows": 2
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Created",
@@ -133,7 +133,7 @@
         "WidthColumns": 3,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Placed",
@@ -172,7 +172,7 @@
         "WidthColumns": 3,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Shipped",
@@ -211,7 +211,7 @@
         "WidthColumns": 3,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Abandoned",
@@ -250,7 +250,7 @@
         "WidthColumns": 3,
         "HeightRows": 1
       },
-      "Description": null
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

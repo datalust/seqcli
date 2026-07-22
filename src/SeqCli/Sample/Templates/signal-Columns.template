@@ -1,0 +1,19 @@
+{
+  "$entity": "signal",
+  "Title": "Columns",
+  "Description": "Created by `seqcli sample setup`",
+  "Filters": [],
+  "Columns": [
+    {
+      "Expression": "SourceContext"
+    },
+    {
+      "Expression": "StatusCode"
+    }
+  ],
+  "IsProtected": false,
+  "IsIndexSuppressed": true,
+  "Grouping": "None",
+  "ExplicitGroupName": null,
+  "OwnerId": null
+}

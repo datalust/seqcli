@@ -41,7 +41,7 @@
         "WidthColumns": 12,
         "HeightRows": 2
       },
-      "Description": ""
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Completed Batches",
@@ -79,7 +79,7 @@
         "WidthColumns": 12,
         "HeightRows": 1
       },
-      "Description": ""
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

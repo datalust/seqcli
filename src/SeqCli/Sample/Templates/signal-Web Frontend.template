@@ -1,10 +1,10 @@
 {
   "$entity": "signal",
   "Title": "Web Frontend",
-  "Description": "Created by `seqcli signal setup`",
+  "Description": "Created by `seqcli sample setup`",
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
       "Filter": "Application = 'Roastery Web Frontend'",
       "FilterNonStrict": null

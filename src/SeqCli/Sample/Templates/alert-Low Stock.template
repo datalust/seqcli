@@ -1,7 +1,7 @@
 {
   "$entity": "alert",
   "Title": "Low Stock",
-  "Description": null,
+  "Description": "Created by `seqcli sample setup`",
   "OwnerId": null,
   "IsProtected": false,
   "IsDisabled": false,

@@ -1,7 +1,7 @@
 {
   "$entity": "view",
   "Title": "Production",
-  "Description": "Created by `admin`",
+  "Description": "Created by `seqcli sample setup`",
   "OwnerId": null,
   "IsProtected": false,
   "GroupKeyExpressions": [
@@ -10,7 +10,7 @@
   ],
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
       "Filter": "Has(MachineId)",
       "FilterNonStrict": "Has(MachineId)"

@@ -4,6 +4,10 @@
   "Description": "Created by `seqcli sample setup`",
   "OwnerId": null,
   "IsProtected": false,
+  "DefaultSignalExpression": {
+    "Kind": "Signal",
+    "SignalId": ref("signal-Columns.template")
+  },
   "Content": {
     "SignalIds": [
       ref("signal-Errors.template"),
@@ -25,7 +29,8 @@
       ref("signal-Success.template"),
       ref("signal-Web Frontend.template"),
       ref("signal-Sample Data.template"),
-      ref("signal-Roastery Production.template")
+      ref("signal-Roastery Production.template"),
+      ref("signal-Columns.template")
     ],
     "QueryIds": [
       ref("sqlquery-Order Items by Product Size.template"),
