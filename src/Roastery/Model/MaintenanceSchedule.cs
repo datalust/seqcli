@@ -7,11 +7,13 @@ namespace Roastery.Model;
 class MaintenanceSchedule
 {
     readonly Lock _sync = new();
-    DateTime _outageStart = DateTime.UtcNow + TimeSpan.FromMinutes(30);
+    
+    DateTime _outageStart;
     DateTime _outageEnd;
 
-    public MaintenanceSchedule()
+    public MaintenanceSchedule(DateTime outageStart)
     {
+        _outageStart = outageStart;
         _outageEnd = _outageStart + OutageDuration();
     }
 
@@ -26,6 +28,7 @@ class MaintenanceSchedule
             if (now < _outageEnd)
                 return true;
 
+            // Schedule the next outage for roughly a day into the future
             _outageStart = now + TimeSpan.FromHours(Distribution.Uniform(20, 28));
             _outageEnd = _outageStart + OutageDuration();
             return false;

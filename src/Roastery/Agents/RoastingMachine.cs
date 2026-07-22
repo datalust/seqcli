@@ -74,6 +74,8 @@ class RoastingMachine : Agent
 
     async Task RoastBatch(CancellationToken cancellationToken)
     {
+        // Check whether the machine is offline for maintenance
+        // This forces stock to deplete and triggers a cascade of failure events
         if (_maintenanceSchedule.IsUnderMaintenance())
         {
             if (!_offlineForServicing)

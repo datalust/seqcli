@@ -52,7 +52,9 @@ public static class Program
 
         var loadingDock = new LoadingDock();
         var productionSchedule = new ProductionSchedule();
-        var maintenanceSchedule = new MaintenanceSchedule();
+        
+        // Schedule the first outage for 2 hours into ingestion
+        var maintenanceSchedule = new MaintenanceSchedule(DateTime.UtcNow + TimeSpan.FromHours(2));
 
         var client = new HttpClient(
             "https://roastery.datalust.co",
