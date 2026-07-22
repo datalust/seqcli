@@ -35,5 +35,5 @@ class MaintenanceSchedule
         }
     }
 
-    static TimeSpan OutageDuration() => TimeSpan.FromMinutes(Distribution.Uniform(35, 50));
+    static TimeSpan OutageDuration() => TimeSpan.FromMinutes(Distribution.Uniform(6, 71));
 }

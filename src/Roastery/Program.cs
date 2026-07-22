@@ -56,7 +56,7 @@ public static class Program
         var productionSchedule = new ProductionSchedule();
 
         // Schedule the first outage for 2 hours into ingestion
-        var maintenanceSchedule = new MaintenanceSchedule(DateTime.UtcNow + TimeSpan.FromHours(2));
+        var maintenanceSchedule = new MaintenanceSchedule(DateTime.UtcNow + TimeSpan.FromHours(Distribution.Uniform(2, 7)));
 
         var client = new HttpClient(
             "https://roastery.datalust.co",
