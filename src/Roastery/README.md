@@ -100,8 +100,7 @@ so-on.
 The simulated database is a thread-safe in-memory dictionary.
 
 Operations act on the dictionary using simple operations and predicates,
-with additional fake SQL generated and logged to illustrate what's
-going on in the
+with additional fake SQL generated and logged.
 
 Entities are cloned when they're inserted and when they're retrieved,
 so that some hygiene is maintained.
