@@ -1,18 +1,19 @@
 {
   "$entity": "signal",
-  "OwnerId": arg("ownerId"),
   "Title": "HTTP Requests",
   "Description": "Created by `seqcli sample setup`",
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
-      "Filter": "@EventType = 0x672bd10e",
-      "FilterNonStrict": null
+      "Filter": "@EventType = 0xe80d5c02",
+      "FilterNonStrict": "@EventType = 0xE80D5C02"
     }
   ],
   "Columns": [],
   "IsProtected": false,
+  "IsIndexSuppressed": false,
   "Grouping": "None",
-  "ExplicitGroupName": null
+  "ExplicitGroupName": null,
+  "OwnerId": null
 }

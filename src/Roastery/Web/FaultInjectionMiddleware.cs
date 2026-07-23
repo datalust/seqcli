@@ -8,7 +8,7 @@ using Serilog;
 
 namespace Roastery.Web;
 
-class FaultInjectionMiddleware: HttpServer
+class FaultInjectionMiddleware : HttpServer
 {
     readonly ILogger _logger;
     readonly HttpServer _next;
@@ -42,7 +42,7 @@ class FaultInjectionMiddleware: HttpServer
         await Task.Delay(-1, cts.Token);
         throw new InvalidOperationException("Should never reach this.");
     }
-        
+
     static Task<HttpResponse> Disposed(HttpRequest request)
     {
         throw new ObjectDisposedException("TcpConnection");
@@ -52,7 +52,7 @@ class FaultInjectionMiddleware: HttpServer
     {
         throw new IOException("An operation was attempted on a nonexistent network connection.");
     }
-        
+
     public override async Task<HttpResponse> InvokeAsync(HttpRequest request)
     {
         if (Distribution.OnceIn(220))

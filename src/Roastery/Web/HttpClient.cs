@@ -34,7 +34,7 @@ class HttpClient
         var request = new HttpRequest(HttpMethod.Post, _basePath + path, body);
         var response = await _server.InvokeAsync(request);
         response.EnsureSuccessStatusCode();
-        return (TResponse) response.Body!;
+        return (TResponse)response.Body!;
     }
 
     public async Task DeleteAsync(string path)

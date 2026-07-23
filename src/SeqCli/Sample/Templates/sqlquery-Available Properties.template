@@ -1,0 +1,8 @@
+{
+  "$entity": "sqlquery",
+  "Title": "Available Properties",
+  "Description": "Automatically created",
+  "Sql": "select distinct(Keys(@Properties)) from stream",
+  "IsProtected": false,
+  "OwnerId": null
+}

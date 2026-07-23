@@ -1,0 +1,21 @@
+{
+  "$entity": "view",
+  "Title": "Production",
+  "Description": "Created by `seqcli sample setup`",
+  "OwnerId": null,
+  "IsProtected": false,
+  "GroupKeyExpressions": [
+    "MachineId",
+    "RoastProfile"
+  ],
+  "Filters": [
+    {
+      "Description": "Created by `seqcli sample setup`",
+      "DescriptionIsExcluded": false,
+      "Filter": "Has(MachineId)",
+      "FilterNonStrict": "Has(MachineId)"
+    }
+  ],
+  "DimensionFilters": [],
+  "PinnedMetrics": []
+}
