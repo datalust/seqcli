@@ -100,7 +100,7 @@ class CreateCommand : Command
 
         Options.Add(
             "notification-level=",
-            "The level of the notifications raised by the alert, for example `Warning` or `Error`",
+            "The level of the notifications raised by the alert, for example `Warning` or `Error`; the default is `Error`",
             l => _notificationLevel = ArgumentString.Normalize(l));
 
         Options.Add(
