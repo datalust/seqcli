@@ -26,8 +26,9 @@ class SchedulingLatencyMiddleware : HttpServer
             if (current > Capacity)
             {
                 // One extra millisecond per concurrent request over capacity, ramping up
-                delay += (int) Math.Pow(current - Capacity, 1.6);
+                delay += (int)Math.Pow(current - Capacity, 1.6);
             }
+
             await Task.Delay(delay);
             return await _next.InvokeAsync(request);
         }

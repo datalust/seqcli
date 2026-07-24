@@ -39,18 +39,18 @@ class Customer : Agent
         var orderPath = $"api/orders/{order.Id}";
         var addItemPath = $"{orderPath}/items";
         var products = await _httpClient.GetAsync<List<Product>>("api/products");
-        var items = (int) Distribution.Uniform(1, 5);
+        var items = (int)Distribution.Uniform(1, 5);
         for (var i = 0; i < items; ++i)
         {
             await Task.Delay((int)Distribution.Uniform(5000, 20000), cancellationToken);
-                
+
             var product = Distribution.Uniform(products);
             await _httpClient.PostAsync<OrderItem>(addItemPath, new OrderItem(order.Id!, product.Id!));
         }
 
         if (Distribution.OnceIn(15))
             return; // Abandon cart :-)
-            
+
         // Customer has ~90s to place order before it'll be cleaned up as abandoned; some will be too slow
         await Task.Delay((int)Distribution.Uniform(10000, 70000), cancellationToken);
 

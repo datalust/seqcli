@@ -25,7 +25,7 @@ public class SampleIngestTestCase : ICliTestCase
         Assert.NotEmpty(events);
 
         var sampleWorkspace = (await connection.Workspaces.ListAsync(shared: true))
-            .SingleOrDefault(w => w.Title == "Sample");
+            .SingleOrDefault(w => w.Title == "Seq Café ☕");
 
         Assert.NotNull(sampleWorkspace);
     }

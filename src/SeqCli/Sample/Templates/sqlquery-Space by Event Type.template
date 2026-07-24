@@ -1,0 +1,8 @@
+{
+  "$entity": "sqlquery",
+  "Title": "Space by Event Type",
+  "Description": "Automatically created",
+  "Sql": "select count(*) as Occurrences,\n       sum(Length(ToJson(@Data))) as TotalChars,\n       ToHexString(first(@EventType)) as EventType,\n       first(@MessageTemplate) as MessageTemplate\nfrom stream\ngroup by @EventType\norder by TotalChars desc\nlimit 10",
+  "IsProtected": false,
+  "OwnerId": null
+}

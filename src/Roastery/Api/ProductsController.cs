@@ -13,7 +13,7 @@ class ProductsController : Controller
 {
     readonly Database _database;
 
-    public ProductsController(ILogger logger, RoasteryMetrics metrics, Database database)
+    public ProductsController(ILogger logger, RoasteryWebMetrics metrics, Database database)
         : base(logger, metrics)
     {
         _database = database;

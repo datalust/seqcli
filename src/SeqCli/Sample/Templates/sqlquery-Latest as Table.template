@@ -1,0 +1,8 @@
+{
+  "$entity": "sqlquery",
+  "Title": "Latest as Table",
+  "Description": "Automatically created",
+  "Sql": "select ToIsoString(@Timestamp) as Timestamp,  @Level,\n       ToHexString(@EventType) as EventType,  @Message, @Exception, @Properties\nfrom stream\norder by Timestamp desc\nlimit 10",
+  "IsProtected": false,
+  "OwnerId": null
+}

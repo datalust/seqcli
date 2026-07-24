@@ -1,0 +1,8 @@
+{
+  "$entity": "sqlquery",
+  "Title": "Count by Hour",
+  "Description": "Automatically created",
+  "Sql": "select count(*) from stream group by time(1h)",
+  "IsProtected": false,
+  "OwnerId": null
+}

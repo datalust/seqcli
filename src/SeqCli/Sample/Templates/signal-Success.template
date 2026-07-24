@@ -1,11 +1,10 @@
 {
   "$entity": "signal",
-  "OwnerId": arg("ownerId"),
   "Title": "Success",
   "Description": "Created by `seqcli sample setup`",
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
       "Filter": "StatusCode >= 200 and StatusCode < 300",
       "FilterNonStrict": null
@@ -13,6 +12,8 @@
   ],
   "Columns": [],
   "IsProtected": false,
+  "IsIndexSuppressed": false,
   "Grouping": "Explicit",
-  "ExplicitGroupName": "StatusCode"
+  "ExplicitGroupName": "StatusCode",
+  "OwnerId": null
 }
