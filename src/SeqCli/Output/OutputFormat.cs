@@ -256,7 +256,8 @@ sealed class OutputFormat
         if (!string.IsNullOrWhiteSpace(evt.Start))
             serilogEvent.AddOrUpdateProperty(new("@st", new ScalarValue(evt.Start)));
 
-        if (!string.IsNullOrWhiteSpace(evt.SpanKind))
+        // This temporarily works around an events API bug; non-span events should not carry span kinds.
+        if (!string.IsNullOrWhiteSpace(evt.Start) && !string.IsNullOrWhiteSpace(evt.SpanKind))
             serilogEvent.AddOrUpdateProperty(new("@sk", new ScalarValue(evt.SpanKind)));
         
         return serilogEvent;

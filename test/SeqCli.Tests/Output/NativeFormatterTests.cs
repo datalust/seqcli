@@ -51,7 +51,14 @@ public class NativeFormatterTests
         [Some.MakeEvent(e => e.Elapsed = TimeSpan.FromSeconds(13)), "@Elapsed: 13s"],
         [Some.MakeEvent(e => e.TraceId = "abc123"), "@TraceId: 'abc123'"],
         [Some.MakeEvent(e => e.SpanId = "def456"), "@SpanId: 'def456'"],
-        [Some.MakeEvent(e => e.SpanKind = "server"), "@SpanKind: 'server'"],
+        [
+            Some.MakeEvent(e =>
+            {
+                e.Start = "2024-01-01T00:00:00.0000000Z";
+                e.SpanKind = "server";
+            }),
+            "@SpanKind: 'server'"
+        ],
         [Some.MakeEvent(e => e.Start = "2024-01-01T00:00:00.0000000Z"), "@Start: DateTime('2024-01-01T00:00:00.0000000Z')"],
         [Some.MakeEvent(e => e.ParentId = "p1"), "@ParentId: 'p1'"],
         [Some.MakeEvent(e => e.Properties = Some.MakeProperties(("UserId", 42))), "@Properties: {UserId: 42}"],
@@ -116,6 +123,13 @@ public class NativeFormatterTests
     public void OptionalPropertiesAreOmittedWhenAbsent(string token)
     {
         Assert.DoesNotContain(token, Render(Some.MakeEvent()));
+    }
+
+    [Fact]
+    public void SpanKindIsOmittedFromEventsThatAreNotSpans()
+    {
+        // The events API reports a span kind for every event, defaulting to `Internal`.
+        Assert.DoesNotContain("@SpanKind", Render(Some.MakeEvent(e => e.SpanKind = "Internal")));
     }
 
     [Fact]

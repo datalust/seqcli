@@ -74,7 +74,8 @@ static partial class NativeFormatter
             ("@Elapsed", evt.Elapsed ?? UndefinedValue),
             ("@TraceId", evt.TraceId ?? UndefinedValue),
             ("@SpanId", evt.SpanId ?? UndefinedValue),
-            ("@SpanKind", evt.SpanKind ?? UndefinedValue),
+            // This temporarily works around an events API bug; non-span events should not carry span kinds.
+            ("@SpanKind", evt.Start != null ? evt.SpanKind ?? UndefinedValue : UndefinedValue),
             ("@Start", evt.Start != null ? DateTimeOffset.Parse(evt.Start).UtcDateTime : UndefinedValue),
             ("@ParentId", evt.ParentId ?? UndefinedValue),
             ("@Properties", evt.Properties?.Count > 0 ? new Action<TextWriter>(w => WritePropertiesObject(w, evt.Properties)) : UndefinedValue),
