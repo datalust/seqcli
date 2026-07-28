@@ -17,36 +17,36 @@ using SeqCli.Output;
 
 namespace SeqCli.Cli.Features;
 
-class OutputFormatFeature(bool supportNative) : CommandFeature
+class OutputFormatFeature(bool supportNative, bool supportJson = true) : CommandFeature
 {
     OutputSyntax _syntax = OutputSyntax.Text;
     bool? _noColor, _forceColor;
-    
+
     // ReSharper disable once UnusedMember.Global
     public OutputFormatFeature()
         : this(false) { }
 
-    public OutputFormat GetOutputFormat(SeqCliConfig config)
+    public OutputFormat GetOutputFormat(SeqCliConfig config, string? outputTemplate = null)
     {
-        return new OutputFormat(
-            _syntax,
-            _noColor ?? config.Output.DisableColor,
-            _forceColor ?? config.Output.ForceColor);
+        return new OutputFormat(_syntax, _noColor, _forceColor, config.Output, outputTemplate);
     }
 
     public override void Enable(OptionSet options)
     {
-        options.Add(
-            "json",
-            "Print output in newline-delimited JSON (the default is plain text)",
-            _ => _syntax = OutputSyntax.Json);
-
-        if (supportNative)
+        if (supportJson)
         {
             options.Add(
-                "native",
-                "Print output using Seq's native value syntax (ideal for agent usage)",
-                _ => _syntax = OutputSyntax.Native);
+                "json",
+                "Print output in newline-delimited JSON (the default is plain text)",
+                _ => _syntax = OutputSyntax.Json);
+
+            if (supportNative)
+            {
+                options.Add(
+                    "native",
+                    "Print output using Seq's native value syntax (ideal for agent usage)",
+                    _ => _syntax = OutputSyntax.Native);
+            }
         }
 
         options.Add("no-color", "Don't colorize text output", _ => _noColor = true);
