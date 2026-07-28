@@ -39,6 +39,7 @@ namespace SeqCli.Output;
 
 sealed class OutputFormat
 {
+    // See https://no-color.org for semantics.
     const string NoColorEnvironmentVariable = "NO_COLOR";
 
     internal const string DefaultOutputTemplate =
@@ -126,7 +127,6 @@ sealed class OutputFormat
         _formatter = CreateOutputLogger();
     }
 
-    // See https://no-color.org.
     static bool NoColorSetInEnvironment()
         => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(NoColorEnvironmentVariable));
 
