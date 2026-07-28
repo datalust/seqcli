@@ -17,14 +17,14 @@ using SeqCli.Output;
 
 namespace SeqCli.Cli.Features;
 
-class OutputFormatFeature(bool supportNative, bool supportJson = true) : CommandFeature
+class OutputFormatFeature(bool supportNative, bool supportJson) : CommandFeature
 {
     OutputSyntax _syntax = OutputSyntax.Text;
     bool? _noColor, _forceColor;
 
     // ReSharper disable once UnusedMember.Global
     public OutputFormatFeature()
-        : this(false) { }
+        : this(supportNative: false, supportJson: true) { }
 
     public OutputFormat GetOutputFormat(SeqCliConfig config, string? outputTemplate = null)
     {
@@ -39,14 +39,14 @@ class OutputFormatFeature(bool supportNative, bool supportJson = true) : Command
                 "json",
                 "Print output in newline-delimited JSON (the default is plain text)",
                 _ => _syntax = OutputSyntax.Json);
-
-            if (supportNative)
-            {
-                options.Add(
-                    "native",
-                    "Print output using Seq's native value syntax (ideal for agent usage)",
-                    _ => _syntax = OutputSyntax.Native);
-            }
+        }
+        
+        if (supportNative)
+        {
+            options.Add(
+                "native",
+                "Print output using Seq's native value syntax (ideal for agent usage)",
+                _ => _syntax = OutputSyntax.Native);
         }
 
         options.Add("no-color", "Don't colorize text output", _ => _noColor = true);

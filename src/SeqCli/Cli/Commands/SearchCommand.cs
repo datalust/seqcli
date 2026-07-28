@@ -50,7 +50,7 @@ class SearchCommand : Command
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
         _range = Enable<DateRangeFeature>();
-        _output = Enable(new OutputFormatFeature(supportNative: true));
+        _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
 
