@@ -23,7 +23,7 @@ namespace SeqCli.Output;
 
 // This is the only usage of Serilog.Expressions remaining in seqcli; the upstream Seq.Syntax doesn't yet support
 // tracing properties or theming.
-static class OutputFormatter
+static class TextFormatters
 {
     public static ITextFormatter Json(TemplateTheme? theme) => new ExpressionTemplate(
         $"{{ " +
@@ -39,15 +39,14 @@ static class OutputFormatter
         applyThemeWhenOutputIsRedirected: true
     );
 
-    const string DefaultTextOutputTemplate =
-        "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end} {@p}\n{@x}";
+    const string DefaultPlainTextOutputTemplate =
+        "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end}\n{@x}";
 
-    public static ITextFormatter Text(TemplateTheme? theme, string? outputTemplate) => new ExpressionTemplate(
-        outputTemplate ?? DefaultTextOutputTemplate,
+    public static ITextFormatter Plain(TemplateTheme? theme, string? outputTemplate) => new ExpressionTemplate(
+        outputTemplate ?? DefaultPlainTextOutputTemplate,
         theme: theme,
         nameResolver: new StaticMemberNameResolver(typeof(TracingFunctions)),
         // The `OutputFormat` constructor has already decided whether to colorize.
         applyThemeWhenOutputIsRedirected: true
     );
-
 }

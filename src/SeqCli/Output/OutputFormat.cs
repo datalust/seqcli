@@ -99,7 +99,7 @@ sealed class OutputFormat
         var colorize = !resolvedNoColor && (applyThemeToRedirectedOutput || !outputIsRedirected);
 
         TemplateTheme = colorize
-            ? OutputTheme.SeqCli
+            ? FlareTheme.SeqCli
             : null;
 
         _formatter = CreateOutputLogger();
@@ -143,11 +143,11 @@ sealed class OutputFormat
 
         if (Json)
         {
-            outputConfiguration.WriteTo.Console(OutputFormatter.Json(TemplateTheme));
+            outputConfiguration.WriteTo.Console(TextFormatters.Json(TemplateTheme));
         }
         else if (Text)
         {
-            outputConfiguration.WriteTo.Console(OutputFormatter.Text(TemplateTheme, _outputTemplate));
+            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _outputTemplate));
         }
         
         // The logger is not configured for Native output, which avoids it. Ideally we'll shift away from using
@@ -171,7 +171,7 @@ sealed class OutputFormat
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(OutputFormatter.Text(TemplateTheme, "{@m}\n"))
+                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}\n"))
                 .CreateLogger();
             writer.Information("{@Entity}", jo);
         }
@@ -201,7 +201,7 @@ sealed class OutputFormat
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(OutputFormatter.Text(TemplateTheme, "{@m}\n"))
+                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}\n"))
                 .CreateLogger();
             writer.Information("{@Entity}", jo);
         }

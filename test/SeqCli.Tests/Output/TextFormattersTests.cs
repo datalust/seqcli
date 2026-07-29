@@ -10,7 +10,7 @@ using Xunit;
 
 namespace SeqCli.Tests.Output;
 
-public class OutputFormatterTests
+public class TextFormattersTests
 {
     const char Escape = '\x1b';
     static readonly DateTimeOffset FixedTimestamp = new DateTimeOffset(2024, 1, 1, 10, 0, 1, 250, TimeSpan.Zero);
@@ -109,7 +109,7 @@ public class OutputFormatterTests
     static string RenderText(LogEvent evt, string? outputTemplate = null)
     {
         var output = new StringWriter();
-        OutputFormatter.Text(theme: null, outputTemplate).Format(evt, output);
+        TextFormatters.Plain(theme: null, outputTemplate).Format(evt, output);
         return output.ToString();
     }
 
@@ -118,7 +118,7 @@ public class OutputFormatterTests
         var evt = OutputFormat.ToSerilogEvent(Some.MakeEvent(e => e.Properties = []));
 
         var output = new StringWriter();
-        OutputFormatter.Json(theme).Format(evt, output);
+        TextFormatters.Json(theme).Format(evt, output);
         return output.ToString();
     }
 }

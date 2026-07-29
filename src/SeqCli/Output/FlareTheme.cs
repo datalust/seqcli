@@ -18,35 +18,39 @@ using Serilog.Templates.Themes;
 
 namespace SeqCli.Output;
 
-static class OutputTheme
+/// <summary>
+/// <c>Flare</c> is Seq's embedded stream/columnar database. This theme is derived from one build originally
+/// for the <c>flaretl</c> command-line tooling used there.
+/// </summary>
+static class FlareTheme
 {
-    static readonly Dictionary<TemplateThemeStyle, string> SeqCliThemeStyles = new()
+    static readonly Dictionary<TemplateThemeStyle, string> FlareThemeStyles = new()
     {
+        [TemplateThemeStyle.Name] = "\e[38;5;0215m",
+        [TemplateThemeStyle.Number] = "\e[38;5;0200m",
+        [TemplateThemeStyle.Boolean] = "\e[38;5;0039m",
+        [TemplateThemeStyle.Null] = "\e[38;5;0039m",
+        [TemplateThemeStyle.String] = "\e[38;5;0217m",
+        [TemplateThemeStyle.Scalar] = "\e[38;5;0217m",
+        [TemplateThemeStyle.LevelError] = "\e[38;5;0197m",
+        [TemplateThemeStyle.TertiaryText] = "\e[38;5;0244m",
         // Based on `TemplateTheme.Code`
-        [TemplateThemeStyle.Text] = "\u001B[38;5;0253m",
-        [TemplateThemeStyle.SecondaryText] = "\u001B[38;5;0246m",
-        [TemplateThemeStyle.TertiaryText] = "\u001B[38;5;0242m",
-        [TemplateThemeStyle.Invalid] = "\u001B[33;1m",
-        [TemplateThemeStyle.Null] = "\u001B[38;5;0038m",
-        [TemplateThemeStyle.Name] = "\u001B[38;5;0215m",
-        [TemplateThemeStyle.String] = "\u001B[38;5;0217m",
-        [TemplateThemeStyle.Number] = "\u001B[38;5;0200m",
-        [TemplateThemeStyle.Boolean] = "\u001B[38;5;0039m",
-        [TemplateThemeStyle.Scalar] = "\u001B[38;5;0079m",
-        [TemplateThemeStyle.LevelVerbose] = "\u001B[37m",
-        [TemplateThemeStyle.LevelDebug] = "\u001B[37m",
-        [TemplateThemeStyle.LevelInformation] = "\u001B[37;1m",
-        [TemplateThemeStyle.LevelWarning] = "\u001B[38;5;0229m",
-        [TemplateThemeStyle.LevelError] = "\u001B[38;5;0197m\u001B[48;5;0238m",
-        [TemplateThemeStyle.LevelFatal] = "\u001B[38;5;0197m\u001B[48;5;0238m"
+        [TemplateThemeStyle.Text] = "\e[38;5;0253m",
+        [TemplateThemeStyle.SecondaryText] = "\e[38;5;0246m",
+        [TemplateThemeStyle.Invalid] = "\e[33;1m",
+        [TemplateThemeStyle.LevelVerbose] = "\e[37m",
+        [TemplateThemeStyle.LevelDebug] = "\e[37m",
+        [TemplateThemeStyle.LevelInformation] = "\e[37;1m",
+        [TemplateThemeStyle.LevelWarning] = "\e[38;5;0229m",
+        [TemplateThemeStyle.LevelFatal] = "\e[38;5;0197m\e[48;5;0238m"
     };
 
-    public static readonly TemplateTheme SeqCli = new(SeqCliThemeStyles);
+    public static readonly TemplateTheme SeqCli = new(FlareThemeStyles);
     
     // `CsvWriter` implements its own theming behavior because the required APIs are not public in Serilog.Expressions.
     // The best way forward for this is likely to be porting theming to Seq.Syntax, and exposing the required APIs there.
     
-    const string AnsiStyleResetSequence = "\u001B[0m";
+    const string AnsiStyleResetSequence = "\e[0m";
     
     // The passed-in theme is ignored because SerilogExpressions themes are opaque. All formatting uses the SeqCli theme.
     // ReSharper disable once UnusedParameter.Global
@@ -54,7 +58,7 @@ static class OutputTheme
     {
         public void Set(TextWriter output, TemplateThemeStyle style)
         {
-            if (SeqCliThemeStyles.TryGetValue(style, out var styleSequence))
+            if (FlareThemeStyles.TryGetValue(style, out var styleSequence))
                 output.Write(styleSequence);
         }
 
