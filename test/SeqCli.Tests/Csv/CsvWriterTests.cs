@@ -2,8 +2,7 @@
 using System.IO;
 using Seq.Api.Model.Data;
 using SeqCli.Csv;
-using SeqCli.Output;
-using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Templates.Themes;
 using Xunit;
 
 namespace SeqCli.Tests.Csv;
@@ -42,10 +41,10 @@ public class CsvWriterTests
         Assert.Contains("The query could not be executed.", rendered);
     }
 
-    static ConsoleTheme RedirectedTheme(bool forceColor) =>
-        forceColor ? OutputFormat.DefaultAnsiTheme : ConsoleTheme.None;
+    static TemplateTheme? RedirectedTheme(bool forceColor) =>
+        forceColor ? TemplateTheme.Code : null;
 
-    static string Render(ConsoleTheme theme, QueryResultPart? result = null)
+    static string Render(TemplateTheme? theme, QueryResultPart? result = null)
     {
         result ??= new QueryResultPart
         {

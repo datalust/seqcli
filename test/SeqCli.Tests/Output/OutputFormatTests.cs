@@ -1,7 +1,6 @@
 using System;
 using SeqCli.Config;
 using SeqCli.Output;
-using Serilog.Sinks.SystemConsole.Themes;
 using Xunit;
 
 namespace SeqCli.Tests.Output;
@@ -14,6 +13,7 @@ public class OutputFormatTests
         bool disableColor = false,
         bool noColorSetInEnvironment = false,
         bool outputIsRedirected = true,
+        bool supportsAnsiEscapes = true,
         OutputSyntax syntax = OutputSyntax.Text)
         => new(
             syntax,
@@ -22,27 +22,28 @@ public class OutputFormatTests
             new SeqCliOutputConfig { DisableColor = disableColor },
             outputTemplate: null,
             noColorSetInEnvironment,
-            outputIsRedirected);
+            outputIsRedirected,
+            supportsAnsiEscapes);
 
     [Fact]
     public void RedirectedOutputIsNotThemedByDefault()
     {
         var format = Create(outputIsRedirected: true);
-        Assert.Same(ConsoleTheme.None, format.Theme);
+        Assert.Null(format.TemplateTheme);
     }
 
     [Fact]
     public void RedirectedOutputIsThemedWhenColorIsForced()
     {
         var format = Create(forceColor: true, outputIsRedirected: true);
-        Assert.Same(OutputFormat.DefaultAnsiTheme, format.Theme);
+        Assert.NotNull(format.TemplateTheme);
     }
 
     [Fact]
     public void TerminalOutputIsThemed()
     {
         var format = Create(outputIsRedirected: false);
-        Assert.Same(OutputFormat.DefaultTheme, format.Theme);
+        Assert.NotNull(format.TemplateTheme);
     }
 
     [Theory]
@@ -51,7 +52,7 @@ public class OutputFormatTests
     public void NoColorSuppressesTheThemeRegardlessOfRedirection(bool outputIsRedirected)
     {
         var format = Create(noColor: true, outputIsRedirected: outputIsRedirected);
-        Assert.Same(ConsoleTheme.None, format.Theme);
+        Assert.Null(format.TemplateTheme);
     }
 
     [Fact]
@@ -90,23 +91,31 @@ public class OutputFormatTests
     }
 
     [Theory]
-    // noColorFlag, forceColorFlag, disableColor, noColorSetInEnvironment, expected
-    [InlineData(null, null, false, false, false)] // Color is on by default.
-    [InlineData(null, null, false, true, true)]   // `NO_COLOR` disables color.
-    [InlineData(null, true, false, true, false)]  // `--force-color` is more specific than `NO_COLOR`.
-    [InlineData(true, null, false, false, true)]  // `--no-color` disables color.
-    [InlineData(true, true, false, false, true)]  // `--no-color` beats `--force-color`.
-    [InlineData(null, null, true, false, true)]   // `output.disableColor` disables color.
-    [InlineData(null, true, true, false, true)]   // `--force-color` doesn't override configuration.
+    // noColorFlag, forceColorFlag, disableColor, noColorSetInEnvironment, supportsAnsiEscapes, expected
+    [InlineData(null, null, false, false, true, false)] // Color is on by default.
+    [InlineData(null, null, false, true, true, true)]   // `NO_COLOR` disables color.
+    [InlineData(null, true, false, true, true, false)]  // `--force-color` is more specific than `NO_COLOR`.
+    [InlineData(true, null, false, false, true, true)]  // `--no-color` disables color.
+    [InlineData(true, true, false, false, true, true)]  // `--no-color` beats `--force-color`.
+    [InlineData(null, null, true, false, true, true)]   // `output.disableColor` disables color.
+    [InlineData(null, true, true, false, true, true)]   // `--force-color` doesn't override configuration.
+    [InlineData(null, null, false, false, false, true)] // No ANSI escape support disables color.
+    [InlineData(null, true, false, false, false, true)] // ...and `--force-color` can't override it.
     public void NoColorIsResolvedFromFlagsConfigurationAndEnvironment(
         bool? noColorFlag,
         bool? forceColorFlag,
         bool disableColor,
         bool noColorSetInEnvironment,
+        bool supportsAnsiEscapes,
         bool expected)
     {
-        var format = Create(noColorFlag, forceColorFlag, disableColor, noColorSetInEnvironment);
+        Assert.Equal(expected, OutputFormat.ResolveNoColor(noColorFlag, forceColorFlag, new SeqCliOutputConfig { DisableColor = disableColor }, noColorSetInEnvironment, supportsAnsiEscapes));
+    }
 
-        Assert.Equal(expected, format.NoColor);
+    [Fact]
+    public void TerminalOutputIsNotThemedWithoutAnsiEscapeSupport()
+    {
+        var format = Create(outputIsRedirected: false, supportsAnsiEscapes: false);
+        Assert.Null(format.TemplateTheme);
     }
 }
