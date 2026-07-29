@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using SeqCli.Ingestion;
 using SeqCli.Mapping;
 using Serilog.Expressions;
@@ -33,14 +34,15 @@ static class TextFormatters
         $"else " +
         // Emit a log or span
         $"{{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} " +
-        $"}}\n",
+        $"}}" +
+        Environment.NewLine,
         theme: theme,
         // The `OutputFormat` constructor has already decided whether to colorize.
         applyThemeWhenOutputIsRedirected: true
     );
 
-    const string DefaultPlainTextOutputTemplate =
-        "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end}\n{@x}";
+    static readonly string DefaultPlainTextOutputTemplate =
+        "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end}" + Environment.NewLine + "{@x}";
 
     public static ITextFormatter Plain(TemplateTheme? theme, string? outputTemplate) => new ExpressionTemplate(
         outputTemplate ?? DefaultPlainTextOutputTemplate,

@@ -171,7 +171,7 @@ sealed class OutputFormat
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}\n"))
+                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
                 .CreateLogger();
             writer.Information("{@Entity}", jo);
         }
@@ -201,7 +201,7 @@ sealed class OutputFormat
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}\n"))
+                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
                 .CreateLogger();
             writer.Information("{@Entity}", jo);
         }

@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.IO;
 using Seq.Api.Model.Data;
 using SeqCli.Csv;
@@ -19,7 +20,7 @@ public class CsvWriterTests
         var rendered = Render(RedirectedTheme(forceColor: false));
 
         Assert.DoesNotContain(Escape, rendered);
-        Assert.Equal("\"Events\",\"Application\"\n\"852\",\"Roastery \"\"Web\"\" Frontend\"\n", rendered);
+        Assert.Equal($"\"Events\",\"Application\"{Environment.NewLine}\"852\",\"Roastery \"\"Web\"\" Frontend\"{Environment.NewLine}", rendered);
     }
 
     [Fact]
@@ -52,7 +53,7 @@ public class CsvWriterTests
             Rows = [[852, "Roastery \"Web\" Frontend"]]
         };
 
-        var output = new StringWriter { NewLine = "\n" };
+        var output = new StringWriter();
         CsvWriter.WriteQueryResult(result, v => v?.ToString() ?? "null", theme, output);
         return output.ToString();
     }
