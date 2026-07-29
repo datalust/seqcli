@@ -20,11 +20,9 @@ using Seq.Syntax.Expressions;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Ingestion;
-using SeqCli.Output;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
 
 namespace SeqCli.Cli.Commands;
 
@@ -34,10 +32,10 @@ class PrintCommand : Command
 {
     readonly FileInputFeature _fileInputFeature;
     readonly InvalidDataHandlingFeature _invalidDataHandlingFeature;
+    readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storage;
 
-    string? _filter, _template = OutputFormat.DefaultOutputTemplate;
-    bool? _noColor, _forceColor;
+    string? _filter, _template;
 
     public PrintCommand()
     {
@@ -53,11 +51,7 @@ class PrintCommand : Command
 
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
-        // These should be ported to use `OutputFormatFeature`.
-        Options.Add("no-color", "Don't colorize text output", _ => _noColor = true);
-        Options.Add("force-color",
-            "Force redirected output to have ANSI color (unless `--no-color` is also specified)",
-            _ => _forceColor = true);
+        _output = Enable(new OutputFormatFeature(supportNative: false, supportJson: false));
 
         _storage = Enable<StoragePathFeature>();
     }
@@ -65,35 +59,21 @@ class PrintCommand : Command
     protected override async Task<int> Run()
     {
         var config = RuntimeConfigurationLoader.Load(_storage);
-        
-        var applyThemeToRedirectedOutput
-            = !(_noColor ?? config.Output.DisableColor) && (_forceColor ?? config.Output.ForceColor);
 
-        var theme
-            = _noColor ?? config.Output.DisableColor                      ? ConsoleTheme.None
-            :  applyThemeToRedirectedOutput ? OutputFormat.DefaultAnsiTheme
-            :                                 OutputFormat.DefaultTheme;
-
-        var outputConfiguration = new LoggerConfiguration()
-            .MinimumLevel.Is(LevelAlias.Minimum)
-            .Enrich.With<RedundantEventTypeRemovalEnricher>()
-            .WriteTo.Console(
-                outputTemplate: _template ?? OutputFormat.DefaultOutputTemplate,
-                theme: theme,
-                applyThemeToRedirectedOutput: applyThemeToRedirectedOutput);
-
+        Func<LogEvent, bool>? filter = null;
         if (_filter != null)
         {
-            if (!SerilogExpression.TryCompile(_filter, out var filter, out var error))
+            if (!SerilogExpression.TryCompile(_filter, out var compiled, out var error))
             {
                 Log.Error("The specified filter could not be compiled: {Error}", error);
                 return 1;
             }
-            
-            outputConfiguration.Filter.ByIncludingOnly(evt => ExpressionResult.IsTrue(filter(evt)));
+
+            filter = evt => ExpressionResult.IsTrue(compiled(evt));
         }
 
-        await using var logger = outputConfiguration.CreateLogger();
+        var output = _output.GetOutputFormat(config, _template);
+
         foreach (var input in _fileInputFeature.OpenInputs())
         {
             using (input)
@@ -108,8 +88,8 @@ class PrintCommand : Command
                         var result = await reader.TryReadAsync();
                         isAtEnd = result.IsAtEnd;
 
-                        if (result.LogEvent != null)
-                            logger.Write(result.LogEvent);
+                        if (result.LogEvent != null && (filter == null || filter(result.LogEvent)))
+                            output.WriteLogEvent(result.LogEvent);
                     }
                     catch (Exception ex)
                     {

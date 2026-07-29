@@ -47,7 +47,7 @@ class DimensionValuesCommand : Command
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
         _range = Enable<DateRangeFeature>();
-        _output = Enable(new OutputFormatFeature(supportNative: true));
+        _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
 
         Options.Add("trace", "Enable detailed (server-side) query tracing", _ => _trace = true);
