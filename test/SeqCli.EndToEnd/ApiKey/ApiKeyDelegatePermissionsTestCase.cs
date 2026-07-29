@@ -21,11 +21,11 @@ public class ApiKeyDelegatePermissionsTestCase : ICliTestCase
             "-t Setup --permissions=Setup,Write --connect-username=carol --connect-password=\"test@1234\"");
         Assert.Equal(0, exit);
 
-        exit = runner.Exec("apikey list", "-t Setup --json --no-color");
+        exit = runner.Exec("apikey list", "-t Setup --json");
         Assert.Equal(0, exit);
 
         var output = runner.LastRunProcess.Output;
-        Assert.Contains("\"AssignedPermissions\": [\"Setup\", \"Write\"]", output);
+        Assert.Contains("\"AssignedPermissions\":[\"Setup\",\"Write\"]", output);
 
         return Task.CompletedTask;
     }
