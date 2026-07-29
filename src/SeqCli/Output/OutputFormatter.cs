@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Globalization;
 using SeqCli.Ingestion;
 using SeqCli.Mapping;
-using Serilog.Events;
 using Serilog.Expressions;
 using Serilog.Formatting;
 using Serilog.Templates;
@@ -30,57 +27,27 @@ static class OutputFormatter
 {
     public static ITextFormatter Json(TemplateTheme? theme) => new ExpressionTemplate(
         $"{{ " +
-            $"if {MetricsMapping.SurrogateDefinitionsProperty} is not null then " +
-                // Emit a metric sample
-                $"{{@t, @l: undefined(), @d: {MetricsMapping.SurrogateDefinitionsProperty}, ..rest()}} " +
-            $"else " +
-                // Emit a log or span
-                $"{{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} " +
+        $"if {MetricsMapping.SurrogateDefinitionsProperty} is not null then " +
+        // Emit a metric sample
+        $"{{@t, @l: undefined(), @d: {MetricsMapping.SurrogateDefinitionsProperty}, ..rest()}} " +
+        $"else " +
+        // Emit a log or span
+        $"{{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} " +
         $"}}\n",
         theme: theme,
         // The `OutputFormat` constructor has already decided whether to colorize.
         applyThemeWhenOutputIsRedirected: true
     );
-    
-    const string DefaultTextOutputTemplate = "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end} {@p}\n{@x}";
+
+    const string DefaultTextOutputTemplate =
+        "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end} {@p}\n{@x}";
 
     public static ITextFormatter Text(TemplateTheme? theme, string? outputTemplate) => new ExpressionTemplate(
         outputTemplate ?? DefaultTextOutputTemplate,
         theme: theme,
-        nameResolver: new StaticMemberNameResolver(typeof(OutputFormatter)),
+        nameResolver: new StaticMemberNameResolver(typeof(TracingFunctions)),
         // The `OutputFormat` constructor has already decided whether to colorize.
         applyThemeWhenOutputIsRedirected: true
     );
-    
-    public static LogEventPropertyValue? Elapsed(LogEvent logEvent)
-    {
-        if (logEvent.Properties.TryGetValue(TraceConstants.SpanStartTimestampProperty, out var sst) &&
-            sst is ScalarValue { Value: DateTime spanStart })
-        {
-            return new ScalarValue(logEvent.Timestamp - spanStart);
-        }
 
-        if (logEvent.Properties.TryGetValue("@st", out var st) &&
-            st is ScalarValue { Value: string spanStartIso } &&
-            DateTimeOffset.TryParse(spanStartIso, CultureInfo.InvariantCulture, out var spanStartDto))
-        {
-            return new ScalarValue(logEvent.Timestamp - spanStartDto);
-        }
-
-        return null;
-    }
-
-    public static LogEventPropertyValue? IsSpan(LogEvent logEvent)
-    {
-        return new ScalarValue(Elapsed(logEvent) != null);
-    }
-    
-    public static LogEventPropertyValue? Milliseconds(LogEventPropertyValue? timeSpan)
-    {
-        // Truncates instead of rounding.
-        if (timeSpan is ScalarValue { Value: TimeSpan ts })
-            return new ScalarValue((decimal)ts.Ticks / TimeSpan.TicksPerMillisecond);
-
-        return null;
-    }
 }
