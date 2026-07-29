@@ -13,7 +13,7 @@ namespace SeqCli.Tests.Output;
 public class TextFormattersTests
 {
     const char Escape = '\x1b';
-    static readonly DateTimeOffset FixedTimestamp = new DateTimeOffset(2024, 1, 1, 10, 0, 1, 250, TimeSpan.Zero);
+    static readonly DateTimeOffset FixedTimestamp = new(2024, 1, 1, 10, 0, 1, 250, TimeSpan.Zero);
 
     [Fact]
     public void ThemedJsonOutputIsColorizedRegardlessOfRedirection()
@@ -35,7 +35,7 @@ public class TextFormattersTests
             properties: new LogEventProperty("Name", new ScalarValue("world")));
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 WRN] Hello, world! {\"Name\":\"world\"}\n",
+            "[2024-01-01T10:00:01.2500000+00:00 WRN] Hello, world!\n",
             RenderText(evt));
     }
 
@@ -49,7 +49,7 @@ public class TextFormattersTests
             new LogEventProperty("Name", new ScalarValue("world")));
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 ERR] Hello, world! {\"Name\":\"world\"}\nSystem.Exception: Boom!\n",
+            "[2024-01-01T10:00:01.2500000+00:00 ERR] Hello, world!\nSystem.Exception: Boom!\n",
             RenderText(evt));
     }
 
@@ -64,7 +64,7 @@ public class TextFormattersTests
         ]);
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1250 ms) {\"Name\":\"world\",\"@st\":\"2024-01-01T10:00:00.0000000Z\"}\n",
+            "[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1250 ms)\n",
             RenderText(evt));
     }
 
@@ -80,7 +80,7 @@ public class TextFormattersTests
         ]);
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1.5 ms) {\"Name\":\"world\",\"SpanStartTimestamp\":\"2024-01-01T10:00:01.2485000Z\"}\n",
+            "[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1.5 ms)\n",
             RenderText(evt));
     }
 
