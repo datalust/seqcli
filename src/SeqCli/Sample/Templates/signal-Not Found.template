@@ -1,11 +1,10 @@
 {
   "$entity": "signal",
-  "OwnerId": arg("ownerId"),
   "Title": "Not Found",
   "Description": "Created by `seqcli sample setup`",
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
       "Filter": "StatusCode = 404",
       "FilterNonStrict": null
@@ -13,6 +12,8 @@
   ],
   "Columns": [],
   "IsProtected": false,
+  "IsIndexSuppressed": false,
   "Grouping": "Inferred",
-  "ExplicitGroupName": null
+  "ExplicitGroupName": null,
+  "OwnerId": null
 }

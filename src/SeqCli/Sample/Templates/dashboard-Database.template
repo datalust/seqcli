@@ -1,21 +1,23 @@
 {
   "$entity": "dashboard",
-  "OwnerId": arg("ownerId"),
+  "OwnerId": null,
   "Title": "Database",
   "IsProtected": false,
   "SignalExpression": {
-    "SignalId": ref("signal-Sample Data.template"),
-    "Kind": "Signal"
+    "Kind": "Signal",
+    "SignalId": ref("signal-Sample Data.template")
   },
   "Charts": [
     {
       "Title": "Database Time by Action (ms)",
       "SignalExpression": {
-        "SignalId": ref("signal-Database.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Database.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "sum(Elapsed)",
@@ -32,10 +34,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -44,16 +46,19 @@
       "DisplayStyle": {
         "WidthColumns": 6,
         "HeightRows": 2
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Slow Queries",
       "SignalExpression": {
-        "SignalId": ref("signal-Database.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Database.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "Elapsed",
@@ -72,10 +77,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [
             "elapsed_ms desc"
@@ -86,16 +91,19 @@
       "DisplayStyle": {
         "WidthColumns": 6,
         "HeightRows": 2
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Statement Execution Time (ms)",
       "SignalExpression": {
-        "SignalId": ref("signal-Database.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Database.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "max(Elapsed)",
@@ -118,10 +126,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "OrangePurple"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -130,7 +138,8 @@
       "DisplayStyle": {
         "WidthColumns": 12,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

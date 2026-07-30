@@ -41,7 +41,7 @@ class Person
         "Zach",
         "Zeynep"
     ];
-        
+
     static readonly string[] Surnames =
     [
         "Anderson",
@@ -61,7 +61,7 @@ class Person
         "Xia",
         "Zheng"
     ];
-        
+
     static readonly string[] Streets =
     [
         "Lilac Road",
@@ -82,11 +82,11 @@ class Person
 
     public static Person Generate()
     {
-        var streetNumber = (int) Distribution.Uniform(1.0, 1000);
+        var streetNumber = (int)Distribution.Uniform(1.0, 1000);
         var name = $"{Distribution.Uniform(Forenames)} {Distribution.Uniform(Surnames)}";
         if (Distribution.OnceIn(20))
             name += $"-{Distribution.Uniform(Surnames)}";
-            
+
         return new Person(
             name,
             $"{streetNumber} {Distribution.Uniform(Streets)}");

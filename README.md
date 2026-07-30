@@ -120,6 +120,13 @@ seqcli help apikey
 
 Available commands:
 
+ - `alert`
+   - [`alert create`](#alert-create) &mdash; Create an alert.
+   - [`alert disable`](#alert-disable) &mdash; Disable one or more alerts.
+   - [`alert enable`](#alert-enable) &mdash; Enable one or more alerts.
+   - [`alert list`](#alert-list) &mdash; List alerts.
+   - [`alert remove`](#alert-remove) &mdash; Remove an alert from the server.
+   - [`alert update`](#alert-update) &mdash; Update an existing alert.
  - `apikey`
    - [`apikey create`](#apikey-create) &mdash; Create an API key for automation or ingestion.
    - [`apikey list`](#apikey-list) &mdash; List available API keys.
@@ -220,6 +227,143 @@ Available commands:
    - [`workspace list`](#workspace-list) &mdash; List available workspaces.
    - [`workspace remove`](#workspace-remove) &mdash; Remove a workspace from the server.
    - [`workspace update`](#workspace-update) &mdash; Update an existing workspace.
+
+### `alert create`
+
+Create an alert.
+
+Example:
+
+```
+seqcli alert create -t 'Too many errors' --select "count(*) as errors" --from stream --signal signal-m33302 --where "@Level = 'Error'" --window 5m --having "errors > 10" --notification-level Error --suppression-time 10m
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | A title for the alert |
+|       `--description=VALUE` | A description for the alert |
+|       `--from=VALUE` | The data source the alert queries; either `stream` (the default) or `series` |
+|       `--signal=VALUE` | A signal expression limiting the alert's input, for example `signal-1` or `signal-1,signal-2` |
+|       `--lateral=VALUE` | A lateral join over a set-valued function applied to the data source, in the form `<setFunctionCall> as <alias>`, for example `unnest(http.server.request.duration.buckets) as bucket`; this argument can be used multiple times |
+|       `--where=VALUE` | A predicate that selects the events the alert will consider |
+|       `--select=VALUE` | A measurement the alert condition will test, for example `count(*) as errors`; this argument can be used multiple times |
+|       `--group-by=VALUE` | An expression to group measurements by, for example `ServiceName` or `ServiceName ci as service`; the `ci` modifier makes the grouping case-insensitive; this argument can be used multiple times |
+|       `--window=VALUE` | The measurement window over which the alert condition is evaluated, as a duration, for example `1m` or `1h` |
+|       `--having=VALUE` | The alert condition; a predicate over the grouped measurements, for example `errors > 10` |
+|       `--notification-level=VALUE` | The level of the notifications raised by the alert, for example `Warning` or `Error` |
+|       `--suppression-time=VALUE` | A duration for which notifications are suppressed after the alert triggers, for example `10m` or `1h` |
+|       `--notification-app=VALUE` | The id of an app instance that will be notified when the alert triggers; this argument can be used multiple times |
+|       `--protected` | Specify that the alert is editable only by administrators |
+|       `--disabled` | Create the alert in a disabled state; disabled alerts are not processed and do not send notifications |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `alert disable`
+
+Disable one or more alerts.
+
+Example:
+
+```
+seqcli alert disable -t 'Too many errors'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the alert(s) to disable |
+| `-i`, `--id=VALUE` | The id of a single alert to disable |
+| `-o`, `--owner=VALUE` | The id of the user to disable alerts for; by default, shared alerts are disabled |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `alert enable`
+
+Enable one or more alerts.
+
+Example:
+
+```
+seqcli alert enable -t 'Too many errors'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the alert(s) to enable |
+| `-i`, `--id=VALUE` | The id of a single alert to enable |
+| `-o`, `--owner=VALUE` | The id of the user to enable alerts for; by default, shared alerts are enabled |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `alert list`
+
+List alerts.
+
+Example:
+
+```
+seqcli alert list
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the alert(s) to list |
+| `-i`, `--id=VALUE` | The id of a single alert to list |
+| `-o`, `--owner=VALUE` | The id of the user to list alerts for; by default, shared alerts are listed |
+|       `--json` | Print output in newline-delimited JSON (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+
+### `alert remove`
+
+Remove an alert from the server.
+
+Example:
+
+```
+seqcli alert remove -t 'Too many errors'
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-t`, `--title=VALUE` | The title of the alert(s) to remove |
+| `-i`, `--id=VALUE` | The id of a single alert to remove |
+| `-o`, `--owner=VALUE` | The id of the user to remove alerts for; by default, shared alerts are removed |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `alert update`
+
+Update an existing alert.
+
+Example:
+
+```
+seqcli alert update --json '{...}'
+```
+
+| Option | Description |
+| ------ | ----------- |
+|       `--json=VALUE` | The updated alert in JSON format; this can be produced using `seqcli alert list --json` |
+|       `--json-stdin` | Read the updated alert as JSON from `STDIN` |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
 ### `apikey create`
 

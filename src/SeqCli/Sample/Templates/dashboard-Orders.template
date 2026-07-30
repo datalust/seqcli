@@ -1,11 +1,11 @@
 {
   "$entity": "dashboard",
-  "OwnerId": arg("ownerId"),
+  "OwnerId": null,
   "Title": "Orders",
   "IsProtected": false,
   "SignalExpression": {
-    "SignalId": ref("signal-Sample Data.template"),
-    "Kind": "Signal"
+    "Kind": "Signal",
+    "SignalId": ref("signal-Sample Data.template")
   },
   "Charts": [
     {
@@ -13,6 +13,8 @@
       "SignalExpression": null,
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(@EventType = 0x8CC54029)",
@@ -39,10 +41,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -51,13 +53,16 @@
       "DisplayStyle": {
         "WidthColumns": 8,
         "HeightRows": 2
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Product Volume",
       "SignalExpression": null,
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "round(sum(Product.SizeInGrams) / 1000, 1)",
@@ -74,10 +79,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [
             "volume_kg desc"
@@ -88,16 +93,19 @@
       "DisplayStyle": {
         "WidthColumns": 4,
         "HeightRows": 2
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Created",
       "SignalExpression": {
-        "SignalId": ref("signal-Order Created.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Order Created.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(*)",
@@ -112,10 +120,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Blues"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -124,16 +132,19 @@
       "DisplayStyle": {
         "WidthColumns": 3,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Placed",
       "SignalExpression": {
-        "SignalId": ref("signal-Order Placed.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Order Placed.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(*)",
@@ -148,10 +159,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "OrangePurple"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -160,16 +171,19 @@
       "DisplayStyle": {
         "WidthColumns": 3,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Shipped",
       "SignalExpression": {
-        "SignalId": ref("signal-Order Shipped.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Order Shipped.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(*)",
@@ -184,10 +198,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Greens"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -196,16 +210,19 @@
       "DisplayStyle": {
         "WidthColumns": 3,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Abandoned",
       "SignalExpression": {
-        "SignalId": ref("signal-Order Abandoned.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-Order Abandoned.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(*)",
@@ -220,10 +237,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Reds"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -232,7 +249,8 @@
       "DisplayStyle": {
         "WidthColumns": 3,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

@@ -1,0 +1,25 @@
+{
+  "$entity": "alert",
+  "Title": "Low Stock",
+  "Description": "Created by `seqcli sample setup`",
+  "OwnerId": null,
+  "IsProtected": false,
+  "IsDisabled": false,
+  "DataSource": "Stream",
+  "Joins": [],
+  "SignalExpression": null,
+  "Where": "@EventType = 0x725f0870",
+  "GroupBy": [],
+  "TimeGrouping": "00:01:00",
+  "Select": [
+    {
+      "Value": "count(*)",
+      "Label": "count"
+    }
+  ],
+  "Having": "count > 0",
+  "NotificationLevel": "Error",
+  "NotificationProperties": [],
+  "NotificationChannels": [],
+  "SuppressionTime": "00:10:00"
+}

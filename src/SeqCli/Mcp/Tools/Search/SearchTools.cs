@@ -43,7 +43,7 @@ class SearchTools(McpSession session, SeqConnection connection)
 {
     const string ResultIdPropertyName = "__seqcli_ResultId";
     static readonly ExpressionTemplate SearchResultFormatter = new (
-        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}\n{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}...\n{{#end}}"
+        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}{Environment.NewLine}{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}...{Environment.NewLine}{{#end}}"
     );
     
     [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
