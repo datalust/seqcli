@@ -68,13 +68,13 @@ class ForwarderModule : Module
             Log.ForContext<ForwarderModule>().Warning("Configured to expose ingestion log via HTTP API");
             builder.RegisterType<IngestionLogEndpoints>().As<IMapEndpoints>();
 
-            var ingestionLogTemplate = "[{@t:o} {@l:u3}] {@m}\n";
+            var ingestionLogTemplate = $"[{{@t:o}} {{@l:u3}}] {{@m}}{Environment.NewLine}";
             if (_config.Forwarder.Diagnostics.IngestionLogShowDetail)
             {
                 Log.ForContext<ForwarderModule>().Warning("Including full client, payload, and error detail in the ingestion log");
                 ingestionLogTemplate +=
-                    "{#if ClientHostIP is not null}Client IP address: {ClientHostIP}\n{#end}" +
-                    "{#if DocumentStart is not null}First {StartToLog} characters of payload: {DocumentStart:l}\n{#end}" +
+                    $"{{#if ClientHostIP is not null}}Client IP address: {{ClientHostIP}}{Environment.NewLine}{{#end}}" +
+                    $"{{#if DocumentStart is not null}}First {{StartToLog}} characters of payload: {{DocumentStart:l}}{Environment.NewLine}{{#end}}" +
                     "{@x}";
             }
             

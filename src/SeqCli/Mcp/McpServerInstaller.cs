@@ -87,13 +87,13 @@ static class McpServerInstaller
                 "mcpServers"),
 
             ["codex"] = Unsupported(
-                "Codex reads MCP servers from ~/.codex/config.toml (TOML), which seqcli can't edit automatically. Add this block:\n\n[mcp_servers.seq]\ncommand = \"seqcli\"\nargs = [\"mcp\", \"run\"]"),
+                $"Codex reads MCP servers from ~/.codex/config.toml (TOML), which seqcli can't edit automatically. Add this block:{Environment.NewLine}{Environment.NewLine}[mcp_servers.seq]{Environment.NewLine}command = \"seqcli\"{Environment.NewLine}args = [\"mcp\", \"run\"]"),
 
             ["goose"] = Unsupported(
-                "Goose reads MCP servers from ~/.config/goose/config.yaml (YAML) under `extensions`, which seqcli can't edit automatically. Add:\n\nextensions:\n  seq:\n    type: stdio\n    cmd: seqcli\n    args: [mcp, run]\n    enabled: true"),
+                $"Goose reads MCP servers from ~/.config/goose/config.yaml (YAML) under `extensions`, which seqcli can't edit automatically. Add:{Environment.NewLine}{Environment.NewLine}extensions:{Environment.NewLine}  seq:{Environment.NewLine}    type: stdio{Environment.NewLine}    cmd: seqcli{Environment.NewLine}    args: [mcp, run]{Environment.NewLine}    enabled: true"),
 
             ["continue"] = Unsupported(
-                "Continue reads MCP servers from YAML, which seqcli can't edit automatically. Create .continue/mcpServers/seq.yaml with:\n\nname: Seq\nversion: 0.0.1\nschema: v1\nmcpServers:\n  - name: seq\n    command: seqcli\n    args:\n      - mcp\n      - run"),
+                $"Continue reads MCP servers from YAML, which seqcli can't edit automatically. Create .continue/mcpServers/seq.yaml with:{Environment.NewLine}{Environment.NewLine}name: Seq{Environment.NewLine}version: 0.0.1{Environment.NewLine}schema: v1{Environment.NewLine}mcpServers:{Environment.NewLine}  - name: seq{Environment.NewLine}    command: seqcli{Environment.NewLine}    args:{Environment.NewLine}      - mcp{Environment.NewLine}      - run"),
         };
     
     static readonly IReadOnlyDictionary<string, string> AgentAliases =

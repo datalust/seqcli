@@ -1,9 +1,9 @@
 #nullable enable
+using System;
 using System.IO;
 using Seq.Api.Model.Data;
 using SeqCli.Csv;
-using SeqCli.Output;
-using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Templates.Themes;
 using Xunit;
 
 namespace SeqCli.Tests.Csv;
@@ -20,7 +20,7 @@ public class CsvWriterTests
         var rendered = Render(RedirectedTheme(forceColor: false));
 
         Assert.DoesNotContain(Escape, rendered);
-        Assert.Equal("\"Events\",\"Application\"\n\"852\",\"Roastery \"\"Web\"\" Frontend\"\n", rendered);
+        Assert.Equal($"\"Events\",\"Application\"{Environment.NewLine}\"852\",\"Roastery \"\"Web\"\" Frontend\"{Environment.NewLine}", rendered);
     }
 
     [Fact]
@@ -42,10 +42,10 @@ public class CsvWriterTests
         Assert.Contains("The query could not be executed.", rendered);
     }
 
-    static ConsoleTheme RedirectedTheme(bool forceColor) =>
-        forceColor ? OutputFormat.DefaultAnsiTheme : ConsoleTheme.None;
+    static TemplateTheme? RedirectedTheme(bool forceColor) =>
+        forceColor ? TemplateTheme.Code : null;
 
-    static string Render(ConsoleTheme theme, QueryResultPart? result = null)
+    static string Render(TemplateTheme? theme, QueryResultPart? result = null)
     {
         result ??= new QueryResultPart
         {
@@ -53,7 +53,7 @@ public class CsvWriterTests
             Rows = [[852, "Roastery \"Web\" Frontend"]]
         };
 
-        var output = new StringWriter { NewLine = "\n" };
+        var output = new StringWriter();
         CsvWriter.WriteQueryResult(result, v => v?.ToString() ?? "null", theme, output);
         return output.ToString();
     }

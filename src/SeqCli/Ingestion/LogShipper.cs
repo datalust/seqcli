@@ -33,7 +33,7 @@ namespace SeqCli.Ingestion;
 
 static class LogShipper
 {
-    static readonly ITextFormatter JsonFormatter = OutputFormatter.Json(null);
+    static readonly ITextFormatter JsonFormatter = TextFormatters.Json(null);
 
     public static async Task ShipBufferAsync(
         SeqConnection connection,
