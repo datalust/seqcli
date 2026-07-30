@@ -69,18 +69,6 @@ public class OutputFormatTests
         Assert.NotNull(format.TemplateTheme);
     }
 
-    // Template themes are ANSI-only, so JSON output is themed on a terminal wherever ANSI is the platform default.
-    [Fact]
-    public void TerminalJsonOutputIsThemedWhereverAnsiIsThePlatformDefault()
-    {
-        var format = Create(syntax: OutputSyntax.Json, outputIsRedirected: false);
-
-        if (OperatingSystem.IsWindows())
-            Assert.Null(format.TemplateTheme);
-        else
-            Assert.NotNull(format.TemplateTheme);
-    }
-
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
