@@ -35,7 +35,7 @@ public class TextFormattersTests
             properties: new LogEventProperty("Name", new ScalarValue("world")));
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 WRN] Hello, world!\n",
+            $"[2024-01-01T10:00:01.2500000+00:00 WRN] Hello, world!{Environment.NewLine}",
             RenderText(evt));
     }
 
@@ -49,7 +49,7 @@ public class TextFormattersTests
             new LogEventProperty("Name", new ScalarValue("world")));
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 ERR] Hello, world!\nSystem.Exception: Boom!\n",
+            $"[2024-01-01T10:00:01.2500000+00:00 ERR] Hello, world!{Environment.NewLine}System.Exception: Boom!{Environment.NewLine}",
             RenderText(evt));
     }
 
@@ -64,7 +64,7 @@ public class TextFormattersTests
         ]);
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1250 ms)\n",
+            $"[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1250 ms){Environment.NewLine}",
             RenderText(evt));
     }
 
@@ -80,7 +80,7 @@ public class TextFormattersTests
         ]);
 
         Assert.Equal(
-            "[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1.5 ms)\n",
+            $"[2024-01-01T10:00:01.2500000+00:00 INF] Hello, world! (1.5 ms){Environment.NewLine}",
             RenderText(evt));
     }
 
@@ -89,7 +89,7 @@ public class TextFormattersTests
     {
         var evt = SomeLogEvent(properties: new LogEventProperty("Name", new ScalarValue("world")));
 
-        Assert.Equal("INF Hello, world!\n", RenderText(evt, "{@l:u3} {@m}\n"));
+        Assert.Equal($"INF Hello, world!{Environment.NewLine}", RenderText(evt, $"{{@l:u3}} {{@m}}{Environment.NewLine}"));
     }
 
     static LogEvent SomeLogEvent(
