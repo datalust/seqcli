@@ -33,9 +33,10 @@ class ShowCommand : Command
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
-    readonly List<string> _properties = [];
+    readonly List<string> _columns = [];
     string? _id;
     bool _includeLogs;
+    bool _includeExceptions;
 
     public ShowCommand()
     {
@@ -45,15 +46,21 @@ class ShowCommand : Command
             id => _id = ArgumentString.Normalize(id));
 
         Options.Add(
-            "p=|property=",
-            "A property to display following each event's message, for example `OrderId` or " +
-            "`@Resource.service.name`; this argument can be used multiple times",
-            p => _properties.Add(ArgumentString.Normalize(p) ?? throw new ArgumentException("Properties require a value.")));
+            "column=",
+            "A column to display preceding each event's message; any Seq expression can be supplied, for " +
+            "example `OrderId`, `@SpanKind`, or `@Resource.service.name`; this argument can be used multiple " +
+            "times, adding columns in order",
+            c => _columns.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Columns require a value.")));
 
         Options.Add(
             "logs",
             "Include log events in the trace, in addition to spans",
             _ => _includeLogs = true);
+
+        Options.Add(
+            "exceptions",
+            "Include exception details, where present",
+            _ => _includeExceptions = true);
 
         _output = Enable(new OutputFormatFeature(supportNative: false, supportJson: false));
         _storagePath = Enable<StoragePathFeature>();
@@ -79,9 +86,9 @@ class ShowCommand : Command
 
             var config = RuntimeConfigurationLoader.Load(_storagePath);
             var connection = SeqConnectionFactory.Connect(_connection, config);
-            var output = _output.GetOutputFormat(config, TraceShowFormat.OutputTemplate);
+            var output = _output.GetOutputFormat(config, TraceShowFormat.OutputTemplate(_columns.Count));
 
-            var result = await connection.Data.TryQueryAsync(TraceQuery.Build(traceId, _includeLogs, _properties));
+            var result = await connection.Data.TryQueryAsync(TraceQuery.Build(traceId, _includeLogs, _includeExceptions, _columns));
             if (!string.IsNullOrWhiteSpace(result.Error))
             {
                 Log.Error("Could not retrieve trace: {ErrorMessage}", result.Error);
@@ -90,7 +97,7 @@ class ShowCommand : Command
                 return 1;
             }
 
-            var traceEvents = TraceQuery.ReadEvents(result, _properties);
+            var traceEvents = TraceQuery.ReadEvents(result, _includeExceptions, _columns);
             if (traceEvents.Count == 0)
             {
                 Log.Error("No events found for trace {TraceId}", traceId);

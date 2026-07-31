@@ -26,23 +26,23 @@ public class TraceQueryTests
     [Fact]
     public void TheSpanOnlyQuerySelectsTheFixedColumns()
     {
-        var query = TraceQuery.Build(TraceId, includeLogs: false, []);
+        var query = TraceQuery.Build(TraceId, includeLogs: false, includeExceptions: false, []);
 
         Assert.Equal(
-            "select @Id, @Timestamp, @Level, @Message, @Exception, @SpanId, @ParentId, @Start, @Elapsed" +
+            "select @Id, @Timestamp, @Level, @Message, @SpanId, @ParentId, @Start, @Elapsed" +
             $" from stream where @TraceId = '{TraceId}' and @Start is not null limit 10000",
             query);
     }
 
     [Fact]
-    public void LogsAndSelectedPropertiesAppearInTheQuery()
+    public void LogsExceptionsAndColumnsAppearInTheQuery()
     {
-        var query = TraceQuery.Build(TraceId, includeLogs: true,
+        var query = TraceQuery.Build(TraceId, includeLogs: true, includeExceptions: true,
             ["@Resource.service.name", "OrderId"]);
 
         Assert.Equal(
             "select @Id, @Timestamp, @Level, @Message, @Exception, @SpanId, @ParentId, @Start, @Elapsed," +
-            " @Resource.service.name as p0, OrderId as p1" +
+            " @Resource.service.name as c0, OrderId as c1" +
             $" from stream where @TraceId = '{TraceId}' limit 10000",
             query);
     }
@@ -50,7 +50,8 @@ public class TraceQueryTests
     [Fact]
     public void UnvalidatedTraceIdsAreRejected()
     {
-        Assert.Throws<ArgumentException>(() => TraceQuery.Build("' or true or '", includeLogs: true, []));
+        Assert.Throws<ArgumentException>(() =>
+            TraceQuery.Build("' or true or '", includeLogs: true, includeExceptions: false, []));
     }
 
     [Fact]
@@ -68,7 +69,7 @@ public class TraceQueryTests
             ]
         };
 
-        var evt = Assert.Single(TraceQuery.ReadEvents(result, []));
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, includeExceptions: true, []));
 
         Assert.Equal("event-1", evt.Id);
         Assert.Equal(timestamp, evt.Timestamp);
@@ -94,7 +95,7 @@ public class TraceQueryTests
                 "0011223344556677", null!, null!, null!]]
         };
 
-        var evt = Assert.Single(TraceQuery.ReadEvents(result, []));
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, includeExceptions: true, []));
 
         Assert.Null(evt.Level);
         Assert.Equal("System.Exception: Boom!", evt.Exception);
@@ -114,7 +115,7 @@ public class TraceQueryTests
         row[column] = "2026-07-31T10:20:00Z";
         var result = new QueryResultPart { Rows = [row!] };
 
-        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, []));
+        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, includeExceptions: true, []));
     }
 
     [Theory]
@@ -126,11 +127,11 @@ public class TraceQueryTests
         row[column] = null;
         var result = new QueryResultPart { Rows = [row!] };
 
-        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, []));
+        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, includeExceptions: true, []));
     }
 
     [Fact]
-    public void SelectedPropertiesAreReadByPositionAndNullsAreOmitted()
+    public void ColumnsAreReadByPositionWithNullsForMissingValues()
     {
         var result = new QueryResultPart
         {
@@ -141,14 +142,35 @@ public class TraceQueryTests
             ]
         };
 
-        var properties = new[] {"@Resource.service.name", "Missing", "AlsoMissing", "OrderId"};
+        var columns = new[] {"@Resource.service.name", "Missing", "AlsoMissing", "OrderId"};
 
-        var evt = Assert.Single(TraceQuery.ReadEvents(result, properties));
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, includeExceptions: true, columns));
 
-        Assert.Equal(2, evt.SelectedProperties.Count);
-        Assert.Equal("@Resource.service.name", evt.SelectedProperties[0].Key);
-        Assert.Equal("frontend", evt.SelectedProperties[0].Value);
-        Assert.Equal("OrderId", evt.SelectedProperties[1].Key);
-        Assert.Equal(42L, evt.SelectedProperties[1].Value);
+        Assert.Equal(["frontend", null, null, 42L], evt.Columns);
+    }
+
+    [Fact]
+    public void RowsWithoutExceptionsAreRead()
+    {
+        var timestamp = new DateTimeOffset(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
+        var start = timestamp - TimeSpan.FromMilliseconds(1.5);
+
+        var result = new QueryResultPart
+        {
+            Rows =
+            [
+                ["event-1", timestamp.UtcTicks, "INFO", "Hello!",
+                    "0011223344556677", "8899aabbccddeeff", start.UtcTicks, 15000L, "frontend"]
+            ]
+        };
+
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, includeExceptions: false, ["@Resource.service.name"]));
+
+        Assert.Null(evt.Exception);
+        Assert.Equal("0011223344556677", evt.SpanId);
+        Assert.Equal("8899aabbccddeeff", evt.ParentId);
+        Assert.Equal(start, evt.Start);
+        Assert.Equal(TimeSpan.FromMilliseconds(1.5), evt.Elapsed);
+        Assert.Equal(["frontend"], evt.Columns);
     }
 }

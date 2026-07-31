@@ -34,7 +34,8 @@ static partial class TraceQuery
     /// </summary>
     public const int MaxEvents = 10000;
 
-    const int FixedColumnCount = 9;
+    // Excludes the optional `@Exception` column.
+    const int FixedColumnCount = 8;
 
     [GeneratedRegex("^[0-9a-f]{32}$")]
     private static partial Regex TraceIdFormat { get; }
@@ -49,15 +50,21 @@ static partial class TraceQuery
     /// </summary>
     /// <param name="traceId">The trace id; must be validated with <see cref="IsValidTraceId"/> first.</param>
     /// <param name="includeLogs">Whether log events are included, or only spans.</param>
-    /// <param name="properties">Expressions to select for each event.</param>
-    public static string Build(string traceId, bool includeLogs, IReadOnlyList<string> properties)
+    /// <param name="includeExceptions">Whether exception details are retrieved.</param>
+    /// <param name="columns">Column expressions to select for each event.</param>
+    public static string Build(string traceId, bool includeLogs, bool includeExceptions, IReadOnlyList<string> columns)
     {
         if (!IsValidTraceId(traceId)) throw new ArgumentException("The trace id has not been validated.");
 
-        var query = new StringBuilder("select @Id, @Timestamp, @Level, @Message, @Exception, @SpanId, @ParentId, @Start, @Elapsed");
+        var query = new StringBuilder("select @Id, @Timestamp, @Level, @Message");
 
-        for (var i = 0; i < properties.Count; ++i)
-            query.Append($", {properties[i]} as p{i}");
+        if (includeExceptions)
+            query.Append(", @Exception");
+
+        query.Append(", @SpanId, @ParentId, @Start, @Elapsed");
+
+        for (var i = 0; i < columns.Count; ++i)
+            query.Append($", {columns[i]} as c{i}");
 
         query.Append($" from stream where @TraceId = '{traceId}'");
 
@@ -72,22 +79,25 @@ static partial class TraceQuery
     /// <summary>
     /// Read the events from a result produced by the query constructed in <see cref="Build"/>.
     /// </summary>
-    public static IReadOnlyList<TraceEvent> ReadEvents(QueryResultPart result, IReadOnlyList<string> properties)
+    public static IReadOnlyList<TraceEvent> ReadEvents(QueryResultPart result, bool includeExceptions, IReadOnlyList<string> columns)
     {
         if (result.Rows == null)
             return [];
 
+        // When exceptions are retrieved, `@Exception` shifts the columns following it.
+        var e = includeExceptions ? 1 : 0;
+
         var events = new List<TraceEvent>(result.Rows.Length);
         foreach (var row in result.Rows)
         {
-            var selected = new List<KeyValuePair<string, object>>();
-            for (var i = 0; i < properties.Count && FixedColumnCount + i < row.Length; ++i)
+            var selected = new object?[columns.Count];
+            for (var i = 0; i < columns.Count && FixedColumnCount + e + i < row.Length; ++i)
             {
-                var value = row[FixedColumnCount + i];
+                var value = row[FixedColumnCount + e + i];
                 if (value is null or JValue { Type: JTokenType.Null })
                     continue;
 
-                selected.Add(new(properties[i], value));
+                selected[i] = value;
             }
 
             events.Add(new TraceEvent(
@@ -95,12 +105,12 @@ static partial class TraceQuery
                 Timestamp: ReadTimestamp(row[1]) ?? throw new InvalidDataException("The event timestamp is missing."),
                 Level: ReadString(row[2]),
                 Message: (ReadString(row[3]) ?? "").TrimEnd(),
-                Exception: ReadString(row[4]),
-                SpanId: ReadString(row[5]),
-                ParentId: ReadString(row[6]),
-                Start: ReadTimestamp(row[7]),
-                Elapsed: ReadDuration(row[8]),
-                SelectedProperties: selected));
+                Exception: includeExceptions ? ReadString(row[4]) : null,
+                SpanId: ReadString(row[4 + e]),
+                ParentId: ReadString(row[5 + e]),
+                Start: ReadTimestamp(row[6 + e]),
+                Elapsed: ReadDuration(row[7 + e]),
+                Columns: selected));
         }
 
         return events;

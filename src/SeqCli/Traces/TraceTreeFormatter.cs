@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Linq;
 using SeqCli.Mapping;
 using SeqCli.Output;
 using SeqCli.Util;
@@ -72,27 +71,19 @@ static class TraceTreeFormatter
         if (evt.Elapsed is { } elapsed)
             properties.Add(new(TraceShowFormat.DurationProperty, new ScalarValue(elapsed)));
 
-        // The selected-property list is embedded in the message template so that it renders in
-        // `{name: value}` style; a structure-valued hole would render as JSON.
-        var messageTokens = new List<MessageTemplateToken> { new TextToken(evt.Message) };
-        for (var i = 0; i < evt.SelectedProperties.Count; ++i)
+        for (var i = 0; i < evt.Columns.Count; ++i)
         {
-            var (name, value) = evt.SelectedProperties[i];
-            var propertyName = TraceShowFormat.SelectedPropertyName(i);
-            messageTokens.Add(new TextToken($"{(i == 0 ? " {" : ", ")}{name}: "));
-            messageTokens.Add(new PropertyToken(propertyName, $"{{{propertyName}}}"));
-            properties.Add(LogEventPropertyFactory.SafeCreate(propertyName, OutputFormat.CreatePropertyValue(value)));
+            if (evt.Columns[i] is { } value)
+                properties.Add(LogEventPropertyFactory.SafeCreate(
+                    TraceShowFormat.ColumnPropertyName(i), OutputFormat.CreatePropertyValue(value)));
         }
-
-        if (evt.SelectedProperties.Count > 0)
-            messageTokens.Add(new TextToken("}"));
 
         // Spans are positioned, and shown, at their start time; the event timestamp marks completion.
         return new LogEvent(
             evt.SortKey.ToLocalTime(),
             LevelMapping.ToSerilogLevel(evt.Level ?? ""),
             string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
-            new MessageTemplate(messageTokens),
+            new MessageTemplate([new TextToken(evt.Message)]),
             properties);
     }
 }

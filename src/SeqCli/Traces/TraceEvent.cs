@@ -29,7 +29,8 @@ namespace SeqCli.Traces;
 /// <param name="ParentId">For spans, the id of the parent span, if any.</param>
 /// <param name="Start">The span start time; <c>null</c> for log events.</param>
 /// <param name="Elapsed">The span duration; <c>null</c> for log events.</param>
-/// <param name="SelectedProperties">Expression/value pairs selected for display, in display order.</param>
+/// <param name="Columns">Values of the selected columns, in command-line order; a <c>null</c>
+/// entry marks a value missing from the event.</param>
 record TraceEvent(
     string Id,
     DateTimeOffset Timestamp,
@@ -40,7 +41,7 @@ record TraceEvent(
     string? ParentId,
     DateTimeOffset? Start,
     TimeSpan? Elapsed,
-    IReadOnlyList<KeyValuePair<string, object>> SelectedProperties)
+    IReadOnlyList<object?> Columns)
 {
     public bool IsSpan => Start != null;
 

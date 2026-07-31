@@ -1698,8 +1698,9 @@ seqcli trace show -i 7d4dedcc73b18e449e0e4ea08cbe346d --logs
 | Option | Description |
 | ------ | ----------- |
 | `-i`, `--id=VALUE` | The id of the trace to display |
-| `-p`, `--property=VALUE` | A property to display following each event's message, for example `OrderId` or `@Resource.service.name`; this argument can be used multiple times |
+|       `--column=VALUE` | A column to display preceding each event's message; any Seq expression can be supplied, for example `OrderId`, `@SpanKind`, or `@Resource.service.name`; this argument can be used multiple times, adding columns in order |
 |       `--logs` | Include log events in the trace, in addition to spans |
+|       `--exceptions` | Include exception details, where present |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
 |       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |

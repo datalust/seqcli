@@ -14,10 +14,10 @@ public class TraceTreeFormatterTests
     static readonly DateTimeOffset T0 = new(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
 
     static TraceEvent Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1,
-        string? message = null, IReadOnlyList<KeyValuePair<string, object>>? properties = null) =>
+        string? message = null, IReadOnlyList<object?>? columns = null) =>
         new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null, message ?? $"span {spanId}",
             null, spanId, parentId, T0.AddMilliseconds(startMs), TimeSpan.FromMilliseconds(elapsedMs),
-            properties ?? []);
+            columns ?? []);
 
     static TraceEvent Log(string? spanId, double timestampMs, string message = "log", string? level = null,
         string? exception = null) =>
@@ -27,7 +27,8 @@ public class TraceTreeFormatterTests
     static string Render(params TraceEvent[] events)
     {
         var output = new StringWriter();
-        var formatter = TextFormatters.Plain(theme: null, TraceShowFormat.OutputTemplate);
+        var formatter = TextFormatters.Plain(theme: null,
+            TraceShowFormat.OutputTemplate(events.Max(e => e.Columns.Count)));
         foreach (var logEvent in TraceTreeFormatter.ToLogEvents(TraceTreeBuilder.Build(events)))
             formatter.Format(logEvent, output);
         return output.ToString();
@@ -85,23 +86,25 @@ public class TraceTreeFormatterTests
     }
 
     [Fact]
-    public void SelectedPropertiesFollowTheMessage()
+    public void ColumnsPrecedeTheMessageInOrder()
     {
-        var actual = Render(Span("a", null, elapsedMs: 2, message: "GET /orders", properties:
-        [
-            new("service.name", "frontend"),
-            new("OrderId", 42L)
-        ]));
+        var actual = Render(Span("a", null, elapsedMs: 2, message: "GET /orders", columns: ["frontend", 42L]));
 
         Assert.Equal(
-            $"[{At()} INF] GET /orders {{service.name: frontend, OrderId: 42}} (2 ms){Environment.NewLine}",
+            $"[{At()} INF] frontend 42 GET /orders (2 ms){Environment.NewLine}",
             actual);
     }
 
-    [Fact]
-    public void EventsWithoutSelectedPropertiesOmitThePropertyList()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void MissingAndEmptyColumnValuesLeaveNoRedundantSpace(object? first)
     {
-        Assert.DoesNotContain("{", Render(Span("a", null)));
+        var actual = Render(Span("a", null, elapsedMs: 2, message: "GET /orders", columns: [first, 42L]));
+
+        Assert.Equal(
+            $"[{At()} INF] 42 GET /orders (2 ms){Environment.NewLine}",
+            actual);
     }
 
     [Fact]

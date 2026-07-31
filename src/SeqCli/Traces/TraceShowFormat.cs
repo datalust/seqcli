@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 
 namespace SeqCli.Traces;
 
@@ -25,17 +26,32 @@ static class TraceShowFormat
     internal static readonly string TreePrefixProperty = $"_SeqcliTraceTreePrefix_{Guid.NewGuid():N}";
     internal static readonly string DurationProperty = $"_SeqcliTraceDuration_{Guid.NewGuid():N}";
 
-    static readonly string SelectedPropertyPrefix = $"_SeqcliTraceSelected_{Guid.NewGuid():N}";
+    static readonly string ColumnPrefix = $"_SeqcliTraceColumn_{Guid.NewGuid():N}";
 
     /// <summary>
     /// The name of the event property carrying the value of the <paramref name="index"/>th
-    /// selected property; these are embedded in the message template so that the property list
-    /// renders in <c>{name: value}</c> style, themed.
+    /// column; the output template includes a hole for each of these.
     /// </summary>
-    internal static string SelectedPropertyName(int index) => $"{SelectedPropertyPrefix}_{index}";
+    internal static string ColumnPropertyName(int index) => $"{ColumnPrefix}_{index}";
 
-    public static readonly string OutputTemplate =
-        $"[{{@t:HH:mm:ss}} {{@l:u3}}] {{{TreePrefixProperty}}}{{@m}}" +
-        $"{{#if {DurationProperty} is not null}} ({{Milliseconds({DurationProperty}):0.###}} ms){{#end}}" +
-        Environment.NewLine + "{@x}";
+    /// <summary>
+    /// Construct the output template, including a space-separated column ahead of the event
+    /// message for each of <paramref name="columnCount"/> selected columns.
+    /// </summary>
+    public static string OutputTemplate(int columnCount)
+    {
+        var template = new StringBuilder($"[{{@t:HH:mm:ss}} {{@l:u3}}] {{{TreePrefixProperty}}}");
+
+        // `<> ''` is undefined, and hence falsy, when the property is missing; the guard thus
+        // drops the column, and its trailing space, for both missing and empty values.
+        for (var i = 0; i < columnCount; ++i)
+        {
+            var column = ColumnPropertyName(i);
+            template.Append($"{{#if {column} <> ''}}{{{column}}} {{#end}}");
+        }
+
+        template.Append($"{{@m}}{{#if {DurationProperty} is not null}} ({{Milliseconds({DurationProperty}):0.###}} ms){{#end}}");
+        template.Append(Environment.NewLine).Append("{@x}");
+        return template.ToString();
+    }
 }

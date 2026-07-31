@@ -25,13 +25,13 @@ public class TraceShowTestCase : ICliTestCase
         var exit = runner.Exec("ingest", $"--json -i {inputFile}");
         Assert.Equal(0, exit);
 
-        exit = runner.Exec("trace show", $"-i {TraceId} --logs -p Customer");
+        exit = runner.Exec("trace show", $"-i {TraceId} --logs --column Customer");
         Assert.Equal(0, exit);
 
         var output = runner.LastRunProcess!.Output;
         var expected = new[]
         {
-            "] GET /orders {Customer: scott} (1000 ms)",
+            "] scott GET /orders (1000 ms)",
             "] ├─ Query orders (300 ms)",
             "] │  ├─ SELECT * FROM orders (150 ms)",
             "] │  ┊  42 rows retrieved",
@@ -46,6 +46,12 @@ public class TraceShowTestCase : ICliTestCase
             Assert.True(index > lastIndex, $"Expected `{line}` in order in output: {output}");
             lastIndex = index;
         }
+
+        Assert.DoesNotContain("System.TimeoutException", output);
+
+        exit = runner.Exec("trace show", $"-i {TraceId} --logs --exceptions");
+        Assert.Equal(0, exit);
+        Assert.Contains("System.TimeoutException: The query timeout was reached", runner.LastRunProcess!.Output);
 
         exit = runner.Exec("trace show", $"-i {TraceId}");
         Assert.Equal(0, exit);
