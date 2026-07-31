@@ -216,6 +216,7 @@ Available commands:
  - `template`
    - [`template export`](#template-export) &mdash; Export entities into template files.
    - [`template import`](#template-import) &mdash; Import entities from template files.
+ - [`trace show`](#trace-show) &mdash; Display a trace as a tree of spans.
  - `user`
    - [`user create`](#user-create) &mdash; Create a user.
    - [`user list`](#user-list) &mdash; List users.
@@ -1683,6 +1684,28 @@ seqcli template import -i ./Templates
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `trace show`
+
+Display a trace as a tree of spans.
+
+Example:
+
+```
+seqcli trace show -i 7d4dedcc73b18e449e0e4ea08cbe346d --logs
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-i`, `--id=VALUE` | The id of the trace to display |
+| `-p`, `--property=VALUE` | A property to display following each event's message, for example `OrderId` or `@Resource.service.name`; this argument can be used multiple times |
+|       `--logs` | Include log events in the trace, in addition to spans |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `user create`
 

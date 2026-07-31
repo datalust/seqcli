@@ -1,0 +1,154 @@
+#nullable enable
+using System;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using Seq.Api.Model.Data;
+using SeqCli.Traces;
+using Xunit;
+
+namespace SeqCli.Tests.Traces;
+
+public class TraceQueryTests
+{
+    const string TraceId = "46a2b061ad71d2e7f93e5332012b8477";
+
+    [Theory]
+    [InlineData(TraceId, true)]
+    [InlineData("46A2B061AD71D2E7F93E5332012B8477", false)]
+    [InlineData("46a2b061ad71d2e7", false)]
+    [InlineData("not a trace id' or true or '", false)]
+    [InlineData("", false)]
+    public void TraceIdsAreValidated(string traceId, bool isValid)
+    {
+        Assert.Equal(isValid, TraceQuery.IsValidTraceId(traceId));
+    }
+
+    [Fact]
+    public void TheSpanOnlyQuerySelectsTheFixedColumns()
+    {
+        var query = TraceQuery.Build(TraceId, includeLogs: false, []);
+
+        Assert.Equal(
+            "select @Id, @Timestamp, @Level, @Message, @Exception, @SpanId, @ParentId, @Start, @Elapsed" +
+            $" from stream where @TraceId = '{TraceId}' and @Start is not null limit 10000",
+            query);
+    }
+
+    [Fact]
+    public void LogsAndSelectedPropertiesAppearInTheQuery()
+    {
+        var query = TraceQuery.Build(TraceId, includeLogs: true,
+            ["@Resource.service.name", "OrderId"]);
+
+        Assert.Equal(
+            "select @Id, @Timestamp, @Level, @Message, @Exception, @SpanId, @ParentId, @Start, @Elapsed," +
+            " @Resource.service.name as p0, OrderId as p1" +
+            $" from stream where @TraceId = '{TraceId}' limit 10000",
+            query);
+    }
+
+    [Fact]
+    public void UnvalidatedTraceIdsAreRejected()
+    {
+        Assert.Throws<ArgumentException>(() => TraceQuery.Build("' or true or '", includeLogs: true, []));
+    }
+
+    [Fact]
+    public void SpanRowsAreRead()
+    {
+        var timestamp = new DateTimeOffset(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
+        var start = timestamp - TimeSpan.FromMilliseconds(1.5);
+
+        var result = new QueryResultPart
+        {
+            Rows =
+            [
+                ["event-1", timestamp.UtcTicks, "INFO", $"Hello!{Environment.NewLine}", null!,
+                    "0011223344556677", "8899aabbccddeeff", start.UtcTicks, 15000L]
+            ]
+        };
+
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, []));
+
+        Assert.Equal("event-1", evt.Id);
+        Assert.Equal(timestamp, evt.Timestamp);
+        Assert.Equal("INFO", evt.Level);
+        Assert.Equal("Hello!", evt.Message);
+        Assert.Null(evt.Exception);
+        Assert.Equal("0011223344556677", evt.SpanId);
+        Assert.Equal("8899aabbccddeeff", evt.ParentId);
+        Assert.Equal(start, evt.Start);
+        Assert.Equal(TimeSpan.FromMilliseconds(1.5), evt.Elapsed);
+        Assert.True(evt.IsSpan);
+        Assert.Equal(start, evt.SortKey);
+    }
+
+    [Fact]
+    public void LogRowsAreRead()
+    {
+        var timestamp = new DateTimeOffset(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
+
+        var result = new QueryResultPart
+        {
+            Rows = [["event-2", timestamp.UtcTicks, null!, "A log", "System.Exception: Boom!",
+                "0011223344556677", null!, null!, null!]]
+        };
+
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, []));
+
+        Assert.Null(evt.Level);
+        Assert.Equal("System.Exception: Boom!", evt.Exception);
+        Assert.False(evt.IsSpan);
+        Assert.Null(evt.Start);
+        Assert.Null(evt.Elapsed);
+        Assert.Equal(timestamp, evt.SortKey);
+    }
+
+    [Theory]
+    [InlineData(1)] // A string `@Timestamp`
+    [InlineData(7)] // A string `@Start`
+    [InlineData(8)] // A string `@Elapsed`
+    public void NonTickTimestampsAndDurationsAreRejected(int column)
+    {
+        var row = new object?[] {"event-1", 0L, null, "", null, null, null, null, null};
+        row[column] = "2026-07-31T10:20:00Z";
+        var result = new QueryResultPart { Rows = [row!] };
+
+        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, []));
+    }
+
+    [Theory]
+    [InlineData(0)] // A missing `@Id`
+    [InlineData(1)] // A missing `@Timestamp`
+    public void MissingRequiredColumnsAreRejected(int column)
+    {
+        var row = new object?[] {"event-1", 0L, null, "", null, null, null, null, null};
+        row[column] = null;
+        var result = new QueryResultPart { Rows = [row!] };
+
+        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, []));
+    }
+
+    [Fact]
+    public void SelectedPropertiesAreReadByPositionAndNullsAreOmitted()
+    {
+        var result = new QueryResultPart
+        {
+            Rows =
+            [
+                ["event-3", 0L, null!, "", null!, null!, null!, null!, null!,
+                    "frontend", null!, JValue.CreateNull(), 42L]
+            ]
+        };
+
+        var properties = new[] {"@Resource.service.name", "Missing", "AlsoMissing", "OrderId"};
+
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, properties));
+
+        Assert.Equal(2, evt.SelectedProperties.Count);
+        Assert.Equal("@Resource.service.name", evt.SelectedProperties[0].Key);
+        Assert.Equal("frontend", evt.SelectedProperties[0].Value);
+        Assert.Equal("OrderId", evt.SelectedProperties[1].Key);
+        Assert.Equal(42L, evt.SelectedProperties[1].Value);
+    }
+}

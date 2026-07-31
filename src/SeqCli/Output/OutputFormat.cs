@@ -319,7 +319,7 @@ sealed class OutputFormat
         return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
     }
 
-    static LogEventPropertyValue CreatePropertyValue(object value)
+    internal static LogEventPropertyValue CreatePropertyValue(object value)
     {
         switch (value)
         {
