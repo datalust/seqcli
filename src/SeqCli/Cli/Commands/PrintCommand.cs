@@ -22,6 +22,7 @@ using Seq.Syntax.Expressions;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Ingestion;
+using SeqCli.Output;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Core;
@@ -50,7 +51,7 @@ class PrintCommand : Command
 
         Options.Add("template=",
             "Specify an output template to control plain text formatting",
-            v => _template = InterpretTemplateEscapeChars(ArgumentString.Normalize(v)));
+            v => _template = ArgumentString.Normalize(v));
 
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
@@ -75,7 +76,8 @@ class PrintCommand : Command
             filter = evt => ExpressionResult.IsTrue(compiled(evt));
         }
 
-        var output = _output.GetOutputFormat(config, _template);
+        var template = _template == null ? null : PrintTemplate.InterpretEscapeChars(_template);
+        var output = _output.GetOutputFormat(config, template);
 
         foreach (var input in _fileInputFeature.OpenInputs())
         {
@@ -105,29 +107,5 @@ class PrintCommand : Command
         }
 
         return 0;
-    }
-    
-    static string? InterpretTemplateEscapeChars(string? template)
-    {
-        if (template == null) return null;
-
-        var result = new StringBuilder();
-        for (var i = 0; i < template.Length; ++i)
-        {
-            var ch = template[i];
-            if (ch != '\\' || i == template.Length - 1)
-                result.Append(ch);
-
-            i += 1;
-            var next = template[i];
-            result.Append(next switch
-            {
-                'r' => '\r',
-                'n' => '\n',
-                _ => throw new ArgumentException($"Sequence `\\{next}` is invalid in templates; escape literal `\\` as `\\\\`.")
-            });
-        }
-
-        return result.ToString();
     }
 }
