@@ -14,8 +14,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Syntax.Expressions;
@@ -25,7 +23,6 @@ using SeqCli.Ingestion;
 using SeqCli.Output;
 using SeqCli.Util;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 
 namespace SeqCli.Cli.Commands;
