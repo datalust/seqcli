@@ -14,6 +14,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Seq.Syntax.Expressions;
@@ -22,6 +24,7 @@ using SeqCli.Config;
 using SeqCli.Ingestion;
 using SeqCli.Util;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 
 namespace SeqCli.Cli.Commands;
@@ -47,7 +50,7 @@ class PrintCommand : Command
 
         Options.Add("template=",
             "Specify an output template to control plain text formatting",
-            v => _template = ArgumentString.Normalize(v));
+            v => _template = InterpretTemplateEscapeChars(ArgumentString.Normalize(v)));
 
         _invalidDataHandlingFeature = Enable<InvalidDataHandlingFeature>();
 
@@ -102,5 +105,29 @@ class PrintCommand : Command
         }
 
         return 0;
+    }
+    
+    static string? InterpretTemplateEscapeChars(string? template)
+    {
+        if (template == null) return null;
+
+        var result = new StringBuilder();
+        for (var i = 0; i < template.Length; ++i)
+        {
+            var ch = template[i];
+            if (ch != '\\' || i == template.Length - 1)
+                result.Append(ch);
+
+            i += 1;
+            var next = template[i];
+            result.Append(next switch
+            {
+                'r' => '\r',
+                'n' => '\n',
+                _ => throw new ArgumentException($"Sequence `\\{next}` is invalid in templates; escape literal `\\` as `\\\\`.")
+            });
+        }
+
+        return result.ToString();
     }
 }
