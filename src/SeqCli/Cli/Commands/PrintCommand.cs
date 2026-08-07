@@ -20,6 +20,7 @@ using Seq.Syntax.Expressions;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Ingestion;
+using SeqCli.Output;
 using SeqCli.Util;
 using Serilog;
 using Serilog.Events;
@@ -72,7 +73,8 @@ class PrintCommand : Command
             filter = evt => ExpressionResult.IsTrue(compiled(evt));
         }
 
-        var output = _output.GetOutputFormat(config, _template);
+        var template = _template == null ? null : PrintTemplate.InterpretEscapeChars(_template);
+        var output = _output.GetOutputFormat(config, template);
 
         foreach (var input in _fileInputFeature.OpenInputs())
         {
