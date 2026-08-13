@@ -57,8 +57,8 @@ class FrameReader
         }
         else if (_unawaitedNextLine != null)
         {
-            var index = Task.WaitAny([_unawaitedNextLine], _trailingLineArrivalDeadline);
-            if (index == -1)
+            var completed = await Task.WhenAny(_unawaitedNextLine, Task.Delay(_trailingLineArrivalDeadline));
+            if (completed != _unawaitedNextLine)
                 return new Frame();
                 
             var line = await _unawaitedNextLine;
@@ -79,9 +79,9 @@ class FrameReader
         Task<string?>? readLine = null;
         while (true)
         {
-            readLine = readLine ?? Task.Run(_source.ReadLineAsync);                
-            var index = Task.WaitAny([readLine], _trailingLineArrivalDeadline);
-            if (index == -1)
+            readLine ??= Task.Run(_source.ReadLineAsync);                
+            var completed = await Task.WhenAny(readLine, Task.Delay(_trailingLineArrivalDeadline));
+            if (completed != readLine)
             {
                 if (hasValue)
                 {
