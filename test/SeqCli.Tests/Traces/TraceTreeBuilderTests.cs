@@ -2,6 +2,8 @@
 using System;
 using System.Linq;
 using SeqCli.Traces;
+using Serilog.Events;
+using Serilog.Parsing;
 using Xunit;
 
 namespace SeqCli.Tests.Traces;
@@ -10,12 +12,14 @@ public class TraceTreeBuilderTests
 {
     static readonly DateTimeOffset T0 = new(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
 
-    static TraceEvent Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1) =>
-        new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null, $"span {spanId}", null,
+    static TraceTreeElement Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1) =>
+        new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null,
+            new MessageTemplate([new TextToken($"span {spanId}")]), [], null,
             spanId, parentId, T0.AddMilliseconds(startMs), TimeSpan.FromMilliseconds(elapsedMs), []);
 
-    static TraceEvent Log(string? spanId, double timestampMs, string message = "log") =>
-        new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), null, message, null,
+    static TraceTreeElement Log(string? spanId, double timestampMs, string message = "log") =>
+        new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), null,
+            new MessageTemplate([new TextToken(message)]), [], null,
             spanId, null, null, null, []);
 
     [Fact]
@@ -24,7 +28,7 @@ public class TraceTreeBuilderTests
         var roots = TraceTreeBuilder.Build([Span("a", null)]);
 
         var root = Assert.Single(roots);
-        Assert.Equal("a", root.Event.SpanId);
+        Assert.Equal("a", root.Element.SpanId);
         Assert.Empty(root.Children);
     }
 
@@ -40,9 +44,9 @@ public class TraceTreeBuilderTests
         var root = Assert.Single(roots);
         var child = Assert.Single(root.Children);
         var grandchild = Assert.Single(child.Children);
-        Assert.Equal("a", root.Event.SpanId);
-        Assert.Equal("b", child.Event.SpanId);
-        Assert.Equal("c", grandchild.Event.SpanId);
+        Assert.Equal("a", root.Element.SpanId);
+        Assert.Equal("b", child.Element.SpanId);
+        Assert.Equal("c", grandchild.Element.SpanId);
     }
 
     [Fact]
@@ -55,7 +59,7 @@ public class TraceTreeBuilderTests
 
         var root = Assert.Single(roots);
         var log = Assert.Single(root.Children);
-        Assert.False(log.Event.IsSpan);
+        Assert.False(log.Element.IsSpan);
     }
 
     [Fact]
@@ -72,7 +76,7 @@ public class TraceTreeBuilderTests
         var root = Assert.Single(roots);
         Assert.Equal(
             ["first", "span c", "span b", "last"],
-            root.Children.Select(c => c.Event.Message).ToArray());
+            root.Children.Select(c => c.Element.MessageTemplate.Text).ToArray());
     }
 
     [Fact]
@@ -84,24 +88,24 @@ public class TraceTreeBuilderTests
         ]);
 
         Assert.Equal(2, roots.Count);
-        Assert.Equal("a", roots[0].Event.SpanId);
-        Assert.Equal("b", roots[1].Event.SpanId);
+        Assert.Equal("a", roots[0].Element.SpanId);
+        Assert.Equal("b", roots[1].Element.SpanId);
     }
 
     [Fact]
-    public void OrphanLogsAttachToTheFirstRootSpan()
+    public void OrphanLogsBecomeRootsAlongsideSpans()
     {
         var roots = TraceTreeBuilder.Build([
             Span("b", null, startMs: 5),
             Span("a", null, startMs: 0),
-            Log("uncaptured", 1),
-            Log(null, 2)
+            Log("uncaptured", 1, "first"),
+            Log(null, 2, "second")
         ]);
 
-        Assert.Equal(2, roots.Count);
-        Assert.Equal("a", roots[0].Event.SpanId);
-        Assert.Equal(2, roots[0].Children.Count);
-        Assert.Empty(roots[1].Children);
+        Assert.Equal(
+            ["span a", "first", "second", "span b"],
+            roots.Select(r => r.Element.MessageTemplate.Text).ToArray());
+        Assert.All(roots, r => Assert.Empty(r.Children));
     }
 
     [Fact]
@@ -113,7 +117,7 @@ public class TraceTreeBuilderTests
         ]);
 
         Assert.Equal(2, roots.Count);
-        Assert.Equal(["first", "second"], roots.Select(r => r.Event.Message).ToArray());
+        Assert.Equal(["first", "second"], roots.Select(r => r.Element.MessageTemplate.Text).ToArray());
     }
 
     [Fact]
@@ -127,7 +131,7 @@ public class TraceTreeBuilderTests
 
         Assert.Equal(2, roots.Count);
         var child = Assert.Single(roots[0].Children);
-        Assert.Equal("b", child.Event.SpanId);
+        Assert.Equal("b", child.Element.SpanId);
     }
 
     [Fact]

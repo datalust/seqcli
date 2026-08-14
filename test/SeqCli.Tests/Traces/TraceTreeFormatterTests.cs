@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using SeqCli.Output;
 using SeqCli.Traces;
+using Serilog.Events;
+using Serilog.Parsing;
 using Xunit;
 
 namespace SeqCli.Tests.Traces;
@@ -13,18 +15,20 @@ public class TraceTreeFormatterTests
 {
     static readonly DateTimeOffset T0 = new(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
 
-    static TraceEvent Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1,
+    static TraceTreeElement Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1,
         string? message = null, IReadOnlyList<object?>? columns = null) =>
-        new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null, message ?? $"span {spanId}",
+        new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null,
+            new MessageTemplate([new TextToken(message ?? $"span {spanId}")]), [],
             null, spanId, parentId, T0.AddMilliseconds(startMs), TimeSpan.FromMilliseconds(elapsedMs),
             columns ?? []);
 
-    static TraceEvent Log(string? spanId, double timestampMs, string message = "log", string? level = null,
+    static TraceTreeElement Log(string? spanId, double timestampMs, string message = "log", string? level = null,
         string? exception = null) =>
-        new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), level, message, exception,
+        new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), level,
+            new MessageTemplate([new TextToken(message)]), [], exception,
             spanId, null, null, null, []);
 
-    static string Render(params TraceEvent[] events)
+    static string Render(params TraceTreeElement[] events)
     {
         var output = new StringWriter();
         var formatter = TextFormatters.Plain(theme: null,
@@ -34,7 +38,7 @@ public class TraceTreeFormatterTests
         return output.ToString();
     }
 
-    static string At(double offsetMs = 0) => T0.AddMilliseconds(offsetMs).ToLocalTime().ToString("HH:mm:ss");
+    static string At(double offsetMs = 0) => T0.AddMilliseconds(offsetMs).ToLocalTime().ToString("o");
 
     [Fact]
     public void SpanLinesShowStartTimeAndElapsed()
@@ -77,7 +81,7 @@ public class TraceTreeFormatterTests
             $"[{At(4)} INF] │  │  ┊  42 rows retrieved",
             $"[{At(175)} INF] │  └─ Materialize results (8 ms)",
             $"[{At(181)} WRN] ┊  Cache miss",
-            $"[{At(200)} INF] ├─ Render response (30 ms)",
+            $"[{At(200)} INF] └─ Render response (30 ms)",
             $"[{At(210)} INF] ┊  Orphan log",
             ""
         ]);
@@ -105,6 +109,23 @@ public class TraceTreeFormatterTests
         Assert.Equal(
             $"[{At()} INF] 42 GET /orders (2 ms){Environment.NewLine}",
             actual);
+    }
+
+    [Fact]
+    public void TemplateHolesAreFilledFromMessageProperties()
+    {
+        var evt = new TraceTreeElement("event-1", T0.AddMilliseconds(1.5), null,
+            new MessageTemplate([
+                new TextToken("GET "),
+                new PropertyToken("Route", "{Route}"),
+                new TextToken(" as "),
+                new PropertyToken("User", "{User}")]),
+            [new LogEventProperty("Route", new ScalarValue("/orders"))],
+            null, "a", null, T0, TimeSpan.FromMilliseconds(1.5), []);
+
+        Assert.Equal(
+            $"[{At()} INF] GET /orders as {{User}} (1.5 ms){Environment.NewLine}",
+            Render(evt));
     }
 
     [Fact]

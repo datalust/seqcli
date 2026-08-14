@@ -14,28 +14,16 @@
 
 using System;
 using System.Collections.Generic;
+using Serilog.Events;
 
 namespace SeqCli.Traces;
 
-/// <summary>
-/// A span or log event belonging to a trace, projected from a Seq query result row.
-/// </summary>
-/// <param name="Id">The event id.</param>
-/// <param name="Timestamp">The event timestamp; for spans, this marks span completion.</param>
-/// <param name="Level">The original level string, if any.</param>
-/// <param name="Message">The rendered message.</param>
-/// <param name="Exception">Exception details, if any.</param>
-/// <param name="SpanId">For spans, the span's own id; for logs, the id of the enclosing span, if any.</param>
-/// <param name="ParentId">For spans, the id of the parent span, if any.</param>
-/// <param name="Start">The span start time; <c>null</c> for log events.</param>
-/// <param name="Elapsed">The span duration; <c>null</c> for log events.</param>
-/// <param name="Columns">Values of the selected columns, in command-line order; a <c>null</c>
-/// entry marks a value missing from the event.</param>
-record TraceEvent(
+record TraceTreeElement(
     string Id,
     DateTimeOffset Timestamp,
     string? Level,
-    string Message,
+    MessageTemplate MessageTemplate,
+    IReadOnlyList<LogEventProperty> TemplateProperties,
     string? Exception,
     string? SpanId,
     string? ParentId,

@@ -40,7 +40,7 @@ static class TraceShowFormat
     /// </summary>
     public static string OutputTemplate(int columnCount)
     {
-        var template = new StringBuilder($"[{{@t:HH:mm:ss}} {{@l:u3}}] {{{TreePrefixProperty}}}");
+        var template = new StringBuilder($"[{{@t:o}} {{@l:u3}}] {{{TreePrefixProperty}}}");
 
         // `<> ''` is undefined, and hence falsy, when the property is missing; the guard thus
         // drops the column, and its trailing space, for both missing and empty values.

@@ -181,7 +181,9 @@ class SearchTools(McpSession session, SeqConnection connection)
         foreach (var result in takenResults)
         {
             var resultId = session.ImportSearchResult(result);
+            
             var serilogEvent = OutputFormat.ToSerilogEvent(result);
+            OutputFormat.FlattenPropertiesUsedWithDottedNames(result, serilogEvent);
             serilogEvent.AddOrUpdateProperty(new LogEventProperty(ResultIdPropertyName, new ScalarValue(resultId)));
             serilogEvent.AddOrUpdateProperty(new LogEventProperty(LevelMapping.SurrogateLevelProperty, new ScalarValue(result.Level ?? "Information")));
             SearchResultFormatter.Format(serilogEvent, responseText);

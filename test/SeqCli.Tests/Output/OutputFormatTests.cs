@@ -1,6 +1,11 @@
 using System;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using Seq.Api.Model.Events;
 using SeqCli.Config;
 using SeqCli.Output;
+using SeqCli.Tests.Support;
+using Serilog.Events;
 using Xunit;
 
 namespace SeqCli.Tests.Output;
@@ -105,5 +110,71 @@ public class OutputFormatTests
     {
         var format = Create(outputIsRedirected: false, supportsAnsiEscapes: false);
         Assert.Null(format.TemplateTheme);
+    }
+
+    static EventEntity MakeDottedHoleEvent(params (string Name, object? Value)[] properties) =>
+        Some.MakeEvent(e =>
+        {
+            e.MessageTemplateTokens =
+            [
+                new MessageTemplateTokenPart { PropertyName = "user.greeting.first" },
+                new MessageTemplateTokenPart { Text = " " },
+                new MessageTemplateTokenPart { PropertyName = "user.name" },
+                new MessageTemplateTokenPart { Text = "!" }
+            ];
+            e.Properties = Some.MakeProperties(properties);
+        });
+
+    static string RenderMessage(EventEntity evt)
+    {
+        var serilogEvent = OutputFormat.ToSerilogEvent(evt);
+        OutputFormat.FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+
+        var output = new StringWriter();
+        TextFormatters.Plain(theme: null, "{@m}").Format(serilogEvent, output);
+        return output.ToString();
+    }
+
+    [Fact]
+    public void DottedHoleNamesResolveThroughNestedStructures()
+    {
+        var evt = MakeDottedHoleEvent(
+            ("user", JObject.Parse("""{"greeting": {"first": "Hello"}, "name": "Barney"}""")));
+
+        Assert.Equal("Hello Barney!", RenderMessage(evt));
+    }
+
+    [Fact]
+    public void FlatPropertiesWinOverStructureTraversal()
+    {
+        var evt = MakeDottedHoleEvent(
+            ("user.greeting.first", "G'day"),
+            ("user", JObject.Parse("""{"greeting": {"first": "Hello"}, "name": "Barney"}""")));
+
+        Assert.Equal("G'day Barney!", RenderMessage(evt));
+    }
+
+    [Fact]
+    public void UnresolvableDottedHolesRenderAsRawText()
+    {
+        var evt = MakeDottedHoleEvent(("user", JObject.Parse("""{"greeting": 42}""")));
+
+        Assert.Equal("{user.greeting.first} {user.name}!", RenderMessage(evt));
+    }
+
+    [Fact]
+    public void ResolvedScalarsAreUnwrappedFromTheirJsonRepresentation()
+    {
+        var evt = Some.MakeEvent(e =>
+        {
+            e.MessageTemplateTokens = [new MessageTemplateTokenPart { PropertyName = "order.total" }];
+            e.Properties = Some.MakeProperties(("order", JObject.Parse("""{"total": 42}""")));
+        });
+
+        var serilogEvent = OutputFormat.ToSerilogEvent(evt);
+        OutputFormat.FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+
+        var scalar = Assert.IsType<ScalarValue>(serilogEvent.Properties["order.total"]);
+        Assert.Equal(42L, scalar.Value);
     }
 }

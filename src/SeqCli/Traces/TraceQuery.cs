@@ -56,7 +56,7 @@ static partial class TraceQuery
     {
         if (!IsValidTraceId(traceId)) throw new ArgumentException("The trace id has not been validated.");
 
-        var query = new StringBuilder("select @Id, @Timestamp, @Level, @Message");
+        var query = new StringBuilder("select @Id, @Timestamp, @Level, @StructuredMessage");
 
         if (includeExceptions)
             query.Append(", @Exception");
@@ -79,7 +79,7 @@ static partial class TraceQuery
     /// <summary>
     /// Read the events from a result produced by the query constructed in <see cref="Build"/>.
     /// </summary>
-    public static IReadOnlyList<TraceEvent> ReadEvents(QueryResultPart result, bool includeExceptions, IReadOnlyList<string> columns)
+    public static IReadOnlyList<TraceTreeElement> ReadEvents(QueryResultPart result, bool includeExceptions, IReadOnlyList<string> columns)
     {
         if (result.Rows == null)
             return [];
@@ -87,7 +87,7 @@ static partial class TraceQuery
         // When exceptions are retrieved, `@Exception` shifts the columns following it.
         var e = includeExceptions ? 1 : 0;
 
-        var events = new List<TraceEvent>(result.Rows.Length);
+        var events = new List<TraceTreeElement>(result.Rows.Length);
         foreach (var row in result.Rows)
         {
             var selected = new object?[columns.Count];
@@ -100,11 +100,14 @@ static partial class TraceQuery
                 selected[i] = value;
             }
 
-            events.Add(new TraceEvent(
+            var (messageTemplate, templateProperties) = StructuredMessage.Read(row[3]);
+
+            events.Add(new TraceTreeElement(
                 Id: ReadString(row[0]) ?? throw new InvalidDataException("The event id is missing."),
                 Timestamp: ReadTimestamp(row[1]) ?? throw new InvalidDataException("The event timestamp is missing."),
                 Level: ReadString(row[2]),
-                Message: (ReadString(row[3]) ?? "").TrimEnd(),
+                MessageTemplate: messageTemplate,
+                TemplateProperties: templateProperties,
                 Exception: includeExceptions ? ReadString(row[4]) : null,
                 SpanId: ReadString(row[4 + e]),
                 ParentId: ReadString(row[5 + e]),

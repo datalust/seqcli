@@ -257,7 +257,18 @@ sealed class OutputFormat
         }
         else
         {
-            WriteLogEvent(ToSerilogEvent(evt));
+            var serilogEvent = ToSerilogEvent(evt);
+
+            if (Text)
+            {
+                // Add flattened versions of structured properties that are referenced using dotted-name syntax in
+                // message templates, e.g. <c>{user.name}</c>. Serilog.Expressions template rendering doesn't otherwise
+                // support these. In text output mode, these aren't usually observable, though
+                // <c>seqcli print --template="{@p}"</c> will make them visible.
+                FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+            }
+
+            WriteLogEvent(serilogEvent);
         }
     }
 
@@ -303,6 +314,32 @@ sealed class OutputFormat
             serilogEvent.AddOrUpdateProperty(new("@sk", new ScalarValue(evt.SpanKind)));
         
         return serilogEvent;
+    }
+
+    public static void FlattenPropertiesUsedWithDottedNames(EventEntity evt, LogEvent serilogEvent)
+    {
+        foreach (var token in evt.MessageTemplateTokens)
+        {
+            if (token.Text != null || token.PropertyName is not { } name || !name.Contains('.') ||
+                serilogEvent.Properties.ContainsKey(name))
+            {
+                continue;
+            }
+
+            var steps = name.Split('.');
+            var value = evt.Properties.FirstOrDefault(p => p.Name == steps[0])?.Value;
+            for (var i = 1; i < steps.Length; ++i)
+            {
+                value = (value as JObject)?.GetValue(steps[i]);
+            }
+
+            if (value is JToken resolved)
+            {
+                // Existing flat-named properties, where present, win.
+                serilogEvent.AddPropertyIfAbsent(LogEventPropertyFactory.SafeCreate(
+                    name, resolved is JValue scalar ? new ScalarValue(scalar.Value) : CreatePropertyValue(resolved)));
+            }
+        }
     }
 
     static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)

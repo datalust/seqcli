@@ -17,7 +17,6 @@ using SeqCli.Mapping;
 using SeqCli.Output;
 using SeqCli.Util;
 using Serilog.Events;
-using Serilog.Parsing;
 
 namespace SeqCli.Traces;
 
@@ -31,24 +30,24 @@ static class TraceTreeFormatter
     const string SpanConnector = "├─ ", LastSpanConnector = "└─ ", LogConnector = "┊  ",
         Continuation = "│  ", Gap = "   ";
 
-    public static IEnumerable<LogEvent> ToLogEvents(IReadOnlyList<TraceNode> roots)
+    public static IEnumerable<LogEvent> ToLogEvents(IReadOnlyList<TraceTreeNode> roots)
     {
         foreach (var root in roots)
         {
-            yield return ToLogEvent(root, root.Event.IsSpan ? "" : LogConnector);
+            yield return ToLogEvent(root, root.Element.IsSpan ? "" : LogConnector);
             foreach (var descendant in WalkChildren(root, ""))
                 yield return descendant;
         }
     }
 
-    static IEnumerable<LogEvent> WalkChildren(TraceNode parent, string indent)
+    static IEnumerable<LogEvent> WalkChildren(TraceTreeNode parent, string indent)
     {
         for (var i = 0; i < parent.Children.Count; ++i)
         {
             var child = parent.Children[i];
             var isLast = i == parent.Children.Count - 1;
 
-            var connector = child.Event.IsSpan ?
+            var connector = child.Element.IsSpan ?
                 isLast ? LastSpanConnector : SpanConnector :
                 LogConnector;
 
@@ -59,14 +58,16 @@ static class TraceTreeFormatter
         }
     }
 
-    static LogEvent ToLogEvent(TraceNode node, string treePrefix)
+    static LogEvent ToLogEvent(TraceTreeNode treeNode, string treePrefix)
     {
-        var evt = node.Event;
+        var evt = treeNode.Element;
 
         var properties = new List<LogEventProperty>
         {
             new(TraceShowFormat.TreePrefixProperty, new ScalarValue(treePrefix))
         };
+
+        properties.AddRange(evt.TemplateProperties);
 
         if (evt.Elapsed is { } elapsed)
             properties.Add(new(TraceShowFormat.DurationProperty, new ScalarValue(elapsed)));
@@ -78,12 +79,12 @@ static class TraceTreeFormatter
                     TraceShowFormat.ColumnPropertyName(i), OutputFormat.CreatePropertyValue(value)));
         }
 
-        // Spans are positioned, and shown, at their start time; the event timestamp marks completion.
+        // Spans are positioned and shown at their start time.
         return new LogEvent(
             evt.SortKey.ToLocalTime(),
             LevelMapping.ToSerilogLevel(evt.Level ?? ""),
             string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
-            new MessageTemplate([new TextToken(evt.Message)]),
+            evt.MessageTemplate,
             properties);
     }
 }

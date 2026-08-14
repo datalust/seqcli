@@ -4,6 +4,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Data;
 using SeqCli.Traces;
+using Serilog.Events;
 using Xunit;
 
 namespace SeqCli.Tests.Traces;
@@ -29,7 +30,7 @@ public class TraceQueryTests
         var query = TraceQuery.Build(TraceId, includeLogs: false, includeExceptions: false, []);
 
         Assert.Equal(
-            "select @Id, @Timestamp, @Level, @Message, @SpanId, @ParentId, @Start, @Elapsed" +
+            "select @Id, @Timestamp, @Level, @StructuredMessage, @SpanId, @ParentId, @Start, @Elapsed" +
             $" from stream where @TraceId = '{TraceId}' and @Start is not null limit 10000",
             query);
     }
@@ -41,7 +42,7 @@ public class TraceQueryTests
             ["@Resource.service.name", "OrderId"]);
 
         Assert.Equal(
-            "select @Id, @Timestamp, @Level, @Message, @Exception, @SpanId, @ParentId, @Start, @Elapsed," +
+            "select @Id, @Timestamp, @Level, @StructuredMessage, @Exception, @SpanId, @ParentId, @Start, @Elapsed," +
             " @Resource.service.name as c0, OrderId as c1" +
             $" from stream where @TraceId = '{TraceId}' limit 10000",
             query);
@@ -64,7 +65,7 @@ public class TraceQueryTests
         {
             Rows =
             [
-                ["event-1", timestamp.UtcTicks, "INFO", $"Hello!{Environment.NewLine}", null!,
+                ["event-1", timestamp.UtcTicks, "INFO", new JArray($"Hello!{Environment.NewLine}"), null!,
                     "0011223344556677", "8899aabbccddeeff", start.UtcTicks, 15000L]
             ]
         };
@@ -74,7 +75,8 @@ public class TraceQueryTests
         Assert.Equal("event-1", evt.Id);
         Assert.Equal(timestamp, evt.Timestamp);
         Assert.Equal("INFO", evt.Level);
-        Assert.Equal("Hello!", evt.Message);
+        Assert.Equal("Hello!", evt.MessageTemplate.Text);
+        Assert.Empty(evt.TemplateProperties);
         Assert.Null(evt.Exception);
         Assert.Equal("0011223344556677", evt.SpanId);
         Assert.Equal("8899aabbccddeeff", evt.ParentId);
@@ -91,7 +93,7 @@ public class TraceQueryTests
 
         var result = new QueryResultPart
         {
-            Rows = [["event-2", timestamp.UtcTicks, null!, "A log", "System.Exception: Boom!",
+            Rows = [["event-2", timestamp.UtcTicks, null!, new JArray("A log"), "System.Exception: Boom!",
                 "0011223344556677", null!, null!, null!]]
         };
 
@@ -111,7 +113,7 @@ public class TraceQueryTests
     [InlineData(8)] // A string `@Elapsed`
     public void NonTickTimestampsAndDurationsAreRejected(int column)
     {
-        var row = new object?[] {"event-1", 0L, null, "", null, null, null, null, null};
+        var row = new object?[] {"event-1", 0L, null, null, null, null, null, null, null};
         row[column] = "2026-07-31T10:20:00Z";
         var result = new QueryResultPart { Rows = [row!] };
 
@@ -123,7 +125,7 @@ public class TraceQueryTests
     [InlineData(1)] // A missing `@Timestamp`
     public void MissingRequiredColumnsAreRejected(int column)
     {
-        var row = new object?[] {"event-1", 0L, null, "", null, null, null, null, null};
+        var row = new object?[] {"event-1", 0L, null, null, null, null, null, null, null};
         row[column] = null;
         var result = new QueryResultPart { Rows = [row!] };
 
@@ -137,7 +139,7 @@ public class TraceQueryTests
         {
             Rows =
             [
-                ["event-3", 0L, null!, "", null!, null!, null!, null!, null!,
+                ["event-3", 0L, null!, JValue.CreateNull(), null!, null!, null!, null!, null!,
                     "frontend", null!, JValue.CreateNull(), 42L]
             ]
         };
@@ -150,6 +152,33 @@ public class TraceQueryTests
     }
 
     [Fact]
+    public void StructuredMessageHolesBecomeTemplatePropertiesAndValues()
+    {
+        var result = new QueryResultPart
+        {
+            Rows =
+            [
+                ["event-4", 0L, null!,
+                    new JArray(
+                        "Hello, ",
+                        new JObject(
+                            new JProperty("name", "Name"),
+                            new JProperty("raw", "{Name}"),
+                            new JProperty("value", "World")),
+                        "!"),
+                    null!, null!, null!, null!, null!]
+            ]
+        };
+
+        var evt = Assert.Single(TraceQuery.ReadEvents(result, includeExceptions: true, []));
+
+        Assert.Equal("Hello, {Name}!", evt.MessageTemplate.Text);
+        var property = Assert.Single(evt.TemplateProperties);
+        Assert.Equal("Name", property.Name);
+        Assert.Equal(new ScalarValue("World"), property.Value);
+    }
+
+    [Fact]
     public void RowsWithoutExceptionsAreRead()
     {
         var timestamp = new DateTimeOffset(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
@@ -159,7 +188,7 @@ public class TraceQueryTests
         {
             Rows =
             [
-                ["event-1", timestamp.UtcTicks, "INFO", "Hello!",
+                ["event-1", timestamp.UtcTicks, "INFO", new JArray("Hello!"),
                     "0011223344556677", "8899aabbccddeeff", start.UtcTicks, 15000L, "frontend"]
             ]
         };

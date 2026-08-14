@@ -35,7 +35,7 @@ public class TraceShowTestCase : ICliTestCase
             "] ├─ Query orders (300 ms)",
             "] │  ├─ SELECT * FROM orders (150 ms)",
             "] │  ┊  42 rows retrieved",
-            "] ├─ Render response (400 ms)",
+            "] └─ Render response (400 ms)",
             "] ┊  Orphan log"
         };
 
