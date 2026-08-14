@@ -1,5 +1,5 @@
 ---
-name: seq-search-and-query
+name: working-with-seq-metrics
 description: Query metrics stored in Seq. Use this when monitoring data or diagnostic metric information is required.
 license: Apache-2.0
 metadata:
