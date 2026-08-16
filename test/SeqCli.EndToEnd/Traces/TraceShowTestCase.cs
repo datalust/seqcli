@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
@@ -25,7 +27,7 @@ public class TraceShowTestCase : ICliTestCase
         var exit = runner.Exec("ingest", $"--json -i {inputFile}");
         Assert.Equal(0, exit);
 
-        exit = runner.Exec("trace show", $"-i {TraceId} --logs --column Customer");
+        exit = runner.Exec("trace", $"-i {TraceId} --logs --column Customer");
         Assert.Equal(0, exit);
 
         var output = runner.LastRunProcess!.Output;
@@ -49,20 +51,79 @@ public class TraceShowTestCase : ICliTestCase
 
         Assert.DoesNotContain("System.TimeoutException", output);
 
-        exit = runner.Exec("trace show", $"-i {TraceId} --logs --exceptions");
+        exit = runner.Exec("trace", $"-i {TraceId} --logs --exceptions");
         Assert.Equal(0, exit);
         Assert.Contains("System.TimeoutException: The query timeout was reached", runner.LastRunProcess!.Output);
 
-        exit = runner.Exec("trace show", $"-i {TraceId}");
+        exit = runner.Exec("trace", $"-i {TraceId}");
         Assert.Equal(0, exit);
         Assert.DoesNotContain("42 rows retrieved", runner.LastRunProcess!.Output);
 
-        exit = runner.Exec("trace show", "-i not-a-trace-id");
+        exit = runner.Exec("trace", "-i not-a-trace-id");
         Assert.Equal(1, exit);
 
-        exit = runner.Exec("trace show", "-i 00000000000000000000000000000000");
+        exit = runner.Exec("trace", "-i 00000000000000000000000000000000");
         Assert.Equal(1, exit);
+
+        exit = runner.Exec("trace", $"-i {TraceId} --span-id 2222222222222222 --logs");
+        Assert.Equal(0, exit);
+        output = runner.LastRunProcess!.Output;
+        Assert.Contains("] Query orders (300 ms)", output);
+        Assert.Contains("SELECT * FROM orders", output);
+        Assert.DoesNotContain("GET /orders", output);
+        Assert.DoesNotContain("Render response", output);
+
+        exit = runner.Exec("trace", $"-i {TraceId} --span-id not-a-span-id");
+        Assert.Equal(1, exit);
+
+        exit = runner.Exec("trace", $"-i {TraceId} --span-id aaaaaaaaaaaaaaaa");
+        Assert.Equal(1, exit);
+        Assert.Contains("does not appear", runner.LastRunProcess!.Output);
+
+        exit = runner.Exec("trace", $"-i {TraceId} --logs --json --column Customer");
+        Assert.Equal(0, exit);
+        var document = ParseDocument(runner.LastRunProcess!.Output);
+
+        Assert.Equal(TraceId, (string?)document["traceId"]);
+        Assert.True((bool?)document["complete"]);
+        Assert.Empty((JArray)document["orphans"]!);
+
+        var root = (JObject)document["root"]!;
+        Assert.Equal("span", (string?)root["type"]);
+        Assert.Equal("1111111111111111", (string?)root["spanId"]);
+        Assert.Equal("GET /orders", (string?)root["message"]);
+        Assert.Equal(1000.0, (double?)root["elapsedMs"]);
+        Assert.Equal("scott", (string?)root["columns"]!["Customer"]);
+
+        var query = (JObject)((JArray)root["children"]!).Single(c => (string?)c["message"] == "Query orders");
+        Assert.Equal("1111111111111111", (string?)query["parentSpanId"]);
+        Assert.Equal(
+            ["SELECT * FROM orders", "42 rows retrieved"],
+            ((JArray)query["children"]!).Select(c => (string)c["message"]!).ToArray());
+
+        var detached = (JObject)Assert.Single((JArray)document["detachedLogs"]!);
+        Assert.Equal("Orphan log", (string?)detached["message"]);
+        Assert.Equal("9999999999999999", (string?)detached["spanId"]);
+
+        exit = runner.Exec("trace", $"-i {TraceId} --span-id 2222222222222222 --logs --json");
+        Assert.Equal(0, exit);
+        document = ParseDocument(runner.LastRunProcess!.Output);
+
+        Assert.Null(document["orphans"]);
+        Assert.Null(document["detachedLogs"]);
+        Assert.Equal("2222222222222222", (string?)document["root"]!["spanId"]);
+        Assert.Equal("1111111111111111", (string?)document["root"]!["parentSpanId"]);
 
         return Task.CompletedTask;
+    }
+
+    // The captured output interleaves any logged warnings with the JSON document; the document is
+    // the only braced content.
+    static JObject ParseDocument(string output)
+    {
+        var start = output.IndexOf('{');
+        var end = output.LastIndexOf('}');
+        Assert.True(start >= 0 && end > start, $"Expected a JSON document in output: {output}");
+        return JObject.Parse(output.Substring(start, end - start + 1));
     }
 }

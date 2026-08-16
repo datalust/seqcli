@@ -216,7 +216,7 @@ Available commands:
  - `template`
    - [`template export`](#template-export) &mdash; Export entities into template files.
    - [`template import`](#template-import) &mdash; Import entities from template files.
- - [`trace show`](#trace-show) &mdash; Display a trace as a tree of spans.
+ - [`trace`](#trace) &mdash; Display a trace as a tree of spans.
  - `user`
    - [`user create`](#user-create) &mdash; Create a user.
    - [`user list`](#user-list) &mdash; List users.
@@ -1685,22 +1685,24 @@ seqcli template import -i ./Templates
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
 
-### `trace show`
+### `trace`
 
 Display a trace as a tree of spans.
 
 Example:
 
 ```
-seqcli trace show -i 7d4dedcc73b18e449e0e4ea08cbe346d --logs
+seqcli trace -i 7d4dedcc73b18e449e0e4ea08cbe346d --logs
 ```
 
 | Option | Description |
 | ------ | ----------- |
 | `-i`, `--id=VALUE` | The id of the trace to display |
+|       `--span-id=VALUE` | The id of a span within the trace; when specified, only the subtree rooted at this span is shown |
 |       `--column=VALUE` | A column to display preceding each event's message; any Seq expression can be supplied, for example `OrderId`, `@SpanKind`, or `@Resource.service.name`; this argument can be used multiple times, adding columns in order |
 |       `--logs` | Include log events in the trace, in addition to spans |
 |       `--exceptions` | Include exception details, where present |
+|       `--json` | Print the trace as a single JSON document, with spans and log events nested under their parents (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
 |       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |

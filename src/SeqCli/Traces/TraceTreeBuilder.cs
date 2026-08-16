@@ -55,6 +55,24 @@ static class TraceTreeBuilder
         return roots;
     }
 
+    /// <summary>
+    /// Find the node carrying the span identified by <paramref name="spanId"/>, searching depth-first
+    /// through <paramref name="roots"/>; returns <c>null</c> if no such span was captured.
+    /// </summary>
+    public static TraceTreeNode? FindSpan(IReadOnlyList<TraceTreeNode> roots, string spanId)
+    {
+        foreach (var node in roots)
+        {
+            if (node.Element is { IsSpan: true } element && element.SpanId == spanId)
+                return node;
+
+            if (FindSpan(node.Children, spanId) is { } descendant)
+                return descendant;
+        }
+
+        return null;
+    }
+
     // Malformed traces can name a span as its own ancestor; attaching would loop the tree.
     static bool IsSelfOrAncestor(TraceTreeNode treeNode, TraceTreeNode prospectiveParent)
     {

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -24,26 +25,33 @@ using Serilog;
 
 // ReSharper disable once UnusedType.Global
 
-namespace SeqCli.Cli.Commands.Trace;
+namespace SeqCli.Cli.Commands;
 
-[Command("trace", "show", "Display a trace as a tree of spans",
-    Example = "seqcli trace show -i 7d4dedcc73b18e449e0e4ea08cbe346d --logs")]
-class ShowCommand : Command
+[Command("trace", "Display a trace as a tree of spans",
+    Example = "seqcli trace -i 7d4dedcc73b18e449e0e4ea08cbe346d --column @SpanId --logs")]
+class TraceCommand : Command
 {
     readonly ConnectionFeature _connection;
     readonly OutputFormatFeature _output;
     readonly StoragePathFeature _storagePath;
     readonly List<string> _columns = [];
     string? _id;
+    string? _spanId;
     bool _includeLogs;
     bool _includeExceptions;
+    bool _json;
 
-    public ShowCommand()
+    public TraceCommand()
     {
         Options.Add(
             "i=|id=",
             "The id of the trace to display",
             id => _id = ArgumentString.Normalize(id));
+
+        Options.Add(
+            "span-id=",
+            "The id of a span within the trace; when specified, only the subtree rooted at this span is shown",
+            spanId => _spanId = ArgumentString.Normalize(spanId));
 
         Options.Add(
             "column=",
@@ -61,6 +69,12 @@ class ShowCommand : Command
             "exceptions",
             "Include exception details, where present",
             _ => _includeExceptions = true);
+
+        Options.Add(
+            "json",
+            "Print the trace as a single JSON document, with spans and log events nested under " +
+            "their parents (the default is plain text)",
+            _ => _json = true);
 
         _output = Enable(new OutputFormatFeature(supportNative: false, supportJson: false));
         _storagePath = Enable<StoragePathFeature>();
@@ -84,9 +98,15 @@ class ShowCommand : Command
                 return 1;
             }
 
+            var spanId = _spanId?.ToLowerInvariant();
+            if (spanId != null && !TraceQuery.IsValidSpanId(spanId))
+            {
+                Log.Error("The span id {SpanId} is not valid; span ids are 16 hexadecimal digits", _spanId);
+                return 1;
+            }
+
             var config = RuntimeConfigurationLoader.Load(_storagePath);
             var connection = SeqConnectionFactory.Connect(_connection, config);
-            var output = _output.GetOutputFormat(config, TraceShowFormat.OutputTemplate(_columns.Count));
 
             var result = await connection.Data.TryQueryAsync(TraceQuery.Build(traceId, _includeLogs, _includeExceptions, _columns));
             if (!string.IsNullOrWhiteSpace(result.Error))
@@ -104,12 +124,38 @@ class ShowCommand : Command
                 return 1;
             }
 
-            if (traceEvents.Count == TraceQuery.MaxEvents)
+            var complete = traceEvents.Count != TraceQuery.MaxEvents;
+            if (!complete)
                 Log.Warning("Only the first {Count} events in the trace were retrieved; the tree may be incomplete",
                     TraceQuery.MaxEvents);
 
-            foreach (var logEvent in TraceTreeFormatter.ToLogEvents(TraceTreeBuilder.Build(traceEvents)))
-                output.WriteLogEvent(logEvent);
+            var roots = TraceTreeBuilder.Build(traceEvents);
+
+            TraceTreeNode? subtreeRoot = null;
+            if (spanId != null)
+            {
+                subtreeRoot = TraceTreeBuilder.FindSpan(roots, spanId);
+                if (subtreeRoot == null)
+                {
+                    Log.Error("The span {SpanId} does not appear in trace {TraceId}", spanId, traceId);
+                    return 1;
+                }
+            }
+
+            if (_json)
+            {
+                var document = subtreeRoot != null ?
+                    TraceTreeJsonFormatter.ToJson(traceId, subtreeRoot, complete, _columns) :
+                    TraceTreeJsonFormatter.ToJson(traceId, roots, complete, _columns);
+
+                Console.WriteLine(document.ToString(Formatting.Indented));
+            }
+            else
+            {
+                var output = _output.GetOutputFormat(config, TraceShowFormat.OutputTemplate(_columns.Count));
+                foreach (var logEvent in TraceTreeFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
+                    output.WriteLogEvent(logEvent);
+            }
 
             return 0;
         }

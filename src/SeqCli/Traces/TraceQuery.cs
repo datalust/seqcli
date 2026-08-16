@@ -40,10 +40,18 @@ static partial class TraceQuery
     [GeneratedRegex("^[0-9a-f]{32}$")]
     private static partial Regex TraceIdFormat { get; }
 
+    [GeneratedRegex("^[0-9a-f]{16}$")]
+    private static partial Regex SpanIdFormat { get; }
+
     /// <summary>
     /// Check whether <paramref name="traceId"/> is a well-formed (lowercase, 32-hex-digit) trace id.
     /// </summary>
     public static bool IsValidTraceId(string traceId) => TraceIdFormat.IsMatch(traceId);
+
+    /// <summary>
+    /// Check whether <paramref name="spanId"/> is a well-formed (lowercase, 16-hex-digit) span id.
+    /// </summary>
+    public static bool IsValidSpanId(string spanId) => SpanIdFormat.IsMatch(spanId);
 
     /// <summary>
     /// Build the query retrieving events in the trace identified by <paramref name="traceId"/>.

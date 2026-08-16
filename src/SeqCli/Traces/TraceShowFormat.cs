@@ -18,7 +18,7 @@ using System.Text;
 namespace SeqCli.Traces;
 
 /// <summary>
-/// The output template used by <c>trace show</c>, along with the "hygienic" property names
+/// The output template used by <c>trace</c>, along with the "hygienic" property names
 /// carrying tree-specific values through to it.
 /// </summary>
 static class TraceShowFormat

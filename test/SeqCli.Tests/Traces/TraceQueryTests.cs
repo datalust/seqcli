@@ -24,6 +24,17 @@ public class TraceQueryTests
         Assert.Equal(isValid, TraceQuery.IsValidTraceId(traceId));
     }
 
+    [Theory]
+    [InlineData("46a2b061ad71d2e7", true)]
+    [InlineData("46A2B061AD71D2E7", false)]
+    [InlineData(TraceId, false)]
+    [InlineData("not a span id", false)]
+    [InlineData("", false)]
+    public void SpanIdsAreValidated(string spanId, bool isValid)
+    {
+        Assert.Equal(isValid, TraceQuery.IsValidSpanId(spanId));
+    }
+
     [Fact]
     public void TheSpanOnlyQuerySelectsTheFixedColumns()
     {

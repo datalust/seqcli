@@ -135,6 +135,31 @@ public class TraceTreeBuilderTests
     }
 
     [Fact]
+    public void FindSpanLocatesNestedSpans()
+    {
+        var roots = TraceTreeBuilder.Build([
+            Span("a", null),
+            Span("b", "missing", startMs: 1),
+            Span("c", "b", startMs: 2)
+        ]);
+
+        Assert.Equal("a", TraceTreeBuilder.FindSpan(roots, "a")?.Element.SpanId);
+        Assert.Equal("c", TraceTreeBuilder.FindSpan(roots, "c")?.Element.SpanId);
+    }
+
+    [Fact]
+    public void FindSpanIgnoresLogEventsAndMissingSpans()
+    {
+        var roots = TraceTreeBuilder.Build([
+            Span("a", null),
+            Log("b", 1)
+        ]);
+
+        Assert.Null(TraceTreeBuilder.FindSpan(roots, "b"));
+        Assert.Null(TraceTreeBuilder.FindSpan(roots, "missing"));
+    }
+
+    [Fact]
     public void ASelfParentedSpanBecomesARoot()
     {
         var roots = TraceTreeBuilder.Build([Span("a", "a")]);
