@@ -42,7 +42,7 @@ sealed class OutputFormat
     const string NoColorEnvironmentVariable = "NO_COLOR";
     
     readonly OutputSyntax _syntax;
-    readonly string? _outputTemplate;
+    readonly string? _plainTextTemplate;
     readonly Logger _formatter;
 
     readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
@@ -59,13 +59,13 @@ sealed class OutputFormat
         bool? noColor,
         bool? forceColor,
         SeqCliOutputConfig outputConfig,
-        string? outputTemplate = null)
+        string? plainTextTemplate = null)
         : this(
             syntax,
             noColor,
             forceColor,
             outputConfig,
-            outputTemplate,
+            plainTextTemplate,
             noColorSetInEnvironment: NoColorSetInEnvironment(),
             outputIsRedirected: Console.IsOutputRedirected,
             allowAnsiEscapes: TerminalFeatures.TryEnableAnsiEscapes())
@@ -76,7 +76,7 @@ sealed class OutputFormat
     /// <param name="noColor">The value of <c>--no-color</c>, if specified.</param>
     /// <param name="forceColor">The value of <c>--force-color</c>, if specified.</param>
     /// <param name="outputConfig">Configured output defaults.</param>
-    /// <param name="outputTemplate">The template controlling plain-text formatting, or <c>null</c> for the default.</param>
+    /// <param name="plainTextTemplate">The template controlling plain-text formatting, or <c>null</c> for the default.</param>
     /// <param name="noColorSetInEnvironment">Whether <c>NO_COLOR</c> is set; see <see cref="NoColorSetInEnvironment"/>.</param>
     /// <param name="outputIsRedirected">Whether <c>STDOUT</c> is redirected, i.e. not attached to a terminal.</param>
     /// <param name="allowAnsiEscapes">Whether ANSI escape sequences are allowed; generally <c>false</c> for interactive
@@ -86,13 +86,13 @@ sealed class OutputFormat
         bool? noColor,
         bool? forceColor,
         SeqCliOutputConfig outputConfig,
-        string? outputTemplate,
+        string? plainTextTemplate,
         bool noColorSetInEnvironment,
         bool outputIsRedirected,
         bool allowAnsiEscapes)
     {
         _syntax = syntax;
-        _outputTemplate = outputTemplate;
+        _plainTextTemplate = plainTextTemplate;
 
         var resolvedNoColor = ResolveNoColor(noColor, forceColor, outputConfig, noColorSetInEnvironment, allowAnsiEscapes);
         var applyThemeToRedirectedOutput = !resolvedNoColor && (forceColor ?? outputConfig.ForceColor);
@@ -147,7 +147,7 @@ sealed class OutputFormat
         }
         else if (Text)
         {
-            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _outputTemplate));
+            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _plainTextTemplate));
         }
         
         // The logger is not configured for Native output, which avoids it. Ideally we'll shift away from using

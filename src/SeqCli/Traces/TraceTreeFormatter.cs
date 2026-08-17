@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Text;
 using SeqCli.Mapping;
 using SeqCli.Output;
 using SeqCli.Util;
@@ -20,15 +22,33 @@ using Serilog.Events;
 
 namespace SeqCli.Traces;
 
-/// <summary>
-/// Flattens a trace tree into a sequence of <see cref="LogEvent"/>s decorated for rendering with
-/// <see cref="TraceShowFormat.OutputTemplate"/>. Root-level spans carry no connecting glyph, child
-/// spans get box-drawing connectors, and logs are marked with a dashed rule at every depth.
-/// </summary>
 static class TraceTreeFormatter
 {
+    static readonly string TreePrefixProperty = $"_SeqcliTraceTreePrefix_{Guid.NewGuid():N}";
+    static readonly string ElapsedProperty = $"_SeqcliTraceElapsed_{Guid.NewGuid():N}";
+    static readonly string ColumnPrefixProperty = $"_SeqcliTraceColumn_{Guid.NewGuid():N}";
+
     const string SpanConnector = "├─ ", LastSpanConnector = "└─ ", LogConnector = "┊  ",
         Continuation = "│  ", Gap = "   ";
+
+    static string ColumnPropertyName(int index) => $"{ColumnPrefixProperty}_{index}";
+
+    public static string OutputTemplate(int columnCount)
+    {
+        var template = new StringBuilder($"[{{@t:o}} {{@l:u3}}] {{{TreePrefixProperty}}}");
+
+        // `<> ''` is undefined, and hence falsy, when the property is missing; the guard thus
+        // drops the column, and its trailing space, for both missing and empty values.
+        for (var i = 0; i < columnCount; ++i)
+        {
+            var column = ColumnPropertyName(i);
+            template.Append($"{{#if {column} <> ''}}{{{column}}} {{#end}}");
+        }
+
+        template.Append($"{{@m}}{{#if {ElapsedProperty} is not null}} ({{Milliseconds({ElapsedProperty}):0.###}} ms){{#end}}");
+        template.Append(Environment.NewLine).Append("{@x}");
+        return template.ToString();
+    }
 
     public static IEnumerable<LogEvent> ToLogEvents(IReadOnlyList<TraceTreeNode> roots)
     {
@@ -64,19 +84,19 @@ static class TraceTreeFormatter
 
         var properties = new List<LogEventProperty>
         {
-            new(TraceShowFormat.TreePrefixProperty, new ScalarValue(treePrefix))
+            new(TreePrefixProperty, new ScalarValue(treePrefix))
         };
 
         properties.AddRange(evt.TemplateProperties);
 
         if (evt.Elapsed is { } elapsed)
-            properties.Add(new(TraceShowFormat.DurationProperty, new ScalarValue(elapsed)));
+            properties.Add(new(ElapsedProperty, new ScalarValue(elapsed)));
 
         for (var i = 0; i < evt.Columns.Count; ++i)
         {
             if (evt.Columns[i] is { } value)
                 properties.Add(LogEventPropertyFactory.SafeCreate(
-                    TraceShowFormat.ColumnPropertyName(i), OutputFormat.CreatePropertyValue(value)));
+                    ColumnPropertyName(i), OutputFormat.CreatePropertyValue(value)));
         }
 
         // Spans are positioned and shown at their start time.

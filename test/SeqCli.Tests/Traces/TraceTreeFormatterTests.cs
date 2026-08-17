@@ -32,7 +32,7 @@ public class TraceTreeFormatterTests
     {
         var output = new StringWriter();
         var formatter = TextFormatters.Plain(theme: null,
-            TraceShowFormat.OutputTemplate(events.Max(e => e.Columns.Count)));
+            TraceTreeFormatter.OutputTemplate(events.Max(e => e.Columns.Count)));
         foreach (var logEvent in TraceTreeFormatter.ToLogEvents(TraceTreeBuilder.Build(events)))
             formatter.Format(logEvent, output);
         return output.ToString();

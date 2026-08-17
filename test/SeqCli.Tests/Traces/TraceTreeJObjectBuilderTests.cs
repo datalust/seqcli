@@ -10,7 +10,7 @@ using Xunit;
 
 namespace SeqCli.Tests.Traces;
 
-public class TraceTreeJsonFormatterTests
+public class TraceTreeJObjectBuilderTests
 {
     const string TraceId = "46a2b061ad71d2e7f93e5332012b8477";
 
@@ -33,7 +33,7 @@ public class TraceTreeJsonFormatterTests
     static JObject ToJson(params TraceTreeElement[] events) => ToJson([], events);
 
     static JObject ToJson(IReadOnlyList<string> columns, params TraceTreeElement[] events) =>
-        TraceTreeJsonFormatter.ToJson(TraceId, TraceTreeBuilder.Build(events), complete: true, columns);
+        TraceTreeJObjectBuilder.FromRoots(TraceId, TraceTreeBuilder.Build(events), complete: true, columns);
 
     [Fact]
     public void TheDocumentCarriesTraceMetadataAndTheRootSpan()
@@ -202,7 +202,7 @@ public class TraceTreeJsonFormatterTests
     [Fact]
     public void IncompleteTracesAreFlagged()
     {
-        var document = TraceTreeJsonFormatter.ToJson(
+        var document = TraceTreeJObjectBuilder.FromRoots(
             TraceId, TraceTreeBuilder.Build([Span("a", null)]), complete: false, []);
 
         Assert.False((bool?)document["complete"]);
@@ -221,7 +221,7 @@ public class TraceTreeJsonFormatterTests
         var subtreeRoot = TraceTreeBuilder.FindSpan(roots, "b");
         Assert.NotNull(subtreeRoot);
 
-        var document = TraceTreeJsonFormatter.ToJson(TraceId, subtreeRoot, complete: true, []);
+        var document = TraceTreeJObjectBuilder.FromSubtree(TraceId, subtreeRoot, complete: true, []);
 
         Assert.Equal(TraceId, (string?)document["traceId"]);
         Assert.True((bool?)document["complete"]);

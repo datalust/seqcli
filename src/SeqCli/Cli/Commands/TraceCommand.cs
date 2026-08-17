@@ -145,14 +145,15 @@ class TraceCommand : Command
             if (_json)
             {
                 var document = subtreeRoot != null ?
-                    TraceTreeJsonFormatter.ToJson(traceId, subtreeRoot, complete, _columns) :
-                    TraceTreeJsonFormatter.ToJson(traceId, roots, complete, _columns);
+                    TraceTreeJObjectBuilder.FromSubtree(traceId, subtreeRoot, complete, _columns) :
+                    TraceTreeJObjectBuilder.FromRoots(traceId, roots, complete, _columns);
 
-                Console.WriteLine(document.ToString(Formatting.Indented));
+                var serializer = new JsonSerializer();
+                serializer.Serialize(Console.Out, document);
             }
             else
             {
-                var output = _output.GetOutputFormat(config, TraceShowFormat.OutputTemplate(_columns.Count));
+                var output = _output.GetOutputFormat(config, TraceTreeFormatter.OutputTemplate(_columns.Count));
                 foreach (var logEvent in TraceTreeFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
                     output.WriteLogEvent(logEvent);
             }
