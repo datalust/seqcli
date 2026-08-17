@@ -42,8 +42,7 @@ public class TraceTreeJObjectBuilderTests
 
         Assert.Equal(TraceId, (string?)document["traceId"]);
         Assert.True((bool?)document["complete"]);
-        Assert.Empty((JArray)document["orphans"]!);
-        Assert.Empty((JArray)document["detachedLogs"]!);
+        Assert.Null(document["orphans"]);
 
         var root = (JObject)document["root"]!;
         Assert.Equal("span", (string?)root["type"]);
@@ -51,7 +50,7 @@ public class TraceTreeJObjectBuilderTests
         Assert.Equal("2026-07-31T10:20:00.0000000Z", (string?)root["start"]);
         Assert.Equal(1.5, (double?)root["elapsedMs"]);
         Assert.Equal("GET /orders", (string?)root["message"]);
-        Assert.Empty((JArray)root["children"]!);
+        Assert.Null(root["children"]);
         Assert.Null(root["parentSpanId"]);
         Assert.Null(root["level"]);
         Assert.Null(root["timestamp"]);
@@ -128,17 +127,20 @@ public class TraceTreeJObjectBuilderTests
     }
 
     [Fact]
-    public void LogsWithNoCapturedEnclosingSpanAreDetached()
+    public void LogsWithNoCapturedEnclosingSpanBecomeOrphans()
     {
         var document = ToJson(
             Span("a", null),
             Log("uncaptured", 1, "first"),
-            Log(null, 2, "second"));
+            Span("b", "missing", startMs: 2),
+            Log(null, 3, "second"));
 
-        var detached = (JArray)document["detachedLogs"]!;
-        Assert.Equal(["first", "second"], detached.Select(l => (string)l["message"]!).ToArray());
-        Assert.Equal("uncaptured", (string?)detached[0]["spanId"]);
-        Assert.Null(detached[1]["spanId"]);
+        var orphans = (JArray)document["orphans"]!;
+        Assert.Equal(
+            [("log", "first"), ("span", "span b"), ("log", "second")],
+            orphans.Select(o => ((string?)o["type"], (string?)o["message"])).ToArray());
+        Assert.Equal("uncaptured", (string?)orphans[0]["spanId"]);
+        Assert.Null(orphans[2]["spanId"]);
     }
 
     [Fact]
@@ -209,13 +211,13 @@ public class TraceTreeJObjectBuilderTests
     }
 
     [Fact]
-    public void SubtreeDocumentsOmitOrphansAndDetachedLogs()
+    public void SubtreeDocumentsOmitOrphans()
     {
         var roots = TraceTreeBuilder.Build([
             Span("a", null),
             Span("b", "a", startMs: 1),
             Log("b", 2, "nested"),
-            Log("uncaptured", 3, "detached")
+            Log("uncaptured", 3, "orphan")
         ]);
 
         var subtreeRoot = TraceTreeBuilder.FindSpan(roots, "b");
@@ -226,7 +228,6 @@ public class TraceTreeJObjectBuilderTests
         Assert.Equal(TraceId, (string?)document["traceId"]);
         Assert.True((bool?)document["complete"]);
         Assert.Null(document["orphans"]);
-        Assert.Null(document["detachedLogs"]);
 
         var root = (JObject)document["root"]!;
         Assert.Equal("b", (string?)root["spanId"]);

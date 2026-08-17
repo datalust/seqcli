@@ -41,13 +41,17 @@ static class TraceTreeJObjectBuilder
                 orphans.Add(ToJson(node, columns));
         }
 
-        return new JObject
+        var json = new JObject
         {
             ["traceId"] = traceId,
             ["complete"] = complete,
-            ["root"] = root != null ? ToJson(root, columns) : JValue.CreateNull(),
-            ["orphans"] = orphans
+            ["root"] = root != null ? ToJson(root, columns) : JValue.CreateNull()
         };
+
+        if (orphans.Count > 0)
+            json["orphans"] = orphans;
+
+        return json;
     }
 
     public static JObject FromSubtree(string traceId, TraceTreeNode subtree, bool complete, IReadOnlyList<string> columns)
@@ -97,7 +101,7 @@ static class TraceTreeJObjectBuilder
         if (ColumnsToJson(evt, columns) is { } selected)
             json["columns"] = selected;
 
-        if (evt.IsSpan)
+        if (evt.IsSpan && node.Children.Count > 0)
         {
             var children = new JArray();
             foreach (var child in node.Children)

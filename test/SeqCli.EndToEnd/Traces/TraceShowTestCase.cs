@@ -86,7 +86,6 @@ public class TraceShowTestCase : ICliTestCase
 
         Assert.Equal(TraceId, (string?)document["traceId"]);
         Assert.True((bool?)document["complete"]);
-        Assert.Empty((JArray)document["orphans"]!);
 
         var root = (JObject)document["root"]!;
         Assert.Equal("span", (string?)root["type"]);
@@ -101,16 +100,16 @@ public class TraceShowTestCase : ICliTestCase
             ["SELECT * FROM orders", "42 rows retrieved"],
             ((JArray)query["children"]!).Select(c => (string)c["message"]!).ToArray());
 
-        var detached = (JObject)Assert.Single((JArray)document["detachedLogs"]!);
-        Assert.Equal("Orphan log", (string?)detached["message"]);
-        Assert.Equal("9999999999999999", (string?)detached["spanId"]);
+        var orphan = (JObject)Assert.Single((JArray)document["orphans"]!);
+        Assert.Equal("log", (string?)orphan["type"]);
+        Assert.Equal("Orphan log", (string?)orphan["message"]);
+        Assert.Equal("9999999999999999", (string?)orphan["spanId"]);
 
         exit = runner.Exec("trace", $"-i {TraceId} --span-id 2222222222222222 --logs --json");
         Assert.Equal(0, exit);
         document = ParseDocument(runner.LastRunProcess!.Output);
 
         Assert.Null(document["orphans"]);
-        Assert.Null(document["detachedLogs"]);
         Assert.Equal("2222222222222222", (string?)document["root"]!["spanId"]);
         Assert.Equal("1111111111111111", (string?)document["root"]!["parentSpanId"]);
 

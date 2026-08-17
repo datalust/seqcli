@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 using SeqCli.Traces;
 using SeqCli.Util;
 using Serilog;
@@ -49,11 +50,6 @@ class TraceCommand : Command
             id => _id = ArgumentString.Normalize(id));
 
         Options.Add(
-            "span-id=",
-            "The id of a span within the trace; when specified, only the subtree rooted at this span is shown",
-            spanId => _spanId = ArgumentString.Normalize(spanId));
-
-        Options.Add(
             "column=",
             "A column to display preceding each event's message; any Seq expression can be supplied, for " +
             "example `OrderId`, `@SpanKind`, or `@Resource.service.name`; this argument can be used multiple " +
@@ -69,6 +65,11 @@ class TraceCommand : Command
             "exceptions",
             "Include exception details, where present",
             _ => _includeExceptions = true);
+
+        Options.Add(
+            "span-id=",
+            "The id of a span within the trace; when specified, only the subtree rooted at this span is shown",
+            spanId => _spanId = ArgumentString.Normalize(spanId));
 
         Options.Add(
             "json",
@@ -144,12 +145,15 @@ class TraceCommand : Command
 
             if (_json)
             {
+                // TODO - better to support JSON and set custom help text.
+                _output.SetSyntax(OutputSyntax.Json);
+                var output = _output.GetOutputFormat(config, TraceTreeFormatter.OutputTemplate(_columns.Count));
+                
                 var document = subtreeRoot != null ?
                     TraceTreeJObjectBuilder.FromSubtree(traceId, subtreeRoot, complete, _columns) :
                     TraceTreeJObjectBuilder.FromRoots(traceId, roots, complete, _columns);
-
-                var serializer = new JsonSerializer();
-                serializer.Serialize(Console.Out, document);
+                
+                output.WriteObject(document);
             }
             else
             {

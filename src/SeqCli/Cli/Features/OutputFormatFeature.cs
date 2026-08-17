@@ -31,6 +31,11 @@ class OutputFormatFeature(bool supportNative, bool supportJson) : CommandFeature
         return new OutputFormat(_syntax, _noColor, _forceColor, config.Output, outputTemplate);
     }
 
+    public void SetSyntax(OutputSyntax syntax)
+    {
+        _syntax = syntax;
+    }
+
     public override void Enable(OptionSet options)
     {
         if (supportJson)
