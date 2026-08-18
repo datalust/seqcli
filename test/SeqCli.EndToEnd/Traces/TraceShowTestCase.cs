@@ -105,6 +105,13 @@ public class TraceShowTestCase : ICliTestCase
         Assert.Equal("Orphan log", (string?)orphan["message"]);
         Assert.Equal("9999999999999999", (string?)orphan["spanId"]);
 
+        // Without `--logs`, every node is a span and the `type` discriminator is omitted.
+        exit = runner.Exec("trace", $"-i {TraceId} --json");
+        Assert.Equal(0, exit);
+        document = ParseDocument(runner.LastRunProcess!.Output);
+        Assert.Null(document["root"]!["type"]);
+        Assert.Null(document["orphans"]);
+
         exit = runner.Exec("trace", $"-i {TraceId} --span-id 2222222222222222 --logs --json");
         Assert.Equal(0, exit);
         document = ParseDocument(runner.LastRunProcess!.Output);

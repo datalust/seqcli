@@ -150,8 +150,8 @@ class TraceCommand : Command
                 var output = _output.GetOutputFormat(config, TraceTreeFormatter.OutputTemplate(_columns.Count));
                 
                 var document = subtreeRoot != null ?
-                    TraceTreeJObjectBuilder.FromSubtree(traceId, subtreeRoot, complete, _columns) :
-                    TraceTreeJObjectBuilder.FromRoots(traceId, roots, complete, _columns);
+                    TraceTreeJObjectBuilder.FromSubtree(traceId, subtreeRoot, complete, _includeLogs, _columns) :
+                    TraceTreeJObjectBuilder.FromRoots(traceId, roots, complete, _includeLogs, _columns);
                 
                 output.WriteObject(document);
             }

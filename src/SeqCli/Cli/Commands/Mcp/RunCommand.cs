@@ -24,6 +24,7 @@ using SeqCli.Mcp.Tools.Metrics;
 using SeqCli.Mcp.Tools.Query;
 using SeqCli.Mcp.Tools.Search;
 using SeqCli.Mcp.Tools.Signals;
+using SeqCli.Mcp.Tools.Traces;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Mcp;
@@ -70,7 +71,8 @@ class RunCommand: Command
                     typeof(SearchTools),
                     typeof(MetricsTools),
                     typeof(QueryTools),
-                    typeof(SignalTools)
+                    typeof(SignalTools),
+                    typeof(TraceTools)
                 ]);
 
             await builder.Build().RunAsync();

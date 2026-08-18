@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Text.Json;
 using ModelContextProtocol.Protocol;
+using Newtonsoft.Json.Linq;
 
 namespace SeqCli.Mcp.Tools;
 
@@ -30,6 +32,26 @@ static class McpResults
                     Text = resultText
                 }
             ]
+        };
+    }
+
+    public static CallToolResult StructuredObject(string statusText, JObject structuredContent)
+    {
+        var json = structuredContent.ToString(Newtonsoft.Json.Formatting.None);
+        return new CallToolResult
+        {
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = statusText
+                },
+                new TextContentBlock
+                {
+                    Text = json
+                }
+            ],
+            StructuredContent = JsonSerializer.Deserialize<JsonElement>(json)
         };
     }
 }

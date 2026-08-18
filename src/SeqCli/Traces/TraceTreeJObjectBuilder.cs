@@ -27,7 +27,7 @@ static class TraceTreeJObjectBuilder
 {
     static readonly ITextFormatter MessageFormatter = TextFormatters.Plain(theme: null, "{@m}");
 
-    public static JObject FromRoots(string traceId, IReadOnlyList<TraceTreeNode> roots, bool complete, IReadOnlyList<string> columns)
+    public static JObject FromRoots(string traceId, IReadOnlyList<TraceTreeNode> roots, bool complete, bool includeTypeMarker, IReadOnlyList<string> columns)
     {
         // The (chronologically) first parentless span is the trace root; any other root-level span —
         // parent missing, duplicate parentless span, cycle participant — is an orphan.
@@ -38,14 +38,14 @@ static class TraceTreeJObjectBuilder
             if (node.Element.IsSpan && root == null && node.Element.ParentId == null)
                 root = node;
             else
-                orphans.Add(ToJson(node, columns));
+                orphans.Add(ToJson(node, includeTypeMarker, columns));
         }
 
         var json = new JObject
         {
             ["traceId"] = traceId,
             ["complete"] = complete,
-            ["root"] = root != null ? ToJson(root, columns) : JValue.CreateNull()
+            ["root"] = root != null ? ToJson(root, includeTypeMarker, columns) : JValue.CreateNull()
         };
 
         if (orphans.Count > 0)
@@ -54,24 +54,26 @@ static class TraceTreeJObjectBuilder
         return json;
     }
 
-    public static JObject FromSubtree(string traceId, TraceTreeNode subtree, bool complete, IReadOnlyList<string> columns)
+    public static JObject FromSubtree(string traceId, TraceTreeNode subtree, bool complete, bool includeTypeMarker, IReadOnlyList<string> columns)
     {
         return new JObject
         {
             ["traceId"] = traceId,
             ["complete"] = complete,
-            ["root"] = ToJson(subtree, columns)
+            ["root"] = ToJson(subtree, includeTypeMarker, columns)
         };
     }
 
-    static JObject ToJson(TraceTreeNode node, IReadOnlyList<string> columns)
+    static JObject ToJson(TraceTreeNode node, bool includeTypeMarker, IReadOnlyList<string> columns)
     {
         var evt = node.Element;
 
-        var json = new JObject
-        {
-            ["type"] = evt.IsSpan ? "span" : "log"
-        };
+        var json = new JObject();
+
+        // The `type` marker distinguishes spans from logs; when a tree can only contain spans,
+        // callers omit it.
+        if (includeTypeMarker)
+            json["type"] = evt.IsSpan ? "span" : "log";
 
         if (evt.SpanId != null)
             json["spanId"] = evt.SpanId;
@@ -105,7 +107,7 @@ static class TraceTreeJObjectBuilder
         {
             var children = new JArray();
             foreach (var child in node.Children)
-                children.Add(ToJson(child, columns));
+                children.Add(ToJson(child, includeTypeMarker, columns));
             json["children"] = children;
         }
 

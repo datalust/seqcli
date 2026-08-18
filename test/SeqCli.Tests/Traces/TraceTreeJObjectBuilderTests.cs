@@ -33,7 +33,7 @@ public class TraceTreeJObjectBuilderTests
     static JObject ToJson(params TraceTreeElement[] events) => ToJson([], events);
 
     static JObject ToJson(IReadOnlyList<string> columns, params TraceTreeElement[] events) =>
-        TraceTreeJObjectBuilder.FromRoots(TraceId, TraceTreeBuilder.Build(events), complete: true, columns);
+        TraceTreeJObjectBuilder.FromRoots(TraceId, TraceTreeBuilder.Build(events), complete: true, includeTypeMarker: true, columns);
 
     [Fact]
     public void TheDocumentCarriesTraceMetadataAndTheRootSpan()
@@ -205,9 +205,32 @@ public class TraceTreeJObjectBuilderTests
     public void IncompleteTracesAreFlagged()
     {
         var document = TraceTreeJObjectBuilder.FromRoots(
-            TraceId, TraceTreeBuilder.Build([Span("a", null)]), complete: false, []);
+            TraceId, TraceTreeBuilder.Build([Span("a", null)]), complete: false, includeTypeMarker: true, []);
 
         Assert.False((bool?)document["complete"]);
+    }
+
+    [Fact]
+    public void TypeMarkersAreOnlyIncludedWhenRequested()
+    {
+        var roots = TraceTreeBuilder.Build([
+            Span("a", null),
+            Span("b", "a", startMs: 1),
+            Span("c", "missing", startMs: 2)
+        ]);
+
+        var document = TraceTreeJObjectBuilder.FromRoots(TraceId, roots, complete: true, includeTypeMarker: false, []);
+
+        var root = (JObject)document["root"]!;
+        Assert.Null(root["type"]);
+        var child = Assert.Single((JArray)root["children"]!);
+        Assert.Null(child["type"]);
+        var orphan = (JObject)Assert.Single((JArray)document["orphans"]!);
+        Assert.Null(orphan["type"]);
+
+        var subtree = TraceTreeJObjectBuilder.FromSubtree(
+            TraceId, TraceTreeBuilder.FindSpan(roots, "b")!, complete: true, includeTypeMarker: false, []);
+        Assert.Null(subtree["root"]!["type"]);
     }
 
     [Fact]
@@ -223,7 +246,7 @@ public class TraceTreeJObjectBuilderTests
         var subtreeRoot = TraceTreeBuilder.FindSpan(roots, "b");
         Assert.NotNull(subtreeRoot);
 
-        var document = TraceTreeJObjectBuilder.FromSubtree(TraceId, subtreeRoot, complete: true, []);
+        var document = TraceTreeJObjectBuilder.FromSubtree(TraceId, subtreeRoot, complete: true, includeTypeMarker: true, []);
 
         Assert.Equal(TraceId, (string?)document["traceId"]);
         Assert.True((bool?)document["complete"]);
