@@ -16,13 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using SeqCli.Mapping;
-using SeqCli.Output;
+using SeqCli.Traces;
 using SeqCli.Util;
 using Serilog.Events;
 
-namespace SeqCli.Traces;
+namespace SeqCli.Output;
 
-static class TraceTreeFormatter
+static class TraceFormatter
 {
     static readonly string TreePrefixProperty = $"_SeqcliTraceTreePrefix_{Guid.NewGuid():N}";
     static readonly string ElapsedProperty = $"_SeqcliTraceElapsed_{Guid.NewGuid():N}";

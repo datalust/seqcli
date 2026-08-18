@@ -9,9 +9,9 @@ using Serilog.Events;
 using Serilog.Parsing;
 using Xunit;
 
-namespace SeqCli.Tests.Traces;
+namespace SeqCli.Tests.Output;
 
-public class TraceTreeFormatterTests
+public class TraceFormatterTests
 {
     static readonly DateTimeOffset T0 = new(2026, 7, 31, 10, 20, 0, TimeSpan.Zero);
 
@@ -32,19 +32,19 @@ public class TraceTreeFormatterTests
     {
         var output = new StringWriter();
         var formatter = TextFormatters.Plain(theme: null,
-            TraceTreeFormatter.OutputTemplate(events.Max(e => e.Columns.Count)));
-        foreach (var logEvent in TraceTreeFormatter.ToLogEvents(TraceTreeBuilder.Build(events)))
+            TraceFormatter.OutputTemplate(events.Max(e => e.Columns.Count)));
+        foreach (var logEvent in TraceFormatter.ToLogEvents(TraceTreeBuilder.Build(events)))
             formatter.Format(logEvent, output);
         return output.ToString();
     }
 
-    static string At(double offsetMs = 0) => T0.AddMilliseconds(offsetMs).ToLocalTime().ToString("o");
+    static string At(double offsetMs) => T0.AddMilliseconds(offsetMs).ToLocalTime().ToString("o");
 
     [Fact]
     public void SpanLinesShowStartTimeAndElapsed()
     {
         Assert.Equal(
-            $"[{At()} INF] span a (1.5 ms){Environment.NewLine}",
+            $"[{At(0)} INF] span a (1.5 ms){Environment.NewLine}",
             Render(Span("a", null, startMs: 0, elapsedMs: 1.5)));
     }
 
@@ -74,11 +74,11 @@ public class TraceTreeFormatterTests
 
         var expected = string.Join(Environment.NewLine,
         [
-            $"[{At()} INF] GET /orders (245 ms)",
-            $"[{At(1)} INF] ┊  Request authenticated",
-            $"[{At(2)} INF] ├─ Query orders (180 ms)",
-            $"[{At(3)} INF] │  ├─ SELECT * FROM orders (170 ms)",
-            $"[{At(4)} INF] │  │  ┊  42 rows retrieved",
+            $"[{At(000)} INF] GET /orders (245 ms)",
+            $"[{At(001)} INF] ┊  Request authenticated",
+            $"[{At(002)} INF] ├─ Query orders (180 ms)",
+            $"[{At(003)} INF] │  ├─ SELECT * FROM orders (170 ms)",
+            $"[{At(004)} INF] │  │  ┊  42 rows retrieved",
             $"[{At(175)} INF] │  └─ Materialize results (8 ms)",
             $"[{At(181)} WRN] ┊  Cache miss",
             $"[{At(200)} INF] └─ Render response (30 ms)",
@@ -95,7 +95,7 @@ public class TraceTreeFormatterTests
         var actual = Render(Span("a", null, elapsedMs: 2, message: "GET /orders", columns: ["frontend", 42L]));
 
         Assert.Equal(
-            $"[{At()} INF] frontend 42 GET /orders (2 ms){Environment.NewLine}",
+            $"[{At(0)} INF] frontend 42 GET /orders (2 ms){Environment.NewLine}",
             actual);
     }
 
@@ -107,7 +107,7 @@ public class TraceTreeFormatterTests
         var actual = Render(Span("a", null, elapsedMs: 2, message: "GET /orders", columns: [first, 42L]));
 
         Assert.Equal(
-            $"[{At()} INF] 42 GET /orders (2 ms){Environment.NewLine}",
+            $"[{At(0)} INF] 42 GET /orders (2 ms){Environment.NewLine}",
             actual);
     }
 
@@ -124,7 +124,7 @@ public class TraceTreeFormatterTests
             null, "a", null, T0, TimeSpan.FromMilliseconds(1.5), []);
 
         Assert.Equal(
-            $"[{At()} INF] GET /orders as {{User}} (1.5 ms){Environment.NewLine}",
+            $"[{At(0)} INF] GET /orders as {{User}} (1.5 ms){Environment.NewLine}",
             Render(evt));
     }
 

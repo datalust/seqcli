@@ -117,11 +117,11 @@ class TraceTools(McpSession session, SeqConnection connection)
                 return McpResults.SimpleText($"The span {spanId} does not appear in trace {traceId}.", isError: true);
             }
 
-            document = TraceTreeJObjectBuilder.FromSubtree(traceId, subtreeRoot, complete, includeTypeMarker: false, columnExpressions);
+            document = TraceTreeJObjectConverter.FromSubtree(traceId, subtreeRoot, complete, includeTypeMarker: false, columnExpressions);
         }
         else
         {
-            document = TraceTreeJObjectBuilder.FromRoots(traceId, roots, complete, includeTypeMarker: false, columnExpressions);
+            document = TraceTreeJObjectConverter.FromRoots(traceId, roots, complete, includeTypeMarker: false, columnExpressions);
         }
 
         var status = complete

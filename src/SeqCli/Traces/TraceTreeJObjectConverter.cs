@@ -23,7 +23,7 @@ using Serilog.Formatting;
 
 namespace SeqCli.Traces;
 
-static class TraceTreeJObjectBuilder
+static class TraceTreeJObjectConverter
 {
     static readonly ITextFormatter MessageFormatter = TextFormatters.Plain(theme: null, "{@m}");
 

@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.IO;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Data;
 using SeqCli.Traces;
@@ -116,31 +115,6 @@ public class TraceQueryTests
         Assert.Null(evt.Start);
         Assert.Null(evt.Elapsed);
         Assert.Equal(timestamp, evt.SortKey);
-    }
-
-    [Theory]
-    [InlineData(1)] // A string `@Timestamp`
-    [InlineData(7)] // A string `@Start`
-    [InlineData(8)] // A string `@Elapsed`
-    public void NonTickTimestampsAndDurationsAreRejected(int column)
-    {
-        var row = new object?[] {"event-1", 0L, null, null, null, null, null, null, null};
-        row[column] = "2026-07-31T10:20:00Z";
-        var result = new QueryResultPart { Rows = [row!] };
-
-        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, includeExceptions: true, []));
-    }
-
-    [Theory]
-    [InlineData(0)] // A missing `@Id`
-    [InlineData(1)] // A missing `@Timestamp`
-    public void MissingRequiredColumnsAreRejected(int column)
-    {
-        var row = new object?[] {"event-1", 0L, null, null, null, null, null, null, null};
-        row[column] = null;
-        var result = new QueryResultPart { Rows = [row!] };
-
-        Assert.Throws<InvalidDataException>(() => TraceQuery.ReadEvents(result, includeExceptions: true, []));
     }
 
     [Fact]

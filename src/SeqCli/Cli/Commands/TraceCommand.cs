@@ -147,18 +147,18 @@ class TraceCommand : Command
             {
                 // TODO - better to support JSON and set custom help text.
                 _output.SetSyntax(OutputSyntax.Json);
-                var output = _output.GetOutputFormat(config, TraceTreeFormatter.OutputTemplate(_columns.Count));
+                var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
                 
                 var document = subtreeRoot != null ?
-                    TraceTreeJObjectBuilder.FromSubtree(traceId, subtreeRoot, complete, _includeLogs, _columns) :
-                    TraceTreeJObjectBuilder.FromRoots(traceId, roots, complete, _includeLogs, _columns);
+                    TraceTreeJObjectConverter.FromSubtree(traceId, subtreeRoot, complete, _includeLogs, _columns) :
+                    TraceTreeJObjectConverter.FromRoots(traceId, roots, complete, _includeLogs, _columns);
                 
                 output.WriteObject(document);
             }
             else
             {
-                var output = _output.GetOutputFormat(config, TraceTreeFormatter.OutputTemplate(_columns.Count));
-                foreach (var logEvent in TraceTreeFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
+                var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
+                foreach (var logEvent in TraceFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
                     output.WriteLogEvent(logEvent);
             }
 
