@@ -1,6 +1,6 @@
 # `seqcli` [![CI](https://github.com/datalust/seqcli/actions/workflows/ci.yml/badge.svg?branch=dev&event=push)](https://github.com/datalust/seqcli/actions/workflows/ci.yml) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
 
-The [Seq](https://datalust.co/seq) client command-line interface for Seq users and AI agents. 
+The [Seq](https://datalust.co/seq) command-line interface for Seq users and AI agents. 
 
 Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`), and [much more](https://github.com/datalust/seqcli#commands).
 
