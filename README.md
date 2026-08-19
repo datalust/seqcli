@@ -1,6 +1,8 @@
 # `seqcli` [![CI](https://github.com/datalust/seqcli/actions/workflows/ci.yml/badge.svg?branch=dev&event=push)](https://github.com/datalust/seqcli/actions/workflows/ci.yml) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
 
-The [Seq](https://datalust.co/seq) client command-line app. Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`), and [much more](https://github.com/datalust/seqcli#commands).
+The [Seq](https://datalust.co/seq) command-line interface for Seq users and AI agents. 
+
+Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`), and [much more](https://github.com/datalust/seqcli#commands).
 
 ![SeqCli Screenshot](https://raw.githubusercontent.com/datalust/seqcli/dev/asset/SeqCli.png)
 
@@ -60,25 +62,23 @@ $token = (
 
 ### MCP and agent skills
 
-`seqcli` includes support for agent-driven diagnostic workflows:
-
-```
-dotnet tool install -g seqcli
-```
+AI agents use `seqcli` to access Seq. Installing the `seqcli` skills and MCP server makes AI agents faster, more successful and more efficient.
 
 For skill installation:
 
 ```
-seqcli skills install -a <agent> [--global]
+seqcli skills install --agent <agent> [--global]
 ```
 
 For local MCP server installation:
 
 ```
-seqcli mcp install -a <agent> [--global]
+seqcli mcp install --agent <agent> [--profile <profile>] [--global]
 ```
 
 Credentials are set using configuration and environment variables as described above.
+
+Upon running the AI agent verify that the skills and MCP server have been detected. If not, consult the agent's documentation for skill and MCP server installation. 
 
 ## Contributing
 
