@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -40,7 +39,6 @@ class TraceCommand : Command
     string? _spanId;
     bool _includeLogs;
     bool _includeExceptions;
-    bool _json;
 
     public TraceCommand()
     {
@@ -70,14 +68,13 @@ class TraceCommand : Command
             "span-id=",
             "The id of a span within the trace; when specified, only the subtree rooted at this span is shown",
             spanId => _spanId = ArgumentString.Normalize(spanId));
-
-        Options.Add(
-            "json",
-            "Print the trace as a single JSON document, with spans and log events nested under " +
-            "their parents (the default is plain text)",
-            _ => _json = true);
-
-        _output = Enable(new OutputFormatFeature(supportNative: false, supportJson: false));
+        
+        _output = Enable(new OutputFormatFeature(supportNative: false, supportJson: true)
+        {
+            JsonArgumentHelp = "Print the trace as a single JSON document, with spans and log events nested under " +
+                               "their parents (the default is plain text)"
+        });
+        
         _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }
@@ -143,12 +140,9 @@ class TraceCommand : Command
                 }
             }
 
-            if (_json)
+            var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
+            if (output.Json)
             {
-                // TODO - better to support JSON and set custom help text.
-                _output.SetSyntax(OutputSyntax.Json);
-                var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
-                
                 var document = subtreeRoot != null ?
                     TraceTreeJObjectConverter.FromSubtree(traceId, subtreeRoot, complete, _includeLogs, _columns) :
                     TraceTreeJObjectConverter.FromRoots(traceId, roots, complete, _includeLogs, _columns);
@@ -157,7 +151,6 @@ class TraceCommand : Command
             }
             else
             {
-                var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
                 foreach (var logEvent in TraceFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
                     output.WriteLogEvent(logEvent);
             }

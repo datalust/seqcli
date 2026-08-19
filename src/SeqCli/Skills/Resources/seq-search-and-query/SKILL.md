@@ -300,12 +300,8 @@ order by service
 
 ## Tracing Tactics
 
-Find traces by searching for their included spans.
-
-To reconstruct a trace as a call tree, use the `seq_load_trace` MCP tool, or `seqcli trace -i <trace-id> --json`,
-supplying the 32-hex-digit `@TraceId` value. The result is a single JSON document with spans nested beneath their
-parents in execution (start-time) order; exception details are included automatically.
-
+* Find traces by searching for their included spans.
+* To reconstruct a trace as a call tree, use the `seq_load_trace` MCP tool, or run `seqcli trace --help` for CLI equivalent.
 * Project additional Seq expressions per span with `columns` (CLI: repeated `--column`), for example
   `@Resource.service.name` or `@SpanKind`; values appear in each node's `columns` object, keyed by expression.
 * On large traces, pass `span_id` (CLI: `--span-id`) to retrieve only the subtree rooted at one span.
