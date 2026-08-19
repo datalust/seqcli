@@ -17,12 +17,17 @@ public class Args(params string[] args)
     static Regex ToArgRegex(string arg) => new(arg.Replace(".", "\\.").Replace("*", ".*"));
 
     public bool Multiuser() => args.Any(a => a == "--license-certificate-stdin");
-    
+
+    const string DockerTagArg = "--docker-tag=";
+
     public bool UseDockerSeq([NotNullWhen(true)] out string? imageTag, [NotNullWhen(true)] out string? containerRuntime)
     {
         if (args.Any(a => a == "--docker-server"))
         {
-            imageTag = args.Any(a => a == "--pre") ? "preview" : "latest";
+            imageTag = args
+                .Where(a => a.StartsWith(DockerTagArg))
+                .Select(a => a[DockerTagArg.Length..])
+                .LastOrDefault() ?? "latest";
             containerRuntime = args.Any(a => a == "--podman") ? "podman" : "docker";
             return true;
         }

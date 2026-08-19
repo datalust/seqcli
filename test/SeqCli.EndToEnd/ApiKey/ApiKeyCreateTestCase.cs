@@ -13,11 +13,11 @@ public class ApiKeyCreateTestCase : ICliTestCase
         var exit = runner.Exec("apikey create", "-t Test");
         Assert.Equal(0, exit);
 
-        exit = runner.Exec("apikey list", "-t Test --json --no-color");
+        exit = runner.Exec("apikey list", "-t Test --json");
         Assert.Equal(0, exit);
 
         var output = runner.LastRunProcess!.Output;
-        Assert.Contains("\"AssignedPermissions\": [\"Ingest\"]", output);
+        Assert.Contains("\"AssignedPermissions\":[\"Ingest\"]", output);
 
         return Task.CompletedTask;
     }

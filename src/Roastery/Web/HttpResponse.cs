@@ -16,7 +16,7 @@ class HttpResponse
 
     public void EnsureSuccessStatusCode()
     {
-        if ((int) StatusCode >= 400)
-            throw new HttpRequestException($"Request failed with status code {(int) StatusCode}/{StatusCode}.");
+        if ((int)StatusCode >= 400)
+            throw new HttpRequestException($"Request failed with status code {(int)StatusCode}/{StatusCode}.");
     }
 }

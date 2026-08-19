@@ -38,7 +38,7 @@ class TailCommand : Command
             "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
             v => _filter = v);
 
-        _output = Enable(new OutputFormatFeature(supportNative: true));
+        _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _connection = Enable<ConnectionFeature>();

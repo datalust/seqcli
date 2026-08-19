@@ -1,0 +1,35 @@
+{
+  "$entity": "view",
+  "Title": "Overview",
+  "Description": "Created by `seqcli sample setup`",
+  "OwnerId": null,
+  "IsProtected": false,
+  "GroupKeyExpressions": [
+    "Application"
+  ],
+  "Filters": [],
+  "DimensionFilters": [],
+  "PinnedMetrics": [
+    {
+      "Metric": {
+        "Accessor": "HttpRequestDuration",
+        "GroupKey": [
+          "Roastery Web Frontend"
+        ],
+        "Kind": "Exponential",
+        "Description": "The time taken to fully process a request.",
+        "Unit": "ms",
+        "Condition": "@Definitions.HttpRequestDuration.kind = 'Exponential' and @Definitions.HttpRequestDuration.unit = 'ms' and Application = 'Roastery Web Frontend'"
+      },
+      "GroupKeyExpressions": [
+        "Application"
+      ],
+      "NonGroupingCondition": null,
+      "UseLogarithmicScale": true,
+      "ShowZero": false,
+      "DisplayExpressionFilters": [],
+      "DisplayGroupKeyExpressions": [],
+      "DisplayDimensionFilters": []
+    }
+  ]
+}

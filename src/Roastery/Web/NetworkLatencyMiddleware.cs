@@ -16,7 +16,7 @@ class NetworkLatencyMiddleware : HttpServer
     {
         await Task.Delay(100 + (int)(Distribution.Uniform() * 300));
         var response = await _next.InvokeAsync(request);
-        await Task.Delay(10 + (int) (Distribution.Uniform() * 100));
+        await Task.Delay(10 + (int)(Distribution.Uniform() * 100));
         return response;
     }
 }

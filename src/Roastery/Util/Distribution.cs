@@ -14,17 +14,17 @@ static class Distribution
     {
         if (min < 0)
             throw new ArgumentOutOfRangeException(nameof(min));
-            
+
         if (max < min || max - min < double.Epsilon)
             throw new ArgumentOutOfRangeException(nameof(max));
-            
+
         return min + Rng.NextDouble() * (max - min);
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     public static T Uniform<T>(IList<T> items)
     {
-        var i = (int) Uniform(0, items.Count);
+        var i = (int)Uniform(0, items.Count);
         return items[i];
     }
 

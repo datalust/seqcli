@@ -82,7 +82,7 @@ class SetupCommand : Command
             templates.Add(template);
         }
 
-        var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs, new TemplateImportState(), merge: false);
+        var err = await TemplateSetImporter.ImportAsync(templates, connection, templateArgs, new TemplateImportState(), merge: true);
         if (err != null)
         {
             await Console.Error.WriteLineAsync(err);

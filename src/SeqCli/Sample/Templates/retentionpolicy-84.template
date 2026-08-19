@@ -1,0 +1,6 @@
+{
+  "$entity": "retentionpolicy",
+  "RetentionTime": "30.00:00:00",
+  "RemovedSignalExpression": null,
+  "DataSource": "Series"
+}

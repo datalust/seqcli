@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
 using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
+using SeqCli.Config;
 using SeqCli.Csv;
 using SeqCli.Mapping;
 using SeqCli.Util;
@@ -31,16 +32,17 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Parsing;
-using Serilog.Sinks.SystemConsole.Themes;
 using Serilog.Templates.Themes;
 
 namespace SeqCli.Output;
 
 sealed class OutputFormat
 {
+    // See https://no-color.org for semantics.
+    const string NoColorEnvironmentVariable = "NO_COLOR";
+    
     readonly OutputSyntax _syntax;
-    readonly bool _noColor;
-    readonly bool _forceColor;
+    readonly string? _outputTemplate;
     readonly Logger _formatter;
 
     readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
@@ -52,39 +54,84 @@ sealed class OutputFormat
         }
     });
 
-    public const string DefaultOutputTemplate =
-        "[{Timestamp:o} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}";
+    public OutputFormat(
+        OutputSyntax syntax,
+        bool? noColor,
+        bool? forceColor,
+        SeqCliOutputConfig outputConfig,
+        string? outputTemplate = null)
+        : this(
+            syntax,
+            noColor,
+            forceColor,
+            outputConfig,
+            outputTemplate,
+            noColorSetInEnvironment: NoColorSetInEnvironment(),
+            outputIsRedirected: Console.IsOutputRedirected,
+            allowAnsiEscapes: TerminalFeatures.TryEnableAnsiEscapes())
+    {
+    }
 
-    public static readonly ConsoleTheme DefaultAnsiTheme = AnsiConsoleTheme.Code;
-
-    public static readonly ConsoleTheme DefaultTheme =
-        OperatingSystem.IsWindows() ? SystemConsoleTheme.Literate : DefaultAnsiTheme;
-
-    static readonly TemplateTheme DefaultTemplateTheme = TemplateTheme.Code;
-
-    public OutputFormat(OutputSyntax syntax, bool noColor, bool forceColor)
+    /// <param name="syntax">The syntax to write output in.</param>
+    /// <param name="noColor">The value of <c>--no-color</c>, if specified.</param>
+    /// <param name="forceColor">The value of <c>--force-color</c>, if specified.</param>
+    /// <param name="outputConfig">Configured output defaults.</param>
+    /// <param name="outputTemplate">The template controlling plain-text formatting, or <c>null</c> for the default.</param>
+    /// <param name="noColorSetInEnvironment">Whether <c>NO_COLOR</c> is set; see <see cref="NoColorSetInEnvironment"/>.</param>
+    /// <param name="outputIsRedirected">Whether <c>STDOUT</c> is redirected, i.e. not attached to a terminal.</param>
+    /// <param name="allowAnsiEscapes">Whether ANSI escape sequences are allowed; generally <c>false</c> for interactive
+    /// legacy Windows terminals and <c>true</c> otherwise.</param>
+    internal OutputFormat(
+        OutputSyntax syntax,
+        bool? noColor,
+        bool? forceColor,
+        SeqCliOutputConfig outputConfig,
+        string? outputTemplate,
+        bool noColorSetInEnvironment,
+        bool outputIsRedirected,
+        bool allowAnsiEscapes)
     {
         _syntax = syntax;
-        _noColor = noColor;
-        _forceColor = forceColor;
+        _outputTemplate = outputTemplate;
+
+        var resolvedNoColor = ResolveNoColor(noColor, forceColor, outputConfig, noColorSetInEnvironment, allowAnsiEscapes);
+        var applyThemeToRedirectedOutput = !resolvedNoColor && (forceColor ?? outputConfig.ForceColor);
+        var colorize = !resolvedNoColor && (applyThemeToRedirectedOutput || !outputIsRedirected);
+
+        TemplateTheme = colorize
+            ? FlareTheme.SeqCli
+            : null;
+
         _formatter = CreateOutputLogger();
+    }
+
+    static bool NoColorSetInEnvironment()
+        => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(NoColorEnvironmentVariable));
+    
+    internal static bool ResolveNoColor(
+        bool? noColorFlag,
+        bool? forceColorFlag,
+        SeqCliOutputConfig config,
+        bool noColorSetInEnvironment,
+        bool supportsAnsiEscapes)
+    {
+        if (!supportsAnsiEscapes)
+            return true;
+
+        if (noColorFlag != null)
+            return noColorFlag.Value;
+
+        if (config.DisableColor)
+            return true;
+
+        return forceColorFlag != true && noColorSetInEnvironment;
     }
 
     public bool Json => _syntax == OutputSyntax.Json;
     public bool Text => _syntax == OutputSyntax.Text;
     public bool Native => _syntax == OutputSyntax.Native;
-    
-    bool ApplyThemeToRedirectedOutput => !_noColor && _forceColor;
 
-    ConsoleTheme Theme
-        => _noColor                     ? ConsoleTheme.None
-            :  ApplyThemeToRedirectedOutput ? DefaultAnsiTheme
-            :                                 DefaultTheme;
-
-    TemplateTheme? TemplateTheme
-        => _noColor                     ? null
-            :  ApplyThemeToRedirectedOutput ? DefaultTemplateTheme
-            :                                 null;
+    internal TemplateTheme? TemplateTheme { get; }
 
     public bool RequiresRender => Native;
 
@@ -96,14 +143,11 @@ sealed class OutputFormat
 
         if (Json)
         {
-            outputConfiguration.WriteTo.Console(OutputFormatter.Json(TemplateTheme));
+            outputConfiguration.WriteTo.Console(TextFormatters.Json(TemplateTheme));
         }
         else if (Text)
         {
-            outputConfiguration.WriteTo.Console(
-                outputTemplate: DefaultOutputTemplate,
-                theme: Theme,
-                applyThemeToRedirectedOutput: ApplyThemeToRedirectedOutput);
+            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _outputTemplate));
         }
         
         // The logger is not configured for Native output, which avoids it. Ideally we'll shift away from using
@@ -127,10 +171,7 @@ sealed class OutputFormat
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(
-                    outputTemplate: "{@Message:j}{NewLine}",
-                    theme: Theme,
-                    applyThemeToRedirectedOutput: ApplyThemeToRedirectedOutput)
+                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
                 .CreateLogger();
             writer.Information("{@Entity}", jo);
         }
@@ -160,10 +201,7 @@ sealed class OutputFormat
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
                 .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(
-                    outputTemplate: "{@Message:j}{NewLine}",
-                    theme: Theme,
-                    applyThemeToRedirectedOutput: ApplyThemeToRedirectedOutput)
+                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
                 .CreateLogger();
             writer.Information("{@Entity}", jo);
         }
@@ -206,7 +244,7 @@ sealed class OutputFormat
         }
         else
         {
-            CsvWriter.WriteQueryResult(result, Stringify, Theme, Console.Out);
+            CsvWriter.WriteQueryResult(result, Stringify, TemplateTheme, Console.Out);
         }
     }
 
@@ -219,8 +257,13 @@ sealed class OutputFormat
         }
         else
         {
-            _formatter.Write(ToSerilogEvent(evt));
+            WriteLogEvent(ToSerilogEvent(evt));
         }
+    }
+
+    public void WriteLogEvent(LogEvent logEvent)
+    {
+        _formatter.Write(logEvent);
     }
 
     public static LogEvent ToSerilogEvent(EventEntity evt)

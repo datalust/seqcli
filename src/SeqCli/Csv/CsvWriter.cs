@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Seq.Api.Model.Data;
 using SeqCli.Mcp.Data;
-using Serilog.Sinks.SystemConsole.Themes;
+using SeqCli.Output;
+using Serilog.Templates.Themes;
 
 namespace SeqCli.Csv;
 
 static class CsvWriter
 {
-    public static void WriteQueryResult(QueryResultPart result, Func<object?, string> stringify, ConsoleTheme theme, TextWriter output)
+    public static void WriteQueryResult(QueryResultPart result, Func<object?, string> stringify, TemplateTheme? theme, TextWriter output)
     {
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
-            theme.Set(output, ConsoleThemeStyle.Text);
+            theme?.Set(output, TemplateThemeStyle.Text);
             QueryResultHelper.WriteErrorResult(output, result);
-            theme.Reset(output);
+            theme?.Reset(output);
         }
         
         var first = true;
@@ -30,7 +32,7 @@ static class CsvWriter
         });
     }
 
-    static void WriteCell(TextWriter output, ConsoleTheme theme, object? value, Func<object?, string> stringify, ref bool firstCol, bool isHeadingRow = false)
+    static void WriteCell(TextWriter output, TemplateTheme? theme, object? value, Func<object?, string> stringify, ref bool firstCol, bool isHeadingRow = false)
     {
         if (firstCol)
         {
@@ -38,39 +40,39 @@ static class CsvWriter
         }
         else
         {
-            theme.Set(output, ConsoleThemeStyle.TertiaryText);
+            theme?.Set(output, TemplateThemeStyle.TertiaryText);
             output.Write(',');
-            theme.Reset(output);
+            theme?.Reset(output);
         }
         
-        theme.Set(output, ConsoleThemeStyle.TertiaryText);
+        theme?.Set(output, TemplateThemeStyle.TertiaryText);
         output.Write('"');
-        theme.Reset(output);
+        theme?.Reset(output);
 
         var valueAsString = stringify(value);
         
-        var dataStyle = isHeadingRow ? ConsoleThemeStyle.Name : ConsoleThemeStyle.Text;
+        var dataStyle = isHeadingRow ? TemplateThemeStyle.Name : TemplateThemeStyle.Text;
         var doubleQuote = valueAsString.IndexOf('"');
         while (doubleQuote != -1)
         {
-            theme.Set(output, dataStyle);
+            theme?.Set(output, dataStyle);
             output.Write(valueAsString[..doubleQuote]);
-            theme.Reset(output);
+            theme?.Reset(output);
             
-            theme.Set(output, ConsoleThemeStyle.Scalar);
+            theme?.Set(output, TemplateThemeStyle.Scalar);
             output.Write("\"\"");
-            theme.Reset(output);
+            theme?.Reset(output);
 
             valueAsString = valueAsString[(doubleQuote + 1)..];
             doubleQuote = valueAsString.IndexOf('"');
         }
         
-        theme.Set(output, dataStyle);
+        theme?.Set(output, dataStyle);
         output.Write(valueAsString);
-        theme.Reset(output);
+        theme?.Reset(output);
         
-        theme.Set(output, ConsoleThemeStyle.TertiaryText);
+        theme?.Set(output, TemplateThemeStyle.TertiaryText);
         output.Write('"');
-        theme.Reset(output);
+        theme?.Reset(output);
     }
 }

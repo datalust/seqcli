@@ -17,30 +17,30 @@ using SeqCli.Output;
 
 namespace SeqCli.Cli.Features;
 
-class OutputFormatFeature(bool supportNative) : CommandFeature
+class OutputFormatFeature(bool supportNative, bool supportJson) : CommandFeature
 {
     OutputSyntax _syntax = OutputSyntax.Text;
     bool? _noColor, _forceColor;
-    
+
     // ReSharper disable once UnusedMember.Global
     public OutputFormatFeature()
-        : this(false) { }
+        : this(supportNative: false, supportJson: true) { }
 
-    public OutputFormat GetOutputFormat(SeqCliConfig config)
+    public OutputFormat GetOutputFormat(SeqCliConfig config, string? outputTemplate = null)
     {
-        return new OutputFormat(
-            _syntax,
-            _noColor ?? config.Output.DisableColor,
-            _forceColor ?? config.Output.ForceColor);
+        return new OutputFormat(_syntax, _noColor, _forceColor, config.Output, outputTemplate);
     }
 
     public override void Enable(OptionSet options)
     {
-        options.Add(
-            "json",
-            "Print output in newline-delimited JSON (the default is plain text)",
-            _ => _syntax = OutputSyntax.Json);
-
+        if (supportJson)
+        {
+            options.Add(
+                "json",
+                "Print output in newline-delimited JSON (the default is plain text)",
+                _ => _syntax = OutputSyntax.Json);
+        }
+        
         if (supportNative)
         {
             options.Add(

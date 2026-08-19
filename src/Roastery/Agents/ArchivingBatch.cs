@@ -14,7 +14,7 @@ class ArchivingBatch : Agent
     readonly HttpClient _client;
     readonly ILogger _logger;
 
-    public ArchivingBatch(HttpClient client, ILogger logger) 
+    public ArchivingBatch(HttpClient client, ILogger logger)
         : base(30000)
     {
         _client = client;
@@ -33,7 +33,7 @@ class ArchivingBatch : Agent
         try
         {
             _logger.Information("Identifying abandoned orders");
-                
+
             var orders = await _client.GetAsync<List<Order>>("api/orders");
             foreach (var order in orders)
             {
@@ -60,7 +60,7 @@ class ArchivingBatch : Agent
         try
         {
             _logger.Information("Archiving completed orders");
-                
+
             var orders = await _client.GetAsync<List<Order>>("api/orders");
             foreach (var order in orders)
             {

@@ -59,7 +59,10 @@ class RunCommand: Command
 
         try
         {
-            var builder = Host.CreateApplicationBuilder();
+            // Avoid creating masses of (inefficient) filesystem watchers on the CWD.
+            Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
+
+            var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
             builder.Services.AddSerilog();
             builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
             builder.Services.AddSingleton<McpSession>();

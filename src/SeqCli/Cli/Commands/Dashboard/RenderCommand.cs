@@ -58,7 +58,7 @@ class RenderCommand : Command
         _range = Enable<DateRangeFeature>();
         _signal = Enable<SignalExpressionFeature>();
         _timeout = Enable<TimeoutFeature>();
-        _output = Enable(new OutputFormatFeature(supportNative: true));
+        _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
         _connection = Enable<ConnectionFeature>();
     }

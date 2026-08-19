@@ -1,21 +1,23 @@
 {
   "$entity": "dashboard",
-  "OwnerId": arg("ownerId"),
+  "OwnerId": null,
   "Title": "HTTP Requests",
   "IsProtected": false,
   "SignalExpression": {
-    "SignalId": ref("signal-Sample Data.template"),
-    "Kind": "Signal"
+    "Kind": "Signal",
+    "SignalId": ref("signal-Sample Data.template")
   },
   "Charts": [
     {
       "Title": "Requests by Status Code",
       "SignalExpression": {
-        "SignalId": ref("signal-HTTP Requests.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(*)",
@@ -32,10 +34,10 @@
             "LineFillToZeroY": true,
             "LineShowMarkers": false,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -44,16 +46,19 @@
       "DisplayStyle": {
         "WidthColumns": 12,
         "HeightRows": 2
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "99th Percentile Response Time",
       "SignalExpression": {
-        "SignalId": ref("signal-HTTP Requests.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "Concat(ToJson(Round(percentile(Elapsed, 99), 0)), ' ms')",
@@ -68,10 +73,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -80,16 +85,19 @@
       "DisplayStyle": {
         "WidthColumns": 4,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Mean Response Time",
       "SignalExpression": {
-        "SignalId": ref("signal-HTTP Requests.template"),
-        "Kind": "Signal"
+        "Kind": "Signal",
+        "SignalId": ref("signal-HTTP Requests.template")
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "Concat(ToJson(Round(mean(Elapsed), 0)), ' ms')",
@@ -104,10 +112,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": false,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Default"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -116,23 +124,26 @@
       "DisplayStyle": {
         "WidthColumns": 4,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     },
     {
       "Title": "Internal Server Errors",
       "SignalExpression": {
         "Kind": "Intersection",
         "Left": {
-          "SignalId": ref("signal-HTTP Requests.template"),
-          "Kind": "Signal"
+          "Kind": "Signal",
+          "SignalId": ref("signal-HTTP Requests.template")
         },
         "Right": {
-          "SignalId": ref("signal-Internal Server Error.template"),
-          "Kind": "Signal"
+          "Kind": "Signal",
+          "SignalId": ref("signal-Internal Server Error.template")
         }
       },
       "Queries": [
         {
+          "DataSource": "Stream",
+          "Joins": [],
           "Measurements": [
             {
               "Value": "count(*)",
@@ -147,10 +158,10 @@
             "LineFillToZeroY": false,
             "LineShowMarkers": true,
             "BarOverlaySum": true,
+            "UseLogarithmicScale": false,
             "SuppressLegend": false,
             "Palette": "Reds"
           },
-          "Alerts": [],
           "Having": null,
           "OrderBy": [],
           "Limit": null
@@ -159,7 +170,8 @@
       "DisplayStyle": {
         "WidthColumns": 4,
         "HeightRows": 1
-      }
+      },
+      "Description": "Created by `seqcli sample setup`"
     }
   ]
 }

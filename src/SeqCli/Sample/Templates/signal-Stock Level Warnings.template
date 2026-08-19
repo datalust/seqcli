@@ -1,11 +1,10 @@
 {
   "$entity": "signal",
-  "OwnerId": arg("ownerId"),
   "Title": "Stock Level Warnings",
   "Description": "Created by `seqcli sample setup`",
   "Filters": [
     {
-      "Description": null,
+      "Description": "Created by `seqcli sample setup`",
       "DescriptionIsExcluded": false,
       "Filter": "@EventType in [4029526114, 1918830704]",
       "FilterNonStrict": "@EventType in [0xF02DB062, 0x725F0870]"
@@ -13,6 +12,8 @@
   ],
   "Columns": [],
   "IsProtected": false,
+  "IsIndexSuppressed": false,
   "Grouping": "Inferred",
-  "ExplicitGroupName": null
+  "ExplicitGroupName": null,
+  "OwnerId": null
 }

@@ -39,7 +39,7 @@ class Router : HttpServer
     public Router(IEnumerable<Controller> controllers, ILogger logger)
     {
         _logger = logger.ForContext<Router>();
-            
+
         _logger.Debug("Building route table from controller metadata");
 
         foreach (var controller in controllers)
@@ -53,7 +53,7 @@ class Router : HttpServer
                 var controllerName = controller.GetType().Name;
                 var actionName = method.Name;
                 var httpMethod = new HttpMethod(route!.Method.ToUpperInvariant());
-                    
+
                 var binding = new RouteBinding(
                     httpMethod,
                     route.Path,
@@ -63,13 +63,15 @@ class Router : HttpServer
                     {
                         using var _ = LogContext.PushProperty("Controller", controllerName);
                         using var __ = LogContext.PushProperty("Action", actionName);
-                        return (Task<HttpResponse>) method.Invoke(controller, [r])!;
+                        return (Task<HttpResponse>)method.Invoke(controller, [r])!;
                     });
-                    
-                _logger.Debug("Binding route HTTP {HttpMethod} {RouteTemplate} to action method {Controller}.{Action}()",
+
+                _logger.Debug(
+                    "Binding route HTTP {HttpMethod} {RouteTemplate} to action method {Controller}.{Action}()",
                     httpMethod, route.Path, binding.Controller, binding.Action);
 
-                var rx = new Regex("^" + route.Path.Replace("{id}", "[^/]+") + "$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                var rx = new Regex("^" + route.Path.Replace("{id}", "[^/]+") + "$",
+                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
                 _routes.Add((httpMethod, rx, binding));
             }
         }
