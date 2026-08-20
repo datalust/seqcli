@@ -53,6 +53,15 @@ public abstract partial class McpToolTestCase : ICliTestCase
         return result.Deserialize<T>(JsonSerializerOptions.Web)!;
     }
 
+    // For tools that construct `CallToolResult` directly, the top-level document is not wrapped
+    // in the SDK's `result` property.
+    protected static JsonElement AssertStructuredObjectResult(CallToolResult callToolResult)
+    {
+        AssertTextResult(callToolResult);
+        Assert.NotNull(callToolResult.StructuredContent);
+        return callToolResult.StructuredContent.Value;
+    }
+
     protected static string[] OrderedSearchResultIds(string searchResult)
     {
         return ResultIdRegex().Matches(searchResult).Select(m => m.Value).Distinct().ToArray();
