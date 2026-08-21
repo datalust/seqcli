@@ -16,10 +16,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using Seq.Api.Model.Signals;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Output;
+using SeqCli.Signals;
 using SeqCli.Util;
 using Serilog;
 
@@ -40,7 +42,7 @@ class SearchCommand : Command
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
-    bool _trace, _noWebSockets;
+    bool _trace, _noWebSockets, _noSignalColumns;
 
     public SearchCommand()
     {
@@ -48,6 +50,7 @@ class SearchCommand : Command
             "f=|filter=",
             "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
             v => _filter = v);
+        
         Options.Add(
             "c=|count=",
             $"The maximum number of events to retrieve; the default is {_count}",
@@ -56,7 +59,7 @@ class SearchCommand : Command
         Options.Add(
             "column=",
             "A column to display preceding each event's message; any Seq expression can be supplied, for " +
-            "example `OrderId`, `@SpanKind`, or `@Resource['service.name']`; this argument can be used multiple " +
+            "example `OrderId`, `@SpanKind`, or `@Resource.service.name`; this argument can be used multiple " +
             "times, adding columns in order; applies to plain-text output only",
             c => _columns.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Columns require a value.")));
 
@@ -74,6 +77,8 @@ class SearchCommand : Command
 
         Options.Add("no-websockets", "Do not use WebSocket-driven streaming searches", _ => _noWebSockets = true);
 
+        Options.Add("no-signal-columns", "Do not show columns associated with the specified signal expression", _ => _noSignalColumns = true);
+
         _connection = Enable<ConnectionFeature>();
     }
 
@@ -83,16 +88,32 @@ class SearchCommand : Command
         {
             var config = RuntimeConfigurationLoader.Load(_storagePath);
 
+            var connection = SeqConnectionFactory.Connect(_connection, config);
+            connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
+
+            var collectedColumns = new List<string>();
+            if (!_noSignalColumns && _signal.Signal is { } signalExpression)
+            {
+                foreach (var signalId in signalExpression.ReferencedSignalIds())
+                {
+                    var signal = await connection.Signals.FindAsync(signalId);
+                    foreach (var column in signal.Columns)
+                    {
+                        collectedColumns.Add(column.Expression);
+                    }
+                }
+            }
+
+            collectedColumns.AddRange(_columns);
+            
             EventColumns? columns = null;
-            if (_columns.Count > 0 && !EventColumns.TryCreate(_columns, out columns, out var error))
+            if (collectedColumns.Count > 0 && !EventColumns.TryCreate(collectedColumns, out columns, out var error))
             {
                 Log.Error("The column expression could not be compiled: {Error}", error);
                 return 1;
             }
 
             var output = _output.GetOutputFormat(config, columns?.OutputTemplate(), columns);
-            var connection = SeqConnectionFactory.Connect(_connection, config);
-            connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
             string? filter = null;
             if (!string.IsNullOrWhiteSpace(_filter))
