@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using SeqCli.Config;
+using SeqCli.Data;
 using SeqCli.Output;
 
 namespace SeqCli.Cli.Features;
@@ -26,9 +27,9 @@ class OutputFormatFeature(bool supportNative, bool supportJson) : CommandFeature
     public OutputFormatFeature()
         : this(supportNative: false, supportJson: true) { }
 
-    public OutputFormat GetOutputFormat(SeqCliConfig config, string? outputTemplate = null)
+    public OutputFormat GetOutputFormat(SeqCliConfig config, string? outputTemplate = null, IEventEnricher? textEnricher = null)
     {
-        return new OutputFormat(_syntax, _noColor, _forceColor, config.Output, outputTemplate);
+        return new OutputFormat(_syntax, _noColor, _forceColor, config.Output, outputTemplate, textEnricher);
     }
 
     public string JsonArgumentHelp { get; init; } = "Print output in newline-delimited JSON (the default is plain text)";

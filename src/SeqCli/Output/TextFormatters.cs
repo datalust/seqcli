@@ -32,12 +32,13 @@ static class TextFormatters
 
     // Guarding on `@Elapsed` rather than the built-in `IsSpan()` shows elapsed time for any
     // event carrying a span start timestamp, whether or not trace and span ids accompany it.
-    static readonly string DefaultPlainTextOutputTemplate =
-        "[{@Timestamp:o} {@Level:u3}] {@Message}{#if @Elapsed is not null} ({TotalMilliseconds(@Elapsed):0.###} ms){#end}" +
+    internal static string PlainOutputTemplate(int columnCount = 0) =>
+        "[{@Timestamp:o} {@Level:u3}] " + EventColumns.TemplateColumnsFragment(columnCount) +
+        "{@Message}{#if @Elapsed is not null} ({TotalMilliseconds(@Elapsed):0.###} ms){#end}" +
         Environment.NewLine + "{@Exception}";
 
     public static ExpressionTemplate Plain(TemplateTheme? theme, string? outputTemplate) =>
-        SeqSyntax.ParseTemplate(outputTemplate ?? DefaultPlainTextOutputTemplate, Encoder(theme));
+        SeqSyntax.ParseTemplate(outputTemplate ?? PlainOutputTemplate(), Encoder(theme));
 
     static TemplateOutputEncoder? Encoder(TemplateTheme? theme) =>
         theme != null ? TemplateOutputEncoder.Ansi(theme) : null;

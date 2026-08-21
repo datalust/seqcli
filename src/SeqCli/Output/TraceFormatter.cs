@@ -27,25 +27,14 @@ static class TraceFormatter
 {
     static readonly string TreePrefixProperty = $"_SeqcliTraceTreePrefix_{Guid.NewGuid():N}";
     static readonly string ElapsedProperty = $"_SeqcliTraceElapsed_{Guid.NewGuid():N}";
-    static readonly string ColumnPrefixProperty = $"_SeqcliTraceColumn_{Guid.NewGuid():N}";
 
     const string SpanConnector = "├─ ", LastSpanConnector = "└─ ", LogConnector = "┊  ",
         Continuation = "│  ", Gap = "   ";
 
-    static string ColumnPropertyName(int index) => $"{ColumnPrefixProperty}_{index}";
-
     public static string OutputTemplate(int columnCount)
     {
         var template = new StringBuilder($"[{{@Timestamp:o}} {{@Level:u3}}] {{{TreePrefixProperty}}}");
-
-        // `<> ''` is undefined, and hence falsy, when the property is missing; the guard thus
-        // drops the column, and its trailing space, for both missing and empty values.
-        for (var i = 0; i < columnCount; ++i)
-        {
-            var column = ColumnPropertyName(i);
-            template.Append($"{{#if {column} <> ''}}{{{column}}} {{#end}}");
-        }
-
+        template.Append(EventColumns.TemplateColumnsFragment(columnCount));
         template.Append($"{{@Message}}{{#if {ElapsedProperty} is not null}} ({{TotalMilliseconds({ElapsedProperty}):0.###}} ms){{#end}}");
         template.Append(Environment.NewLine).Append("{@Exception}");
         return template.ToString();
@@ -106,7 +95,7 @@ static class TraceFormatter
         for (var i = 0; i < evt.Columns.Count; ++i)
         {
             if (evt.Columns[i] is { } value)
-                eventJson[ColumnPropertyName(i)] = ToSystemTextJson.FromApiValue(value);
+                eventJson[EventColumns.ColumnPropertyName(i)] = ToSystemTextJson.FromApiValue(value);
         }
 
         return eventJson;

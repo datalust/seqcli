@@ -29,6 +29,7 @@ using Seq.Syntax.Templates.Themes;
 using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Csv;
+using SeqCli.Data;
 
 namespace SeqCli.Output;
 
@@ -39,6 +40,7 @@ sealed class OutputFormat
 
     readonly OutputSyntax _syntax;
     readonly ExpressionTemplate? _eventFormatter;
+    readonly IEventEnricher? _textEnricher;
     readonly ExpressionTemplate _jsonValueFormatter;
 
     readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
@@ -55,13 +57,15 @@ sealed class OutputFormat
         bool? noColor,
         bool? forceColor,
         SeqCliOutputConfig outputConfig,
-        string? plainTextTemplate = null)
+        string? plainTextTemplate = null,
+        IEventEnricher? textEnricher = null)
         : this(
             syntax,
             noColor,
             forceColor,
             outputConfig,
             plainTextTemplate,
+            textEnricher,
             noColorSetInEnvironment: NoColorSetInEnvironment(),
             outputIsRedirected: Console.IsOutputRedirected,
             allowAnsiEscapes: TerminalFeatures.TryEnableAnsiEscapes())
@@ -73,6 +77,7 @@ sealed class OutputFormat
     /// <param name="forceColor">The value of <c>--force-color</c>, if specified.</param>
     /// <param name="outputConfig">Configured output defaults.</param>
     /// <param name="plainTextTemplate">The template controlling plain-text formatting, or <c>null</c> for the default.</param>
+    /// <param name="textEnricher">An enricher applied to events written as plain text, or <c>null</c>.</param>
     /// <param name="noColorSetInEnvironment">Whether <c>NO_COLOR</c> is set; see <see cref="NoColorSetInEnvironment"/>.</param>
     /// <param name="outputIsRedirected">Whether <c>STDOUT</c> is redirected, i.e. not attached to a terminal.</param>
     /// <param name="allowAnsiEscapes">Whether ANSI escape sequences are allowed; generally <c>false</c> for interactive
@@ -83,11 +88,15 @@ sealed class OutputFormat
         bool? forceColor,
         SeqCliOutputConfig outputConfig,
         string? plainTextTemplate,
+        IEventEnricher? textEnricher,
         bool noColorSetInEnvironment,
         bool outputIsRedirected,
         bool allowAnsiEscapes)
     {
         _syntax = syntax;
+
+        // Enrichment supports plain-text templates, so JSON output shows events verbatim.
+        _textEnricher = Text ? textEnricher : null;
 
         var resolvedNoColor = ResolveNoColor(noColor, forceColor, outputConfig, noColorSetInEnvironment, allowAnsiEscapes);
         var applyThemeToRedirectedOutput = !resolvedNoColor && (forceColor ?? outputConfig.ForceColor);
@@ -237,6 +246,7 @@ sealed class OutputFormat
 
     public void WriteEvent(JsonObject eventJson)
     {
+        _textEnricher?.Enrich(eventJson);
         _eventFormatter?.Format(eventJson, Console.Out);
     }
 

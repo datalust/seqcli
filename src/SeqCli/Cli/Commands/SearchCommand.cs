@@ -13,11 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
+using SeqCli.Util;
 using Serilog;
 
 // ReSharper disable UnusedType.Global
@@ -33,6 +36,7 @@ class SearchCommand : Command
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
     readonly StoragePathFeature _storagePath;
+    readonly List<string> _columns = [];
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
@@ -48,6 +52,13 @@ class SearchCommand : Command
             "c=|count=",
             $"The maximum number of events to retrieve; the default is {_count}",
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
+
+        Options.Add(
+            "column=",
+            "A column to display preceding each event's message; any Seq expression can be supplied, for " +
+            "example `OrderId`, `@SpanKind`, or `@Resource['service.name']`; this argument can be used multiple " +
+            "times, adding columns in order; applies to plain-text output only",
+            c => _columns.Add(ArgumentString.Normalize(c) ?? throw new ArgumentException("Columns require a value.")));
 
         _range = Enable<DateRangeFeature>();
         _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
@@ -71,7 +82,15 @@ class SearchCommand : Command
         try
         {
             var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var output = _output.GetOutputFormat(config);
+
+            EventColumns? columns = null;
+            if (_columns.Count > 0 && !EventColumns.TryCreate(_columns, out columns, out var error))
+            {
+                Log.Error("The column expression could not be compiled: {Error}", error);
+                return 1;
+            }
+
+            var output = _output.GetOutputFormat(config, columns?.OutputTemplate(), columns);
             var connection = SeqConnectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
