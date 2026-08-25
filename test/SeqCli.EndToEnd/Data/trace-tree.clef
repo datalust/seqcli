@@ -1,0 +1,6 @@
+{"@t":"2023-12-20T00:50:01Z","@st":"2023-12-20T00:50:00Z","@tr":"7d4dedcc73b18e449e0e4ea08cbe346d","@sp":"1111111111111111","@mt":"GET {Route}","Route":"/orders","Customer":"scott"}
+{"@t":"2023-12-20T00:50:00.4Z","@st":"2023-12-20T00:50:00.1Z","@tr":"7d4dedcc73b18e449e0e4ea08cbe346d","@sp":"2222222222222222","@ps":"1111111111111111","@m":"Query orders"}
+{"@t":"2023-12-20T00:50:00.3Z","@st":"2023-12-20T00:50:00.15Z","@tr":"7d4dedcc73b18e449e0e4ea08cbe346d","@sp":"3333333333333333","@ps":"2222222222222222","@m":"SELECT * FROM orders","@x":"System.InvalidOperationException: The database connection was lost"}
+{"@t":"2023-12-20T00:50:00.2Z","@l":"Warning","@tr":"7d4dedcc73b18e449e0e4ea08cbe346d","@sp":"2222222222222222","@mt":"{RowCount} rows retrieved","RowCount":42,"@x":"System.TimeoutException: The query timeout was reached"}
+{"@t":"2023-12-20T00:50:00.9Z","@st":"2023-12-20T00:50:00.5Z","@tr":"7d4dedcc73b18e449e0e4ea08cbe346d","@sp":"4444444444444444","@ps":"1111111111111111","@m":"Render response"}
+{"@t":"2023-12-20T00:50:00.95Z","@tr":"7d4dedcc73b18e449e0e4ea08cbe346d","@sp":"9999999999999999","@m":"Orphan log"}

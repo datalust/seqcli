@@ -31,13 +31,15 @@ class OutputFormatFeature(bool supportNative, bool supportJson) : CommandFeature
         return new OutputFormat(_syntax, _noColor, _forceColor, config.Output, outputTemplate);
     }
 
+    public string JsonArgumentHelp { get; init; } = "Print output in newline-delimited JSON (the default is plain text)";
+
     public override void Enable(OptionSet options)
     {
         if (supportJson)
         {
             options.Add(
                 "json",
-                "Print output in newline-delimited JSON (the default is plain text)",
+                JsonArgumentHelp,
                 _ => _syntax = OutputSyntax.Json);
         }
         

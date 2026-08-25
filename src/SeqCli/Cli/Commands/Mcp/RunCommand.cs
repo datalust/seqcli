@@ -24,6 +24,7 @@ using SeqCli.Mcp.Tools.Metrics;
 using SeqCli.Mcp.Tools.Query;
 using SeqCli.Mcp.Tools.Search;
 using SeqCli.Mcp.Tools.Signals;
+using SeqCli.Mcp.Tools.Traces;
 using Serilog;
 
 namespace SeqCli.Cli.Commands.Mcp;
@@ -59,7 +60,10 @@ class RunCommand: Command
 
         try
         {
-            var builder = Host.CreateApplicationBuilder();
+            // Avoid creating masses of (inefficient) filesystem watchers on the CWD.
+            Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
+
+            var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
             builder.Services.AddSerilog();
             builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
             builder.Services.AddSingleton<McpSession>();
@@ -70,7 +74,8 @@ class RunCommand: Command
                     typeof(SearchTools),
                     typeof(MetricsTools),
                     typeof(QueryTools),
-                    typeof(SignalTools)
+                    typeof(SignalTools),
+                    typeof(TraceTools)
                 ]);
 
             await builder.Build().RunAsync();

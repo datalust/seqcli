@@ -35,7 +35,7 @@ class InstallCommand : Command
 
         Options.Add(
             "a=|agent=",
-            "The agent name to install the MCP server for; the default is the generic name `agents`",
+            "The agent name to install the MCP server for; the default is the generic name `agents` - known values are: claude, windsurf, vscode, copilot, qwen, gemini, zed, amazonq, and roo",
             t => _agent = ArgumentString.Normalize(t));
 
         Options.Add(

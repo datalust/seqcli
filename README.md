@@ -1,6 +1,8 @@
 # `seqcli` [![CI](https://github.com/datalust/seqcli/actions/workflows/ci.yml/badge.svg?branch=dev&event=push)](https://github.com/datalust/seqcli/actions/workflows/ci.yml) [![GitHub release](https://img.shields.io/github/release/datalust/seqcli.svg)](https://github.com/datalust/seqcli/releases)
 
-The [Seq](https://datalust.co/seq) client command-line app. Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`), and [much more](https://github.com/datalust/seqcli#commands).
+The [Seq](https://datalust.co/seq) command-line interface for Seq users and AI agents. 
+
+Supports logging (`seqcli log`), searching (`search`), tailing (`tail`), querying (`query`) and [JSON or plain-text log file](https://github.com/serilog/serilog-formatting-compact) ingestion (`ingest`), and [much more](https://github.com/datalust/seqcli#commands).
 
 ![SeqCli Screenshot](https://raw.githubusercontent.com/datalust/seqcli/dev/asset/SeqCli.png)
 
@@ -60,25 +62,23 @@ $token = (
 
 ### MCP and agent skills
 
-`seqcli` includes support for agent-driven diagnostic workflows:
-
-```
-dotnet tool install -g seqcli
-```
+AI agents use `seqcli` to access Seq. Installing the `seqcli` skills and MCP server makes AI agents faster, more successful and more efficient.
 
 For skill installation:
 
 ```
-seqcli skills install -a <agent> [--global]
+seqcli skills install --agent <agent> [--global]
 ```
 
 For local MCP server installation:
 
 ```
-seqcli mcp install -a <agent> [--global]
+seqcli mcp install --agent <agent> [--profile <profile>] [--global]
 ```
 
 Credentials are set using configuration and environment variables as described above.
+
+Upon running the AI agent verify that the skills and MCP server have been detected. If not, consult the agent's documentation for skill and MCP server installation. 
 
 ## Contributing
 
@@ -216,6 +216,7 @@ Available commands:
  - `template`
    - [`template export`](#template-export) &mdash; Export entities into template files.
    - [`template import`](#template-import) &mdash; Import entities from template files.
+ - [`trace`](#trace) &mdash; Display a trace as a tree of spans.
  - `user`
    - [`user create`](#user-create) &mdash; Create a user.
    - [`user list`](#user-list) &mdash; List users.
@@ -1683,6 +1684,31 @@ seqcli template import -i ./Templates
 | `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
 |       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 |       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+
+### `trace`
+
+Display a trace as a tree of spans.
+
+Example:
+
+```
+seqcli trace -i 7d4dedcc73b18e449e0e4ea08cbe346d --logs
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `-i`, `--id=VALUE` | The id of the trace to display |
+|       `--span-id=VALUE` | The id of a span within the trace; when specified, only the subtree rooted at this span is shown |
+|       `--column=VALUE` | A column to display preceding each event's message; any Seq expression can be supplied, for example `OrderId`, `@SpanKind`, or `@Resource.service.name`; this argument can be used multiple times, adding columns in order |
+|       `--logs` | Include log events in the trace, in addition to spans |
+|       `--exceptions` | Include exception details, where present |
+|       `--json` | Print the trace as a single JSON document, with spans and log events nested under their parents (the default is plain text) |
+|       `--no-color` | Don't colorize text output |
+|       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |
+|       `--storage=VALUE` | The folder where `SeqCli.json` and other data will be stored; falls back to `SEQCLI_STORAGE_PATH` from the environment, then the `seqcli forwarder` service's configured storage path (Windows only), then the current user's home directory |
+| `-s`, `--server=VALUE` | The URL of the Seq server; by default the `connection.serverUrl` config value will be used |
+| `-a`, `--apikey=VALUE` | The API key to use when connecting to the server; by default the `connection.apiKey` config value will be used |
+|       `--profile=VALUE` | A connection profile to use; by default the `connection.serverUrl` and `connection.apiKey` config values will be used |
 
 ### `user create`
 

@@ -42,7 +42,7 @@ sealed class OutputFormat
     const string NoColorEnvironmentVariable = "NO_COLOR";
     
     readonly OutputSyntax _syntax;
-    readonly string? _outputTemplate;
+    readonly string? _plainTextTemplate;
     readonly Logger _formatter;
 
     readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
@@ -59,13 +59,13 @@ sealed class OutputFormat
         bool? noColor,
         bool? forceColor,
         SeqCliOutputConfig outputConfig,
-        string? outputTemplate = null)
+        string? plainTextTemplate = null)
         : this(
             syntax,
             noColor,
             forceColor,
             outputConfig,
-            outputTemplate,
+            plainTextTemplate,
             noColorSetInEnvironment: NoColorSetInEnvironment(),
             outputIsRedirected: Console.IsOutputRedirected,
             allowAnsiEscapes: TerminalFeatures.TryEnableAnsiEscapes())
@@ -76,7 +76,7 @@ sealed class OutputFormat
     /// <param name="noColor">The value of <c>--no-color</c>, if specified.</param>
     /// <param name="forceColor">The value of <c>--force-color</c>, if specified.</param>
     /// <param name="outputConfig">Configured output defaults.</param>
-    /// <param name="outputTemplate">The template controlling plain-text formatting, or <c>null</c> for the default.</param>
+    /// <param name="plainTextTemplate">The template controlling plain-text formatting, or <c>null</c> for the default.</param>
     /// <param name="noColorSetInEnvironment">Whether <c>NO_COLOR</c> is set; see <see cref="NoColorSetInEnvironment"/>.</param>
     /// <param name="outputIsRedirected">Whether <c>STDOUT</c> is redirected, i.e. not attached to a terminal.</param>
     /// <param name="allowAnsiEscapes">Whether ANSI escape sequences are allowed; generally <c>false</c> for interactive
@@ -86,13 +86,13 @@ sealed class OutputFormat
         bool? noColor,
         bool? forceColor,
         SeqCliOutputConfig outputConfig,
-        string? outputTemplate,
+        string? plainTextTemplate,
         bool noColorSetInEnvironment,
         bool outputIsRedirected,
         bool allowAnsiEscapes)
     {
         _syntax = syntax;
-        _outputTemplate = outputTemplate;
+        _plainTextTemplate = plainTextTemplate;
 
         var resolvedNoColor = ResolveNoColor(noColor, forceColor, outputConfig, noColorSetInEnvironment, allowAnsiEscapes);
         var applyThemeToRedirectedOutput = !resolvedNoColor && (forceColor ?? outputConfig.ForceColor);
@@ -147,7 +147,7 @@ sealed class OutputFormat
         }
         else if (Text)
         {
-            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _outputTemplate));
+            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _plainTextTemplate));
         }
         
         // The logger is not configured for Native output, which avoids it. Ideally we'll shift away from using
@@ -257,7 +257,18 @@ sealed class OutputFormat
         }
         else
         {
-            WriteLogEvent(ToSerilogEvent(evt));
+            var serilogEvent = ToSerilogEvent(evt);
+
+            if (Text)
+            {
+                // Add flattened versions of structured properties that are referenced using dotted-name syntax in
+                // message templates, e.g. <c>{user.name}</c>. Serilog.Expressions template rendering doesn't otherwise
+                // support these. In text output mode, these aren't usually observable, though
+                // <c>seqcli print --template="{@p}"</c> will make them visible.
+                FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+            }
+
+            WriteLogEvent(serilogEvent);
         }
     }
 
@@ -305,6 +316,32 @@ sealed class OutputFormat
         return serilogEvent;
     }
 
+    public static void FlattenPropertiesUsedWithDottedNames(EventEntity evt, LogEvent serilogEvent)
+    {
+        foreach (var token in evt.MessageTemplateTokens)
+        {
+            if (token.Text != null || token.PropertyName is not { } name || !name.Contains('.') ||
+                serilogEvent.Properties.ContainsKey(name))
+            {
+                continue;
+            }
+
+            var steps = name.Split('.');
+            var value = evt.Properties.FirstOrDefault(p => p.Name == steps[0])?.Value;
+            for (var i = 1; i < steps.Length; ++i)
+            {
+                value = (value as JObject)?.GetValue(steps[i]);
+            }
+
+            if (value is JToken resolved)
+            {
+                // Existing flat-named properties, where present, win.
+                serilogEvent.AddPropertyIfAbsent(LogEventPropertyFactory.SafeCreate(
+                    name, resolved is JValue scalar ? new ScalarValue(scalar.Value) : CreatePropertyValue(resolved)));
+            }
+        }
+    }
+
     static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
     {
         // Not ideal, we lose renderings, alignment etc. here.
@@ -319,7 +356,7 @@ sealed class OutputFormat
         return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
     }
 
-    static LogEventPropertyValue CreatePropertyValue(object value)
+    internal static LogEventPropertyValue CreatePropertyValue(object value)
     {
         switch (value)
         {

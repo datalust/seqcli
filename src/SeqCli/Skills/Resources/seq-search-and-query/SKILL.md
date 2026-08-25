@@ -300,29 +300,15 @@ order by service
 
 ## Tracing Tactics
 
-Reconstruct a trace in execution (start-time) order:
-
-```
-select
-   @SpanId as span_id,
-   @ParentId as parent_id,
-   @Resource.service.name as service,
-   @Message as span_name,
-   @SpanKind as kind,
-   @Start as start,                    -- raw ticks — order by THIS column
-   ToIsoString(@Start) as start_iso,   -- readable copy, for display only
-   TotalMilliseconds(@Elapsed) as ms
-from stream
-where @TraceId = '0af7651916cd43dd8448eb211c80319c' and Has(@Start)
-order by start asc
-limit 1000 -- traces can be large; if the result looks truncated, raise this
-```
-
-This orders rows by start time; it does NOT build the hierarchy. The call tree is assembled from `parent_id` (each row's 
-`@ParentId` = its parent's `@SpanId`; the root's is null).
-
-Note that you'll need to use the "retrieve a specific trace span" search recipe to see more about a span appearing in
-these results.
+* Find traces by searching for their included spans.
+* To reconstruct a trace as a call tree, use the `seq_load_trace` MCP tool, or run `seqcli trace -i <traceid>`.
+* Project additional Seq expressions per span with `columns` (CLI: repeated `--column`), for example
+  `@Resource.service.name` or `@SpanKind`; values appear in each node's `columns` object, keyed by expression.
+* On large traces, pass `span_id` (CLI: `--span-id`) to retrieve only the subtree rooted at one span.
+* If `complete` is `false`, the trace was truncated at the retrieval limit.
+* Log events recorded during a span are not included by `seq_load_trace`; find them by searching with
+  `@TraceId = '...' and @SpanId = '...' and not Has(@Start)` (CLI: pass `--logs`).
+* To see all properties of a single span, use the "retrieve a specific trace span" search recipe above.
 
 Rank services by span latency over a window:
 
