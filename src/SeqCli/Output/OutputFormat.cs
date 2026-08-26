@@ -170,7 +170,6 @@ sealed class OutputFormat
                 
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
-                // The default limit truncates deeply-nested documents, such as trace trees.
                 .Destructure.ToMaximumDepth(10000)
                 .Enrich.With<StripStructureTypeEnricher>()
                 .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
@@ -202,7 +201,6 @@ sealed class OutputFormat
 
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
-                // The default limit truncates deeply-nested documents, such as trace trees.
                 .Destructure.ToMaximumDepth(10000)
                 .Enrich.With<StripStructureTypeEnricher>()
                 .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
