@@ -100,13 +100,11 @@ public class TraceShowTestCase : ICliTestCase
             ["SELECT * FROM orders", "42 rows retrieved"],
             ((JArray)query["children"]!).Select(c => (string)c["message"]!).ToArray());
 
-        // Deeply-nested spans must survive JSON serialization; the tree is six spans deep here.
         var node = root;
-        foreach (var message in new[] { "Render response", "Serialize model", "Serialize order", "Format currency", "Lookup locale" })
+        foreach (var message in ["Render response", "Serialize model", "Serialize order", "Format currency", "Lookup locale"])
         {
-            var children = node["children"] as JArray;
-            Assert.True(children != null, $"Expected children under `{(string?)node["message"]}` in: {runner.LastRunProcess!.Output}");
-            node = (JObject)children!.Single(c => (string?)c["message"] == message);
+            var children = Assert.IsType<JArray>(node["children"]);
+            node = (JObject)children.Single(c => (string?)c["message"] == message);
         }
 
         Assert.Equal("8888888888888888", (string?)node["spanId"]);
