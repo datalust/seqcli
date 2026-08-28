@@ -170,6 +170,7 @@ sealed class OutputFormat
                 
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
+                .Destructure.ToMaximumDepth(10000)
                 .Enrich.With<StripStructureTypeEnricher>()
                 .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
                 .CreateLogger();
@@ -200,6 +201,7 @@ sealed class OutputFormat
 
             var writer = new LoggerConfiguration()
                 .Destructure.With<JsonNetDestructuringPolicy>()
+                .Destructure.ToMaximumDepth(10000)
                 .Enrich.With<StripStructureTypeEnricher>()
                 .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
                 .CreateLogger();
