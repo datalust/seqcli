@@ -21,9 +21,8 @@ using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
+using SeqCli.Syntax;
 using Serilog;
-using Serilog.Formatting;
-using Serilog.Templates;
 
 namespace SeqCli.Forwarder;
 
@@ -68,17 +67,17 @@ class ForwarderModule : Module
             Log.ForContext<ForwarderModule>().Warning("Configured to expose ingestion log via HTTP API");
             builder.RegisterType<IngestionLogEndpoints>().As<IMapEndpoints>();
 
-            var ingestionLogTemplate = $"[{{@t:o}} {{@l:u3}}] {{@m}}{Environment.NewLine}";
+            var ingestionLogTemplate = $"[{{@Timestamp:o}} {{@Level:u3}}] {{@Message}}{Environment.NewLine}";
             if (_config.Forwarder.Diagnostics.IngestionLogShowDetail)
             {
                 Log.ForContext<ForwarderModule>().Warning("Including full client, payload, and error detail in the ingestion log");
                 ingestionLogTemplate +=
                     $"{{#if ClientHostIP is not null}}Client IP address: {{ClientHostIP}}{Environment.NewLine}{{#end}}" +
                     $"{{#if DocumentStart is not null}}First {{StartToLog}} characters of payload: {{DocumentStart:l}}{Environment.NewLine}{{#end}}" +
-                    "{@x}";
+                    "{@Exception}";
             }
             
-            builder.Register(_ => new ExpressionTemplate(ingestionLogTemplate)).As<ITextFormatter>();
+            builder.Register(_ => SeqSyntax.ParseTemplate(ingestionLogTemplate));
         }
 
         builder.Register(c =>

@@ -16,17 +16,18 @@ using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Seq.Syntax.Templates;
 using SeqCli.Forwarder.Diagnostics;
-using Serilog.Formatting;
+using SeqCli.Ingestion;
 
 namespace SeqCli.Forwarder.Web.Api;
 
 class IngestionLogEndpoints : IMapEndpoints
 {
-    readonly ITextFormatter _formatter;
+    readonly ExpressionTemplate _formatter;
     readonly Encoding _utf8 = new UTF8Encoding(false);
 
-    public IngestionLogEndpoints(ITextFormatter formatter)
+    public IngestionLogEndpoints(ExpressionTemplate formatter)
     {
         _formatter = formatter;
     }
@@ -45,7 +46,7 @@ class IngestionLogEndpoints : IMapEndpoints
             using var log = new StringWriter();
             foreach (var logEvent in events)
             {
-                _formatter.Format(logEvent, log);
+                _formatter.Format(SerilogEventJson.ToEventJson(logEvent), log);
             }
 
             return Results.Content(log.ToString(), "text/plain", _utf8);

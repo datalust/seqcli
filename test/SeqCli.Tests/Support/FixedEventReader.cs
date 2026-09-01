@@ -3,11 +3,11 @@ using SeqCli.Ingestion;
 
 namespace SeqCli.Tests.Support;
 
-class FixedLogEventReader : ILogEventReader
+class FixedEventReader : IEventReader
 {
     readonly ReadResult _result;
 
-    public FixedLogEventReader(ReadResult result)
+    public FixedEventReader(ReadResult result)
     {
         _result = result;
     }

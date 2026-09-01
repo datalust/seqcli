@@ -1,15 +1,20 @@
-﻿using Serilog.Events;
+using System.Text.Json.Nodes;
 
 namespace SeqCli.Ingestion;
 
 readonly struct ReadResult
 {
-    public LogEvent? LogEvent { get; }
+    /// <summary>
+    /// The event, as a JSON document in Seq's emission schema, or <c>null</c> if no event
+    /// is available.
+    /// </summary>
+    public JsonObject? Document { get; }
+
     public bool IsAtEnd { get; }
 
-    public ReadResult(LogEvent? logEvent, bool isAtEnd)
+    public ReadResult(JsonObject? document, bool isAtEnd)
     {
-        LogEvent = logEvent;
+        Document = document;
         IsAtEnd = isAtEnd;
     }
 }

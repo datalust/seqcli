@@ -14,11 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
-using SeqCli.Mapping;
+using System.Text.Json.Nodes;
 using SeqCli.Traces;
 using SeqCli.Util;
-using Serilog.Events;
 
 namespace SeqCli.Output;
 
@@ -35,7 +35,7 @@ static class TraceFormatter
 
     public static string OutputTemplate(int columnCount)
     {
-        var template = new StringBuilder($"[{{@t:o}} {{@l:u3}}] {{{TreePrefixProperty}}}");
+        var template = new StringBuilder($"[{{@Timestamp:o}} {{@Level:u3}}] {{{TreePrefixProperty}}}");
 
         // `<> ''` is undefined, and hence falsy, when the property is missing; the guard thus
         // drops the column, and its trailing space, for both missing and empty values.
@@ -45,22 +45,22 @@ static class TraceFormatter
             template.Append($"{{#if {column} <> ''}}{{{column}}} {{#end}}");
         }
 
-        template.Append($"{{@m}}{{#if {ElapsedProperty} is not null}} ({{Milliseconds({ElapsedProperty}):0.###}} ms){{#end}}");
-        template.Append(Environment.NewLine).Append("{@x}");
+        template.Append($"{{@Message}}{{#if {ElapsedProperty} is not null}} ({{TotalMilliseconds({ElapsedProperty}):0.###}} ms){{#end}}");
+        template.Append(Environment.NewLine).Append("{@Exception}");
         return template.ToString();
     }
 
-    public static IEnumerable<LogEvent> ToLogEvents(IReadOnlyList<TraceTreeNode> roots)
+    public static IEnumerable<JsonObject> ToEventJson(IReadOnlyList<TraceTreeNode> roots)
     {
         foreach (var root in roots)
         {
-            yield return ToLogEvent(root, root.Element.IsSpan ? "" : LogConnector);
+            yield return ToEventJson(root, root.Element.IsSpan ? "" : LogConnector);
             foreach (var descendant in WalkChildren(root, ""))
                 yield return descendant;
         }
     }
 
-    static IEnumerable<LogEvent> WalkChildren(TraceTreeNode parent, string indent)
+    static IEnumerable<JsonObject> WalkChildren(TraceTreeNode parent, string indent)
     {
         for (var i = 0; i < parent.Children.Count; ++i)
         {
@@ -71,40 +71,43 @@ static class TraceFormatter
                 isLast ? LastSpanConnector : SpanConnector :
                 LogConnector;
 
-            yield return ToLogEvent(child, indent + connector);
+            yield return ToEventJson(child, indent + connector);
 
             foreach (var descendant in WalkChildren(child, indent + (isLast ? Gap : Continuation)))
                 yield return descendant;
         }
     }
 
-    static LogEvent ToLogEvent(TraceTreeNode treeNode, string treePrefix)
+    static JsonObject ToEventJson(TraceTreeNode treeNode, string treePrefix)
     {
         var evt = treeNode.Element;
 
-        var properties = new List<LogEventProperty>
+        // Spans are positioned and shown at their start time.
+        var eventJson = new JsonObject
         {
-            new(TreePrefixProperty, new ScalarValue(treePrefix))
+            ["@t"] = evt.SortKey.ToLocalTime().ToString("o", CultureInfo.InvariantCulture),
+            ["@mt"] = evt.MessageTemplate,
+            [TreePrefixProperty] = treePrefix
         };
 
-        properties.AddRange(evt.TemplateProperties);
+        if (!string.IsNullOrEmpty(evt.Level))
+            eventJson["@l"] = evt.Level;
+
+        if (!string.IsNullOrWhiteSpace(evt.Exception))
+            eventJson["@x"] = evt.Exception;
+
+        foreach (var (name, value) in evt.TemplateProperties)
+            eventJson[name] = value?.DeepClone();
 
         if (evt.Elapsed is { } elapsed)
-            properties.Add(new(ElapsedProperty, new ScalarValue(elapsed)));
+            eventJson[ElapsedProperty] = elapsed.ToString("c", CultureInfo.InvariantCulture);
 
         for (var i = 0; i < evt.Columns.Count; ++i)
         {
             if (evt.Columns[i] is { } value)
-                properties.Add(LogEventPropertyFactory.SafeCreate(
-                    ColumnPropertyName(i), OutputFormat.CreatePropertyValue(value)));
+                eventJson[ColumnPropertyName(i)] = JsonNodes.FromApiValue(value);
         }
 
-        // Spans are positioned and shown at their start time.
-        return new LogEvent(
-            evt.SortKey.ToLocalTime(),
-            LevelMapping.ToSerilogLevel(evt.Level ?? ""),
-            string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
-            evt.MessageTemplate,
-            properties);
+        return eventJson;
     }
 }

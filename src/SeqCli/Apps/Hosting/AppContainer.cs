@@ -21,7 +21,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
-using SeqCli.Mapping;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
@@ -143,7 +142,7 @@ partial class AppContainer : IAppHost, IDisposable
         if (jobject.TryGetValue("@l", out var levelToken))
         {
             jobject.Remove("@l");
-            jobject.Add("@l", new JValue(LevelMapping.ToSerilogLevel(levelToken.Value<string>()!).ToString()));
+            jobject.Add("@l", new JValue(SerilogLevelMapping.ToSerilogLevel(levelToken.Value<string>()!).ToString()));
         }
 
         SanitizeTraceIdentifiers(jobject);

@@ -10,14 +10,14 @@ using SeqCli.PlainText.Patterns;
 
 namespace SeqCli.PlainText;
 
-class PlainTextLogEventReader : ILogEventReader
+class PlainTextEventReader : IEventReader
 {
     static readonly TimeSpan TrailingLineArrivalDeadline = TimeSpan.FromMilliseconds(10);
 
     readonly NameValueExtractor _nameValueExtractor;
     readonly FrameReader _reader;
 
-    public PlainTextLogEventReader(TextReader input, string extractionPattern)
+    public PlainTextEventReader(TextReader input, string extractionPattern)
     {
         if (extractionPattern == null) throw new ArgumentNullException(nameof(extractionPattern));
         _nameValueExtractor = ExtractionPatternInterpreter.CreateNameValueExtractor(ExtractionPatternParser.Parse(extractionPattern));
@@ -36,7 +36,7 @@ class PlainTextLogEventReader : ILogEventReader
 
         var (properties, remainder) = _nameValueExtractor.ExtractValues(frame.Value);
 
-        var evt = LogEventBuilder.FromProperties(properties, remainder);
+        var evt = EventJsonBuilder.FromProperties(properties, remainder);
         return new ReadResult(evt, frame.IsAtEnd);
     }
 }

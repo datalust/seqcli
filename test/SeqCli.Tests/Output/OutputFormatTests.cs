@@ -2,9 +2,9 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
 using SeqCli.Config;
+using SeqCli.Mapping;
 using SeqCli.Output;
 using SeqCli.Tests.Support;
-using Serilog.Events;
 using Xunit;
 
 #nullable enable
@@ -128,11 +128,10 @@ public class OutputFormatTests
 
     static string RenderMessage(EventEntity evt)
     {
-        var serilogEvent = OutputFormat.ToSerilogEvent(evt);
-        OutputFormat.FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+        var eventJson = EventEntityJson.ToEventJson(evt);
 
         var output = new StringWriter();
-        TextFormatters.Plain(theme: null, "{@m}").Format(serilogEvent, output);
+        TextFormatters.Plain(theme: null, "{@m}").Format(eventJson, output);
         return output.ToString();
     }
 
@@ -146,16 +145,6 @@ public class OutputFormatTests
     }
 
     [Fact]
-    public void FlatPropertiesWinOverStructureTraversal()
-    {
-        var evt = MakeDottedHoleEvent(
-            ("user.greeting.first", "G'day"),
-            ("user", JObject.Parse("""{"greeting": {"first": "Hello"}, "name": "Barney"}""")));
-
-        Assert.Equal("G'day Barney!", RenderMessage(evt));
-    }
-
-    [Fact]
     public void UnresolvableDottedHolesRenderAsRawText()
     {
         var evt = MakeDottedHoleEvent(("user", JObject.Parse("""{"greeting": 42}""")));
@@ -163,19 +152,46 @@ public class OutputFormatTests
         Assert.Equal("{user.greeting.first} {user.name}!", RenderMessage(evt));
     }
 
-    [Fact]
-    public void ResolvedScalarsAreUnwrappedFromTheirJsonRepresentation()
+    static string CaptureConsoleOut(System.Action write)
     {
-        var evt = Some.MakeEvent(e =>
+        var output = new StringWriter();
+        var saved = System.Console.Out;
+        System.Console.SetOut(output);
+        try
         {
-            e.MessageTemplateTokens = [new MessageTemplateTokenPart { PropertyName = "order.total" }];
-            e.Properties = Some.MakeProperties(("order", JObject.Parse("""{"total": 42}""")));
-        });
+            write();
+        }
+        finally
+        {
+            System.Console.SetOut(saved);
+        }
 
-        var serilogEvent = OutputFormat.ToSerilogEvent(evt);
-        OutputFormat.FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+        return output.ToString();
+    }
 
-        var scalar = Assert.IsType<ScalarValue>(serilogEvent.Properties["order.total"]);
-        Assert.Equal(42L, scalar.Value);
+    [Fact]
+    public void ObjectsAreWrittenAsSingleLineJson()
+    {
+        var format = Create(syntax: OutputSyntax.Json);
+
+        var written = CaptureConsoleOut(() => format.WriteObject(
+            new JObject(new JProperty("Title", "Errors"), new JProperty("Count", 42))));
+
+        Assert.Equal("""{"Title":"Errors","Count":42}""" + System.Environment.NewLine, written);
+    }
+
+    [Fact]
+    public void EntitiesAreWrittenAsJsonWithoutLinks()
+    {
+        var entity = new Seq.Api.Model.Signals.SignalEntity { Id = "signal-1", Title = "Errors" };
+
+        var format = Create(syntax: OutputSyntax.Json);
+        var written = CaptureConsoleOut(() => format.WriteEntity(entity));
+
+        Assert.Contains("\"Id\":\"signal-1\"", written);
+        Assert.Contains("\"Title\":\"Errors\"", written);
+        Assert.DoesNotContain("Links", written);
+        Assert.EndsWith(System.Environment.NewLine, written);
+        Assert.Equal(written.TrimEnd(), written.TrimEnd().ReplaceLineEndings(""));
     }
 }

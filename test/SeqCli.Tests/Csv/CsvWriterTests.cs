@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using Seq.Api.Model.Data;
 using SeqCli.Csv;
-using Serilog.Templates.Themes;
+using Seq.Syntax.Templates.Themes;
 using Xunit;
 
 namespace SeqCli.Tests.Csv;
@@ -12,8 +12,8 @@ public class CsvWriterTests
 {
     const char Escape = '\x1b';
 
-    // `CsvWriter` writes to the console without going through Serilog's console sink, so unlike the other
-    // output paths it has no opportunity to suppress the theme itself.
+    // `CsvWriter` writes delimited output directly rather than rendering a template, so unlike the
+    // other output paths it applies (or omits) the theme itself.
     [Fact]
     public void QueryResultsAreNotColorizedWhenOutputIsRedirected()
     {

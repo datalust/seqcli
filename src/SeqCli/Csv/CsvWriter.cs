@@ -1,22 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using Seq.Api.Model.Data;
+using Seq.Syntax.Templates.Themes;
 using SeqCli.Mcp.Data;
-using SeqCli.Output;
-using Serilog.Templates.Themes;
 
 namespace SeqCli.Csv;
 
 static class CsvWriter
 {
+    // Delimited output is written directly rather than rendered through a template, so styled
+    // runs are opened and closed here.
+    static void SetStyle(TextWriter output, TemplateTheme? theme, TemplateThemeStyle style)
+    {
+        if (theme?.Open(style) is { } open)
+            output.Write(open);
+    }
+
+    static void ResetStyle(TextWriter output, TemplateTheme? theme, TemplateThemeStyle style)
+    {
+        if (theme?.Close(style) is { } close)
+            output.Write(close);
+    }
+
     public static void WriteQueryResult(QueryResultPart result, Func<object?, string> stringify, TemplateTheme? theme, TextWriter output)
     {
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
-            theme?.Set(output, TemplateThemeStyle.Text);
+            SetStyle(output, theme, TemplateThemeStyle.Text);
             QueryResultHelper.WriteErrorResult(output, result);
-            theme?.Reset(output);
+            ResetStyle(output, theme, TemplateThemeStyle.Text);
         }
         
         var first = true;
@@ -40,39 +52,39 @@ static class CsvWriter
         }
         else
         {
-            theme?.Set(output, TemplateThemeStyle.TertiaryText);
+            SetStyle(output, theme, TemplateThemeStyle.TertiaryText);
             output.Write(',');
-            theme?.Reset(output);
+            ResetStyle(output, theme, TemplateThemeStyle.TertiaryText);
         }
-        
-        theme?.Set(output, TemplateThemeStyle.TertiaryText);
+
+        SetStyle(output, theme, TemplateThemeStyle.TertiaryText);
         output.Write('"');
-        theme?.Reset(output);
+        ResetStyle(output, theme, TemplateThemeStyle.TertiaryText);
 
         var valueAsString = stringify(value);
-        
+
         var dataStyle = isHeadingRow ? TemplateThemeStyle.Name : TemplateThemeStyle.Text;
         var doubleQuote = valueAsString.IndexOf('"');
         while (doubleQuote != -1)
         {
-            theme?.Set(output, dataStyle);
+            SetStyle(output, theme, dataStyle);
             output.Write(valueAsString[..doubleQuote]);
-            theme?.Reset(output);
-            
-            theme?.Set(output, TemplateThemeStyle.Scalar);
+            ResetStyle(output, theme, dataStyle);
+
+            SetStyle(output, theme, TemplateThemeStyle.Scalar);
             output.Write("\"\"");
-            theme?.Reset(output);
+            ResetStyle(output, theme, TemplateThemeStyle.Scalar);
 
             valueAsString = valueAsString[(doubleQuote + 1)..];
             doubleQuote = valueAsString.IndexOf('"');
         }
-        
-        theme?.Set(output, dataStyle);
+
+        SetStyle(output, theme, dataStyle);
         output.Write(valueAsString);
-        theme?.Reset(output);
-        
-        theme?.Set(output, TemplateThemeStyle.TertiaryText);
+        ResetStyle(output, theme, dataStyle);
+
+        SetStyle(output, theme, TemplateThemeStyle.TertiaryText);
         output.Write('"');
-        theme?.Reset(output);
+        ResetStyle(output, theme, TemplateThemeStyle.TertiaryText);
     }
 }

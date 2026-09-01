@@ -14,16 +14,16 @@
 
 using System;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Seq.Syntax.Expressions;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Ingestion;
 using SeqCli.Output;
+using SeqCli.Syntax;
 using SeqCli.Util;
 using Serilog;
-using Serilog.Events;
 
 namespace SeqCli.Cli.Commands;
 
@@ -61,16 +61,16 @@ class PrintCommand : Command
     {
         var config = RuntimeConfigurationLoader.Load(_storage);
 
-        Func<LogEvent, bool>? filter = null;
+        Func<JsonObject, bool>? filter = null;
         if (_filter != null)
         {
-            if (!SerilogExpression.TryCompile(_filter, out var compiled, out var error))
+            if (!SeqSyntax.TryCompileExpression(_filter, out var compiled, out var error))
             {
                 Log.Error("The specified filter could not be compiled: {Error}", error);
                 return 1;
             }
 
-            filter = evt => ExpressionResult.IsTrue(compiled(evt));
+            filter = evt => compiled(evt).IsTrue();
         }
 
         var template = _template == null ? null : PrintTemplate.InterpretEscapeChars(_template);
@@ -80,7 +80,7 @@ class PrintCommand : Command
         {
             using (input)
             {
-                var reader = new JsonLogEventReader(input);
+                var reader = new JsonEventReader(input);
 
                 var isAtEnd = false;
                 do
@@ -90,12 +90,12 @@ class PrintCommand : Command
                         var result = await reader.TryReadAsync();
                         isAtEnd = result.IsAtEnd;
 
-                        if (result.LogEvent != null && (filter == null || filter(result.LogEvent)))
-                            output.WriteLogEvent(result.LogEvent);
+                        if (result.Document != null && (filter == null || filter(result.Document)))
+                            output.WriteEvent(result.Document);
                     }
                     catch (Exception ex)
                     {
-                        if (ex is not JsonReaderException && ex is not InvalidDataException ||
+                        if (ex is not JsonException && ex is not InvalidDataException ||
                             _invalidDataHandlingFeature.InvalidDataHandling != InvalidDataHandling.Ignore)
                             throw;
                     }

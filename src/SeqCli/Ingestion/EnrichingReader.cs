@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Serilog.Core;
+using SeqCli.Syntax;
 
 namespace SeqCli.Ingestion;
 
-class EnrichingReader : ILogEventReader
+class EnrichingReader : IEventReader
 {
-    readonly ILogEventReader _inner;
-    readonly IReadOnlyCollection<ILogEventEnricher> _enrichers;
+    readonly IEventReader _inner;
+    readonly IReadOnlyCollection<IEventEnricher> _enrichers;
 
     public EnrichingReader(
-        ILogEventReader inner,
-        IReadOnlyCollection<ILogEventEnricher> enrichers)
+        IEventReader inner,
+        IReadOnlyCollection<IEventEnricher> enrichers)
     {
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         _enrichers = enrichers ?? throw new ArgumentNullException(nameof(enrichers));
@@ -22,11 +22,10 @@ class EnrichingReader : ILogEventReader
     {
         var result = await _inner.TryReadAsync();
 
-        if (result.LogEvent != null)
+        if (result.Document != null)
         {
             foreach (var enricher in _enrichers)
-                // We're breaking the nullability contract of `ILogEventEnricher.Enrich()`, here.
-                enricher.Enrich(result.LogEvent, null!);
+                enricher.Enrich(result.Document);
         }
 
         return result;

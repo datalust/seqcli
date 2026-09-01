@@ -1,4 +1,4 @@
-﻿// Copyright © Datalust and contributors.
+// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,80 +14,74 @@
 
 using System;
 using System.Collections.Generic;
-using Serilog.Events;
 
 namespace SeqCli.Mapping;
 
+/// <summary>
+/// Recognizes the level spellings found in event data from various sources (<c>info</c>,
+/// <c>WARN</c>, <c>trce</c>, …) and maps them to canonical Seq level names. Level values
+/// themselves are preserved verbatim throughout the pipeline; the canonical name is used
+/// where a normalized form is needed.
+/// </summary>
 public static class LevelMapping
 {
-    // Use a "hygienic" name for the original level value to avoid collisions
-    internal static readonly string SurrogateLevelProperty = $"_SeqcliOriginalLevel_{Guid.NewGuid():N}";
-
-    static readonly Dictionary<string, (string, LogEventLevel)> LevelsByName =
+    static readonly Dictionary<string, string> LevelsByName =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["t"] = ("Trace", LogEventLevel.Verbose),
-            ["tr"] = ("Trace", LogEventLevel.Verbose),
-            ["trc"] = ("Trace", LogEventLevel.Verbose),
-            ["trce"] = ("Trace", LogEventLevel.Verbose),
-            ["trace"] = ("Trace", LogEventLevel.Verbose),
-            ["v"] = ("Verbose", LogEventLevel.Verbose),
-            ["ver"] = ("Verbose", LogEventLevel.Verbose),
-            ["vrb"] = ("Verbose", LogEventLevel.Verbose),
-            ["verb"] = ("Verbose", LogEventLevel.Verbose),
-            ["verbose"] = ("Verbose", LogEventLevel.Verbose),
-            ["d"] = ("Debug", LogEventLevel.Debug),
-            ["de"] = ("Debug", LogEventLevel.Debug),
-            ["dbg"] = ("Debug", LogEventLevel.Debug),
-            ["deb"] = ("Debug", LogEventLevel.Debug),
-            ["dbug"] = ("Debug", LogEventLevel.Debug),
-            ["debu"] = ("Debug", LogEventLevel.Debug),
-            ["debug"] = ("Debug", LogEventLevel.Debug),
-            ["i"] = ("Information", LogEventLevel.Information),
-            ["in"] = ("Information", LogEventLevel.Information),
-            ["inf"] = ("Information", LogEventLevel.Information),
-            ["info"] = ("Information", LogEventLevel.Information),
-            ["information"] = ("Information", LogEventLevel.Information),
-            ["notice"] = ("Notice", LogEventLevel.Information),
-            ["w"] = ("Warning", LogEventLevel.Warning),
-            ["wa"] = ("Warning", LogEventLevel.Warning),
-            ["war"] = ("Warning", LogEventLevel.Warning),
-            ["wrn"] = ("Warning", LogEventLevel.Warning),
-            ["warn"] = ("Warning", LogEventLevel.Warning),
-            ["warning"] = ("Warning", LogEventLevel.Warning),
-            ["e"] = ("Error", LogEventLevel.Error),
-            ["er"] = ("Error", LogEventLevel.Error),
-            ["err"] = ("Error", LogEventLevel.Error),
-            ["erro"] = ("Error", LogEventLevel.Error),
-            ["eror"] = ("Error", LogEventLevel.Error),
-            ["error"] = ("Error", LogEventLevel.Error),
-            ["f"] = ("Fatal", LogEventLevel.Fatal),
-            ["fa"] = ("Fatal", LogEventLevel.Fatal),
-            ["ftl"] = ("Fatal", LogEventLevel.Fatal),
-            ["fat"] = ("Fatal", LogEventLevel.Fatal),
-            ["fatl"] = ("Fatal", LogEventLevel.Fatal),
-            ["fatal"] = ("Fatal", LogEventLevel.Fatal),
-            ["c"] = ("Critical", LogEventLevel.Fatal),
-            ["cr"] = ("Critical", LogEventLevel.Fatal),
-            ["crt"] = ("Critical", LogEventLevel.Fatal),
-            ["cri"] = ("Critical", LogEventLevel.Fatal),
-            ["crit"] = ("Critical", LogEventLevel.Fatal),
-            ["critical"] = ("Critical", LogEventLevel.Fatal),
-            ["emerg"] = ("Emergency", LogEventLevel.Fatal),
-            ["alert"] = ("Alert", LogEventLevel.Fatal),
-            ["panic"] = ("Panic", LogEventLevel.Fatal)
+            ["t"] = "Trace",
+            ["tr"] = "Trace",
+            ["trc"] = "Trace",
+            ["trce"] = "Trace",
+            ["trace"] = "Trace",
+            ["v"] = "Verbose",
+            ["ver"] = "Verbose",
+            ["vrb"] = "Verbose",
+            ["verb"] = "Verbose",
+            ["verbose"] = "Verbose",
+            ["d"] = "Debug",
+            ["de"] = "Debug",
+            ["dbg"] = "Debug",
+            ["deb"] = "Debug",
+            ["dbug"] = "Debug",
+            ["debu"] = "Debug",
+            ["debug"] = "Debug",
+            ["i"] = "Information",
+            ["in"] = "Information",
+            ["inf"] = "Information",
+            ["info"] = "Information",
+            ["information"] = "Information",
+            ["notice"] = "Notice",
+            ["w"] = "Warning",
+            ["wa"] = "Warning",
+            ["war"] = "Warning",
+            ["wrn"] = "Warning",
+            ["warn"] = "Warning",
+            ["warning"] = "Warning",
+            ["e"] = "Error",
+            ["er"] = "Error",
+            ["err"] = "Error",
+            ["erro"] = "Error",
+            ["eror"] = "Error",
+            ["error"] = "Error",
+            ["f"] = "Fatal",
+            ["fa"] = "Fatal",
+            ["ftl"] = "Fatal",
+            ["fat"] = "Fatal",
+            ["fatl"] = "Fatal",
+            ["fatal"] = "Fatal",
+            ["c"] = "Critical",
+            ["cr"] = "Critical",
+            ["crt"] = "Critical",
+            ["cri"] = "Critical",
+            ["crit"] = "Critical",
+            ["critical"] = "Critical",
+            ["emerg"] = "Emergency",
+            ["alert"] = "Alert",
+            ["panic"] = "Panic"
         };
-
-    public static LogEventLevel ToSerilogLevel(string level)
-    {
-        if (string.IsNullOrEmpty(level))
-            return LogEventLevel.Information;
-            
-        return LevelsByName.TryGetValue(level, out var m) ? m.Item2 : LogEventLevel.Information;
-    }
 
     public static string ToFullLevelName(string level)
     {
-        return LevelsByName.TryGetValue(level, out var m) ? m.Item1 : level;
+        return LevelsByName.TryGetValue(level, out var m) ? m : level;
     }
 }

@@ -30,8 +30,8 @@ using Seq.Syntax.Templates;
 using SeqCli.Mapping;
 using SeqCli.Output;
 using SeqCli.Signals;
+using SeqCli.Syntax;
 using Serilog;
-using Serilog.Events;
 using NativeFormatter = SeqCli.Output.NativeFormatter;
 
 // ReSharper disable UnusedMember.Global
@@ -42,8 +42,9 @@ namespace SeqCli.Mcp.Tools.Search;
 class SearchTools(McpSession session, SeqConnection connection)
 {
     const string ResultIdPropertyName = "__seqcli_ResultId";
-    static readonly ExpressionTemplate SearchResultFormatter = new (
-        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@t)}} {{{LevelMapping.SurrogateLevelProperty}}}] {{@m}}{Environment.NewLine}{{#if @x is not null}}{{Substring(ToString(@x), 0, 512)}}...{Environment.NewLine}{{#end}}"
+    static readonly ExpressionTemplate SearchResultFormatter = SeqSyntax.ParseTemplate(
+        $"{{{ResultIdPropertyName}}} [{{UtcDateTime(@Timestamp)}} {{@Level}}] {{@Message}}{Environment.NewLine}" +
+        $"{{#if @Exception is not null}}{{Substring(ToString(@Exception), 0, 512)}}...{Environment.NewLine}{{#end}}"
     );
     
     [McpServerTool(Name = "seq_new_session", ReadOnly = true, Title = "Begin a new Search/Query Session")]
@@ -181,12 +182,10 @@ class SearchTools(McpSession session, SeqConnection connection)
         foreach (var result in takenResults)
         {
             var resultId = session.ImportSearchResult(result);
-            
-            var serilogEvent = OutputFormat.ToSerilogEvent(result);
-            OutputFormat.FlattenPropertiesUsedWithDottedNames(result, serilogEvent);
-            serilogEvent.AddOrUpdateProperty(new LogEventProperty(ResultIdPropertyName, new ScalarValue(resultId)));
-            serilogEvent.AddOrUpdateProperty(new LogEventProperty(LevelMapping.SurrogateLevelProperty, new ScalarValue(result.Level ?? "Information")));
-            SearchResultFormatter.Format(serilogEvent, responseText);
+
+            var eventJson = EventEntityJson.ToEventJson(result);
+            eventJson[ResultIdPropertyName] = resultId;
+            SearchResultFormatter.Format(eventJson, responseText);
         }
 
         return new CallToolResult
