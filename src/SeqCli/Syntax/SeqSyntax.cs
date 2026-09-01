@@ -17,8 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 using Seq.Syntax.Expressions;
 using Seq.Syntax.Templates;
 using Seq.Syntax.Templates.Encoding;
-using SeqCli.Syntax.V1;
-using V1Compatibility = Seq.Syntax.Compatibility.V1;
+using Seq.Syntax.Compatibility;
 
 namespace SeqCli.Syntax;
 
@@ -42,12 +41,12 @@ static class SeqSyntax
         [MaybeNullWhen(false)] out CompiledExpression result,
         [MaybeNullWhen(true)] out string error)
     {
-        return V1Compatibility.TryCompileExpression(expression, formatProvider: null, TracingFunctions.Resolver, out result, out error);
+        return V1.TryCompileExpression(expression, formatProvider: null, null, out result, out error);
     }
 
     public static ExpressionTemplate ParseTemplate(string template, TemplateOutputEncoder? encoder = null)
     {
-        if (!V1Compatibility.TryParseTemplate(template, culture: null, TracingFunctions.Resolver, encoder, out var parsed, out var error))
+        if (!V1.TryParseTemplate(template, culture: null, null, encoder, out var parsed, out var error))
             throw new ArgumentException(error);
 
         return parsed;
