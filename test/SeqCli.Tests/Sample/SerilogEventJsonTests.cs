@@ -1,13 +1,12 @@
 #nullable enable
 using System;
 using System.Linq;
-using SeqCli.Ingestion;
 using SeqCli.Sample.Ingestion;
 using Serilog;
 using Serilog.Events;
 using Xunit;
 
-namespace SeqCli.Tests.Ingestion;
+namespace SeqCli.Tests.Sample;
 
 public class SerilogEventJsonTests
 {

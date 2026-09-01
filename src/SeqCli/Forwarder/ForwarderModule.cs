@@ -21,7 +21,6 @@ using SeqCli.Config;
 using SeqCli.Forwarder.Channel;
 using SeqCli.Forwarder.Web.Api;
 using SeqCli.Forwarder.Web.Host;
-using SeqCli.Syntax;
 using Serilog;
 
 namespace SeqCli.Forwarder;
@@ -65,25 +64,17 @@ class ForwarderModule : Module
         if (_config.Forwarder.Diagnostics.ExposeIngestionLog)
         {
             Log.ForContext<ForwarderModule>().Warning("Configured to expose ingestion log via HTTP API");
-            builder.RegisterType<IngestionLogEndpoints>().As<IMapEndpoints>();
-
-            var ingestionLogTemplate = $"[{{@Timestamp:o}} {{@Level:u3}}] {{@Message}}{Environment.NewLine}";
             if (_config.Forwarder.Diagnostics.IngestionLogShowDetail)
             {
                 Log.ForContext<ForwarderModule>().Warning("Including full client, payload, and error detail in the ingestion log");
-                ingestionLogTemplate +=
-                    $"{{#if ClientHostIP is not null}}Client IP address: {{ClientHostIP}}{Environment.NewLine}{{#end}}" +
-                    $"{{#if DocumentStart is not null}}First {{StartToLog}} characters of payload: {{DocumentStart:l}}{Environment.NewLine}{{#end}}" +
-                    "{@Exception}";
             }
-            
-            builder.Register(_ => SeqSyntax.ParseTemplate(ingestionLogTemplate));
+
+            builder.Register(_ => new IngestionLogEndpoints(_config.Forwarder.Diagnostics.IngestionLogShowDetail)).As<IMapEndpoints>();
         }
 
-        builder.Register(c =>
+        builder.Register(_ =>
         {
-            var config = c.Resolve<SeqCliConfig>();
-            var baseUri = config.Connection.ServerUrl;
+            var baseUri = _config.Connection.ServerUrl;
             if (string.IsNullOrWhiteSpace(baseUri))
                 throw new ArgumentException("The destination Seq server URL must be configured in `SeqCli.json`.");
 
@@ -94,13 +85,13 @@ class ForwarderModule : Module
             // this expression, using an "or" operator.
 
             var hasSocketHandlerOption =
-                config.Connection.PooledConnectionLifetimeMilliseconds.HasValue;
+                _config.Connection.PooledConnectionLifetimeMilliseconds.HasValue;
 
             if (hasSocketHandlerOption)
             {
                 var httpMessageHandler = new SocketsHttpHandler
                 {
-                    PooledConnectionLifetime = config.Connection.PooledConnectionLifetimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(config.Connection.PooledConnectionLifetimeMilliseconds.Value) : Timeout.InfiniteTimeSpan,
+                    PooledConnectionLifetime = _config.Connection.PooledConnectionLifetimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(_config.Connection.PooledConnectionLifetimeMilliseconds.Value) : Timeout.InfiniteTimeSpan,
                 };
 
                 return new HttpClient(httpMessageHandler) { BaseAddress = new Uri(baseUri) };

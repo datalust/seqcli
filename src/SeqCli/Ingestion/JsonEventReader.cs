@@ -49,16 +49,14 @@ class JsonEventReader : IEventReader
         return new ReadResult(ReadFromJson(frame.Value), frame.IsAtEnd);
     }
 
-    public static JsonObject ReadFromJson(string json)
+    static JsonObject ReadFromJson(string json)
     {
         if (JsonNode.Parse(json) is not JsonObject eventJson)
             throw new InvalidDataException($"The line is not a JSON object: `{json.Trim()}`.");
 
         if (!eventJson.ContainsKey("@t"))
             eventJson["@t"] = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-
-        SerilogTracingConventions.LiftSpanProperties(eventJson);
-
+        
         return eventJson;
     }
 }

@@ -14,14 +14,8 @@
 
 using System.Text.Json.Nodes;
 
-namespace SeqCli.Ingestion;
+namespace SeqCli.Sample.Ingestion;
 
-/// <summary>
-/// SerilogTracing emits span fields as regular event properties, because Serilog's data model
-/// has nowhere else to put them. Events passing through seqcli lift these into the reified
-/// <c>@st</c> and <c>@ps</c> fields so that they're recognized as spans by Seq and by seqcli's
-/// own output formatting.
-/// </summary>
 static class SerilogTracingConventions
 {
     internal const string ParentSpanIdProperty = "ParentSpanId";

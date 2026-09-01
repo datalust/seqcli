@@ -18,7 +18,7 @@ using System.Text.Json.Nodes;
 using SeqCli.Syntax;
 using Serilog.Events;
 
-namespace SeqCli.Ingestion;
+namespace SeqCli.Sample.Ingestion;
 
 /// <summary>
 /// Converts Serilog events produced within seqcli itself — the <c>sample ingest</c> simulation
