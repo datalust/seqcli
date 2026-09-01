@@ -14,14 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using Seq.Api.Model.LogEvents;
 
 namespace SeqCli.Mapping;
 
 /// <summary>
-/// Recognizes the level spellings found in event data from various sources (<c>info</c>,
-/// <c>WARN</c>, <c>trce</c>, …) and maps them to canonical Seq level names. Level values
-/// themselves are preserved verbatim throughout the pipeline; the canonical name is used
-/// where a normalized form is needed.
+/// Some Seq API
 /// </summary>
 public static class LevelMapping
 {
@@ -80,8 +78,25 @@ public static class LevelMapping
             ["panic"] = "Panic"
         };
 
+    // Intended only for use by ingest extraction patterns.
     public static string ToFullLevelName(string level)
     {
         return LevelsByName.TryGetValue(level, out var m) ? m : level;
+    }
+    
+    public static LogEventLevel ToSeqApiLogEventLevel(string level)
+    {
+        if (string.IsNullOrEmpty(level))
+            return LogEventLevel.Information;
+
+        return ToFullLevelName(level) switch
+        {
+            "Trace" or "Verbose" => LogEventLevel.Verbose,
+            "Debug" => LogEventLevel.Debug,
+            "Warning" => LogEventLevel.Warning,
+            "Error" => LogEventLevel.Error,
+            "Fatal" or "Critical" or "Emergency" or "Alert" or "Panic" => LogEventLevel.Fatal,
+            _ => LogEventLevel.Information
+        };
     }
 }

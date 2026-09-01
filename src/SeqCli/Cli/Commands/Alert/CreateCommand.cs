@@ -178,7 +178,7 @@ class CreateCommand : Command
             alert.Having = _having;
 
         if (_notificationLevel != null)
-            alert.NotificationLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_notificationLevel));
+            alert.NotificationLevel = LevelMapping.ToSeqApiLogEventLevel(_notificationLevel);
 
         if (_suppressionTime != null)
             alert.SuppressionTime = DurationMoniker.ToTimeSpan(_suppressionTime);

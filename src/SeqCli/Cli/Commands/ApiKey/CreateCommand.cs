@@ -125,7 +125,7 @@ class CreateCommand : Command
 
         if (_level != null)
         {
-            apiKey.InputSettings.MinimumLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_level));
+            apiKey.InputSettings.MinimumLevel = LevelMapping.ToSeqApiLogEventLevel(_level);
         }
 
         apiKey.AssignedPermissions.Clear();
