@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json.Linq;
+using SeqCli.Api;
 using SeqCli.Util;
 
 namespace SeqCli.Traces;
@@ -51,7 +52,7 @@ static class StructuredMessage
                 templateTokens.Add((false, (hole["raw"] as JValue)?.Value as string ?? $"{{{name}}}"));
 
                 if (hole.TryGetValue("value", out var value) && propertyNames.Add(name))
-                    SetPathProperty(properties, name, JsonNodes.FromNewtonsoft(value));
+                    SetPathProperty(properties, name, ToSystemTextJson.FromNewtonsoft(value));
             }
             else if (token is JValue { Type: JTokenType.String } text)
             {

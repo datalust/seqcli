@@ -26,6 +26,7 @@ using Seq.Api.Model.Events;
 using Seq.Syntax.Templates;
 using Seq.Syntax.Templates.Encoding;
 using Seq.Syntax.Templates.Themes;
+using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Csv;
 using SeqCli.Mapping;
@@ -150,7 +151,7 @@ sealed class OutputFormat
         if (Json)
         {
             jo.Remove("Links");
-            WriteJsonValue(JsonNodes.FromNewtonsoft(jo));
+            WriteJsonValue(ToSystemTextJson.FromNewtonsoft(jo));
         }
         else if (Text)
         {
@@ -173,7 +174,7 @@ sealed class OutputFormat
                 (JToken)JArray.FromObject(value, _serializer) :
                 JObject.FromObject(value, _serializer);
 
-            WriteJsonValue(JsonNodes.FromNewtonsoft(jo));
+            WriteJsonValue(ToSystemTextJson.FromNewtonsoft(jo));
         }
         else if (Text)
         {

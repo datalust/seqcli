@@ -17,21 +17,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Syntax;
 
-namespace SeqCli.Util;
+namespace SeqCli.Api;
 
-static class JsonNodes
+static class ToSystemTextJson
 {
-    public static JsonNode? FromNewtonsoft(JToken token)
-    {
-        if (token is JValue { Value: null })
-            return null;
-
-        return JsonNode.Parse(token.ToString(Formatting.None));
-    }
-
     /// <summary>
-    /// Convert a value deserialized by the Seq API client — a Newtonsoft LINQ-to-JSON token, or
-    /// a plain CLR scalar — into its System.Text.Json equivalent.
+    /// Convert a value deserialized by the Seq API client into its `System.Text.Json` equivalent.
     /// </summary>
     public static JsonNode? FromApiValue(object? value)
     {
@@ -41,5 +32,14 @@ static class JsonNodes
             JToken token => FromNewtonsoft(token),
             _ => EventJson.CreateScalar(value)
         };
+    }
+    
+    /// Conversion helper for values retrieved through the Seq API client.
+    public static JsonNode? FromNewtonsoft(JToken token)
+    {
+        if (token is JValue { Value: null })
+            return null;
+
+        return JsonNode.Parse(token.ToString(Formatting.None));
     }
 }

@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.Json.Nodes;
+using SeqCli.Api;
 using SeqCli.Traces;
 using SeqCli.Util;
 
@@ -105,7 +106,7 @@ static class TraceFormatter
         for (var i = 0; i < evt.Columns.Count; ++i)
         {
             if (evt.Columns[i] is { } value)
-                eventJson[ColumnPropertyName(i)] = JsonNodes.FromApiValue(value);
+                eventJson[ColumnPropertyName(i)] = ToSystemTextJson.FromApiValue(value);
         }
 
         return eventJson;

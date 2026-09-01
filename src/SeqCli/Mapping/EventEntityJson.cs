@@ -19,6 +19,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Shared;
+using SeqCli.Api;
 using SeqCli.Output;
 using SeqCli.Syntax;
 using SeqCli.Util;
@@ -75,7 +76,7 @@ static class EventEntityJson
         if (evt.Properties != null)
         {
             foreach (var property in evt.Properties)
-                EventJson.SetUserProperty(eventJson, property.Name, JsonNodes.FromApiValue(property.Value));
+                EventJson.SetUserProperty(eventJson, property.Name, ToSystemTextJson.FromApiValue(property.Value));
         }
 
         return eventJson;
@@ -99,7 +100,7 @@ static class EventEntityJson
     {
         var result = new JsonObject();
         foreach (var property in properties)
-            result[property.Name] = JsonNodes.FromApiValue(property.Value);
+            result[property.Name] = ToSystemTextJson.FromApiValue(property.Value);
         return result;
     }
 }
