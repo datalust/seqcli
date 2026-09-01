@@ -19,22 +19,25 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Shared;
+using SeqCli.Output;
 using SeqCli.Syntax;
 using SeqCli.Util;
 
 namespace SeqCli.Mapping;
 
 /// <summary>
-/// Converts events retrieved from the Seq API into event JSON documents in Seq's emission
-/// (CLEF) schema, ready for filtering and formatting with Seq.Syntax.
+/// Converts event entities into compact JSON format for further processing. This class is only necessary because
+/// <c>Seq.Api</c> doesn't yet provide a simple compact-JSON based result format for searches. Once we've filled
+/// that gap, this class, and <see cref="OutputFormat.WriteEventEntity"/> can be removed.
 /// </summary>
 static class EventEntityJson
 {
     public static JsonObject ToEventJson(EventEntity evt)
     {
-        // Timestamps are shown in local time, matching earlier seqcli versions.
         var eventJson = new JsonObject
         {
+            // Earlier versions relied on Serilog output formatting to show timestamps in local time; we'll need
+            // to consider adding some compensating mechanism to `Seq.Syntax`.
             ["@t"] = DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture)
                 .ToLocalTime().ToString("o", CultureInfo.InvariantCulture)
         };
@@ -42,8 +45,6 @@ static class EventEntityJson
         if (evt.MessageTemplateTokens != null)
             eventJson["@mt"] = ToMessageTemplateText(evt.MessageTemplateTokens);
 
-        // By the emission convention, `Information` levels are omitted; any other level keeps
-        // the spelling it was ingested with.
         if (!string.IsNullOrWhiteSpace(evt.Level) && evt.Level != "Information")
             eventJson["@l"] = evt.Level;
 

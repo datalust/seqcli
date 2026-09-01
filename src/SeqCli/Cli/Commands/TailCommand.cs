@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.IO;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using SeqCli.Api;
@@ -63,13 +65,15 @@ class TailCommand : Command
         
         try
         {
-            await foreach (var evt in connection.Events.StreamAsync(
+            await foreach (var evt in connection.Events.StreamDocumentsAsync(
                                filter: strict,
                                signal: _signal.Signal,
                                render: true,
+                               clef: true,
                                cancellationToken: cancel.Token))
             {
-                output.WriteEventEntity(evt);
+                var eventJson = JsonNode.Parse(evt)?.AsObject() ?? throw new InvalidDataException("Non-JSON document received.");
+                output.WriteEvent(eventJson);
             }
         }
         catch (OperationCanceledException)
