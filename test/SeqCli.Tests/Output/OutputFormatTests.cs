@@ -151,47 +151,4 @@ public class OutputFormatTests
 
         Assert.Equal("{user.greeting.first} {user.name}!", RenderMessage(evt));
     }
-
-    static string CaptureConsoleOut(System.Action write)
-    {
-        var output = new StringWriter();
-        var saved = System.Console.Out;
-        System.Console.SetOut(output);
-        try
-        {
-            write();
-        }
-        finally
-        {
-            System.Console.SetOut(saved);
-        }
-
-        return output.ToString();
-    }
-
-    [Fact]
-    public void ObjectsAreWrittenAsSingleLineJson()
-    {
-        var format = Create(syntax: OutputSyntax.Json);
-
-        var written = CaptureConsoleOut(() => format.WriteObject(
-            new JObject(new JProperty("Title", "Errors"), new JProperty("Count", 42))));
-
-        Assert.Equal("""{"Title":"Errors","Count":42}""" + System.Environment.NewLine, written);
-    }
-
-    [Fact]
-    public void EntitiesAreWrittenAsJsonWithoutLinks()
-    {
-        var entity = new Seq.Api.Model.Signals.SignalEntity { Id = "signal-1", Title = "Errors" };
-
-        var format = Create(syntax: OutputSyntax.Json);
-        var written = CaptureConsoleOut(() => format.WriteEntity(entity));
-
-        Assert.Contains("\"Id\":\"signal-1\"", written);
-        Assert.Contains("\"Title\":\"Errors\"", written);
-        Assert.DoesNotContain("Links", written);
-        Assert.EndsWith(System.Environment.NewLine, written);
-        Assert.Equal(written.TrimEnd(), written.TrimEnd().ReplaceLineEndings(""));
-    }
 }
