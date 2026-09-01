@@ -18,9 +18,6 @@ using Seq.Api.Model.LogEvents;
 
 namespace SeqCli.Mapping;
 
-/// <summary>
-/// Some Seq API
-/// </summary>
 public static class LevelMapping
 {
     static readonly Dictionary<string, string> LevelsByName =
