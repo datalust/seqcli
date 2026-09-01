@@ -1,4 +1,4 @@
-// Copyright © Datalust and contributors.
+﻿// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,13 @@ static class MetricsMapping
         sample = new JsonObject
         {
             ["@t"] = logEvent.Timestamp.ToString("o", CultureInfo.InvariantCulture),
-            ["@d"] = SerilogEventJson.ToJsonNode(definitions)
+            ["@d"] = SimulationEvent.ToJsonNode(definitions)
         };
 
         foreach (var (name, value) in logEvent.Properties)
         {
             if (name != SurrogateDefinitionsProperty)
-                EventJson.SetUserProperty(sample, name, SerilogEventJson.ToJsonNode(value));
+                EventJson.SetUserProperty(sample, name, SimulationEvent.ToJsonNode(value));
         }
 
         return true;

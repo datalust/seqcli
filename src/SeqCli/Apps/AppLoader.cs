@@ -29,13 +29,12 @@ class AppLoader : IDisposable
     readonly string _packageBinaryPath;
 
     // These are used for interop between the host process and the app. The
-    // app _must_ be able to load on the unified version. Apps built against Seq.Syntax v1
-    // bundle their own `Seq.Syntax.dll`, which loads side-by-side with the host's
-    // `Seq.Syntax.V2.dll`.
+    // app _must_ be able to load on the unified version.
     readonly Assembly[] _contracts =
     [
         typeof(SeqApp).Assembly,
         typeof(Log).Assembly,
+        // Seq.Syntax uses version-specific assembly names to improve our chances of successful loading.
         typeof(SeqExpression).Assembly
     ];
         

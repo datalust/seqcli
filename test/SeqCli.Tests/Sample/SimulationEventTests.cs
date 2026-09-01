@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SeqCli.Tests.Sample;
 
-public class SerilogEventJsonTests
+public class SimulationEventTests
 {
     static LogEvent CaptureEvent(Action<ILogger> log)
     {
@@ -30,7 +30,7 @@ public class SerilogEventJsonTests
     public void EventFieldsMapToTheEmissionSchema()
     {
         var evt = CaptureEvent(log => log.Warning(new Exception("Boom!"), "Hello, {Name}!", "world"));
-        var eventJson = SerilogEventJson.ToEventJson(evt);
+        var eventJson = SimulationEvent.ToJsonObject(evt);
 
         Assert.Equal(evt.Timestamp.ToString("o"), (string?)eventJson["@t"]);
         Assert.Equal("Hello, {Name}!", (string?)eventJson["@mt"]);
@@ -44,7 +44,7 @@ public class SerilogEventJsonTests
     {
         var evt = CaptureEvent(log => log.Information("Hello"));
 
-        Assert.False(SerilogEventJson.ToEventJson(evt).ContainsKey("@l"));
+        Assert.False(SimulationEvent.ToJsonObject(evt).ContainsKey("@l"));
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class SerilogEventJsonTests
     {
         var evt = CaptureEvent(log => log.Information("{@Order} {Items}",
             new { Id = 7, Total = 4.5 }, new[] { "a", "b" }));
-        var eventJson = SerilogEventJson.ToEventJson(evt);
+        var eventJson = SimulationEvent.ToJsonObject(evt);
 
         Assert.Equal(7, (int?)eventJson["Order"]!["Id"]);
         Assert.Equal(4.5, (double?)eventJson["Order"]!["Total"]);
@@ -67,7 +67,7 @@ public class SerilogEventJsonTests
             .ForContext("SpanStartTimestamp", start)
             .ForContext("ParentSpanId", "8899aabbccddeeff")
             .Information("GET /orders"));
-        var eventJson = SerilogEventJson.ToEventJson(evt);
+        var eventJson = SimulationEvent.ToJsonObject(evt);
 
         Assert.Equal(start.ToString("o"), (string?)eventJson["@st"]);
         Assert.Equal("8899aabbccddeeff", (string?)eventJson["@ps"]);
@@ -103,6 +103,6 @@ public class SerilogEventJsonTests
     {
         var evt = CaptureEvent(log => log.ForContext("@evil", "value").Information("Hello"));
 
-        Assert.Equal("value", (string?)SerilogEventJson.ToEventJson(evt)["@@evil"]);
+        Assert.Equal("value", (string?)SimulationEvent.ToJsonObject(evt)["@@evil"]);
     }
 }

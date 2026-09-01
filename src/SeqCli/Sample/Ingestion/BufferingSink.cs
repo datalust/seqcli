@@ -25,7 +25,7 @@ class BufferingSink: ILogEventSink, IEventReader, IDisposable
 
         var document = MetricsMapping.TryGetMetricSampleJson(logEvent, out var sample)
             ? sample
-            : SerilogEventJson.ToEventJson(logEvent);
+            : SimulationEvent.ToJsonObject(logEvent);
 
         _queue.Enqueue(document);
     }

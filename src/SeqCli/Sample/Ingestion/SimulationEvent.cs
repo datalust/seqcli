@@ -20,15 +20,13 @@ using Serilog.Events;
 
 namespace SeqCli.Sample.Ingestion;
 
-/// <summary>
-/// Converts Serilog events produced within seqcli itself — the <c>sample ingest</c> simulation
-/// and the forwarder's diagnostic ingestion log — into event JSON documents in Seq's emission
-/// schema. Externally-supplied event data never passes through here: it's read directly into
-/// JSON documents.
-/// </summary>
-static class SerilogEventJson
+/// <summary>Used only in the Roastery simulation; no other event data should ever be processed using this type.</summary>
+static class SimulationEvent
 {
-    public static JsonObject ToEventJson(LogEvent logEvent)
+    const string ParentSpanIdProperty = "ParentSpanId", 
+        SpanStartTimestampProperty = "SpanStartTimestamp";
+
+    public static JsonObject ToJsonObject(LogEvent logEvent)
     {
         var eventJson = new JsonObject
         {
@@ -51,7 +49,7 @@ static class SerilogEventJson
         foreach (var (name, value) in logEvent.Properties)
             EventJson.SetUserProperty(eventJson, name, ToJsonNode(value));
 
-        SerilogTracingConventions.LiftSpanProperties(eventJson);
+        LiftSpanProperties(eventJson);
 
         return eventJson;
     }
@@ -86,6 +84,22 @@ static class SerilogEventJson
 
             default:
                 return EventJson.CreateScalar(value.ToString());
+        }
+    }
+    
+    static void LiftSpanProperties(JsonObject eventJson)
+    {
+        LiftProperty(eventJson, SpanStartTimestampProperty, "@st");
+        LiftProperty(eventJson, ParentSpanIdProperty, "@ps");
+    }
+
+    static void LiftProperty(JsonObject eventJson, string propertyName, string reifiedName)
+    {
+        if (eventJson.TryGetPropertyValue(propertyName, out var value))
+        {
+            eventJson.Remove(propertyName);
+            if (!eventJson.ContainsKey(reifiedName))
+                eventJson[reifiedName] = value;
         }
     }
 }
