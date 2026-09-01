@@ -13,9 +13,8 @@
 // limitations under the License.
 
 using System.Text.Json.Nodes;
-using SeqCli.Data;
 
-namespace SeqCli.Syntax;
+namespace SeqCli.Data;
 
 /// <summary>
 /// Overrides the event's <c>@l</c> level with a fixed value.
