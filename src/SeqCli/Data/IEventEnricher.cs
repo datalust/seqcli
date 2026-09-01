@@ -14,21 +14,13 @@
 
 using System.Text.Json.Nodes;
 
-namespace SeqCli.Syntax;
+namespace SeqCli.Data;
 
-class ScalarPropertyEnricher : IEventEnricher
+/// <summary>
+/// Adds or updates fields on an event JSON document; the equivalent, in Seq's data model, of a
+/// Serilog enricher.
+/// </summary>
+interface IEventEnricher
 {
-    readonly string _name;
-    readonly object? _scalarValue;
-
-    public ScalarPropertyEnricher(string name, object? scalarValue)
-    {
-        _name = EventJson.EscapeUserPropertyName(name);
-        _scalarValue = scalarValue;
-    }
-
-    public void Enrich(JsonObject eventJson)
-    {
-        eventJson[_name] = EventJson.CreateScalar(_scalarValue);
-    }
+    void Enrich(JsonObject eventJson);
 }

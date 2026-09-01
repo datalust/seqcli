@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SeqCli.Data;
 using SeqCli.Syntax;
 
 namespace SeqCli.Ingestion;

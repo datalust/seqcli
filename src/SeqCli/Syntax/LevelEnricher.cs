@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Text.Json.Nodes;
+using SeqCli.Data;
 
 namespace SeqCli.Syntax;
 

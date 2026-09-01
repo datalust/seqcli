@@ -15,6 +15,7 @@
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SeqCli.Data;
 using SeqCli.Syntax;
 
 namespace SeqCli.Api;
@@ -30,7 +31,7 @@ static class ToSystemTextJson
         {
             null => null,
             JToken token => FromNewtonsoft(token),
-            _ => EventJson.CreateScalar(value)
+            _ => EventJsonDocument.CreateScalar(value)
         };
     }
     

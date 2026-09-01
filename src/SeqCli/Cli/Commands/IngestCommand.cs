@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Data;
 using SeqCli.Ingestion;
 using SeqCli.PlainText;
 using SeqCli.Syntax;

@@ -16,14 +16,9 @@ using System;
 using System.Globalization;
 using System.Text.Json.Nodes;
 
-namespace SeqCli.Syntax;
+namespace SeqCli.Data;
 
-/// <summary>
-/// Helpers for constructing event JSON documents in Seq's emission (CLEF) schema, where
-/// reified fields carry <c>@</c>-prefixed names and user-defined property names beginning
-/// with <c>@</c> are escaped with a second <c>@</c>.
-/// </summary>
-static class EventJson
+static class EventJsonDocument
 {
     const string InvalidPropertyNameSubstitute = "(unnamed)";
 

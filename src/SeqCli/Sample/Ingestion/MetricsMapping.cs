@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json.Nodes;
+using SeqCli.Data;
 using SeqCli.Ingestion;
 using SeqCli.Syntax;
 using Serilog.Events;
@@ -51,7 +52,7 @@ static class MetricsMapping
         foreach (var (name, value) in logEvent.Properties)
         {
             if (name != SurrogateDefinitionsProperty)
-                EventJson.SetUserProperty(sample, name, SimulationEvent.ToJsonNode(value));
+                EventJsonDocument.SetUserProperty(sample, name, SimulationEvent.ToJsonNode(value));
         }
 
         return true;

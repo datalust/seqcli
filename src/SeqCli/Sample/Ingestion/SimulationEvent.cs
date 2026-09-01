@@ -15,6 +15,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
+using SeqCli.Data;
 using SeqCli.Syntax;
 using Serilog.Events;
 
@@ -47,7 +48,7 @@ static class SimulationEvent
             eventJson["@sp"] = spanId.ToHexString();
 
         foreach (var (name, value) in logEvent.Properties)
-            EventJson.SetUserProperty(eventJson, name, ToJsonNode(value));
+            EventJsonDocument.SetUserProperty(eventJson, name, ToJsonNode(value));
 
         LiftSpanProperties(eventJson);
 
@@ -59,7 +60,7 @@ static class SimulationEvent
         switch (value)
         {
             case ScalarValue scalar:
-                return EventJson.CreateScalar(scalar.Value);
+                return EventJsonDocument.CreateScalar(scalar.Value);
 
             case SequenceValue sequence:
                 return new JsonArray(sequence.Elements.Select(ToJsonNode).ToArray());
@@ -83,7 +84,7 @@ static class SimulationEvent
             }
 
             default:
-                return EventJson.CreateScalar(value.ToString());
+                return EventJsonDocument.CreateScalar(value.ToString());
         }
     }
     

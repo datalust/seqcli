@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json.Nodes;
+using SeqCli.Data;
 using SeqCli.Syntax;
 using Superpower.Model;
 
@@ -55,11 +56,11 @@ static class EventJsonBuilder
         foreach (var (name, value) in properties)
         {
             if (!ReifiedProperties.IsReifiedProperty(name))
-                EventJson.SetUserProperty(eventJson, name, CreateValue(value));
+                EventJsonDocument.SetUserProperty(eventJson, name, CreateValue(value));
         }
 
         if (remainder != null)
-            EventJson.SetUserProperty(eventJson, "@unmatched", remainder);
+            EventJsonDocument.SetUserProperty(eventJson, "@unmatched", remainder);
 
         return eventJson;
     }
@@ -68,7 +69,7 @@ static class EventJsonBuilder
     {
         return value is TextSpan span
             ? JsonValue.Create(span.ToStringValue())
-            : EventJson.CreateScalar(value);
+            : EventJsonDocument.CreateScalar(value);
     }
 
     static bool TryGetText(IDictionary<string, object?> properties, string name, out string text)
