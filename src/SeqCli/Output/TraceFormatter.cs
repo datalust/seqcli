@@ -19,7 +19,6 @@ using System.Text;
 using System.Text.Json.Nodes;
 using SeqCli.Api;
 using SeqCli.Traces;
-using SeqCli.Util;
 
 namespace SeqCli.Output;
 

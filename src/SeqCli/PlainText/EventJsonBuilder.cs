@@ -17,10 +17,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using SeqCli.Data;
-using SeqCli.Syntax;
 using Superpower.Model;
 
-namespace SeqCli.PlainText.LogEvents;
+namespace SeqCli.PlainText;
 
 /// <summary>
 /// Assembles the values captured by a plain-text extraction pattern into an event JSON

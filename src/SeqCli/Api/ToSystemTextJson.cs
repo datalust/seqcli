@@ -16,7 +16,6 @@ using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SeqCli.Data;
-using SeqCli.Syntax;
 
 namespace SeqCli.Api;
 

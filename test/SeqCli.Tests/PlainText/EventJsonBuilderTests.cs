@@ -2,7 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using SeqCli.PlainText.LogEvents;
+using SeqCli.Data;
+using SeqCli.PlainText;
 using Superpower.Model;
 using Xunit;
 

@@ -16,7 +16,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
 using SeqCli.Data;
-using SeqCli.Syntax;
 using Serilog.Events;
 
 namespace SeqCli.Sample.Ingestion;

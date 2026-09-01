@@ -30,7 +30,6 @@ using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Csv;
 using SeqCli.Mapping;
-using SeqCli.Util;
 
 namespace SeqCli.Output;
 

@@ -22,8 +22,6 @@ using Seq.Api.Model.Shared;
 using SeqCli.Api;
 using SeqCli.Data;
 using SeqCli.Output;
-using SeqCli.Syntax;
-using SeqCli.Util;
 
 namespace SeqCli.Mapping;
 

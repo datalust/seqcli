@@ -18,7 +18,6 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json.Linq;
 using SeqCli.Api;
-using SeqCli.Util;
 
 namespace SeqCli.Traces;
 

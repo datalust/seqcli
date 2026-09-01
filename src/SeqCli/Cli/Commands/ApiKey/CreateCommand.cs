@@ -16,7 +16,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api;
-using Seq.Api.Model.LogEvents;
 using Seq.Api.Model.Security;
 using Seq.Api.Model.Shared;
 using SeqCli.Api;

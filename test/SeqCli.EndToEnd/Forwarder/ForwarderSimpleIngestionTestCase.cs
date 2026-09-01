@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
