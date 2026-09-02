@@ -18,23 +18,13 @@ using System.Text.Json.Nodes;
 
 namespace SeqCli.Data;
 
-static class EventJsonDocument
+static class EventJsonFormat
 {
-    const string InvalidPropertyNameSubstitute = "(unnamed)";
-
     public static string EscapeUserPropertyName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-            return InvalidPropertyNameSubstitute;
-
         return name.StartsWith('@') ? $"@{name}" : name;
     }
-
-    public static void SetUserProperty(JsonObject eventJson, string name, JsonNode? value)
-    {
-        eventJson[EscapeUserPropertyName(name)] = value;
-    }
-
+    
     public static JsonNode? CreateScalar(object? value)
     {
         return value switch

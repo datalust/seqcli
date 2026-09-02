@@ -30,7 +30,7 @@ static class ToSystemTextJson
         {
             null => null,
             JToken token => FromNewtonsoft(token),
-            _ => EventJsonDocument.CreateScalar(value)
+            _ => EventJsonFormat.CreateScalar(value)
         };
     }
     

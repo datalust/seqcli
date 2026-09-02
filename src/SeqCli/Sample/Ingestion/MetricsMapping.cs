@@ -50,7 +50,7 @@ static class MetricsMapping
         foreach (var (name, value) in logEvent.Properties)
         {
             if (name != SurrogateDefinitionsProperty)
-                EventJsonDocument.SetUserProperty(sample, name, SimulationEvent.ToJsonNode(value));
+                sample[EventJsonFormat.EscapeUserPropertyName(name)] = SimulationEvent.ToJsonNode(value);
         }
 
         return true;

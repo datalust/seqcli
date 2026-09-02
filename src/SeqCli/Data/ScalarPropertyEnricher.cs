@@ -23,12 +23,12 @@ class ScalarPropertyEnricher : IEventEnricher
 
     public ScalarPropertyEnricher(string name, object? scalarValue)
     {
-        _name = EventJsonDocument.EscapeUserPropertyName(name);
+        _name = EventJsonFormat.EscapeUserPropertyName(name);
         _scalarValue = scalarValue;
     }
 
     public void Enrich(JsonObject eventJson)
     {
-        eventJson[_name] = EventJsonDocument.CreateScalar(_scalarValue);
+        eventJson[_name] = EventJsonFormat.CreateScalar(_scalarValue);
     }
 }

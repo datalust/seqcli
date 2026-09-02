@@ -55,20 +55,22 @@ static class EventJsonBuilder
         foreach (var (name, value) in properties)
         {
             if (!ReifiedProperties.IsReifiedProperty(name))
-                EventJsonDocument.SetUserProperty(eventJson, name, CreateValue(value));
+                eventJson[EventJsonFormat.EscapeUserPropertyName(name)] = UnwrapTextSpans(value);
         }
 
         if (remainder != null)
-            EventJsonDocument.SetUserProperty(eventJson, "@unmatched", remainder);
+            eventJson[EventJsonFormat.EscapeUserPropertyName("@unmatched")] = UnwrapTextSpans(remainder);
 
         return eventJson;
     }
 
-    static JsonNode? CreateValue(object? value)
+    static JsonNode? UnwrapTextSpans(object? value)
     {
+        // We should consider whether text spans might also end up in extracted dictionary or array elements, though
+        // I don't think they will, currently.
         return value is TextSpan span
             ? JsonValue.Create(span.ToStringValue())
-            : EventJsonDocument.CreateScalar(value);
+            : EventJsonFormat.CreateScalar(value);
     }
 
     static bool TryGetText(IDictionary<string, object?> properties, string name, out string text)

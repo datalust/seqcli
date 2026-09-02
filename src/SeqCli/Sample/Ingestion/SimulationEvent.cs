@@ -47,7 +47,7 @@ static class SimulationEvent
             eventJson["@sp"] = spanId.ToHexString();
 
         foreach (var (name, value) in logEvent.Properties)
-            EventJsonDocument.SetUserProperty(eventJson, name, ToJsonNode(value));
+            eventJson[EventJsonFormat.EscapeUserPropertyName(name)] = ToJsonNode(value);
 
         LiftSpanProperties(eventJson);
 
@@ -59,7 +59,7 @@ static class SimulationEvent
         switch (value)
         {
             case ScalarValue scalar:
-                return EventJsonDocument.CreateScalar(scalar.Value);
+                return EventJsonFormat.CreateScalar(scalar.Value);
 
             case SequenceValue sequence:
                 return new JsonArray(sequence.Elements.Select(ToJsonNode).ToArray());
@@ -83,7 +83,7 @@ static class SimulationEvent
             }
 
             default:
-                return EventJsonDocument.CreateScalar(value.ToString());
+                return EventJsonFormat.CreateScalar(value.ToString());
         }
     }
     

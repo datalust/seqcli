@@ -75,7 +75,7 @@ static class EventEntityJson
         if (evt.Properties != null)
         {
             foreach (var property in evt.Properties)
-                EventJsonDocument.SetUserProperty(eventJson, property.Name, ToSystemTextJson.FromApiValue(property.Value));
+                eventJson[EventJsonFormat.EscapeUserPropertyName(property.Name)] = ToSystemTextJson.FromApiValue(property.Value);
         }
 
         return eventJson;
