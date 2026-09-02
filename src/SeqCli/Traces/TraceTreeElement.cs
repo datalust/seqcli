@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Serilog.Events;
+using System.Text.Json.Nodes;
 
 namespace SeqCli.Traces;
 
@@ -22,8 +22,8 @@ record TraceTreeElement(
     string Id,
     DateTimeOffset Timestamp,
     string? Level,
-    MessageTemplate MessageTemplate,
-    IReadOnlyList<LogEventProperty> TemplateProperties,
+    string MessageTemplate,
+    JsonObject TemplateProperties,
     string? Exception,
     string? SpanId,
     string? ParentId,

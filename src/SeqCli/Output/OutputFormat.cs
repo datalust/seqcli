@@ -15,24 +15,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
+using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model;
 using Seq.Api.Model.Data;
 using Seq.Api.Model.Events;
+using Seq.Syntax.Templates;
+using Seq.Syntax.Templates.Encoding;
+using Seq.Syntax.Templates.Themes;
+using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Csv;
-using SeqCli.Mapping;
-using SeqCli.Util;
-using Serilog;
-using Serilog.Core;
-using Serilog.Events;
-using Serilog.Parsing;
-using Serilog.Templates.Themes;
 
 namespace SeqCli.Output;
 
@@ -40,10 +36,10 @@ sealed class OutputFormat
 {
     // See https://no-color.org for semantics.
     const string NoColorEnvironmentVariable = "NO_COLOR";
-    
+
     readonly OutputSyntax _syntax;
-    readonly string? _plainTextTemplate;
-    readonly Logger _formatter;
+    readonly ExpressionTemplate? _eventFormatter;
+    readonly ExpressionTemplate _jsonValueFormatter;
 
     readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
     {
@@ -92,7 +88,6 @@ sealed class OutputFormat
         bool allowAnsiEscapes)
     {
         _syntax = syntax;
-        _plainTextTemplate = plainTextTemplate;
 
         var resolvedNoColor = ResolveNoColor(noColor, forceColor, outputConfig, noColorSetInEnvironment, allowAnsiEscapes);
         var applyThemeToRedirectedOutput = !resolvedNoColor && (forceColor ?? outputConfig.ForceColor);
@@ -102,12 +97,20 @@ sealed class OutputFormat
             ? FlareTheme.SeqCli
             : null;
 
-        _formatter = CreateOutputLogger();
+        _eventFormatter = Json
+            ? TextFormatters.Json(TemplateTheme)
+            : Text
+                ? TextFormatters.Plain(TemplateTheme, plainTextTemplate)
+                : null;
+
+        _jsonValueFormatter = new ExpressionTemplate(
+            "{Value}" + Environment.NewLine,
+            encoder: TemplateTheme != null ? TemplateOutputEncoder.Ansi(TemplateTheme) : null);
     }
 
     static bool NoColorSetInEnvironment()
         => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(NoColorEnvironmentVariable));
-    
+
     internal static bool ResolveNoColor(
         bool? noColorFlag,
         bool? forceColorFlag,
@@ -135,27 +138,6 @@ sealed class OutputFormat
 
     public bool RequiresRender => Native;
 
-    Logger CreateOutputLogger()
-    {
-        var outputConfiguration = new LoggerConfiguration()
-            .MinimumLevel.Is(LevelAlias.Minimum)
-            .Enrich.With<RedundantEventTypeRemovalEnricher>();
-
-        if (Json)
-        {
-            outputConfiguration.WriteTo.Console(TextFormatters.Json(TemplateTheme));
-        }
-        else if (Text)
-        {
-            outputConfiguration.WriteTo.Console(TextFormatters.Plain(TemplateTheme, _plainTextTemplate));
-        }
-        
-        // The logger is not configured for Native output, which avoids it. Ideally we'll shift away from using
-        // Serilog here, and move Text/Json over to EventEntity-driven formatters, too.
-
-        return outputConfiguration.CreateLogger();
-    }
-
     public void WriteEntity(Entity entity)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -163,18 +145,11 @@ sealed class OutputFormat
         var jo = JObject.FromObject(
             entity,
             _serializer);
-            
+
         if (Json)
         {
             jo.Remove("Links");
-                
-            var writer = new LoggerConfiguration()
-                .Destructure.With<JsonNetDestructuringPolicy>()
-                .Destructure.ToMaximumDepth(10000)
-                .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
-                .CreateLogger();
-            writer.Information("{@Entity}", jo);
+            WriteJsonValue(ToSystemTextJson.FromNewtonsoft(jo));
         }
         else if (Text)
         {
@@ -190,22 +165,14 @@ sealed class OutputFormat
     public void WriteObject(object value)
     {
         if (value == null) throw new ArgumentNullException(nameof(value));
-            
+
         if (Json)
         {
             var jo = value is ICollection and not (IDictionary or JToken) ?
                 (JToken)JArray.FromObject(value, _serializer) :
                 JObject.FromObject(value, _serializer);
 
-            // Using the same method of JSON colorization as above
-
-            var writer = new LoggerConfiguration()
-                .Destructure.With<JsonNetDestructuringPolicy>()
-                .Destructure.ToMaximumDepth(10000)
-                .Enrich.With<StripStructureTypeEnricher>()
-                .WriteTo.Console(TextFormatters.Plain(TemplateTheme, "{@m}" + Environment.NewLine))
-                .CreateLogger();
-            writer.Information("{@Entity}", jo);
+            WriteJsonValue(ToSystemTextJson.FromNewtonsoft(jo));
         }
         else if (Text)
         {
@@ -218,6 +185,11 @@ sealed class OutputFormat
         }
     }
 
+    void WriteJsonValue(JsonNode? value)
+    {
+        _jsonValueFormatter.Format(new JsonObject { ["Value"] = value }, Console.Out);
+    }
+
     public void ListEntities(IEnumerable<Entity> list)
     {
         foreach (var entity in list)
@@ -225,7 +197,7 @@ sealed class OutputFormat
             WriteEntity(entity);
         }
     }
-    
+
     // ReSharper disable once MemberCanBeMadeStatic.Global
 #pragma warning disable CA1822
     public void WriteText(string? text)
@@ -259,125 +231,15 @@ sealed class OutputFormat
         }
         else
         {
-            var serilogEvent = ToSerilogEvent(evt);
-
-            if (Text)
-            {
-                // Add flattened versions of structured properties that are referenced using dotted-name syntax in
-                // message templates, e.g. <c>{user.name}</c>. Serilog.Expressions template rendering doesn't otherwise
-                // support these. In text output mode, these aren't usually observable, though
-                // <c>seqcli print --template="{@p}"</c> will make them visible.
-                FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
-            }
-
-            WriteLogEvent(serilogEvent);
+            WriteEvent(EventEntityJson.ToEventJson(evt));
         }
     }
 
-    public void WriteLogEvent(LogEvent logEvent)
+    public void WriteEvent(JsonObject eventJson)
     {
-        _formatter.Write(logEvent);
+        _eventFormatter?.Format(eventJson, Console.Out);
     }
 
-    public static LogEvent ToSerilogEvent(EventEntity evt)
-    {
-        ActivityTraceId traceId = default;
-        if (!string.IsNullOrWhiteSpace(evt.TraceId))
-            traceId = ActivityTraceId.CreateFromString(evt.TraceId);
-
-        ActivitySpanId spanId = default;
-        if (!string.IsNullOrWhiteSpace(evt.SpanId))
-            spanId = ActivitySpanId.CreateFromString(evt.SpanId);
-
-        var serilogEvent = new LogEvent(
-            DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime(),
-            LevelMapping.ToSerilogLevel(evt.Level),
-            string.IsNullOrWhiteSpace(evt.Exception) ? null : new TextException(evt.Exception),
-            new MessageTemplate(evt.MessageTemplateTokens.Select(ToMessageTemplateToken)),
-            evt.Properties
-                .Select(p => CreateProperty(p.Name, p.Value)),
-            traceId,
-            spanId
-        );
-
-        if (evt.Scope?.Count > 0)
-            serilogEvent.AddOrUpdateProperty(new("@sa", new StructureValue(evt.Scope.Select(p => CreateProperty(p.Name, p.Value)))));
-
-        if (evt.Resource?.Count > 0)
-            serilogEvent.AddOrUpdateProperty(new("@ra", new StructureValue(evt.Resource.Select(p => CreateProperty(p.Name, p.Value)))));
-
-        if (!string.IsNullOrWhiteSpace(evt.ParentId))
-            serilogEvent.AddOrUpdateProperty(new("@ps", new ScalarValue(evt.ParentId)));
-
-        if (!string.IsNullOrWhiteSpace(evt.Start))
-            serilogEvent.AddOrUpdateProperty(new("@st", new ScalarValue(evt.Start)));
-
-        if (!string.IsNullOrWhiteSpace(evt.SpanKind))
-            serilogEvent.AddOrUpdateProperty(new("@sk", new ScalarValue(evt.SpanKind)));
-        
-        return serilogEvent;
-    }
-
-    public static void FlattenPropertiesUsedWithDottedNames(EventEntity evt, LogEvent serilogEvent)
-    {
-        foreach (var token in evt.MessageTemplateTokens)
-        {
-            if (token.Text != null || token.PropertyName is not { } name || !name.Contains('.') ||
-                serilogEvent.Properties.ContainsKey(name))
-            {
-                continue;
-            }
-
-            var steps = name.Split('.');
-            var value = evt.Properties.FirstOrDefault(p => p.Name == steps[0])?.Value;
-            for (var i = 1; i < steps.Length; ++i)
-            {
-                value = (value as JObject)?.GetValue(steps[i]);
-            }
-
-            if (value is JToken resolved)
-            {
-                // Existing flat-named properties, where present, win.
-                serilogEvent.AddPropertyIfAbsent(LogEventPropertyFactory.SafeCreate(
-                    name, resolved is JValue scalar ? new ScalarValue(scalar.Value) : CreatePropertyValue(resolved)));
-            }
-        }
-    }
-
-    static MessageTemplateToken ToMessageTemplateToken(MessageTemplateTokenPart token)
-    {
-        // Not ideal, we lose renderings, alignment etc. here.
-
-        if (token.Text != null)
-            return new TextToken(token.Text);
-        return new PropertyToken(token.PropertyName, token.RawText ?? $"{{{token.PropertyName}}}");
-    }
-
-    static LogEventProperty CreateProperty(string name, object value)
-    {
-        return LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value));
-    }
-
-    internal static LogEventPropertyValue CreatePropertyValue(object value)
-    {
-        switch (value)
-        {
-            case JObject jo:
-                jo.TryGetValue("$typeTag", out var tt);
-                return new StructureValue(
-                    jo.Properties()
-                        .Where(kvp => kvp.Name != "$typeTag")
-                        .Select(kvp => CreateProperty(kvp.Name, kvp.Value)),
-                    (tt as JValue)?.Value as string);
-
-            case JArray ja:
-                return new SequenceValue(ja.Select(CreatePropertyValue));
-
-            default:
-                return new ScalarValue(value);
-        }
-    }
-    
     static string Stringify(object? value)
     {
         return value switch

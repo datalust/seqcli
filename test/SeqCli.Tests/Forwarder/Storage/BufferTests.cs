@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using SeqCli.Forwarder.Filesystem.System;
 using SeqCli.Forwarder.Storage;
 using SeqCli.Tests.Forwarder.Filesystem;
 using Xunit;

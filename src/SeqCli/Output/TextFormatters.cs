@@ -13,42 +13,32 @@
 // limitations under the License.
 
 using System;
-using SeqCli.Ingestion;
-using SeqCli.Mapping;
-using Serilog.Expressions;
-using Serilog.Formatting;
-using Serilog.Templates;
-using Serilog.Templates.Themes;
+using Seq.Syntax.Templates;
+using Seq.Syntax.Templates.Encoding;
+using Seq.Syntax.Templates.Themes;
+using SeqCli.Syntax;
 
 namespace SeqCli.Output;
 
-// This is the only usage of Serilog.Expressions remaining in seqcli; the upstream Seq.Syntax doesn't yet support
-// tracing properties or theming.
 static class TextFormatters
 {
-    public static ITextFormatter Json(TemplateTheme? theme) => new ExpressionTemplate(
-        $"{{ " +
-        $"if {MetricsMapping.SurrogateDefinitionsProperty} is not null then " +
-        // Emit a metric sample
-        $"{{@t, @l: undefined(), @d: {MetricsMapping.SurrogateDefinitionsProperty}, ..rest()}} " +
-        $"else " +
-        // Emit a log or span
-        $"{{@t, @mt, @l: coalesce({LevelMapping.SurrogateLevelProperty}, if @l = 'Information' then undefined() else @l), @x, @sp, @tr, @ps: coalesce({TraceConstants.ParentSpanIdProperty}, @ps), @st: coalesce({TraceConstants.SpanStartTimestampProperty}, @st), ..rest()}} " +
-        $"}}" +
-        Environment.NewLine,
-        theme: theme,
-        // The `OutputFormat` constructor has already decided whether to colorize.
-        applyThemeWhenOutputIsRedirected: true
-    );
+    /// <summary>
+    /// Newline-delimited CLEF output: the event JSON document is written verbatim, with theming
+    /// when a theme is supplied.
+    /// </summary>
+    public static ExpressionTemplate Json(TemplateTheme? theme) => new(
+        "{@Data}" + Environment.NewLine,
+        encoder: Encoder(theme));
 
+    // Guarding on `@Elapsed` rather than the built-in `IsSpan()` shows elapsed time for any
+    // event carrying a span start timestamp, whether or not trace and span ids accompany it.
     static readonly string DefaultPlainTextOutputTemplate =
-        "[{@t:o} {@l:u3}] {@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end}" + Environment.NewLine + "{@x}";
+        "[{@Timestamp:o} {@Level:u3}] {@Message}{#if @Elapsed is not null} ({TotalMilliseconds(@Elapsed):0.###} ms){#end}" +
+        Environment.NewLine + "{@Exception}";
 
-    public static ITextFormatter Plain(TemplateTheme? theme, string? outputTemplate) => new ExpressionTemplate(
-        outputTemplate ?? DefaultPlainTextOutputTemplate,
-        theme: theme,
-        nameResolver: new StaticMemberNameResolver(typeof(TracingFunctions)),
-        // The `OutputFormat` constructor has already decided whether to colorize.
-        applyThemeWhenOutputIsRedirected: true
-    );
+    public static ExpressionTemplate Plain(TemplateTheme? theme, string? outputTemplate) =>
+        SeqSyntax.ParseTemplate(outputTemplate ?? DefaultPlainTextOutputTemplate, Encoder(theme));
+
+    static TemplateOutputEncoder? Encoder(TemplateTheme? theme) =>
+        theme != null ? TemplateOutputEncoder.Ansi(theme) : null;
 }

@@ -34,7 +34,8 @@ class AppLoader : IDisposable
     [
         typeof(SeqApp).Assembly,
         typeof(Log).Assembly,
-        typeof(SerilogExpression).Assembly
+        // Seq.Syntax uses version-specific assembly names to improve our chances of successful loading.
+        typeof(SeqExpression).Assembly
     ];
         
     public AppLoader(string packageBinaryPath)

@@ -21,7 +21,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
-using SeqCli.Mapping;
+using SeqCli.Api;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
@@ -109,11 +109,11 @@ partial class AppContainer : IAppHost, IDisposable
         {
             if (_seqApp is ISubscribeTo<LogEventData> led)
             {
-                led.On(EventFormat.FromRaw(eventId, eventType, serilogEvent));
+                led.On(EventFormat.FromSerilogLogEvent(eventId, eventType, serilogEvent));
             }
             else if (_seqApp is ISubscribeToAsync<LogEventData> leda)
             {
-                await leda.OnAsync(EventFormat.FromRaw(eventId, eventType, serilogEvent));
+                await leda.OnAsync(EventFormat.FromSerilogLogEvent(eventId, eventType, serilogEvent));
             }
             else if (_seqApp is ISubscribeTo<LogEvent> sled)
             {
@@ -143,7 +143,8 @@ partial class AppContainer : IAppHost, IDisposable
         if (jobject.TryGetValue("@l", out var levelToken))
         {
             jobject.Remove("@l");
-            jobject.Add("@l", new JValue(LevelMapping.ToSerilogLevel(levelToken.Value<string>()!).ToString()));
+            // The Seq.Api `LogEventLevel` enum intentionally matches the Serilog one.
+            jobject.Add("@l", new JValue(LevelMapping.ToSeqApiLogEventLevel(levelToken.Value<string>()!).ToString()));
         }
 
         SanitizeTraceIdentifiers(jobject);

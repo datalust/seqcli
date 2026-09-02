@@ -24,7 +24,7 @@ namespace SeqCli.Apps.Hosting;
 
 static class EventFormat
 {
-    public static Event<LogEventData> FromRaw(string eventId, uint eventType, LogEvent raw)
+    public static Event<LogEventData> FromSerilogLogEvent(string eventId, uint eventType, LogEvent raw)
     {
         var properties = new Dictionary<string, object?>();
         foreach (var prop in raw.Properties)

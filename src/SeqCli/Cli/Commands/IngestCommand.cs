@@ -14,18 +14,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Data;
 using SeqCli.Ingestion;
-using SeqCli.Mapping;
 using SeqCli.PlainText;
 using SeqCli.Syntax;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace SeqCli.Cli.Commands;
 
@@ -84,19 +83,19 @@ class IngestCommand : Command
     {
         try
         {
-            var enrichers = new List<ILogEventEnricher>();
-            
+            var enrichers = new List<IEventEnricher>();
+
             if (_level != null)
-                enrichers.Add(new ScalarPropertyEnricher(LevelMapping.SurrogateLevelProperty, _level));
-            
+                enrichers.Add(new LevelEnricher(_level));
+
             foreach (var (name, value) in _properties.FlatProperties)
                 enrichers.Add(new ScalarPropertyEnricher(name, value));
 
-            Func<LogEvent, bool>? filter = null;
+            Func<JsonObject, bool>? filter = null;
             if (_filter != null)
             {
                 var eval = SeqSyntax.CompileExpression(_filter);
-                filter = evt => Seq.Syntax.Expressions.ExpressionResult.IsTrue(eval(evt));
+                filter = evt => eval(evt).IsTrue();
             }
 
             var config = RuntimeConfigurationLoader.Load(_storagePath);
@@ -112,9 +111,9 @@ class IngestCommand : Command
             {
                 using (input)
                 {
-                    ILogEventReader reader = _json
-                        ? new JsonLogEventReader(input)
-                        : new PlainTextLogEventReader(input, _pattern);
+                    IEventReader reader = _json
+                        ? new JsonEventReader(input)
+                        : new PlainTextEventReader(input, _pattern);
 
                     reader = new EnrichingReader(reader, enrichers);
 

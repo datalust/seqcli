@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.Json.Nodes;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Shared;
-using Serilog.Events;
-using Serilog.Parsing;
 
 namespace SeqCli.Tests.Support;
 
@@ -15,14 +14,13 @@ static class Some
 {
     static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
 
-    public static LogEvent LogEvent()
+    public static JsonObject EventJson()
     {
-        return new LogEvent(
-            DateTimeOffset.UtcNow, 
-            LogEventLevel.Information,
-            null,
-            new MessageTemplateParser().Parse("Test"),
-            Enumerable.Empty<LogEventProperty>());
+        return new JsonObject
+        {
+            ["@t"] = DateTimeOffset.UtcNow.ToString("o"),
+            ["@mt"] = "Test"
+        };
     }
 
     public static string String()
@@ -41,7 +39,7 @@ static class Some
         Rng.GetBytes(bytes);
         return bytes;
     }
-    
+
     public static EventEntity MakeEvent(Action<EventEntity>? configure = null)
     {
         var evt = new EventEntity

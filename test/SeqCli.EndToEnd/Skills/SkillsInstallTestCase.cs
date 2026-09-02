@@ -1,6 +1,5 @@
 using System.IO;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;

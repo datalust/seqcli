@@ -1,4 +1,4 @@
-﻿// Copyright © Datalust and contributors.
+// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Text.Json.Nodes;
 
-namespace SeqCli.PlainText.LogEvents;
+namespace SeqCli.Data;
 
-class TextOnlyException : Exception
+/// <summary>
+/// Adds or updates fields on an event JSON document; the equivalent, in Seq's data model, of a
+/// Serilog enricher.
+/// </summary>
+interface IEventEnricher
 {
-    readonly string _toStringValue;
-
-    public TextOnlyException(string toStringValue)
-    {
-        _toStringValue = toStringValue ?? throw new ArgumentNullException(nameof(toStringValue));
-    }
-
-    public override string ToString()
-    {
-        return _toStringValue;
-    }
+    void Enrich(JsonObject eventJson);
 }

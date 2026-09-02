@@ -151,8 +151,8 @@ class TraceCommand : Command
             }
             else
             {
-                foreach (var logEvent in TraceFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
-                    output.WriteLogEvent(logEvent);
+                foreach (var eventJson in TraceFormatter.ToEventJson(subtreeRoot != null ? [subtreeRoot] : roots))
+                    output.WriteEvent(eventJson);
             }
 
             return 0;

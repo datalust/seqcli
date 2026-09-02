@@ -17,12 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api.Model.Alerting;
-using Seq.Api.Model.LogEvents;
 using Seq.Api.Model.Shared;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Mapping;
 using SeqCli.Signals;
 using SeqCli.Syntax;
 using SeqCli.Util;
@@ -178,7 +176,7 @@ class CreateCommand : Command
             alert.Having = _having;
 
         if (_notificationLevel != null)
-            alert.NotificationLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_notificationLevel));
+            alert.NotificationLevel = LevelMapping.ToSeqApiLogEventLevel(_notificationLevel);
 
         if (_suppressionTime != null)
             alert.SuppressionTime = DurationMoniker.ToTimeSpan(_suppressionTime);

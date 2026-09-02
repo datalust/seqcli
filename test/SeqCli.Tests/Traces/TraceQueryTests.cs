@@ -3,7 +3,6 @@ using System;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Data;
 using SeqCli.Traces;
-using Serilog.Events;
 using Xunit;
 
 namespace SeqCli.Tests.Traces;
@@ -85,7 +84,7 @@ public class TraceQueryTests
         Assert.Equal("event-1", evt.Id);
         Assert.Equal(timestamp, evt.Timestamp);
         Assert.Equal("INFO", evt.Level);
-        Assert.Equal("Hello!", evt.MessageTemplate.Text);
+        Assert.Equal("Hello!", evt.MessageTemplate);
         Assert.Empty(evt.TemplateProperties);
         Assert.Null(evt.Exception);
         Assert.Equal("0011223344556677", evt.SpanId);
@@ -157,10 +156,10 @@ public class TraceQueryTests
 
         var evt = Assert.Single(TraceQuery.ReadEvents(result, includeExceptions: true, []));
 
-        Assert.Equal("Hello, {Name}!", evt.MessageTemplate.Text);
+        Assert.Equal("Hello, {Name}!", evt.MessageTemplate);
         var property = Assert.Single(evt.TemplateProperties);
-        Assert.Equal("Name", property.Name);
-        Assert.Equal(new ScalarValue("World"), property.Value);
+        Assert.Equal("Name", property.Key);
+        Assert.Equal("World", (string?)property.Value);
     }
 
     [Fact]

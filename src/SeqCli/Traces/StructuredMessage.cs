@@ -14,30 +14,30 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json.Nodes;
 using Newtonsoft.Json.Linq;
-using SeqCli.Output;
-using SeqCli.Util;
-using Serilog.Events;
-using Serilog.Parsing;
+using SeqCli.Api;
 
 namespace SeqCli.Traces;
 
 static class StructuredMessage
 {
     /// <summary>
-    /// Reads the token array produced by the Seq `@StructuredMessage` property
-    /// into a Serilog message template, along with the property values needed to render it.
+    /// Reads the token array produced by the Seq `@StructuredMessage` property into message
+    /// template text, along with the property values needed to render it. Dotted hole names
+    /// are stored as nested structures, matching how message rendering resolves them.
     /// </summary>
-    public static (MessageTemplate Message, IReadOnlyList<LogEventProperty> Properties) Read(object? structuredMessage)
+    public static (string MessageTemplate, JsonObject Properties) Read(object? structuredMessage)
     {
         if (structuredMessage is null or JValue { Type: JTokenType.Null })
-            return (new MessageTemplate([]), []);
+            return ("", new JsonObject());
 
         if (structuredMessage is not JArray tokens)
             throw new InvalidDataException($"Expected a structured message but found `{structuredMessage}`.");
 
-        var templateTokens = new List<MessageTemplateToken>();
-        var properties = new List<LogEventProperty>();
+        var templateTokens = new List<(bool IsText, string Text)>();
+        var properties = new JsonObject();
         var propertyNames = new HashSet<string>();
 
         foreach (var token in tokens)
@@ -48,14 +48,14 @@ static class StructuredMessage
                     throw new InvalidDataException("A message template hole is missing its `name`.");
 
                 // Currently ignores `formatted`.
-                templateTokens.Add(new PropertyToken(name, (hole["raw"] as JValue)?.Value as string ?? $"{{{name}}}"));
+                templateTokens.Add((false, (hole["raw"] as JValue)?.Value as string ?? $"{{{name}}}"));
 
                 if (hole.TryGetValue("value", out var value) && propertyNames.Add(name))
-                    properties.Add(LogEventPropertyFactory.SafeCreate(name, CreatePropertyValue(value)));
+                    SetPathProperty(properties, name, ToSystemTextJson.FromNewtonsoft(value));
             }
             else if (token is JValue { Type: JTokenType.String } text)
             {
-                templateTokens.Add(new TextToken((string)text.Value!));
+                templateTokens.Add((true, (string)text.Value!));
             }
             else
             {
@@ -65,27 +65,53 @@ static class StructuredMessage
 
         TrimEnd(templateTokens);
 
-        return (new MessageTemplate(templateTokens), properties);
+        var templateText = string.Concat(templateTokens.Select(t =>
+            t.IsText ? t.Text.Replace("{", "{{").Replace("}", "}}") : t.Text));
+
+        return (templateText, properties);
     }
 
-    static void TrimEnd(List<MessageTemplateToken> templateTokens)
+    // Message rendering resolves dotted hole names as paths into nested objects, so `a.b`
+    // becomes member `b` of object `a`. If placing a value along the path would collide with a
+    // non-object value, the hole is left unresolvable and renders as raw text.
+    static void SetPathProperty(JsonObject properties, string name, JsonNode? value)
     {
-        while (templateTokens.Count > 0 && templateTokens[^1] is TextToken text)
+        var steps = name.Split('.');
+        var target = properties;
+        for (var i = 0; i < steps.Length - 1; ++i)
         {
-            var trimmed = text.Text.TrimEnd();
-            if (trimmed.Length == text.Text.Length)
+            if (target.TryGetPropertyValue(steps[i], out var next))
+            {
+                if (next is not JsonObject nextObject)
+                    return;
+
+                target = nextObject;
+            }
+            else
+            {
+                var nextObject = new JsonObject();
+                target[steps[i]] = nextObject;
+                target = nextObject;
+            }
+        }
+
+        target[steps[^1]] = value;
+    }
+
+    static void TrimEnd(List<(bool IsText, string Text)> templateTokens)
+    {
+        while (templateTokens.Count > 0 && templateTokens[^1] is (true, var text))
+        {
+            var trimmed = text.TrimEnd();
+            if (trimmed.Length == text.Length)
                 break;
 
             templateTokens.RemoveAt(templateTokens.Count - 1);
             if (trimmed.Length > 0)
             {
-                templateTokens.Add(new TextToken(trimmed));
+                templateTokens.Add((true, trimmed));
                 break;
             }
         }
     }
-
-    static LogEventPropertyValue CreatePropertyValue(JToken value) => value is JValue scalar ?
-        new ScalarValue(scalar.Value) :
-        OutputFormat.CreatePropertyValue(value);
 }
