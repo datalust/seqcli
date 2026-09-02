@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using Seq.Api.Model.LogEvents;
 
-namespace SeqCli.Mapping;
+namespace SeqCli.Api;
 
 public static class LevelMapping
 {

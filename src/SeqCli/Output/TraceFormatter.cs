@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json.Nodes;
 using SeqCli.Api;
+using SeqCli.Data;
 using SeqCli.Traces;
 
 namespace SeqCli.Output;
@@ -100,7 +101,7 @@ static class TraceFormatter
             eventJson[name] = value?.DeepClone();
 
         if (evt.Elapsed is { } elapsed)
-            eventJson[ElapsedProperty] = elapsed.ToString("c", CultureInfo.InvariantCulture);
+            eventJson[ElapsedProperty] = EventJsonFormat.CreateScalar(elapsed);
 
         for (var i = 0; i < evt.Columns.Count; ++i)
         {

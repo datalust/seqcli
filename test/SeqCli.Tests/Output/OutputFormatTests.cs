@@ -1,8 +1,8 @@
 using System.IO;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
+using SeqCli.Api;
 using SeqCli.Config;
-using SeqCli.Mapping;
 using SeqCli.Output;
 using SeqCli.Tests.Support;
 using Xunit;

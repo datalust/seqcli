@@ -22,7 +22,6 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Seq.Api;
 using SeqCli.Api;
 using Serilog;
@@ -132,7 +131,7 @@ static class LogShipper
                 if (sendFailureHandling == SendFailureHandling.Retry)
                 {
                     var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
-                    await Task.Delay(millisecondsDelay);
+                    await Task.Delay(millisecondsDelay, cancellationToken);
                     retries += 1;
                     continue;
                 }
@@ -191,7 +190,7 @@ static class LogShipper
             }
             catch (Exception ex)
             {
-                if (ex is System.Text.Json.JsonException || ex is InvalidDataException)
+                if (ex is System.Text.Json.JsonException or InvalidDataException)
                 {
                     if (invalidDataHandling == InvalidDataHandling.Ignore)
                         continue;
@@ -200,7 +199,7 @@ static class LogShipper
                 throw;
             }
 
-            return new BatchResult(batch.ToArray(), isLast);
+            return new BatchResult([.. batch], isLast);
         } while (true);
     }
 
@@ -219,6 +218,7 @@ static class LogShipper
         using (var builder = new StringWriter())
         {
             foreach (var evt in batch)
+                // ReSharper disable once MethodHasAsyncOverload
                 builder.WriteLine(evt.ToJsonString());
 
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
@@ -243,7 +243,7 @@ static class LogShipper
         {
             try
             {
-                var error = JsonConvert.DeserializeObject<dynamic>(resultJson)!;
+                var error = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(resultJson)!;
 
                 sendFailureLog.Error("Shipping failed with status code {StatusCode}: {ErrorMessage}",
                     result.StatusCode,

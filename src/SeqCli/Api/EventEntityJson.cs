@@ -19,11 +19,10 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Shared;
-using SeqCli.Api;
 using SeqCli.Data;
 using SeqCli.Output;
 
-namespace SeqCli.Mapping;
+namespace SeqCli.Api;
 
 /// <summary>
 /// Converts event entities into compact JSON format for further processing. This class is only necessary because

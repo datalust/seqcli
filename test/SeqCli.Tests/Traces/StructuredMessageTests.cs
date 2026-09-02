@@ -22,8 +22,8 @@ public class StructuredMessageTests
     {
         foreach (var cell in new object?[] { null, JValue.CreateNull() })
         {
-            var (message, properties) = StructuredMessage.Read(cell);
-            Assert.Equal("", message);
+            var (mt, properties) = StructuredMessage.Read(cell);
+            Assert.Equal("", mt);
             Assert.Empty(properties);
         }
     }
@@ -31,27 +31,26 @@ public class StructuredMessageTests
     [Fact]
     public void TextTokensAreRead()
     {
-        var (message, properties) = StructuredMessage.Read(new JArray("Hello", ", ", "world"));
+        var (mt, properties) = StructuredMessage.Read(new JArray("Hello", ", ", "world"));
 
-        Assert.Equal("Hello, world", message);
+        Assert.Equal("Hello, world", mt);
         Assert.Empty(properties);
     }
 
     [Fact]
     public void LiteralBracesAreEscapedInTemplateText()
     {
-        var (message, _) = StructuredMessage.Read(new JArray("a {not-a-hole} b"));
-
-        Assert.Equal("a {{not-a-hole}} b", message);
+        var (mt, _) = StructuredMessage.Read(new JArray("a {not-a-hole} b"));
+        Assert.Equal("a {{not-a-hole}} b", mt);
     }
 
     [Fact]
     public void HolesCarryRawTextAndValues()
     {
-        var (message, properties) = StructuredMessage.Read(new JArray(
+        var (mt, properties) = StructuredMessage.Read(new JArray(
             "Hello, ", Hole("Name", "{Name:x}", "World"), "!"));
 
-        Assert.Equal("Hello, {Name:x}!", message);
+        Assert.Equal("Hello, {Name:x}!", mt);
 
         var property = Assert.Single(properties);
         Assert.Equal("Name", property.Key);
@@ -61,9 +60,9 @@ public class StructuredMessageTests
     [Fact]
     public void HolesWithoutValuesContributeNoProperties()
     {
-        var (message, properties) = StructuredMessage.Read(new JArray(Hole("Name")));
+        var (mt, properties) = StructuredMessage.Read(new JArray(Hole("Name")));
 
-        Assert.Equal("{Name}", message);
+        Assert.Equal("{Name}", mt);
         Assert.Empty(properties);
     }
 
@@ -97,10 +96,10 @@ public class StructuredMessageTests
     [Fact]
     public void DottedHoleNamesBecomeNestedObjects()
     {
-        var (message, properties) = StructuredMessage.Read(new JArray(
+        var (mt, properties) = StructuredMessage.Read(new JArray(
             Hole("user.name", value: "Barney")));
 
-        Assert.Equal("{user.name}", message);
+        Assert.Equal("{user.name}", mt);
         var user = Assert.IsType<JsonObject>(properties["user"]);
         Assert.Equal("Barney", (string?)user["name"]);
     }
@@ -108,25 +107,24 @@ public class StructuredMessageTests
     [Fact]
     public void TrailingWhitespaceIsTrimmed()
     {
-        var (message, _) = StructuredMessage.Read(new JArray("Hi ", "}", " \n"));
+        var (mt, _) = StructuredMessage.Read(new JArray("Hi ", "}", " \n"));
 
-        Assert.Equal("Hi }}", message);
+        Assert.Equal("Hi }}", mt);
     }
 
     [Fact]
     public void WhitespaceOnlyMessagesReadAsEmpty()
     {
-        var (message, _) = StructuredMessage.Read(new JArray("   "));
+        var (mt, _) = StructuredMessage.Read(new JArray("   "));
 
-        Assert.Equal("", message);
+        Assert.Equal("", mt);
     }
 
     [Fact]
     public void TrailingHolesAreNotTrimmed()
     {
-        var (message, _) = StructuredMessage.Read(new JArray("Took ", Hole("Elapsed")));
-
-        Assert.Equal("Took {Elapsed}", message);
+        var (mt, _) = StructuredMessage.Read(new JArray("Took ", Hole("Elapsed")));
+        Assert.Equal("Took {Elapsed}", mt);
     }
 
     [Fact]

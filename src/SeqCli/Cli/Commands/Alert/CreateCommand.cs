@@ -21,7 +21,6 @@ using Seq.Api.Model.Shared;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Mapping;
 using SeqCli.Signals;
 using SeqCli.Syntax;
 using SeqCli.Util;

@@ -69,7 +69,7 @@ public class SimulationEventTests
             .Information("GET /orders"));
         var eventJson = SimulationEvent.ToJsonObject(evt);
 
-        Assert.Equal(start.ToString("o"), (string?)eventJson["@st"]);
+        Assert.Equal(start, eventJson["@st"]!.GetValue<DateTime>());
         Assert.Equal("8899aabbccddeeff", (string?)eventJson["@ps"]);
         Assert.False(eventJson.ContainsKey("SpanStartTimestamp"));
         Assert.False(eventJson.ContainsKey("ParentSpanId"));

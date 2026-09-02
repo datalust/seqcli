@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Text.Json.Nodes;
 using Seq.Syntax.Templates.Themes;
-using SeqCli.Mapping;
+using SeqCli.Api;
 using SeqCli.Output;
 using SeqCli.Tests.Support;
 using Xunit;

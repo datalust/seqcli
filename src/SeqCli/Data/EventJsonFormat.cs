@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
 using System.Text.Json.Nodes;
 
 namespace SeqCli.Data;
@@ -25,6 +24,10 @@ static class EventJsonFormat
         return name.StartsWith('@') ? $"@{name}" : name;
     }
     
+    /// <summary>
+    /// Use this function when converting a value of uncertain or non-primitive type into a <see cref="JsonNode"/>. It's
+    /// okay to use <see cref="JsonValue.Create{T}(T?,JsonNodeOptions?)"/> for strongly-typed primitives.
+    /// </summary>
     public static JsonNode? CreateScalar(object? value)
     {
         return value switch
@@ -43,8 +46,9 @@ static class EventJsonFormat
             float n => JsonValue.Create(n),
             double n => JsonValue.Create(n),
             decimal n => JsonValue.Create(n),
-            DateTime dt => JsonValue.Create(dt.ToString("o", CultureInfo.InvariantCulture)),
-            DateTimeOffset dto => JsonValue.Create(dto.ToString("o", CultureInfo.InvariantCulture)),
+            TimeSpan ts => JsonValue.Create(ts.ToString("c")),
+            DateTime dt => JsonValue.Create(dt),
+            DateTimeOffset dto => JsonValue.Create(dto),
             _ => JsonValue.Create(value.ToString())
         };
     }

@@ -27,7 +27,7 @@ using Seq.Api.Client;
 using Seq.Api.Model.Events;
 using Seq.Api.Model.Signals;
 using Seq.Syntax.Templates;
-using SeqCli.Mapping;
+using SeqCli.Api;
 using SeqCli.Signals;
 using SeqCli.Syntax;
 using Serilog;

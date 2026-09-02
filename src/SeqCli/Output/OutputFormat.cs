@@ -29,7 +29,6 @@ using Seq.Syntax.Templates.Themes;
 using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Csv;
-using SeqCli.Mapping;
 
 namespace SeqCli.Output;
 

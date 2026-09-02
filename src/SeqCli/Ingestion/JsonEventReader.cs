@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -55,7 +54,7 @@ class JsonEventReader : IEventReader
             throw new InvalidDataException($"The line is not a JSON object: `{json.Trim()}`.");
 
         if (!eventJson.ContainsKey("@t"))
-            eventJson["@t"] = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+            eventJson["@t"] = DateTime.UtcNow;
         
         return eventJson;
     }
