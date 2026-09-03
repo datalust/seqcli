@@ -1,7 +1,9 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.Json.Nodes;
+using Seq.Api.Model.Events;
 using Seq.Syntax.Templates.Themes;
 using SeqCli.Api;
 using SeqCli.Output;
@@ -73,6 +75,73 @@ public class TextFormattersTests
             $"INF Hello, world!{Environment.NewLine}",
             RenderText(SomeEventJson(), $"{{@l:u3}} {{@m}}{Environment.NewLine}"));
     }
+
+    [Fact]
+    public void ColumnsPrecedeTheMessageInOrder()
+    {
+        var evt = Some.MakeEvent(e => e.Properties = Some.MakeProperties(("Customer", "scott"), ("OrderId", 42)));
+
+        Assert.Equal(
+            $"[{At(evt)} INF] scott 42 Hello{Environment.NewLine}",
+            RenderText(evt, "Customer", "OrderId"));
+    }
+
+    [Fact]
+    public void MissingAndEmptyColumnValuesLeaveNoRedundantSpace()
+    {
+        var evt = Some.MakeEvent(e => e.Properties = Some.MakeProperties(("Empty", ""), ("OrderId", 42)));
+
+        Assert.Equal(
+            $"[{At(evt)} INF] 42 Hello{Environment.NewLine}",
+            RenderText(evt, "Missing", "Empty", "OrderId"));
+    }
+
+    [Fact]
+    public void SeqStyleNamesResolveAgainstApiEvents()
+    {
+        var evt = Some.MakeEvent(e =>
+        {
+            e.Properties = [];
+            e.Level = "Warning";
+            e.SpanKind = "Server";
+            e.Resource = Some.MakeProperties(("service.name", "frontend"));
+        });
+
+        Assert.Equal(
+            $"[{At(evt)} WRN] frontend Server Hello{Environment.NewLine}",
+            RenderText(evt, "@Resource['service.name']", "@SpanKind"));
+    }
+
+    [Fact]
+    public void ComputedColumnValuesAreRendered()
+    {
+        var evt = Some.MakeEvent(e => e.Properties = Some.MakeProperties(("OrderId", 42)));
+
+        Assert.Equal(
+            $"[{At(evt)} INF] order-42 Hello{Environment.NewLine}",
+            RenderText(evt, "concat('order-', tostring(OrderId))"));
+    }
+
+    [Theory]
+    [InlineData("if OrderId > 40 then 'big' else 'small'", "big")]
+    [InlineData("{id: OrderId}.id", "42")]
+    [InlineData("concat('{', tostring(OrderId), '}')", "{42}")]
+    [InlineData("Missing or OrderId = 42", "true")]
+    [InlineData("[OrderId, 'x'][0]", "42")]
+    public void ColumnExpressionsUsingTemplateDelimitersAreRendered(string column, string expected)
+    {
+        var evt = Some.MakeEvent(e => e.Properties = Some.MakeProperties(("OrderId", 42)));
+
+        Assert.Equal(
+            $"[{At(evt)} INF] {expected} Hello{Environment.NewLine}",
+            RenderText(evt, column));
+    }
+
+    static string At(EventEntity evt) =>
+        DateTimeOffset.ParseExact(evt.Timestamp, "o", CultureInfo.InvariantCulture).ToLocalTime().ToString("o");
+
+    static string RenderText(EventEntity evt, params string[] columns) =>
+        RenderText(EventEntityJson.ToEventJson(evt), TextFormatters.PlainOutputTemplate(columns));
 
     static JsonObject SomeEventJson(string? level = null, string? exception = null)
     {

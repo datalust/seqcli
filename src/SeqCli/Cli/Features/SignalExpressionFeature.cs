@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using Seq.Api.Model.Signals;
+using SeqCli.Signals;
 
 namespace SeqCli.Cli.Features;
 
@@ -27,9 +28,7 @@ class SignalExpressionFeature : CommandFeature
             if (string.IsNullOrWhiteSpace(_signalExpression))
                 return null;
 
-            // This is a hack that just happens to work because of the way
-            // signal ids are passed through ToString() as literals
-            return SignalExpressionPart.Signal(_signalExpression.Trim());
+            return SignalExpressionParser.ParseExpression(_signalExpression);
         }
     }
 

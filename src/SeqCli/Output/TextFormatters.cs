@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 using Seq.Syntax.Templates;
 using Seq.Syntax.Templates.Encoding;
 using Seq.Syntax.Templates.Themes;
@@ -30,14 +32,28 @@ static class TextFormatters
         "{@Data}" + Environment.NewLine,
         encoder: Encoder(theme));
 
-    // Guarding on `@Elapsed` rather than the built-in `IsSpan()` shows elapsed time for any
-    // event carrying a span start timestamp, whether or not trace and span ids accompany it.
-    static readonly string DefaultPlainTextOutputTemplate =
-        "[{@Timestamp:o} {@Level:u3}] {@Message}{#if @Elapsed is not null} ({TotalMilliseconds(@Elapsed):0.###} ms){#end}" +
+    /// <summary>
+    /// The default plain-text template, showing <paramref name="columns"/> ahead of each
+    /// event's message.
+    /// </summary>
+    /// <param name="columns">Column expressions, evaluated against each event; any Seq expression can be
+    /// supplied.</param>
+    internal static string PlainOutputTemplate(IEnumerable<string>? columns = null) =>
+        "[{@Timestamp:o} {@Level:u3}] " + ColumnsFragment(columns ?? []) +
+        "{@Message}{#if @Elapsed is not null} ({TotalMilliseconds(@Elapsed):0.###} ms){#end}" +
         Environment.NewLine + "{@Exception}";
 
+    internal static string ColumnsFragment(IEnumerable<string> columns)
+    {
+        var fragment = new StringBuilder();
+        foreach (var column in columns)
+            fragment.Append($"{{#if ({column}) <> ''}}{{({column})}} {{#end}}");
+
+        return fragment.ToString();
+    }
+
     public static ExpressionTemplate Plain(TemplateTheme? theme, string? outputTemplate) =>
-        SeqSyntax.ParseTemplate(outputTemplate ?? DefaultPlainTextOutputTemplate, Encoder(theme));
+        SeqSyntax.ParseTemplate(outputTemplate ?? PlainOutputTemplate(), Encoder(theme));
 
     static TemplateOutputEncoder? Encoder(TemplateTheme? theme) =>
         theme != null ? TemplateOutputEncoder.Ansi(theme) : null;
