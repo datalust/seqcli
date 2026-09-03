@@ -17,8 +17,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Seq.Api;
 using Seq.Api.Model.Signals;
-using SeqCli.Output;
 using SeqCli.Signals;
+using SeqCli.Syntax;
 using SeqCli.Util;
 
 namespace SeqCli.Cli.Features;
@@ -43,9 +43,9 @@ class EventColumnsFeature : CommandFeature
             _ => _noSignalColumns = true);
     }
 
-    public async Task<EventColumns?> GetEventColumns(SeqConnection connection, SignalExpressionPart? signal)
+    public async Task<IReadOnlyList<string>> GetColumns(SeqConnection connection, SignalExpressionPart? signal)
     {
-        var collectedColumns = new List<string>();
+        var columns = new List<string>();
         if (!_noSignalColumns && signal is { } signalExpression)
         {
             foreach (var signalId in signalExpression.ReferencedSignalIds())
@@ -53,18 +53,19 @@ class EventColumnsFeature : CommandFeature
                 var signalEntity = await connection.Signals.FindAsync(signalId);
                 foreach (var column in signalEntity.Columns)
                 {
-                    collectedColumns.Add(column.Expression);
+                    columns.Add(column.Expression);
                 }
             }
         }
 
-        collectedColumns.AddRange(_columns);
+        columns.AddRange(_columns);
 
-        if (collectedColumns.Count == 0)
-            return null;
-
-        if (!EventColumns.TryCreate(collectedColumns, out var columns, out var error))
-            throw new ArgumentException($"The column expression could not be compiled: {error}");
+        foreach (var column in columns)
+        {
+            // A better error than a failed output template parse.
+            if (!SeqSyntax.TryCompileExpression(column, out _, out var error))
+                throw new ArgumentException($"The column expression `{column}` could not be compiled: {error}");
+        }
 
         return columns;
     }

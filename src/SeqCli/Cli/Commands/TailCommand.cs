@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 
 namespace SeqCli.Cli.Commands;
 
@@ -63,8 +64,8 @@ class TailCommand : Command
             strict = converted.StrictExpression;
         }
         
-        var columns = await _eventColumns.GetEventColumns(connection, _signal.Signal);
-        var output = _output.GetOutputFormat(config, columns?.OutputTemplate(), columns);
+        var columns = await _eventColumns.GetColumns(connection, _signal.Signal);
+        var output = _output.GetOutputFormat(config, TextFormatters.PlainOutputTemplate(columns));
         
         try
         {

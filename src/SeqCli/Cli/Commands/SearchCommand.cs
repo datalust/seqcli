@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 
 // ReSharper disable UnusedType.Global
@@ -78,8 +79,8 @@ class SearchCommand : Command
             var connection = SeqConnectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
 
-            var columns = await _eventColumns.GetEventColumns(connection, _signal.Signal);
-            var output = _output.GetOutputFormat(config, columns?.OutputTemplate(), columns);
+            var columns = await _eventColumns.GetColumns(connection, _signal.Signal);
+            var output = _output.GetOutputFormat(config, TextFormatters.PlainOutputTemplate(columns));
 
             string? filter = null;
             if (!string.IsNullOrWhiteSpace(_filter))

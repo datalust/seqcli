@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using SeqCli.Api;
@@ -27,14 +28,19 @@ static class TraceFormatter
 {
     static readonly string TreePrefixProperty = $"_SeqcliTraceTreePrefix_{Guid.NewGuid():N}";
     static readonly string ElapsedProperty = $"_SeqcliTraceElapsed_{Guid.NewGuid():N}";
+    static readonly string ColumnPrefixProperty = $"_SeqcliTraceColumn_{Guid.NewGuid():N}";
 
     const string SpanConnector = "├─ ", LastSpanConnector = "└─ ", LogConnector = "┊  ",
         Continuation = "│  ", Gap = "   ";
 
+    // The trace query evaluates column expressions server-side, so their results are carried in
+    // surrogate properties rather than being recomputed by the output template.
+    static string ColumnProperty(int index) => $"{ColumnPrefixProperty}_{index}";
+
     public static string OutputTemplate(int columnCount)
     {
         var template = new StringBuilder($"[{{@Timestamp:o}} {{@Level:u3}}] {{{TreePrefixProperty}}}");
-        template.Append(EventColumns.TemplateColumnsFragment(columnCount));
+        template.Append(TextFormatters.ColumnsFragment(Enumerable.Range(0, columnCount).Select(ColumnProperty)));
         template.Append($"{{@Message}}{{#if {ElapsedProperty} is not null}} ({{TotalMilliseconds({ElapsedProperty}):0.###}} ms){{#end}}");
         template.Append(Environment.NewLine).Append("{@Exception}");
         return template.ToString();
@@ -95,7 +101,7 @@ static class TraceFormatter
         for (var i = 0; i < evt.Columns.Count; ++i)
         {
             if (evt.Columns[i] is { } value)
-                eventJson[EventColumns.ColumnPropertyName(i)] = ToSystemTextJson.FromApiValue(value);
+                eventJson[ColumnProperty(i)] = ToSystemTextJson.FromApiValue(value);
         }
 
         return eventJson;

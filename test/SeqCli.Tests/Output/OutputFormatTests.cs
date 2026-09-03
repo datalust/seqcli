@@ -27,7 +27,6 @@ public class OutputFormatTests
             forceColor,
             new SeqCliOutputConfig { DisableColor = disableColor },
             plainTextTemplate: null,
-            textEnricher: null,
             noColorSetInEnvironment,
             outputIsRedirected,
             supportsAnsiEscapes);
