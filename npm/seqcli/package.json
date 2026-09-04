@@ -1,0 +1,50 @@
+{
+  "name": "@datalust/seqcli",
+  "//version": "These version are replaced during the deployment process",
+  "version": "0.0.0",
+  "description": "The Seq command-line client. Administer, log, ingest, search, from any OS.",
+  "keywords": [
+    "seq",
+    "seqcli",
+    "datalust",
+    "logging",
+    "structured-logging",
+    "cli"
+  ],
+  "scripts": {
+    "prepack": "cp ../../README.md ./README.md && cp ../../LICENSE ./LICENSE",
+    "postpack": "rm ./README.md ./LICENSE"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/datalust/seqcli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datalust/seqcli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/datalust/seqcli/issues"
+  },
+  "bin": {
+    "seqcli": "bin/seqcli.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "optionalDependencies": {
+    "@datalust/seqcli-win-x64": "0.0.0",
+    "@datalust/seqcli-win-arm64": "0.0.0",
+    "@datalust/seqcli-linux-x64": "0.0.0",
+    "@datalust/seqcli-linux-arm64": "0.0.0",
+    "@datalust/seqcli-linux-musl-x64": "0.0.0",
+    "@datalust/seqcli-linux-musl-arm64": "0.0.0",
+    "@datalust/seqcli-osx-x64": "0.0.0",
+    "@datalust/seqcli-osx-arm64": "0.0.0"
+  }
+}

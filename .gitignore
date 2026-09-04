@@ -21,6 +21,8 @@ x64/
 x86/
 bld/
 [Bb]in/
+# The npm launcher package keeps its script in bin/
+!npm/seqcli/bin/
 [Oo]bj/
 [Ll]og/
 
@@ -296,3 +298,7 @@ global.json
 .claude/
 .qwen/
 .agents/
+
+# npm packaging staging area (build/Build.Npm.ps1)
+npm-staging/
+npm-archives/
