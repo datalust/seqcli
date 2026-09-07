@@ -1,0 +1,24 @@
+{
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "description": "seqcli binaries for {{rid}}. Install @datalust/seqcli instead of depending on this package directly.",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/datalust/seqcli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datalust/seqcli.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "{{os}}"
+  ],
+  "cpu": [
+    "{{cpu}}"
+  ],
+  "preferUnplugged": true,
+  "publishConfig": {
+    "access": "public"
+  }
+}

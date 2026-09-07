@@ -14,6 +14,14 @@ The Seq installer for Windows includes `seqcli`. Otherwise, download the [releas
 dotnet tool install --global seqcli
 ```
 
+With Node.js installed, `seqcli` can be installed from npm using:
+
+```
+npm install -g @datalust/seqcli
+```
+
+On Windows, if the Seq installation directory is on your `PATH`, the `seqcli` bundled with Seq may take precedence over the npm-installed copy; `where seqcli` shows the resolution order, and `npx @datalust/seqcli <command>` always runs the npm version.
+
 To set a default server URL and API key, run:
 
 ```

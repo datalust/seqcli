@@ -12,3 +12,12 @@ function Get-SemVer()
         $base + "." + $revision
     }
 }
+
+function Get-NpmVersion($version)
+{
+    # npm requires strict semver, which forbids leading zeros in numeric identifiers; the build number
+    # is zero-padded (e.g. 2026.1.02616), so strip the padding from the patch component (-> 2026.1.2616).
+    # Prerelease suffixes are alphanumeric identifiers and are left as-is.
+    if ($version -notmatch '^(\d+)\.(\d+)\.(\d+)(.*)$') { throw "Unrecognized version: $version" }
+    "$([int]$Matches[1]).$([int]$Matches[2]).$([int]$Matches[3])$($Matches[4])"
+}
