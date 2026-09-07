@@ -209,6 +209,11 @@ function Stage-LauncherPackage($rids)
     if (Test-Path $directory) { Remove-Item -Recurse -Force $directory }
     Copy-Item -Recurse ./npm/seqcli $directory
 
+    # The launcher package is the one users see on npmjs.com, so it carries the repository README
+    # and license rather than maintaining separate copies under ./npm.
+    Copy-Item ./README.md "$directory/README.md"
+    Copy-Item ./LICENSE "$directory/LICENSE"
+
     $package = Get-Content "$directory/package.json" -Raw | ConvertFrom-Json -AsHashtable
     $package.version = $npmVersion
     $package.optionalDependencies = [ordered]@{}

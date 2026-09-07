@@ -11,10 +11,6 @@
     "structured-logging",
     "cli"
   ],
-  "scripts": {
-    "prepack": "cp ../../README.md ./README.md && cp ../../LICENSE ./LICENSE",
-    "postpack": "rm ./README.md ./LICENSE"
-  },
   "license": "Apache-2.0",
   "homepage": "https://github.com/datalust/seqcli",
   "repository": {
