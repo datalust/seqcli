@@ -1464,6 +1464,8 @@ seqcli search -f "@Exception like '%TimeoutException%'" -c 30
 | ------ | ----------- |
 | `-f`, `--filter=VALUE` | A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'` |
 | `-c`, `--count=VALUE` | The maximum number of events to retrieve; the default is 1 |
+|       `--column=VALUE` | A column to display preceding each event's message; any Seq expression can be supplied, for example `OrderId`, `@SpanKind`, or `@Resource['service.name']`; this argument can be used multiple times, adding columns in order; applies to plain-text output only |
+|       `--no-signal-columns` | Do not show columns associated with the specified signal expression |
 |       `--start=VALUE` | ISO 8601 date/time to query from |
 |       `--end=VALUE` | ISO 8601 date/time to query to |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
@@ -1636,6 +1638,8 @@ Stream log events matching a filter.
 | Option | Description |
 | ------ | ----------- |
 | `-f`, `--filter=VALUE` | An optional server-side filter to apply to the stream, for example `@Level = 'Error'` |
+|       `--column=VALUE` | A column to display preceding each event's message; any Seq expression can be supplied, for example `OrderId`, `@SpanKind`, or `@Resource['service.name']`; this argument can be used multiple times, adding columns in order; applies to plain-text output only |
+|       `--no-signal-columns` | Do not show columns associated with the specified signal expression |
 |       `--json` | Print output in newline-delimited JSON (the default is plain text) |
 |       `--no-color` | Don't colorize text output |
 |       `--force-color` | Force redirected output to have ANSI color (unless `--no-color` is also specified) |

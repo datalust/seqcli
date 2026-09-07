@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 
 // ReSharper disable UnusedType.Global
@@ -33,6 +34,7 @@ class SearchCommand : Command
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
     readonly StoragePathFeature _storagePath;
+    readonly EventColumnsFeature _eventColumns;
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
@@ -44,11 +46,13 @@ class SearchCommand : Command
             "f=|filter=",
             "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
             v => _filter = v);
+        
         Options.Add(
             "c=|count=",
             $"The maximum number of events to retrieve; the default is {_count}",
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
+        _eventColumns = Enable<EventColumnsFeature>();
         _range = Enable<DateRangeFeature>();
         _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
@@ -71,9 +75,12 @@ class SearchCommand : Command
         try
         {
             var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var output = _output.GetOutputFormat(config);
+
             var connection = SeqConnectionFactory.Connect(_connection, config);
             connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
+
+            var columns = await _eventColumns.GetColumns(connection, _signal.Signal);
+            var output = _output.GetOutputFormat(config, TextFormatters.PlainOutputTemplate(columns));
 
             string? filter = null;
             if (!string.IsNullOrWhiteSpace(_filter))

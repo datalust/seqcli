@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 
 namespace SeqCli.Cli.Commands;
 
@@ -31,6 +32,7 @@ class TailCommand : Command
     readonly OutputFormatFeature _output;
     readonly SignalExpressionFeature _signal;
     readonly StoragePathFeature _storagePath;
+    readonly EventColumnsFeature _eventColumns;
     string? _filter;
 
     public TailCommand()
@@ -40,6 +42,7 @@ class TailCommand : Command
             "An optional server-side filter to apply to the stream, for example `@Level = 'Error'`",
             v => _filter = v);
 
+        _eventColumns = Enable<EventColumnsFeature>();
         _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
         _signal = Enable<SignalExpressionFeature>();
@@ -61,7 +64,8 @@ class TailCommand : Command
             strict = converted.StrictExpression;
         }
         
-        var output = _output.GetOutputFormat(config);
+        var columns = await _eventColumns.GetColumns(connection, _signal.Signal);
+        var output = _output.GetOutputFormat(config, TextFormatters.PlainOutputTemplate(columns));
         
         try
         {
