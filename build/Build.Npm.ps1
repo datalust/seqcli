@@ -173,12 +173,24 @@ function Publish-NpmPackage($name, $directory)
 
 function Assert-NpmPublished($name)
 {
-    # The registry can take a moment to reflect a new version.
-    for ($attempt = 1; $attempt -le 6; $attempt++) {
+    # `npm publish` returns as soon as the registry accepts the upload, but the read path (the
+    # packument served via npm's CDN) is updated asynchronously and can lag by several minutes,
+    # particularly for the first-ever publish of a package name. Poll for up to ten minutes.
+    $timeout = [TimeSpan]::FromMinutes(10)
+    $interval = 15
+    $started = Get-Date
+
+    while ($true) {
         if (Test-NpmPublished $name) { return }
-        Start-Sleep -Seconds 5
+
+        $elapsed = (Get-Date) - $started
+        if ($elapsed -ge $timeout) { break }
+
+        Write-Host ("Waiting for {0}@{1} to become visible on the registry ({2:mm\:ss} elapsed)" -f $name, $npmVersion, $elapsed)
+        Start-Sleep -Seconds $interval
     }
-    throw "$name@$npmVersion is not visible on the registry"
+
+    throw "$name@$npmVersion is not visible on the registry after $($timeout.TotalMinutes) minutes"
 }
 
 function Stage-PlatformPackage($rid)
