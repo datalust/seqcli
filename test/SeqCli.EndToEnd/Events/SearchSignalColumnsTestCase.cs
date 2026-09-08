@@ -96,6 +96,6 @@ public class SearchSignalColumnsTestCase : ICliTestCase
         // A signal that can't be found is reported, rather than silently ignored.
         exit = runner.Exec("search", $"--signal signal-999999 {filter} -c 10");
         Assert.Equal(1, exit);
-        Assert.Contains("Could not retrieve search result", runner.LastRunProcess!.Output);
+        Assert.Contains("The command failed", runner.LastRunProcess!.Output);
     }
 }

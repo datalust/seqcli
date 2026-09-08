@@ -54,8 +54,11 @@ class Program
         }
         catch (Exception ex)
         {
-            Log.Debug(ex, "Unhandled command exception");
-            Log.Fatal("The command failed: {UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
+            // The `--verbose` flag flips the level switch from `Error` to `Information`; we use that as a signal to
+            // include full stack traces, it's a bit of a sneaky backchannel but saves adding yet more infrastructure.
+            var reportedException = levelSwitch.MinimumLevel < LogEventLevel.Error ? ex : null;
+            
+            Log.Fatal(reportedException, "The command failed: {UnhandledExceptionMessage}", Presentation.FormattedMessage(ex));
             return 1;
         }
         finally

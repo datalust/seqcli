@@ -22,7 +22,6 @@ using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
 using SeqCli.Util;
-using Serilog;
 
 namespace SeqCli.Cli.Commands.Metrics;
 
@@ -69,56 +68,48 @@ class SearchCommand : Command
 
     protected override async Task<int> Run()
     {
-        try
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var output = _output.GetOutputFormat(config);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
+
+        string? filter = null;
+        if (!string.IsNullOrWhiteSpace(_filter))
+            filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
+
+        var result = await connection.Metrics.SearchAsync(
+            _groups,
+            filter,
+            _count,
+            rangeStartUtc: _range.Start,
+            rangeEndUtc: _range.End,
+            trace: _trace);
+        
+        // We convert the metric into a query result to improve formatting consistency. Room for an abstraction of
+        // some kind here.
+        var rows = new List<object?[]>();
+        foreach (var metric in result.Metrics)
         {
-            var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var output = _output.GetOutputFormat(config);
-            var connection = SeqConnectionFactory.Connect(_connection, config);
-
-            string? filter = null;
-            if (!string.IsNullOrWhiteSpace(_filter))
-                filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
-
-            var result = await connection.Metrics.SearchAsync(
-                _groups,
-                filter,
-                _count,
-                rangeStartUtc: _range.Start,
-                rangeEndUtc: _range.End,
-                trace: _trace);
-            
-            // We convert the metric into a query result to improve formatting consistency. Room for an abstraction of
-            // some kind here.
-            var rows = new List<object?[]>();
-            foreach (var metric in result.Metrics)
+            var row = new List<object?>
             {
-                var row = new List<object?>
-                {
-                    metric.Name ?? metric.Accessor,
-                    metric.Kind,
-                    metric.Unit,
-                    metric.Description
-                };
-                
-                foreach (var value in metric.GroupKey)
-                    row.Add(value);
-                
-                rows.Add(row.ToArray());
-            }
-            var asRowset = new QueryResultPart
-            {
-                Columns = new[] { "Name", "Kind", "Unit", "Description" }.Concat(_groups).ToArray(),
-                Rows = rows.ToArray()
+                metric.Name ?? metric.Accessor,
+                metric.Kind,
+                metric.Unit,
+                metric.Description
             };
             
-            output.WriteQueryResult(asRowset);
-
-            return 0;
+            foreach (var value in metric.GroupKey)
+                row.Add(value);
+            
+            rows.Add(row.ToArray());
         }
-        catch (Exception ex)
+        var asRowset = new QueryResultPart
         {
-            Log.Error(ex, "Could not retrieve metrics: {ErrorMessage}", ex.Message);
-            return 1;
-        }
+            Columns = new[] { "Name", "Kind", "Unit", "Description" }.Concat(_groups).ToArray(),
+            Rows = rows.ToArray()
+        };
+        
+        output.WriteQueryResult(asRowset);
+
+        return 0;
     }
 }

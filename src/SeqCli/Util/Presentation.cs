@@ -29,7 +29,7 @@ static class Presentation
     /// and causal chain.</returns>
     public static string FormattedMessage(Exception ex)
     {
-        if (ex == null) throw new ArgumentNullException(nameof(ex));
+        ArgumentNullException.ThrowIfNull(ex);
 
         static Exception Unwrap(Exception outer)
         {
@@ -38,8 +38,10 @@ static class Presentation
 
         static string Describe(Exception toDescribe)
         {
-            // :-)
-            return toDescribe.Message.Replace(", see inner exception", "");
+            var described = toDescribe.Message.Replace(", see inner exception", "").Trim();
+            if (!described.EndsWith('.'))
+                described += ".";
+            return described;
         }
 
         var unwrapped = Unwrap(ex);
@@ -49,7 +51,7 @@ static class Presentation
         {
             unwrapped = Unwrap(unwrapped.InnerException);
                     
-            message.Append(' ');
+            message.Append(" → ");
             message.Append(Describe(unwrapped));
         }
 
