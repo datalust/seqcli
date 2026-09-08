@@ -6,7 +6,7 @@ using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
 
-namespace SeqCli.EndToEnd.Delete;
+namespace SeqCli.EndToEnd.Events;
 
 public class EventsDeleteWithDateRangeAllTestCase : ICliTestCase
 {
