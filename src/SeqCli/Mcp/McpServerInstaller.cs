@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
@@ -121,9 +122,11 @@ static class McpServerInstaller
             root[target.ServerMapKey] = serverMap;
         }
 
+        var (command, leadingArgs) = ResolveCommand();
+
         // A connection profile is the only connection setting we propagate; the server URL and
         // API key are resolved from config at runtime so they're not baked into the agent's file.
-        var args = new JArray("mcp", "run");
+        var args = new JArray(leadingArgs.Concat(["mcp", "run"]).ToArray<object>());
         if (profileName != null)
         {
             args.Add("--profile");
@@ -132,7 +135,7 @@ static class McpServerInstaller
 
         serverMap[ServerName] = new JObject
         {
-            ["command"] = "seqcli",
+            ["command"] = command,
             ["args"] = args,
         };
 
@@ -144,6 +147,60 @@ static class McpServerInstaller
         Console.WriteLine(" Done.");
         
         Log.Information("Installed Seq MCP server for {Agent} to {Path}", agent, path);
+    }
+
+    // Agents resolve `seqcli` from PATH when they start the server. On Windows, an npm-installed
+    // `seqcli` is a `seqcli.cmd` shim, which hosts that spawn processes without a shell can't run
+    // directly, so in that case the server is launched through `cmd /c` instead.
+    static (string Command, string[] LeadingArgs) ResolveCommand() =>
+        ResolveCommand(
+            OperatingSystem.IsWindows(),
+            Environment.GetEnvironmentVariable("PATH"),
+            Environment.GetEnvironmentVariable("PATHEXT"),
+            File.Exists);
+
+    internal static (string Command, string[] LeadingArgs) ResolveCommand(
+        bool isWindows,
+        string? path,
+        string? pathExt,
+        Func<string, bool> fileExists)
+    {
+        if (!isWindows)
+            return ("seqcli", []);
+
+        var found = FindOnWindowsPath("seqcli", path, pathExt, fileExists);
+        if (found == null)
+            return ("seqcli", []);
+
+        var extension = Path.GetExtension(found);
+        if (extension.Equals(".cmd", StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(".bat", StringComparison.OrdinalIgnoreCase))
+        {
+            Log.Information("Found `seqcli` on PATH as {ShimPath}; the MCP server will be launched via `cmd /c`", found);
+            return ("cmd", ["/c", "seqcli"]);
+        }
+
+        return ("seqcli", []);
+    }
+
+    // Mirrors how Windows locates a command: each PATH directory in turn, trying the PATHEXT
+    // extensions in order within it.
+    static string? FindOnWindowsPath(string name, string? path, string? pathExt, Func<string, bool> fileExists)
+    {
+        var extensions = (pathExt is { Length: > 0 } ? pathExt : ".COM;.EXE;.BAT;.CMD")
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var directory in (path ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            foreach (var extension in extensions)
+            {
+                var candidate = Path.Combine(directory, name + extension);
+                if (fileExists(candidate))
+                    return candidate;
+            }
+        }
+
+        return null;
     }
 
     static AgentTarget Unsupported(string message) =>

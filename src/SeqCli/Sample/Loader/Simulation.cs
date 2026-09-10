@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using Roastery.Metrics;
 using Seq.Api;
 using SeqCli.Ingestion;
-using SeqCli.Mapping;
+using SeqCli.Sample.Ingestion;
 using Serilog;
 
 namespace SeqCli.Sample.Loader;

@@ -19,22 +19,17 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Seq.Api;
 using SeqCli.Api;
-using SeqCli.Output;
 using Serilog;
-using Serilog.Events;
-using Serilog.Formatting;
 
 namespace SeqCli.Ingestion;
 
 static class LogShipper
 {
-    static readonly ITextFormatter JsonFormatter = TextFormatters.Json(null);
-
     public static async Task ShipBufferAsync(
         SeqConnection connection,
         string? apiKey,
@@ -49,7 +44,7 @@ static class LogShipper
                 ContentType = new MediaTypeHeaderValue(ApiConstants.ClefMediaType, "utf-8")
             }
         };
-        
+
         var retries = 0;
         while (true)
         {
@@ -87,22 +82,22 @@ static class LogShipper
             {
                 sendFailureLog.Error(ex, "Failed to ship a batch");
             }
-            
+
             var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
             sendFailureLog.Information("Backing off connection schedule; will retry in {MillisecondsDelay}", millisecondsDelay);
             await Task.Delay(millisecondsDelay, cancellationToken);
             retries += 1;
         }
     }
-    
+
     public static async Task<int> ShipEventsAsync(
         SeqConnection connection,
         string? apiKey,
-        ILogEventReader reader,
+        IEventReader reader,
         InvalidDataHandling invalidDataHandling,
         SendFailureHandling sendFailureHandling,
         int batchSize,
-        Func<LogEvent, bool>? filter,
+        Func<JsonObject, bool>? filter,
         CancellationToken cancellationToken)
     {
         const int maxEmptyBatchWaitMS = 2000;
@@ -116,10 +111,10 @@ static class LogShipper
                 var statusCode = await SendBatchAsync(
                     connection,
                     apiKey,
-                    batch.LogEvents,
+                    batch.Documents,
                     sendFailureHandling != SendFailureHandling.Ignore ? Log.Logger : null,
                     cancellationToken);
-                
+
                 sendSucceeded = (int)statusCode is >= 200 and < 300;
             }
             catch (Exception ex)
@@ -136,7 +131,7 @@ static class LogShipper
                 if (sendFailureHandling == SendFailureHandling.Retry)
                 {
                     var millisecondsDelay = (int)Math.Min(Math.Pow(2, retries) * 2000, 60000);
-                    await Task.Delay(millisecondsDelay);
+                    await Task.Delay(millisecondsDelay, cancellationToken);
                     retries += 1;
                     continue;
                 }
@@ -146,7 +141,7 @@ static class LogShipper
 
             if (batch.IsLast)
                 break;
-                
+
             batch = await ReadBatchAsync(reader, filter, batchSize, invalidDataHandling, maxEmptyBatchWaitMS);
         }
 
@@ -154,15 +149,15 @@ static class LogShipper
     }
 
     static async Task<BatchResult> ReadBatchAsync(
-        ILogEventReader reader,
-        Func<LogEvent, bool>? filter,
+        IEventReader reader,
+        Func<JsonObject, bool>? filter,
         int count,
         InvalidDataHandling invalidDataHandling,
         int maxWaitMS)
     {
-        var batch = new List<LogEvent>();
+        var batch = new List<JsonObject>();
         var isLast = false;
-            
+
         // Avoid consuming stacks of CPU unnecessarily when there's no work to do. We do eventually yield
         // an empty batch, because level switching relies on this.
         var totalWaitMS = 0;
@@ -175,7 +170,7 @@ static class LogShipper
                 {
                     var rr = await reader.TryReadAsync();
                     isLast = rr.IsAtEnd;
-                    var evt = rr.LogEvent;
+                    var evt = rr.Document;
                     if (evt == null)
                     {
                         if (isLast || batch.Count != 0 || totalWaitMS > maxWaitMS)
@@ -195,7 +190,7 @@ static class LogShipper
             }
             catch (Exception ex)
             {
-                if (ex is JsonReaderException || ex is InvalidDataException)
+                if (ex is System.Text.Json.JsonException or InvalidDataException)
                 {
                     if (invalidDataHandling == InvalidDataHandling.Ignore)
                         continue;
@@ -204,14 +199,14 @@ static class LogShipper
                 throw;
             }
 
-            return new BatchResult(batch.ToArray(), isLast);
+            return new BatchResult([.. batch], isLast);
         } while (true);
     }
 
     static async Task<HttpStatusCode> SendBatchAsync(
         SeqConnection connection,
         string? apiKey,
-        IReadOnlyCollection<LogEvent> batch,
+        IReadOnlyCollection<JsonObject> batch,
         ILogger? sendFailureLog,
         CancellationToken cancellationToken)
     {
@@ -223,7 +218,8 @@ static class LogShipper
         using (var builder = new StringWriter())
         {
             foreach (var evt in batch)
-                JsonFormatter.Format(evt, builder);
+                // ReSharper disable once MethodHasAsyncOverload
+                builder.WriteLine(evt.ToJsonString());
 
             content = new StringContent(builder.ToString(), Encoding.UTF8, ApiConstants.ClefMediaType);
         }
@@ -247,7 +243,7 @@ static class LogShipper
         {
             try
             {
-                var error = JsonConvert.DeserializeObject<dynamic>(resultJson)!;
+                var error = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(resultJson)!;
 
                 sendFailureLog.Error("Shipping failed with status code {StatusCode}: {ErrorMessage}",
                     result.StatusCode,

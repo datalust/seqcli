@@ -14,18 +14,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Data;
 using SeqCli.Ingestion;
-using SeqCli.Mapping;
 using SeqCli.PlainText;
 using SeqCli.Syntax;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace SeqCli.Cli.Commands;
 
@@ -82,66 +81,58 @@ class IngestCommand : Command
 
     protected override async Task<int> Run()
     {
-        try
+        var enrichers = new List<IEventEnricher>();
+
+        if (_level != null)
+            enrichers.Add(new LevelEnricher(_level));
+
+        foreach (var (name, value) in _properties.FlatProperties)
+            enrichers.Add(new ScalarPropertyEnricher(name, value));
+
+        Func<JsonObject, bool>? filter = null;
+        if (_filter != null)
         {
-            var enrichers = new List<ILogEventEnricher>();
-            
-            if (_level != null)
-                enrichers.Add(new ScalarPropertyEnricher(LevelMapping.SurrogateLevelProperty, _level));
-            
-            foreach (var (name, value) in _properties.FlatProperties)
-                enrichers.Add(new ScalarPropertyEnricher(name, value));
-
-            Func<LogEvent, bool>? filter = null;
-            if (_filter != null)
-            {
-                var eval = SeqSyntax.CompileExpression(_filter);
-                filter = evt => Seq.Syntax.Expressions.ExpressionResult.IsTrue(eval(evt));
-            }
-
-            var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var connection = SeqConnectionFactory.Connect(_connection, config);
-            
-            // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
-            // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
-            // close at some point!
-            var (_, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
-            var batchSize = _batchSize.Value;
-
-            foreach (var input in _fileInputFeature.OpenInputs())
-            {
-                using (input)
-                {
-                    ILogEventReader reader = _json
-                        ? new JsonLogEventReader(input)
-                        : new PlainTextLogEventReader(input, _pattern);
-
-                    reader = new EnrichingReader(reader, enrichers);
-
-                    if (_message != null)
-                        reader = new StaticMessageTemplateReader(reader, _message);
-
-                    var exit = await LogShipper.ShipEventsAsync(
-                        connection,
-                        apiKey,
-                        reader,
-                        _invalidDataHandlingFeature.InvalidDataHandling,
-                        _sendFailureHandlingFeature.SendFailureHandling,
-                        batchSize,
-                        filter,
-                        CancellationToken.None);
-
-                    if (exit != 0)
-                        return exit;
-                }
-            }
-
-            return 0;
+            var eval = SeqSyntax.CompileExpression(_filter);
+            filter = evt => eval(evt).IsTrue();
         }
-        catch (Exception ex)
+
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
+        
+        // The API key is passed through separately because `SeqConnection` doesn't expose a batched ingestion
+        // mechanism and so we manually construct `HttpRequestMessage`s deeper in the stack. Nice feature gap to
+        // close at some point!
+        var (_, apiKey) = SeqConnectionFactory.GetConnectionDetails(_connection, config);
+        var batchSize = _batchSize.Value;
+
+        foreach (var input in _fileInputFeature.OpenInputs())
         {
-            Log.Error(ex, "Ingestion failed: {ErrorMessage}", ex.Message);
-            return 1;
+            using (input)
+            {
+                IEventReader reader = _json
+                    ? new JsonEventReader(input)
+                    : new PlainTextEventReader(input, _pattern);
+
+                reader = new EnrichingReader(reader, enrichers);
+
+                if (_message != null)
+                    reader = new StaticMessageTemplateReader(reader, _message);
+
+                var exit = await LogShipper.ShipEventsAsync(
+                    connection,
+                    apiKey,
+                    reader,
+                    _invalidDataHandlingFeature.InvalidDataHandling,
+                    _sendFailureHandlingFeature.SendFailureHandling,
+                    batchSize,
+                    filter,
+                    CancellationToken.None);
+
+                if (exit != 0)
+                    return exit;
+            }
         }
+
+        return 0;
     }
 }

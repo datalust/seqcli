@@ -1,10 +1,10 @@
 using System.IO;
 using Newtonsoft.Json.Linq;
 using Seq.Api.Model.Events;
+using SeqCli.Api;
 using SeqCli.Config;
 using SeqCli.Output;
 using SeqCli.Tests.Support;
-using Serilog.Events;
 using Xunit;
 
 #nullable enable
@@ -128,11 +128,10 @@ public class OutputFormatTests
 
     static string RenderMessage(EventEntity evt)
     {
-        var serilogEvent = OutputFormat.ToSerilogEvent(evt);
-        OutputFormat.FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
+        var eventJson = EventEntityJson.ToEventJson(evt);
 
         var output = new StringWriter();
-        TextFormatters.Plain(theme: null, "{@m}").Format(serilogEvent, output);
+        TextFormatters.Plain(theme: null, "{@m}").Format(eventJson, output);
         return output.ToString();
     }
 
@@ -146,36 +145,10 @@ public class OutputFormatTests
     }
 
     [Fact]
-    public void FlatPropertiesWinOverStructureTraversal()
-    {
-        var evt = MakeDottedHoleEvent(
-            ("user.greeting.first", "G'day"),
-            ("user", JObject.Parse("""{"greeting": {"first": "Hello"}, "name": "Barney"}""")));
-
-        Assert.Equal("G'day Barney!", RenderMessage(evt));
-    }
-
-    [Fact]
     public void UnresolvableDottedHolesRenderAsRawText()
     {
         var evt = MakeDottedHoleEvent(("user", JObject.Parse("""{"greeting": 42}""")));
 
         Assert.Equal("{user.greeting.first} {user.name}!", RenderMessage(evt));
-    }
-
-    [Fact]
-    public void ResolvedScalarsAreUnwrappedFromTheirJsonRepresentation()
-    {
-        var evt = Some.MakeEvent(e =>
-        {
-            e.MessageTemplateTokens = [new MessageTemplateTokenPart { PropertyName = "order.total" }];
-            e.Properties = Some.MakeProperties(("order", JObject.Parse("""{"total": 42}""")));
-        });
-
-        var serilogEvent = OutputFormat.ToSerilogEvent(evt);
-        OutputFormat.FlattenPropertiesUsedWithDottedNames(evt, serilogEvent);
-
-        var scalar = Assert.IsType<ScalarValue>(serilogEvent.Properties["order.total"]);
-        Assert.Equal(42L, scalar.Value);
     }
 }

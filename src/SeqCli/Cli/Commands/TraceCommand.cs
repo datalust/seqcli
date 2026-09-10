@@ -81,86 +81,78 @@ class TraceCommand : Command
 
     protected override async Task<int> Run()
     {
-        try
+        if (_id == null)
         {
-            if (_id == null)
-            {
-                Log.Error("A trace id must be specified");
-                return 1;
-            }
-
-            var traceId = _id.ToLowerInvariant();
-            if (!TraceQuery.IsValidTraceId(traceId))
-            {
-                Log.Error("The trace id {TraceId} is not valid; trace ids are 32 hexadecimal digits", _id);
-                return 1;
-            }
-
-            var spanId = _spanId?.ToLowerInvariant();
-            if (spanId != null && !TraceQuery.IsValidSpanId(spanId))
-            {
-                Log.Error("The span id {SpanId} is not valid; span ids are 16 hexadecimal digits", _spanId);
-                return 1;
-            }
-
-            var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var connection = SeqConnectionFactory.Connect(_connection, config);
-
-            var result = await connection.Data.TryQueryAsync(TraceQuery.Build(traceId, _includeLogs, _includeExceptions, _columns));
-            if (!string.IsNullOrWhiteSpace(result.Error))
-            {
-                Log.Error("Could not retrieve trace: {ErrorMessage}", result.Error);
-                foreach (var reason in result.Reasons)
-                    Log.Error("{Reason}", reason);
-                return 1;
-            }
-
-            var traceEvents = TraceQuery.ReadEvents(result, _includeExceptions, _columns);
-            if (traceEvents.Count == 0)
-            {
-                Log.Error("No events found for trace {TraceId}", traceId);
-                return 1;
-            }
-
-            var complete = traceEvents.Count != TraceQuery.MaxEvents;
-            if (!complete)
-                Log.Warning("Only the first {Count} events in the trace were retrieved; the tree may be incomplete",
-                    TraceQuery.MaxEvents);
-
-            var roots = TraceTreeBuilder.Build(traceEvents);
-
-            TraceTreeNode? subtreeRoot = null;
-            if (spanId != null)
-            {
-                subtreeRoot = TraceTreeBuilder.FindSpan(roots, spanId);
-                if (subtreeRoot == null)
-                {
-                    Log.Error("The span {SpanId} does not appear in trace {TraceId}", spanId, traceId);
-                    return 1;
-                }
-            }
-
-            var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
-            if (output.Json)
-            {
-                var document = subtreeRoot != null ?
-                    TraceTreeJObjectConverter.FromSubtree(traceId, subtreeRoot, complete, _includeLogs, _columns) :
-                    TraceTreeJObjectConverter.FromRoots(traceId, roots, complete, _includeLogs, _columns);
-                
-                output.WriteObject(document);
-            }
-            else
-            {
-                foreach (var logEvent in TraceFormatter.ToLogEvents(subtreeRoot != null ? [subtreeRoot] : roots))
-                    output.WriteLogEvent(logEvent);
-            }
-
-            return 0;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Could not retrieve trace: {ErrorMessage}", ex.Message);
+            Log.Error("A trace id must be specified");
             return 1;
         }
+
+        var traceId = _id.ToLowerInvariant();
+        if (!TraceQuery.IsValidTraceId(traceId))
+        {
+            Log.Error("The trace id {TraceId} is not valid; trace ids are 32 hexadecimal digits", _id);
+            return 1;
+        }
+
+        var spanId = _spanId?.ToLowerInvariant();
+        if (spanId != null && !TraceQuery.IsValidSpanId(spanId))
+        {
+            Log.Error("The span id {SpanId} is not valid; span ids are 16 hexadecimal digits", _spanId);
+            return 1;
+        }
+
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+        var connection = SeqConnectionFactory.Connect(_connection, config);
+
+        var result = await connection.Data.TryQueryAsync(TraceQuery.Build(traceId, _includeLogs, _includeExceptions, _columns));
+        if (!string.IsNullOrWhiteSpace(result.Error))
+        {
+            Log.Error("Could not retrieve trace: {ErrorMessage}", result.Error);
+            foreach (var reason in result.Reasons)
+                Log.Error("{Reason}", reason);
+            return 1;
+        }
+
+        var traceEvents = TraceQuery.ReadEvents(result, _includeExceptions, _columns);
+        if (traceEvents.Count == 0)
+        {
+            Log.Error("No events found for trace {TraceId}", traceId);
+            return 1;
+        }
+
+        var complete = traceEvents.Count != TraceQuery.MaxEvents;
+        if (!complete)
+            Log.Warning("Only the first {Count} events in the trace were retrieved; the tree may be incomplete",
+                TraceQuery.MaxEvents);
+
+        var roots = TraceTreeBuilder.Build(traceEvents);
+
+        TraceTreeNode? subtreeRoot = null;
+        if (spanId != null)
+        {
+            subtreeRoot = TraceTreeBuilder.FindSpan(roots, spanId);
+            if (subtreeRoot == null)
+            {
+                Log.Error("The span {SpanId} does not appear in trace {TraceId}", spanId, traceId);
+                return 1;
+            }
+        }
+
+        var output = _output.GetOutputFormat(config, TraceFormatter.OutputTemplate(_columns.Count));
+        if (output.Json)
+        {
+            var document = subtreeRoot != null ?
+                TraceTreeJObjectConverter.FromSubtree(traceId, subtreeRoot, complete, _includeLogs, _columns) :
+                TraceTreeJObjectConverter.FromRoots(traceId, roots, complete, _includeLogs, _columns);
+            
+            output.WriteObject(document);
+        }
+        else
+        {
+            foreach (var eventJson in TraceFormatter.ToEventJson(subtreeRoot != null ? [subtreeRoot] : roots))
+                output.WriteEvent(eventJson);
+        }
+
+        return 0;
     }
 }

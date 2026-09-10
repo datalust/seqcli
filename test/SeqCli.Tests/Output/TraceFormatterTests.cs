@@ -3,10 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using SeqCli.Output;
 using SeqCli.Traces;
-using Serilog.Events;
-using Serilog.Parsing;
 using Xunit;
 
 namespace SeqCli.Tests.Output;
@@ -18,14 +17,14 @@ public class TraceFormatterTests
     static TraceTreeElement Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1,
         string? message = null, IReadOnlyList<object?>? columns = null) =>
         new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null,
-            new MessageTemplate([new TextToken(message ?? $"span {spanId}")]), [],
+            message ?? $"span {spanId}", new JsonObject(),
             null, spanId, parentId, T0.AddMilliseconds(startMs), TimeSpan.FromMilliseconds(elapsedMs),
             columns ?? []);
 
     static TraceTreeElement Log(string? spanId, double timestampMs, string message = "log", string? level = null,
         string? exception = null) =>
         new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), level,
-            new MessageTemplate([new TextToken(message)]), [], exception,
+            message, new JsonObject(), exception,
             spanId, null, null, null, []);
 
     static string Render(params TraceTreeElement[] events)
@@ -33,8 +32,8 @@ public class TraceFormatterTests
         var output = new StringWriter();
         var formatter = TextFormatters.Plain(theme: null,
             TraceFormatter.OutputTemplate(events.Max(e => e.Columns.Count)));
-        foreach (var logEvent in TraceFormatter.ToLogEvents(TraceTreeBuilder.Build(events)))
-            formatter.Format(logEvent, output);
+        foreach (var eventJson in TraceFormatter.ToEventJson(TraceTreeBuilder.Build(events)))
+            formatter.Format(eventJson, output);
         return output.ToString();
     }
 
@@ -115,12 +114,8 @@ public class TraceFormatterTests
     public void TemplateHolesAreFilledFromMessageProperties()
     {
         var evt = new TraceTreeElement("event-1", T0.AddMilliseconds(1.5), null,
-            new MessageTemplate([
-                new TextToken("GET "),
-                new PropertyToken("Route", "{Route}"),
-                new TextToken(" as "),
-                new PropertyToken("User", "{User}")]),
-            [new LogEventProperty("Route", new ScalarValue("/orders"))],
+            "GET {Route} as {User}",
+            new JsonObject { ["Route"] = "/orders" },
             null, "a", null, T0, TimeSpan.FromMilliseconds(1.5), []);
 
         Assert.Equal(

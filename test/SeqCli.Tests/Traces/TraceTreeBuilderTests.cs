@@ -1,9 +1,8 @@
 #nullable enable
 using System;
 using System.Linq;
+using System.Text.Json.Nodes;
 using SeqCli.Traces;
-using Serilog.Events;
-using Serilog.Parsing;
 using Xunit;
 
 namespace SeqCli.Tests.Traces;
@@ -14,12 +13,12 @@ public class TraceTreeBuilderTests
 
     static TraceTreeElement Span(string spanId, string? parentId, double startMs = 0, double elapsedMs = 1) =>
         new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), null,
-            new MessageTemplate([new TextToken($"span {spanId}")]), [], null,
+            $"span {spanId}", new JsonObject(), null,
             spanId, parentId, T0.AddMilliseconds(startMs), TimeSpan.FromMilliseconds(elapsedMs), []);
 
     static TraceTreeElement Log(string? spanId, double timestampMs, string message = "log") =>
         new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), null,
-            new MessageTemplate([new TextToken(message)]), [], null,
+            message, new JsonObject(), null,
             spanId, null, null, null, []);
 
     [Fact]
@@ -76,7 +75,7 @@ public class TraceTreeBuilderTests
         var root = Assert.Single(roots);
         Assert.Equal(
             ["first", "span c", "span b", "last"],
-            root.Children.Select(c => c.Element.MessageTemplate.Text).ToArray());
+            root.Children.Select(c => c.Element.MessageTemplate).ToArray());
     }
 
     [Fact]
@@ -104,7 +103,7 @@ public class TraceTreeBuilderTests
 
         Assert.Equal(
             ["span a", "first", "second", "span b"],
-            roots.Select(r => r.Element.MessageTemplate.Text).ToArray());
+            roots.Select(r => r.Element.MessageTemplate).ToArray());
         Assert.All(roots, r => Assert.Empty(r.Children));
     }
 
@@ -117,7 +116,7 @@ public class TraceTreeBuilderTests
         ]);
 
         Assert.Equal(2, roots.Count);
-        Assert.Equal(["first", "second"], roots.Select(r => r.Element.MessageTemplate.Text).ToArray());
+        Assert.Equal(["first", "second"], roots.Select(r => r.Element.MessageTemplate).ToArray());
     }
 
     [Fact]

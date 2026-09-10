@@ -13,13 +13,12 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.IO;
-using Serilog.Templates.Themes;
+using Seq.Syntax.Templates.Themes;
 
 namespace SeqCli.Output;
 
 /// <summary>
-/// <c>Flare</c> is Seq's embedded stream/columnar database. This theme is derived from one build originally
+/// <c>Flare</c> is Seq's embedded stream/columnar database. This theme is derived from one built originally
 /// for the <c>flaretl</c> command-line tooling used there.
 /// </summary>
 static class FlareTheme
@@ -45,26 +44,5 @@ static class FlareTheme
         [TemplateThemeStyle.LevelFatal] = "\e[38;5;0197m\e[48;5;0238m"
     };
 
-    public static readonly TemplateTheme SeqCli = new(FlareThemeStyles);
-    
-    // `CsvWriter` implements its own theming behavior because the required APIs are not public in Serilog.Expressions.
-    // The best way forward for this is likely to be porting theming to Seq.Syntax, and exposing the required APIs there.
-    
-    const string AnsiStyleResetSequence = "\e[0m";
-    
-    // The passed-in theme is ignored because SerilogExpressions themes are opaque. All formatting uses the SeqCli theme.
-    // ReSharper disable once UnusedParameter.Global
-    extension(TemplateTheme theme)
-    {
-        public void Set(TextWriter output, TemplateThemeStyle style)
-        {
-            if (FlareThemeStyles.TryGetValue(style, out var styleSequence))
-                output.Write(styleSequence);
-        }
-
-        public void Reset(TextWriter output)
-        {
-            output.Write(AnsiStyleResetSequence);
-        }
-    }
+    public static readonly TemplateTheme SeqCli = new AnsiTheme(FlareThemeStyles);
 }

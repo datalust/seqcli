@@ -100,6 +100,16 @@ public class TraceShowTestCase : ICliTestCase
             ["SELECT * FROM orders", "42 rows retrieved"],
             ((JArray)query["children"]!).Select(c => (string)c["message"]!).ToArray());
 
+        var node = root;
+        foreach (var message in new[] {"Render response", "Serialize model", "Serialize order", "Format currency", "Lookup locale"})
+        {
+            var children = Assert.IsType<JArray>(node["children"]);
+            node = Assert.IsType<JObject>(Assert.Single(children, c => (string?)c["message"] == message));
+        }
+
+        Assert.Equal("8888888888888888", (string?)node["spanId"]);
+        Assert.Null(node["children"]);
+
         var orphan = (JObject)Assert.Single((JArray)document["orphans"]!);
         Assert.Equal("log", (string?)orphan["type"]);
         Assert.Equal("Orphan log", (string?)orphan["message"]);

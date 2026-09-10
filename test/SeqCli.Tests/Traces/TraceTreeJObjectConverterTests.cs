@@ -2,10 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 using Newtonsoft.Json.Linq;
 using SeqCli.Traces;
-using Serilog.Events;
-using Serilog.Parsing;
 using Xunit;
 
 namespace SeqCli.Tests.Traces;
@@ -20,14 +19,14 @@ public class TraceTreeJObjectConverterTests
         string? message = null, string? level = null, string? exception = null,
         IReadOnlyList<object?>? columns = null) =>
         new($"event-span-{spanId}", T0.AddMilliseconds(startMs + elapsedMs), level,
-            new MessageTemplate([new TextToken(message ?? $"span {spanId}")]), [],
+            message ?? $"span {spanId}", new JsonObject(),
             exception, spanId, parentId, T0.AddMilliseconds(startMs), TimeSpan.FromMilliseconds(elapsedMs),
             columns ?? []);
 
     static TraceTreeElement Log(string? spanId, double timestampMs, string message = "log", string? level = null,
         string? exception = null, IReadOnlyList<object?>? columns = null) =>
         new($"event-log-{timestampMs}-{message}", T0.AddMilliseconds(timestampMs), level,
-            new MessageTemplate([new TextToken(message)]), [], exception,
+            message, new JsonObject(), exception,
             spanId, null, null, null, columns ?? []);
 
     static JObject ToJson(params TraceTreeElement[] events) => ToJson([], events);
@@ -142,30 +141,13 @@ public class TraceTreeJObjectConverterTests
         Assert.Equal("uncaptured", (string?)orphans[0]["spanId"]);
         Assert.Null(orphans[2]["spanId"]);
     }
-
-    [Fact]
-    public void LevelsAreNormalizedToFullNames()
-    {
-        var document = ToJson(
-            Span("a", null),
-            Log("a", 1, level: "warn"),
-            Log("a", 2, level: "Nonstandard"));
-
-        var children = (JArray)document["root"]!["children"]!;
-        Assert.Equal("Warning", (string?)children[0]["level"]);
-        Assert.Equal("Nonstandard", (string?)children[1]["level"]);
-    }
-
+    
     [Fact]
     public void TemplateHolesAreFilledFromMessageProperties()
     {
         var evt = new TraceTreeElement("event-1", T0.AddMilliseconds(1.5), null,
-            new MessageTemplate([
-                new TextToken("GET "),
-                new PropertyToken("Route", "{Route}"),
-                new TextToken(" as "),
-                new PropertyToken("User", "{User}")]),
-            [new LogEventProperty("Route", new ScalarValue("/orders"))],
+            "GET {Route} as {User}",
+            new JsonObject { ["Route"] = "/orders" },
             null, "a", null, T0, TimeSpan.FromMilliseconds(1.5), []);
 
         var document = ToJson(evt);

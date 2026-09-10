@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using SeqCli.PlainText;
 using SeqCli.PlainText.Extraction;
 using SeqCli.PlainText.Patterns;
 using Xunit;

@@ -1,4 +1,4 @@
-﻿// Copyright © Datalust and contributors.
+// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using SeqCli.Util;
-using Serilog.Core;
-using Serilog.Events;
+using System.Text.Json.Nodes;
 
-namespace SeqCli.Ingestion;
+namespace SeqCli.Data;
 
-class ScalarPropertyEnricher : ILogEventEnricher
+/// <summary>
+/// Overrides the event's <c>@l</c> level with a fixed value.
+/// </summary>
+class LevelEnricher(string level) : IEventEnricher
 {
-    readonly LogEventProperty _property;
-
-    public ScalarPropertyEnricher(string name, object? scalarValue)
+    public void Enrich(JsonObject eventJson)
     {
-        _property = LogEventPropertyFactory.SafeCreate(name, new ScalarValue(scalarValue));
-    }
-
-    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-    {
-        logEvent.AddOrUpdateProperty(_property);
+        eventJson["@l"] = level;
     }
 }

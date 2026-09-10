@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using Seq.Api;
@@ -6,7 +5,7 @@ using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
 
-namespace SeqCli.EndToEnd.Delete;
+namespace SeqCli.EndToEnd.Events;
 
 public class EventsDeleteTestCase : ICliTestCase
 {

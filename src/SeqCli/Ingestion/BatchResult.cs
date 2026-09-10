@@ -1,15 +1,15 @@
-﻿using Serilog.Events;
+using System.Text.Json.Nodes;
 
 namespace SeqCli.Ingestion;
 
 struct BatchResult
 {
-    public LogEvent[] LogEvents { get; }
+    public JsonObject[] Documents { get; }
     public bool IsLast { get; }
 
-    public BatchResult(LogEvent[] logEvents, bool isLast)
+    public BatchResult(JsonObject[] documents, bool isLast)
     {
-        LogEvents = logEvents;
+        Documents = documents;
         IsLast = isLast;
     }
 }

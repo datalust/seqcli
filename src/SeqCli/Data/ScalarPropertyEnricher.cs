@@ -1,4 +1,4 @@
-﻿// Copyright 2013-2015 Serilog Contributors
+// Copyright © Datalust and contributors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Text.Json.Nodes;
 
-namespace SeqCli.Util;
+namespace SeqCli.Data;
 
-class TextException : Exception
+class ScalarPropertyEnricher : IEventEnricher
 {
-    readonly string _text;
+    readonly string _name;
+    readonly object? _scalarValue;
 
-    public TextException(string text)
-        : base("This exception type provides ToString() access to details only.")
+    public ScalarPropertyEnricher(string name, object? scalarValue)
     {
-        _text = text;
+        _name = EventJsonFormat.EscapeUserPropertyName(name);
+        _scalarValue = scalarValue;
     }
 
-    public override string ToString()
+    public void Enrich(JsonObject eventJson)
     {
-        return _text;
+        eventJson[_name] = EventJsonFormat.CreateScalar(_scalarValue);
     }
 }

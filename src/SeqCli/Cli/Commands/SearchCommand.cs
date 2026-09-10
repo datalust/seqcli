@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
+using SeqCli.Output;
 using Serilog;
 
 // ReSharper disable UnusedType.Global
@@ -33,6 +34,7 @@ class SearchCommand : Command
     readonly DateRangeFeature _range;
     readonly SignalExpressionFeature _signal;
     readonly StoragePathFeature _storagePath;
+    readonly EventColumnsFeature _eventColumns;
     string? _filter;
     int _count = 1;
     int _httpClientTimeout = 100000;
@@ -44,11 +46,13 @@ class SearchCommand : Command
             "f=|filter=",
             "A filter to apply to the search, for example `Host = 'xmpweb-01.example.com'`",
             v => _filter = v);
+        
         Options.Add(
             "c=|count=",
             $"The maximum number of events to retrieve; the default is {_count}",
             v => _count = int.Parse(v, CultureInfo.InvariantCulture));
 
+        _eventColumns = Enable<EventColumnsFeature>();
         _range = Enable<DateRangeFeature>();
         _output = Enable(new OutputFormatFeature(supportNative: true, supportJson: true));
         _storagePath = Enable<StoragePathFeature>();
@@ -68,59 +72,54 @@ class SearchCommand : Command
 
     protected override async Task<int> Run()
     {
+        var config = RuntimeConfigurationLoader.Load(_storagePath);
+
+        var connection = SeqConnectionFactory.Connect(_connection, config);
+        connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
+
+        var columns = await _eventColumns.GetColumns(connection, _signal.Signal);
+        var output = _output.GetOutputFormat(config, TextFormatters.PlainOutputTemplate(columns));
+
+        string? filter = null;
+        if (!string.IsNullOrWhiteSpace(_filter))
+            filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
+
         try
         {
-            var config = RuntimeConfigurationLoader.Load(_storagePath);
-            var output = _output.GetOutputFormat(config);
-            var connection = SeqConnectionFactory.Connect(_connection, config);
-            connection.Client.HttpClient.Timeout = TimeSpan.FromMilliseconds(_httpClientTimeout);
-
-            string? filter = null;
-            if (!string.IsNullOrWhiteSpace(_filter))
-                filter = (await connection.Expressions.ToStrictAsync(_filter)).StrictExpression;
-
-            try
+            if (!_noWebSockets)
             {
-                if (!_noWebSockets)
+                await foreach (var evt in connection.Events.EnumerateAsync(null,
+                                   _signal.Signal,
+                                   filter,
+                                   _count,
+                                   fromDateUtc: _range.Start,
+                                   toDateUtc: _range.End,
+                                   trace: _trace,
+                                   render: output.RequiresRender))
                 {
-                    await foreach (var evt in connection.Events.EnumerateAsync(null,
-                                       _signal.Signal,
-                                       filter,
-                                       _count,
-                                       fromDateUtc: _range.Start,
-                                       toDateUtc: _range.End,
-                                       trace: _trace,
-                                       render: output.RequiresRender))
-                    {
-                        output.WriteEventEntity(evt);
-                    }
-
-                    return 0;
+                    output.WriteEventEntity(evt);
                 }
-            }
-            catch (NotSupportedException nse)
-            {
-                Log.Information(nse, "WebSockets not supported; falling back to paged search");
-            }
-            
-            await foreach (var evt in connection.Events.PagedEnumerateAsync(null,
-                               _signal.Signal,
-                               filter,
-                               _count,
-                               fromDateUtc: _range.Start,
-                               toDateUtc: _range.End,
-                               trace: _trace,
-                               render: output.RequiresRender))
-            {
-                output.WriteEventEntity(evt);
-            }
 
-            return 0;
+                return 0;
+            }
         }
-        catch (Exception ex)
+        catch (NotSupportedException nse)
         {
-            Log.Error(ex, "Could not retrieve search result: {ErrorMessage}", ex.Message);
-            return 1;
+            Log.Information(nse, "WebSockets not supported; falling back to paged search");
         }
+        
+        await foreach (var evt in connection.Events.PagedEnumerateAsync(null,
+                           _signal.Signal,
+                           filter,
+                           _count,
+                           fromDateUtc: _range.Start,
+                           toDateUtc: _range.End,
+                           trace: _trace,
+                           render: output.RequiresRender))
+        {
+            output.WriteEventEntity(evt);
+        }
+
+        return 0;
     }
 }

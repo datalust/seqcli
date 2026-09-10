@@ -1,4 +1,3 @@
-using System;
 using SeqCli.Syntax;
 using Xunit;
 

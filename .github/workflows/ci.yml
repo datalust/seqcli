@@ -42,6 +42,17 @@ jobs:
         shell: pwsh
         run: |
           ./build/Build.Windows.ps1
+      - name: Upload archives
+        # Consumed by the publish-npm job
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: archives
+          path: |
+            artifacts/seqcli-*-*.zip
+            artifacts/seqcli-*-*.tar.gz
+          if-no-files-found: error
+          retention-days: 1
 
   build-linux:
     name: Build (Linux)
@@ -69,3 +80,45 @@ jobs:
         shell: pwsh
         run: |
           ./build/Build.Linux.ps1 -SeqDockerTag $env:SEQ_DOCKER_TAG
+
+  publish-npm:
+    name: Publish (npm)
+    runs-on: ubuntu-24.04
+    needs: build-windows
+
+    # Mirrors NuGet publishing: builds from any branch this workflow targets (dev builds as
+    # prereleases under the `dev` dist-tag, main builds as `latest`), but never pull requests.
+    if: github.event_name != 'pull_request'
+
+    permissions:
+      contents: read
+      # Required for npm trusted publishing (OIDC) and provenance
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          # Bootstrap only: together with NODE_AUTH_TOKEN below, authenticates using the NPM_TOKEN
+          # secret. Once trusted publishing is configured for every @datalust/seqcli* package
+          # (bound to this workflow file, ci.yml), remove `registry-url` here and `NODE_AUTH_TOKEN`
+          # below so that npm authenticates with the OIDC token instead.
+          registry-url: https://registry.npmjs.org/
+      - name: Update npm
+        # Trusted publishing and automatic provenance require npm 11.5.1 or later
+        run: |
+          npm install -g npm@latest
+          npm --version
+      - name: Download archives
+        uses: actions/download-artifact@v8
+        with:
+          name: archives
+          path: npm-archives
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        shell: pwsh
+        run: |
+          ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives

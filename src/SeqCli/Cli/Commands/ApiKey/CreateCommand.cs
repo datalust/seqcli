@@ -16,13 +16,11 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Seq.Api;
-using Seq.Api.Model.LogEvents;
 using Seq.Api.Model.Security;
 using Seq.Api.Model.Shared;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
-using SeqCli.Mapping;
 using SeqCli.Util;
 using Serilog;
 
@@ -125,7 +123,7 @@ class CreateCommand : Command
 
         if (_level != null)
         {
-            apiKey.InputSettings.MinimumLevel = Enum.Parse<LogEventLevel>(LevelMapping.ToFullLevelName(_level));
+            apiKey.InputSettings.MinimumLevel = LevelMapping.ToSeqApiLogEventLevel(_level);
         }
 
         apiKey.AssignedPermissions.Clear();

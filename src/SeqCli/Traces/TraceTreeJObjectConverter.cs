@@ -15,17 +15,16 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.Json.Nodes;
 using Newtonsoft.Json.Linq;
-using SeqCli.Mapping;
+using Seq.Syntax.Templates;
 using SeqCli.Output;
-using Serilog.Events;
-using Serilog.Formatting;
 
 namespace SeqCli.Traces;
 
 static class TraceTreeJObjectConverter
 {
-    static readonly ITextFormatter MessageFormatter = TextFormatters.Plain(theme: null, "{@m}");
+    static readonly ExpressionTemplate MessageFormatter = TextFormatters.Plain(theme: null, "{@Message}");
 
     public static JObject FromRoots(string traceId, IReadOnlyList<TraceTreeNode> roots, bool complete, bool includeTypeMarker, IReadOnlyList<string> columns)
     {
@@ -82,7 +81,7 @@ static class TraceTreeJObjectConverter
             json["parentSpanId"] = evt.ParentId;
 
         if (!string.IsNullOrEmpty(evt.Level))
-            json["level"] = LevelMapping.ToFullLevelName(evt.Level);
+            json["level"] = evt.Level;
 
         if (evt.IsSpan)
         {
@@ -131,15 +130,16 @@ static class TraceTreeJObjectConverter
 
     static string RenderMessage(TraceTreeElement evt)
     {
-        var logEvent = new LogEvent(
-            evt.SortKey,
-            LevelMapping.ToSerilogLevel(evt.Level ?? ""),
-            exception: null,
-            evt.MessageTemplate,
-            evt.TemplateProperties);
+        var eventJson = new JsonObject
+        {
+            ["@mt"] = evt.MessageTemplate
+        };
+
+        foreach (var (name, value) in evt.TemplateProperties)
+            eventJson[name] = value?.DeepClone();
 
         var message = new StringWriter();
-        MessageFormatter.Format(logEvent, message);
+        MessageFormatter.Format(eventJson, message);
         return message.ToString();
     }
 }

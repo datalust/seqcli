@@ -4,7 +4,6 @@ using Seq.Api;
 using SeqCli.EndToEnd.Support;
 using Serilog;
 using Xunit;
-using System.IO;
 using System.Linq;
 
 namespace SeqCli.EndToEnd.User;

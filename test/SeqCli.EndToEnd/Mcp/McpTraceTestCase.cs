@@ -33,7 +33,7 @@ public class McpTraceTestCase : McpToolTestCase
             });
 
         var text = AssertTextResult(loaded);
-        Assert.Contains("Loaded 4 span(s)", text);
+        Assert.Contains("Loaded 8 span(s)", text);
 
         var document = AssertStructuredObjectResult(loaded);
         Assert.Equal(TraceId, document.GetProperty("traceId").GetString());

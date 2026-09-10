@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using SeqCli.PlainText.Patterns;
 using Superpower;
 using Xunit;

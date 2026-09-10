@@ -2,7 +2,7 @@
 
 namespace SeqCli.Ingestion;
 
-interface ILogEventReader
+interface IEventReader
 {
     Task<ReadResult> TryReadAsync();
 }

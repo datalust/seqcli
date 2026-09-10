@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using SeqCli.Mapping;
+using SeqCli.Api;
 using SeqCli.PlainText.Parsers;
 using Superpower;
 using Superpower.Model;
 using Superpower.Parsers;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace SeqCli.PlainText.Extraction;
 
@@ -122,7 +123,7 @@ static class Matchers
 
     // Equivalent to :* at end-of-pattern
     public static TextParser<object?> MultiLineContent { get; } =
-        Span.WithAll(ch => true)
+        Span.WithAll(_ => true)
             .Select(span => (object?)span);
 
     [Matcher("n")]
