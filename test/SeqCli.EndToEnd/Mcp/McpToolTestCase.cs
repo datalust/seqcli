@@ -47,9 +47,14 @@ public abstract partial class McpToolTestCase : ICliTestCase
         AssertTextResult(callToolResult);
         Assert.NotNull(callToolResult.StructuredContent);
 
-        // Tools returning non-object values have them wrapped in a `result` property by the MCP
-        // SDK, because the protocol requires `structuredContent` to be an object.
-        var result = callToolResult.StructuredContent.Value.GetProperty("result");
+        // Before protocol version 2026-07-28, `structuredContent` had to be an object, so the MCP SDK
+        // wrapped non-object values (e.g. arrays) in a `result` property. From that version on, the SDK
+        // sends the value directly. Accept either shape.
+        var structuredContent = callToolResult.StructuredContent.Value;
+        var result = structuredContent.ValueKind == JsonValueKind.Object &&
+                     structuredContent.TryGetProperty("result", out var wrapped)
+            ? wrapped
+            : structuredContent;
         return result.Deserialize<T>(JsonSerializerOptions.Web)!;
     }
 
