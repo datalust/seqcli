@@ -13,9 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ModelContextProtocol.Protocol;
+using Seq.Api;
+using Seq.Api.Model.Settings;
 using SeqCli.Api;
 using SeqCli.Cli.Features;
 using SeqCli.Config;
@@ -65,10 +70,25 @@ class RunCommand: Command
 
             var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
             builder.Services.AddSerilog();
-            builder.Services.AddSingleton(_ => SeqConnectionFactory.Connect(_connection, config));
+            var connection = SeqConnectionFactory.Connect(_connection, config);
+            var instanceTitle = await TryGetInstanceTitleAsync(connection);
+
+            builder.Services.AddSingleton(connection);
             builder.Services.AddSingleton<McpSession>();
             builder.Services
-                .AddMcpServer()
+                .AddMcpServer(options =>
+                {
+                    var identity = instanceTitle != null ? $"Seq ({instanceTitle})" : "Seq";
+                    var assemblyName = Assembly.GetEntryAssembly()?.GetName();
+                    options.ServerInfo = new Implementation
+                    {
+                        Name = identity,
+                        Version = assemblyName?.Version?.ToString() ?? "0.0.0"
+                    };
+
+                    if (instanceTitle != null)
+                        options.ServerInstructions = $"Connected to {identity}";
+                })
                 .WithStdioServerTransport()
                 .WithTools([
                     typeof(SearchTools),
@@ -90,5 +110,23 @@ class RunCommand: Command
             await Log.CloseAndFlushAsync();
         }
         return 0;
+    }
+
+    static async Task<string?> TryGetInstanceTitleAsync(SeqConnection connection)
+    {
+        try
+        {
+            // Not really any good options, here - we might have a 1-2 second deadline for first-turn availability,
+            // and 30-60 second absolute deadline. It's likely the call will be subsecond, but if we miss the first
+            // turn, might as well keep waiting, the tool won't work if Seq is down, anyway.
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            var setting = await connection.Settings.FindNamedAsync(SettingName.InstanceTitle, cts.Token);
+            return setting.Value is string title && !string.IsNullOrWhiteSpace(title) ? title.Trim() : null;
+        }
+        catch (Exception ex)
+        {
+            Log.Information(ex, "Could not retrieve the Seq instance title");
+            return null;
+        }
     }
 }
