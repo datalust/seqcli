@@ -27,14 +27,14 @@ class SetCommand: Command
     readonly ConnectionFeature _connection;
     readonly SettingNameFeature _name;
     readonly StoragePathFeature _storagePath;
-    
+
     string? _value;
     bool _valueSpecified, _readValueFromStdin;
 
     public SetCommand()
     {
         _name = Enable<SettingNameFeature>();
-        
+
         Options.Add("v|value=",
             "The setting value, comma-separated if multiple values are accepted",
             v =>
@@ -72,9 +72,8 @@ class SetCommand: Command
 
     string? ReadValue()
     {
-        if (_readValueFromStdin)
-            return Console.In.ReadToEnd().TrimEnd('\r', '\n');
+        var value = _readValueFromStdin ? Console.In.ReadToEnd().TrimEnd('\r', '\n') : _value;
 
-        return _value;
+        return string.IsNullOrEmpty(value) ? null : value;
     }
 }
