@@ -1,4 +1,5 @@
-# If this file is renamed, the incrementing run attempt number will be reset.
+# If this file is renamed, the incrementing run attempt number will be reset, and the NuGet.org
+# trusted publishing policy, which identifies this workflow by file name, must be updated.
 
 name: CI
 
@@ -26,6 +27,9 @@ jobs:
     runs-on: windows-latest
 
     permissions:
+      # Required for NuGet.org trusted publishing.
+      id-token: write
+      # Required for creating GitHub releases.
       contents: write
 
     steps:
@@ -37,11 +41,28 @@ jobs:
       - name: Build and Publish
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: true
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
           ./build/Build.Windows.ps1
+      - name: Log in to NuGet
+        # Builds from any branch this workflow targets are published (dev builds as prereleases),
+        # but never pull requests.
+        if: github.event_name != 'pull_request'
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Push to NuGet
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          $packages = @(Get-ChildItem ./artifacts/*.nupkg)
+          if ($packages.Count -eq 0) { throw "No packages found in ./artifacts" }
+          foreach ($nupkg in $packages) {
+            dotnet nuget push "$nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
+            if ($LASTEXITCODE -ne 0) { throw "Publishing failed" }
+          }
       - name: Upload archives
         # Consumed by the publish-npm job
         if: github.event_name != 'pull_request'
