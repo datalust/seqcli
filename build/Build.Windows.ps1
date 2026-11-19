@@ -95,19 +95,6 @@ function Publish-Docs($version)
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
 }
 
-function Upload-NugetPackages
-{
-    # GitHub Actions will only supply this to branch builds and not PRs. We publish
-    # builds from any branch this action targets (i.e. main and dev).
-
-    Write-Output "Publishing NuGet packages"
-
-    foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
-        & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
-        if($LASTEXITCODE -ne 0) { throw "Publishing failed" }
-    }
-}
-
 function Upload-GitHubRelease($version)
 {
     Write-Output "Creating release for version $version"
@@ -144,11 +131,6 @@ Publish-Archives($version)
 Publish-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
-
-if ("$($env:NUGET_API_KEY)" -ne "")
-{
-    Upload-NugetPackages
-}
 
 if ($env:CI_PUBLISH -eq "True") {
     Upload-GitHubRelease($version)
