@@ -29,7 +29,7 @@
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="2.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Seq.Api" Version="2026.2.0-dev-00501" />
+    <PackageReference Include="Seq.Api" Version="2026.2.0" />
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="4.0.0" />
