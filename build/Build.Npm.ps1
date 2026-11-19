@@ -2,8 +2,8 @@
 # archive, then the launcher package `@datalust/seqcli` (from ./npm/seqcli) with its
 # optionalDependencies pinned to the same version.
 #
-# In CI (see publish-npm in .github/workflows/ci.yml) the archives come from the build-windows job's
-# artifacts, so dev builds are published as prereleases (dist-tag `dev`) and main builds as `latest`,
+# In CI (see publish-npm in .github/workflows/publish.yml) the archives come from the artifacts of
+# the CI run's build-windows job, so dev builds are published as prereleases (dist-tag `dev`) and main builds as `latest`,
 # matching NuGet. Packages that already exist on the registry at the target version are skipped, so
 # a partially-failed run can simply be re-run.
 #
@@ -24,7 +24,7 @@ param(
     [string] $ArchiveDir,
 
     # GitHub repository to download release assets from. Also identifies the repository whose CI
-    # publishes via npm trusted publishing (forks without an NPM_TOKEN skip publishing).
+    # publishes via npm trusted publishing (forks skip publishing).
     [string] $Repo = 'datalust/seqcli',
 
     # Stage the packages and run `npm pack` instead of `npm publish`.
@@ -57,7 +57,8 @@ Write-Host "npm dist-tag: $DistTag"
 Write-Host "Dry run: $DryRun"
 
 if (-not $DryRun -and -not $env:NODE_AUTH_TOKEN -and $env:GITHUB_REPOSITORY -ne $Repo) {
-    # Forks have neither the NPM_TOKEN secret nor a trusted publisher configuration.
+    # Forks have no trusted publisher configuration. NODE_AUTH_TOKEN still allows a manual publish
+    # with a token, e.g. from a maintainer's machine.
     Write-Host "Skipping npm publishing: no npm credentials are available in this environment"
     Pop-Location
     exit 0
