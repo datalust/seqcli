@@ -1,6 +1,6 @@
 # Building and publishing `seqcli`
 
-This directory holds the PowerShell scripts that build, test, package, and publish `seqcli`. They are driven by the GitHub Actions workflow in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), but can also be run locally with `pwsh`.
+This directory holds the PowerShell scripts that build, test, package, and publish `seqcli`. They are driven by the GitHub Actions workflows in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) and [`.github/workflows/publish.yml`](../.github/workflows/publish.yml), but can also be run locally with `pwsh`.
 
 | Script | Runs on | Produces |
 |---|---|---|
@@ -31,11 +31,10 @@ npm enforces strict semver, which forbids leading zeros in numeric components, s
 
 ## The CI workflow
 
-The workflow runs on pushes and pull requests to `dev` and `main`, and can be triggered manually with `workflow_dispatch`. Three jobs run:
+The workflow runs on pushes and pull requests to `dev` and `main`, and can be triggered manually with `workflow_dispatch`. Two jobs run:
 
-1. **Build (Windows)** runs `Build.Windows.ps1`. On non-PR builds, it then pushes the tool package to NuGet (see below) and uploads the release archives as a workflow artifact named `archives` for the npm job to consume.
+1. **Build (Windows)** runs `Build.Windows.ps1`. On non-PR builds, it then uploads the tool package as a workflow artifact named `packages`, and the release archives as one named `archives`, for the publish workflow to consume.
 2. **Build (Linux)** runs `Build.Linux.ps1`, after configuring `binfmt` so that ARM64 images can be built on the x64 runner. It runs in parallel with the Windows job.
-3. **Publish (npm)** runs `Build.Npm.ps1` after the Windows job succeeds, on every non-PR build.
 
 Environment variables control what gets published:
 
@@ -46,14 +45,18 @@ Environment variables control what gets published:
 | `CI_PUBLISH` | `True` for pushes to `main`, or when the manual `publish` input is set | Whether `Build.Windows.ps1` creates a GitHub release |
 | `GH_TOKEN` | `secrets.GITHUB_TOKEN` | Used by `gh release create` |
 | `DOCKER_USER`, `DOCKER_TOKEN` | Docker Hub secrets | When `DOCKER_TOKEN` is non-empty, `Build.Linux.ps1` pushes images |
-| `NODE_AUTH_TOKEN` | `secrets.NPM_TOKEN` | Authenticates `npm publish` (see below) |
 | `SEQ_DOCKER_TAG` | e.g. `2026.1` | Seq image tag used for the Linux end-to-end tests |
 
-GitHub only supplies repository secrets to branch builds, not to pull requests, so PR builds run the full build and test steps but publish nothing.
+GitHub supplies no secrets or OIDC tokens to pull requests from forks, and PR builds run the full build and test steps but publish nothing.
 
-### NuGet trusted publishing
+## The publish workflow
 
-The tool package is pushed to NuGet.org by workflow steps in the Windows job, not by `Build.Windows.ps1`. 
+`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded, and was started by a push or manual dispatch on `dev` or `main` in this repository; it does nothing for pull requests. Two jobs run, independently:
+
+1. **Publish (NuGet)** downloads the `packages` artifact from the CI run and pushes it to NuGet.org.
+2. **Publish (npm)** checks out the commit CI built, downloads the `archives` artifact, and runs `Build.Npm.ps1`.
+
+Both registries use [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing).
 
 ### What each branch publishes
 

@@ -1,5 +1,5 @@
-# If this file is renamed, the incrementing run attempt number will be reset, and the NuGet.org
-# trusted publishing policy, which identifies this workflow by file name, must be updated.
+# If this file is renamed, the incrementing run attempt number will be reset. If the workflow's
+# `name` changes, the `workflow_run` trigger in publish.yml must be updated.
 
 name: CI
 
@@ -27,8 +27,6 @@ jobs:
     runs-on: windows-latest
 
     permissions:
-      # Required for NuGet.org trusted publishing.
-      id-token: write
       # Required for creating GitHub releases.
       contents: write
 
@@ -45,26 +43,17 @@ jobs:
         shell: pwsh
         run: |
           ./build/Build.Windows.ps1
-      - name: Log in to NuGet
-        # Builds from any branch this workflow targets are published (dev builds as prereleases),
-        # but never pull requests.
+      - name: Upload packages
+        # Consumed by the publish-nuget job in publish.yml
         if: github.event_name != 'pull_request'
-        uses: NuGet/login@v1
-        id: login
+        uses: actions/upload-artifact@v7
         with:
-          user: ${{ secrets.NUGET_USER }}
-      - name: Push to NuGet
-        if: github.event_name != 'pull_request'
-        shell: pwsh
-        run: |
-          $packages = @(Get-ChildItem ./artifacts/*.nupkg)
-          if ($packages.Count -eq 0) { throw "No packages found in ./artifacts" }
-          foreach ($nupkg in $packages) {
-            dotnet nuget push "$nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
-            if ($LASTEXITCODE -ne 0) { throw "Publishing failed" }
-          }
+          name: packages
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+          retention-days: 1
       - name: Upload archives
-        # Consumed by the publish-npm job
+        # Consumed by the publish-npm job in publish.yml
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7
         with:
@@ -101,45 +90,3 @@ jobs:
         shell: pwsh
         run: |
           ./build/Build.Linux.ps1 -SeqDockerTag $env:SEQ_DOCKER_TAG
-
-  publish-npm:
-    name: Publish (npm)
-    runs-on: ubuntu-24.04
-    needs: build-windows
-
-    # Mirrors NuGet publishing: builds from any branch this workflow targets (dev builds as
-    # prereleases under the `dev` dist-tag, main builds as `latest`), but never pull requests.
-    if: github.event_name != 'pull_request'
-
-    permissions:
-      contents: read
-      # Required for npm trusted publishing (OIDC) and provenance
-      id-token: write
-
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24.x
-          # Bootstrap only: together with NODE_AUTH_TOKEN below, authenticates using the NPM_TOKEN
-          # secret. Once trusted publishing is configured for every @datalust/seqcli* package
-          # (bound to this workflow file, ci.yml), remove `registry-url` here and `NODE_AUTH_TOKEN`
-          # below so that npm authenticates with the OIDC token instead.
-          registry-url: https://registry.npmjs.org/
-      - name: Update npm
-        # Trusted publishing and automatic provenance require npm 11.5.1 or later
-        run: |
-          npm install -g npm@latest
-          npm --version
-      - name: Download archives
-        uses: actions/download-artifact@v8
-        with:
-          name: archives
-          path: npm-archives
-      - name: Publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        shell: pwsh
-        run: |
-          ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives
