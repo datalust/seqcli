@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Api;
@@ -50,7 +51,7 @@ class RemoveCommand : Command
         var toRemove = _userIdentity.Id != null ? [await connection.Users.FindAsync(_userIdentity.Id)]
             :
             (await connection.Users.ListAsync())
-            .Where(u => _userIdentity.Name == u.Username) 
+            .Where(u => string.Equals(_userIdentity.Name, u.Username, StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         if (!toRemove.Any())

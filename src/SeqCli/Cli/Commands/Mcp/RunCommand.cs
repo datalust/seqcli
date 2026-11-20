@@ -72,7 +72,6 @@ class RunCommand: Command
             builder.Services.AddSerilog();
             var connection = SeqConnectionFactory.Connect(_connection, config);
             var instanceTitle = await TryGetInstanceTitleAsync(connection);
-
             builder.Services.AddSingleton(connection);
             builder.Services.AddSingleton<McpSession>();
             builder.Services
@@ -111,7 +110,7 @@ class RunCommand: Command
         }
         return 0;
     }
-
+    
     static async Task<string?> TryGetInstanceTitleAsync(SeqConnection connection)
     {
         try

@@ -1,0 +1,106 @@
+# Publishes the packages built by a successful CI run to NuGet.org and npm
+
+name: Publish
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
+    branches: [ "dev", "main" ]
+
+permissions: {}
+
+env:
+  # Reproduce the version computed by the triggering CI run (see Get-SemVer in build/Build.Common.ps1).
+  CI_BUILD_NUMBER_BASE: ${{ github.event.workflow_run.run_number }}
+  CI_TARGET_BRANCH: ${{ github.event.workflow_run.head_branch }}
+
+jobs:
+  publish-nuget:
+    name: Publish (NuGet)
+    runs-on: ubuntu-24.04
+
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+
+    permissions:
+      # Required to download artifacts from the triggering CI run.
+      actions: read
+      # Required for NuGet.org trusted publishing.
+      id-token: write
+
+    steps:
+      - name: Setup
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: packages
+          path: packages
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Log in to NuGet
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Push to NuGet
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: true
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        shell: pwsh
+        run: |
+          $packages = @(Get-ChildItem ./packages/*.nupkg)
+          if ($packages.Count -eq 0) { throw "No packages found in ./packages" }
+          foreach ($nupkg in $packages) {
+            dotnet nuget push "$nupkg" --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+            if ($LASTEXITCODE -ne 0) { throw "Publishing failed" }
+          }
+
+  publish-npm:
+    name: Publish (npm)
+    runs-on: ubuntu-24.04
+
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+
+    permissions:
+      # Required to download artifacts from the triggering CI run.
+      actions: read
+      contents: read
+      # Required for npm trusted publishing and provenance.
+      id-token: write
+
+    steps:
+      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The checks
+      # above guarantee this is a commit pushed to this repository, not pull request code.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Setup
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+      - name: Update npm
+        # Trusted publishing and automatic provenance require npm 11.5.1 or later
+        run: |
+          npm install -g npm@latest
+          npm --version
+      - name: Download archives
+        uses: actions/download-artifact@v8
+        with:
+          name: archives
+          path: npm-archives
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Publish
+        shell: pwsh
+        run: |
+          ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SeqCli.Api;
@@ -44,7 +45,7 @@ class ListCommand : Command
         var list = _userIdentity.Id != null ? [await connection.Users.FindAsync(_userIdentity.Id)]
             :
             (await connection.Users.ListAsync())
-            .Where(u => _userIdentity.Name == null || _userIdentity.Name == u.Username);
+            .Where(u => _userIdentity.Name == null || string.Equals(_userIdentity.Name, u.Username, StringComparison.OrdinalIgnoreCase));
 
         _output.GetOutputFormat(config).ListEntities(list);
             
