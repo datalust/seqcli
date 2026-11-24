@@ -1,4 +1,4 @@
-# If this file is renamed, the incrementing run attempt number will be reset. If the workflow's
+# If this file is renamed, the incrementing run number will be reset. If the workflow's
 # `name` changes, the `workflow_run` trigger in publish.yml must be updated.
 
 name: CI
@@ -8,18 +8,11 @@ on:
     branches: [ "dev", "main" ]
   pull_request:
     branches: [ "dev", "main" ]
-  workflow_dispatch:
-    inputs:
-      publish:
-        description: 'Publish a GitHub release'
-        type: boolean
-        required: true
-        default: true
 
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
-  CI_PUBLISH: ${{ (github.event_name == 'push' && github.ref_name == 'main') || inputs.publish }}
+  CI_PUBLISH: ${{ (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev'))}}
 
 jobs:
   build-windows:
