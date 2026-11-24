@@ -51,7 +51,11 @@ GitHub supplies no secrets or OIDC tokens to pull requests from forks, and PR bu
 
 ## The publish workflow
 
-`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded, and was started by a push or manual dispatch on `dev` or `main` in this repository; it does nothing for pull requests. Two jobs run, independently:
+`publish.yml` runs automatically via `workflow_run` when the CI workflow completes on `main`. It only publishes when that CI run succeeded, and was started by a push or manual dispatch in this repository; it does nothing for pull requests.
+
+Builds from `dev` are not published automatically. To publish one, run the **Publish** workflow manually from the Actions tab and select the `dev` branch. It publishes the latest successful CI push build of that branch. The CI run's artifacts are only retained for one day, so if that build is older, push again or re-run CI first.
+
+A **Resolve CI run** job first identifies the CI run, then two jobs run, independently:
 
 1. **Publish (NuGet)** downloads the `packages` artifact from the CI run and pushes it to NuGet.org.
 2. **Publish (npm)** checks out the commit CI built, downloads the `archives` artifact, and runs `Build.Npm.ps1`.
@@ -63,7 +67,7 @@ Both registries use [trusted publishing](https://learn.microsoft.com/nuget/nuget
 | Trigger | GitHub release | NuGet | Docker Hub | npm |
 |---|---|---|---|---|
 | Pull request | no | no | no | no |
-| Push to `dev` | no (unless manual `publish`) | prerelease version | `datalust/seqcli-ci:<version>` | prerelease, dist-tag `dev` |
+| Push to `dev` | no (unless manual `publish`) | prerelease version, when the publish workflow is run manually | `datalust/seqcli-ci:<version>` | prerelease, dist-tag `dev`, when the publish workflow is run manually |
 | Push to `main` | yes, `v<version>` | release version | `datalust/seqcli-ci:<version>` | release, dist-tag `latest` |
 
 Note that `Build.Linux.ps1` always pushes to the `datalust/seqcli-ci` repository (the image name with a `-ci` suffix), never directly to `datalust/seqcli`. Promoting an image to the public `datalust/seqcli` repository, and tagging it `latest`, is a separate step outside this repository.

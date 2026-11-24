@@ -1,4 +1,8 @@
-# Publishes the packages built by a successful CI run to NuGet.org and npm
+# Publishes the packages built by a successful CI run to NuGet.org and npm.
+#
+# CI runs on `main` are published automatically. Builds from other branches (e.g. `dev`) are only
+# published when this workflow is run manually from the Actions tab, selecting the branch to publish;
+# that publishes the latest successful CI push build of the branch.
 
 name: Publish
 
@@ -6,27 +10,65 @@ on:
   workflow_run:
     workflows: [ "CI" ]
     types: [ completed ]
-    branches: [ "dev", "main" ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 permissions: {}
 
-env:
-  # Reproduce the version computed by the triggering CI run (see Get-SemVer in build/Build.Common.ps1).
-  CI_BUILD_NUMBER_BASE: ${{ github.event.workflow_run.run_number }}
-  CI_TARGET_BRANCH: ${{ github.event.workflow_run.head_branch }}
-
 jobs:
-  publish-nuget:
-    name: Publish (NuGet)
+  # Identifies the CI run whose artifacts are published, and the values needed to reproduce its version.
+  resolve:
+    name: Resolve CI run
     runs-on: ubuntu-24.04
 
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
 
     permissions:
-      # Required to download artifacts from the triggering CI run.
+      # Required to look up CI runs.
+      actions: read
+
+    outputs:
+      run-id: ${{ github.event.workflow_run.id || steps.latest.outputs.id }}
+      run-number: ${{ github.event.workflow_run.run_number || steps.latest.outputs.number }}
+      head-branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+      head-sha: ${{ github.event.workflow_run.head_sha || steps.latest.outputs.sha }}
+
+    steps:
+      # Automatic runs take everything from the triggering CI run, validated by the condition above.
+      # The query's filters give manual runs the same guarantees: a successful CI build of a commit
+      # pushed to this repository, never pull request code.
+      - name: Find latest successful CI push build
+        id: latest
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch "$GITHUB_REF_NAME" \
+            --event push --status success --limit 1 --json databaseId,number,headSha,url \
+            --jq '.[0] // empty | "id=\(.databaseId)", "number=\(.number)", "sha=\(.headSha)", "url=\(.url)"')
+
+          if [ -z "$run" ]; then
+            echo "::error::No successful CI push build found for branch '$GITHUB_REF_NAME'"
+            exit 1
+          fi
+
+          echo "$run" | tee -a "$GITHUB_OUTPUT"
+
+  publish-nuget:
+    name: Publish (NuGet)
+    runs-on: ubuntu-24.04
+    needs: resolve
+
+    permissions:
+      # Required to download artifacts from the CI run.
       actions: read
       # Required for NuGet.org trusted publishing.
       id-token: write
@@ -41,7 +83,7 @@ jobs:
         with:
           name: packages
           path: packages
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ needs.resolve.outputs.run-id }}
           github-token: ${{ github.token }}
       - name: Log in to NuGet
         uses: NuGet/login@v1
@@ -64,25 +106,26 @@ jobs:
   publish-npm:
     name: Publish (npm)
     runs-on: ubuntu-24.04
-
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+    needs: resolve
 
     permissions:
-      # Required to download artifacts from the triggering CI run.
+      # Required to download artifacts from the CI run.
       actions: read
       contents: read
       # Required for npm trusted publishing and provenance.
       id-token: write
 
+    env:
+      # Reproduce the version computed by the CI run (see Get-SemVer in build/Build.Common.ps1).
+      CI_BUILD_NUMBER_BASE: ${{ needs.resolve.outputs.run-number }}
+      CI_TARGET_BRANCH: ${{ needs.resolve.outputs.head-branch }}
+
     steps:
-      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The checks
-      # above guarantee this is a commit pushed to this repository, not pull request code.
+      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The resolve job
+      # guarantees this is a commit pushed to this repository, not pull request code.
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ needs.resolve.outputs.head-sha }}
           persist-credentials: false
       - name: Setup
         uses: actions/setup-node@v7
@@ -98,7 +141,7 @@ jobs:
         with:
           name: archives
           path: npm-archives
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ needs.resolve.outputs.run-id }}
           github-token: ${{ github.token }}
       - name: Publish
         shell: pwsh
