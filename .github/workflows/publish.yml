@@ -1,4 +1,5 @@
-# Publishes the packages built by a successful CI run to NuGet.org and npm, then creates a Github release.
+# Publishes the packages built by a successful CI run: creates a draft GitHub release, pushes the
+# packages to NuGet.org and npm, then publishes the release once both registries have succeeded.
 
 name: Publish
 
@@ -16,8 +17,8 @@ env:
   CI_TARGET_BRANCH: ${{ github.event.workflow_run.head_branch }}
 
 jobs:
-  publish-nuget:
-    name: Publish (NuGet)
+  draft-release:
+    name: Draft GitHub release
     runs-on: ubuntu-24.04
 
     if: >-
@@ -25,6 +26,65 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository &&
       (github.event.workflow_run.event == 'workflow_dispatch' ||
        (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'))
+
+    permissions:
+      # Required to download artifacts from the triggering CI run.
+      actions: read
+      # Required to create the release.
+      contents: write
+
+    outputs:
+      tag: ${{ steps.draft.outputs.tag }}
+
+    steps:
+      # Build.Common.ps1 and baseversion, at the commit CI built, to reproduce its version.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Download release assets
+        # Every artifact of the CI run: `packages`, `archives` and `docs`.
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Create draft release
+        # The tag isn't created until the release is published, at the commit given by --target.
+        id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: pwsh
+        run: |
+          . ./build/Build.Common.ps1
+          $tag = "v$(Get-SemVer)"
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+          $assets = @(Get-ChildItem ./release-assets -File | ForEach-Object { $_.FullName })
+          if ($assets.Count -eq 0) { throw "No release assets found in ./release-assets" }
+
+          $isDraft = gh release view $tag --repo $env:GITHUB_REPOSITORY --json isDraft --jq .isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            # A draft left by an earlier attempt of this run; refresh its assets.
+            if ($isDraft -ne 'true') { throw "Release $tag has already been published" }
+            Write-Host "Updating existing draft release $tag"
+            & gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber @assets
+            if ($LASTEXITCODE -ne 0) { throw "Uploading release assets failed" }
+          } else {
+            Write-Host "Creating draft release $tag"
+            $arguments = @('release', 'create', $tag, '--draft', '--title', $tag, '--target', $env:HEAD_SHA, '--generate-notes', '--repo', $env:GITHUB_REPOSITORY)
+            if ($env:CI_TARGET_BRANCH -ne 'main') { $arguments += '--prerelease' }
+            & gh @arguments @assets
+            if ($LASTEXITCODE -ne 0) { throw "Creating the draft release failed" }
+          }
+
+  publish-nuget:
+    name: Publish (NuGet)
+    runs-on: ubuntu-24.04
+
+    needs: draft-release
 
     permissions:
       # Required to download artifacts from the triggering CI run.
@@ -58,7 +118,7 @@ jobs:
           $packages = @(Get-ChildItem ./packages/*.nupkg)
           if ($packages.Count -eq 0) { throw "No packages found in ./packages" }
           foreach ($nupkg in $packages) {
-            dotnet nuget push "$nupkg" --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+            dotnet nuget push "$nupkg" --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
             if ($LASTEXITCODE -ne 0) { throw "Publishing failed" }
           }
 
@@ -66,11 +126,7 @@ jobs:
     name: Publish (npm)
     runs-on: ubuntu-24.04
 
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_repository.full_name == github.repository &&
-      (github.event.workflow_run.event == 'workflow_dispatch' ||
-       (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'))
+    needs: draft-release
 
     permissions:
       # Required to download artifacts from the triggering CI run.
@@ -80,8 +136,8 @@ jobs:
       id-token: write
 
     steps:
-      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The checks
-      # above guarantee this is a commit pushed to this repository, not pull request code.
+      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The checks on
+      # the draft-release job guarantee this is a commit pushed to this repository, not pull request code.
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -108,46 +164,20 @@ jobs:
           ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives
 
   publish-github:
-    name: Publish (GitHub release)
+    name: Publish GitHub release
     runs-on: ubuntu-24.04
 
-    # Only create a release once the packages are on NuGet.org and npm.
-    needs: [ publish-nuget, publish-npm ]
+    # Only publish the release once the packages are on NuGet.org and npm.
+    needs: [ draft-release, publish-nuget, publish-npm ]
 
     permissions:
-      # Required to download artifacts from the triggering CI run.
-      actions: read
-      # Required to create the release and its tag.
+      # Required to publish the release and create its tag.
       contents: write
 
     steps:
-      # Build.Common.ps1 and baseversion, at the commit CI built, to reproduce its version.
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          persist-credentials: false
-      - name: Download release assets
-        # Every artifact of the CI run: `packages`, `archives` and `docs`.
-        uses: actions/download-artifact@v8
-        with:
-          path: release-assets
-          merge-multiple: true
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-      - name: Create release
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-        shell: pwsh
+          TAG: ${{ needs.draft-release.outputs.tag }}
         run: |
-          . ./build/Build.Common.ps1
-          $version = Get-SemVer
-          Write-Host "Creating release for version $version"
-
-          $arguments = @('release', 'create', "v$version", '--title', "v$version", '--target', $env:HEAD_SHA, '--generate-notes', '--repo', $env:GITHUB_REPOSITORY)
-          if ($env:CI_TARGET_BRANCH -ne 'main') { $arguments += '--prerelease' }
-          $assets = @(Get-ChildItem ./release-assets -File | ForEach-Object { $_.FullName })
-          if ($assets.Count -eq 0) { throw "No release assets found in ./release-assets" }
-
-          & gh @arguments @assets
-          if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }
+          gh release edit "$TAG" --draft=false --repo "$GITHUB_REPOSITORY"

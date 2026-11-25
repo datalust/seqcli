@@ -50,13 +50,14 @@ GitHub supplies no secrets or OIDC tokens to pull requests from forks, and PR bu
 
 ## The publish workflow
 
-`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded in this repository, and was either a push to `main` or a manual dispatch on `dev` or `main`; it does nothing for pull requests or pushes to `dev`. Three jobs run:
+`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded in this repository, and was either a push to `main` or a manual dispatch on `dev` or `main`; it does nothing for pull requests or pushes to `dev`. Four jobs run:
 
-1. **Publish (NuGet)** downloads the `packages` artifact from the CI run and pushes it to NuGet.org.
-2. **Publish (npm)** checks out the commit CI built, downloads the `archives` artifact, and runs `Build.Npm.ps1`.
-3. **Publish (GitHub release)** runs only after both of the above succeed. It downloads all three artifacts and creates release `v<version>` at the commit CI built, with them attached; builds from branches other than `main` are marked as prereleases.
+1. **Draft GitHub release** downloads all three artifacts and creates a draft release `v<version>` targeting the commit CI built, with them attached; builds from branches other than `main` are marked as prereleases. Drafts are visible only to people with write access, and the tag isn't created until the release is published.
+2. **Publish (NuGet)** downloads the `packages` artifact from the CI run and pushes it to NuGet.org.
+3. **Publish (npm)** checks out the commit CI built, downloads the `archives` artifact, and runs `Build.Npm.ps1`.
+4. **Publish GitHub release** runs only after both registries succeed, and publishes the draft, which creates the tag.
 
-The NuGet and npm jobs run in parallel.
+The NuGet and npm jobs run in parallel, after the draft is created. If either fails, the draft is left in place; re-running the failed jobs publishes it once they succeed. Re-running the draft job updates the existing draft's assets rather than creating another.
 
 Both registries use [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing).
 

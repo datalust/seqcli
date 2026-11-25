@@ -83,7 +83,7 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || inputs.publish
 
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v6
