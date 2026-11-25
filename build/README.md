@@ -20,7 +20,7 @@ Every artifact from one CI run shares a single version, computed by `Get-SemVer`
 ```
 
 * `<baseversion>` is read from [`baseversion`](../baseversion) in the repository root (e.g. `2026.1`). Bump it there when starting a new release line.
-* `<build number>` is `CI_BUILD_NUMBER_BASE + 2300`, zero-padded to five digits (e.g. `02616`). `CI_BUILD_NUMBER_BASE` is the GitHub Actions `run_number`; the fixed offset keeps build numbers increasing across the move from the previous CI system. Note the comment at the top of `ci.yml`: renaming the workflow file resets `run_number`, which would produce lower version numbers than already-published releases. Locally, where the variable is unset, the build number is the literal string `local`.
+* `<build number>` is `CI_BUILD_NUMBER_BASE + 2300`, zero-padded to five digits (e.g. `02616`). `CI_BUILD_NUMBER_BASE` is the GitHub Actions `run_number`; the fixed offset keeps build numbers increasing across the move from the previous CI system. Renaming the workflow file resets `run_number`, which would produce lower version numbers than already-published releases. Locally, where the variable is unset, the build number is the literal string `local`.
 * The prerelease suffix is added for every branch except `main`. It is the first ten characters of the branch name, stripped of anything other than letters, digits and hyphens, followed by the build number. A `dev` build is therefore `2026.1.02700-dev-02700`; a `main` build is `2026.1.02616`.
 
 `CI_TARGET_BRANCH` overrides the branch detected from git. In CI it is set from `github.head_ref` (for pull requests) or `github.ref_name`.
