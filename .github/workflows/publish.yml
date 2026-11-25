@@ -51,34 +51,14 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
       - name: Create draft release
-        # The tag isn't created until the release is published, at the commit given by --target.
+        # Writes the release tag to the step's `tag` output.
         id: draft
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         shell: pwsh
         run: |
-          . ./build/Build.Common.ps1
-          $tag = "v$(Get-SemVer)"
-          "tag=$tag" >> $env:GITHUB_OUTPUT
-
-          $assets = @(Get-ChildItem ./release-assets -File | ForEach-Object { $_.FullName })
-          if ($assets.Count -eq 0) { throw "No release assets found in ./release-assets" }
-
-          $isDraft = gh release view $tag --repo $env:GITHUB_REPOSITORY --json isDraft --jq .isDraft 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            # A draft left by an earlier attempt of this run; refresh its assets.
-            if ($isDraft -ne 'true') { throw "Release $tag has already been published" }
-            Write-Host "Updating existing draft release $tag"
-            & gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber @assets
-            if ($LASTEXITCODE -ne 0) { throw "Uploading release assets failed" }
-          } else {
-            Write-Host "Creating draft release $tag"
-            $arguments = @('release', 'create', $tag, '--draft', '--title', $tag, '--target', $env:HEAD_SHA, '--generate-notes', '--repo', $env:GITHUB_REPOSITORY)
-            if ($env:CI_TARGET_BRANCH -ne 'main') { $arguments += '--prerelease' }
-            & gh @arguments @assets
-            if ($LASTEXITCODE -ne 0) { throw "Creating the draft release failed" }
-          }
+          ./build/Build.Release.ps1 -AssetDir ./release-assets -Target $env:HEAD_SHA
 
   publish-nuget:
     name: Publish (NuGet)
