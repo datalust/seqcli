@@ -48,7 +48,7 @@ function Create-ArtifactDir
     mkdir ./artifacts
 }
 
-function Publish-Archives($version)
+function Create-Archives($version)
 {
     $rids = $([xml](Get-Content .\src\SeqCli\SeqCli.csproj)).Project.PropertyGroup.RuntimeIdentifiers.Split(';')
     foreach ($rid in $rids) {
@@ -78,7 +78,7 @@ function Publish-Archives($version)
     }
 }
 
-function Publish-DotNetTool($version)
+function Package-DotNetTool($version)
 {
     Write-Output "Building dotnet tool"
 
@@ -93,18 +93,6 @@ function Publish-Docs($version)
 
     & dotnet run --project ./src/SeqCli/SeqCli.csproj -f $framework -- help --markdown > ./artifacts/seqcli-$version.md
     if($LASTEXITCODE -ne 0) { throw "Build failed" }
-}
-
-function Upload-GitHubRelease($version)
-{
-    Write-Output "Creating release for version $version"
-    
-    $prerelease = "";
-    if ($env:CI_TARGET_BRANCH -ne "main") {
-      $prerelease = "--prerelease ";
-    }
-
-    iex "gh release create v$version --title v$version $prerelease--generate-notes $(get-item ./artifacts/*)"
 }
 
 function Remove-GlobalJson
@@ -127,14 +115,10 @@ Clean-Output
 Create-ArtifactDir
 Create-GlobalJson
 Restore-Packages
-Publish-Archives($version)
-Publish-DotNetTool($version)
+Create-Archives($version)
+Package-DotNetTool($version)
 Execute-Tests($version)
 Publish-Docs($version)
-
-if ($env:CI_PUBLISH -eq "True") {
-    Upload-GitHubRelease($version)
-}
 
 Remove-GlobalJson
 

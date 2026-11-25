@@ -1,4 +1,4 @@
-# Publishes the packages built by a successful CI run to NuGet.org and npm
+# Publishes the packages built by a successful CI run to NuGet.org and npm, then creates a Github release.
 
 name: Publish
 
@@ -22,8 +22,9 @@ jobs:
 
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'workflow_dispatch' ||
+       (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'))
 
     permissions:
       # Required to download artifacts from the triggering CI run.
@@ -67,8 +68,9 @@ jobs:
 
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'workflow_dispatch' ||
+       (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'))
 
     permissions:
       # Required to download artifacts from the triggering CI run.
@@ -104,3 +106,48 @@ jobs:
         shell: pwsh
         run: |
           ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives
+
+  publish-github:
+    name: Publish (GitHub release)
+    runs-on: ubuntu-24.04
+
+    # Only create a release once the packages are on NuGet.org and npm.
+    needs: [ publish-nuget, publish-npm ]
+
+    permissions:
+      # Required to download artifacts from the triggering CI run.
+      actions: read
+      # Required to create the release and its tag.
+      contents: write
+
+    steps:
+      # Build.Common.ps1 and baseversion, at the commit CI built, to reproduce its version.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Download release assets
+        # Every artifact of the CI run: `packages`, `archives` and `docs`.
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: pwsh
+        run: |
+          . ./build/Build.Common.ps1
+          $version = Get-SemVer
+          Write-Host "Creating release for version $version"
+
+          $arguments = @('release', 'create', "v$version", '--title', "v$version", '--target', $env:HEAD_SHA, '--generate-notes', '--repo', $env:GITHUB_REPOSITORY)
+          if ($env:CI_TARGET_BRANCH -ne 'main') { $arguments += '--prerelease' }
+          $assets = @(Get-ChildItem ./release-assets -File | ForEach-Object { $_.FullName })
+          if ($assets.Count -eq 0) { throw "No release assets found in ./release-assets" }
+
+          & gh @arguments @assets
+          if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }

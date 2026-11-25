@@ -5,7 +5,7 @@ This directory holds the PowerShell scripts that build, test, package, and publi
 | Script | Runs on | Produces |
 |---|---|---|
 | `Build.Common.ps1` | (dot-sourced by the others) | Version number helpers |
-| `Build.Windows.ps1` | Windows | Release archives for every platform, the `seqcli` .NET tool package, generated docs, a GitHub release |
+| `Build.Windows.ps1` | Windows | Release archives for every platform, the `seqcli` .NET tool package, generated docs |
 | `Build.Linux.ps1` | Linux | `datalust/seqcli` Docker images for `linux/amd64` and `linux/arm64` |
 | `Build.Npm.ps1` | Linux (any OS locally) | `@datalust/seqcli` and `@datalust/seqcli-<rid>` npm packages |
 
@@ -33,7 +33,7 @@ npm enforces strict semver, which forbids leading zeros in numeric components, s
 
 The workflow runs on pushes and pull requests to `dev` and `main`, and can be triggered manually with `workflow_dispatch`. Two jobs run:
 
-1. **Build (Windows)** runs `Build.Windows.ps1`. On non-PR builds, it then uploads the tool package as a workflow artifact named `packages`, and the release archives as one named `archives`, for the publish workflow to consume.
+1. **Build (Windows)** runs `Build.Windows.ps1`. When `CI_PUBLISH` is set (pushes to `main`, and manual runs with the `publish` input checked), it then uploads the tool package as a workflow artifact named `packages`, the release archives as one named `archives`, and the markdown command reference as one named `docs`, for the publish workflow to consume.
 2. **Build (Linux)** runs `Build.Linux.ps1`, after configuring `binfmt` so that ARM64 images can be built on the x64 runner. It runs in parallel with the Windows job.
 
 Environment variables control what gets published:
@@ -42,8 +42,7 @@ Environment variables control what gets published:
 |---|---|---|
 | `CI_BUILD_NUMBER_BASE` | `github.run_number` | Build number component of the version |
 | `CI_TARGET_BRANCH` | `github.head_ref` or `github.ref_name` | Branch component of the version |
-| `CI_PUBLISH` | `True` for pushes to `main`, or when the manual `publish` input is set | Whether `Build.Windows.ps1` creates a GitHub release |
-| `GH_TOKEN` | `secrets.GITHUB_TOKEN` | Used by `gh release create` |
+| `CI_PUBLISH` | `True` for pushes to `main`, or when the manual `publish` input is set | Whether CI uploads the artifacts the publish workflow publishes to NuGet, npm and a GitHub release |
 | `DOCKER_USER`, `DOCKER_TOKEN` | Docker Hub secrets | When `DOCKER_TOKEN` is non-empty, `Build.Linux.ps1` pushes images |
 | `SEQ_DOCKER_TAG` | e.g. `2026.1` | Seq image tag used for the Linux end-to-end tests |
 
@@ -51,10 +50,13 @@ GitHub supplies no secrets or OIDC tokens to pull requests from forks, and PR bu
 
 ## The publish workflow
 
-`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded, and was started by a push or manual dispatch on `dev` or `main` in this repository; it does nothing for pull requests. Two jobs run, independently:
+`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded in this repository, and was either a push to `main` or a manual dispatch on `dev` or `main`; it does nothing for pull requests or pushes to `dev`. Three jobs run:
 
 1. **Publish (NuGet)** downloads the `packages` artifact from the CI run and pushes it to NuGet.org.
 2. **Publish (npm)** checks out the commit CI built, downloads the `archives` artifact, and runs `Build.Npm.ps1`.
+3. **Publish (GitHub release)** runs only after both of the above succeed. It downloads all three artifacts and creates release `v<version>` at the commit CI built, with them attached; builds from branches other than `main` are marked as prereleases.
+
+The NuGet and npm jobs run in parallel.
 
 Both registries use [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing).
 
@@ -63,12 +65,14 @@ Both registries use [trusted publishing](https://learn.microsoft.com/nuget/nuget
 | Trigger | GitHub release | NuGet | Docker Hub | npm |
 |---|---|---|---|---|
 | Pull request | no | no | no | no |
-| Push to `dev` | no (unless manual `publish`) | prerelease version | `datalust/seqcli-ci:<version>` | prerelease, dist-tag `dev` |
+| Push to `dev` | no | no | `datalust/seqcli-ci:<version>` | no |
 | Push to `main` | yes, `v<version>` | release version | `datalust/seqcli-ci:<version>` | release, dist-tag `latest` |
+| Manual run, `publish` checked | yes (prerelease unless on `main`) | prerelease version unless on `main` | `datalust/seqcli-ci:<version>` | prerelease (dist-tag `dev`) unless on `main` |
+| Manual run, `publish` unchecked | no (CI skips its jobs) | no | no | no |
 
 Note that `Build.Linux.ps1` always pushes to the `datalust/seqcli-ci` repository (the image name with a `-ci` suffix), never directly to `datalust/seqcli`. Promoting an image to the public `datalust/seqcli` repository, and tagging it `latest`, is a separate step outside this repository.
 
-To publish a release from `dev` (for example a preview build), run the workflow manually from the Actions tab with the **Publish a GitHub release** input checked. The release is marked as a prerelease because the branch is not `main`.
+To publish a release from `dev` (for example a preview build), run the workflow manually from the Actions tab with the **Publish a GitHub release and packages** input checked; this also publishes to NuGet and npm. The release is marked as a prerelease because the branch is not `main`.
 
 ## Running the builds locally
 
