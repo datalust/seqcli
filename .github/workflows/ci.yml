@@ -1,5 +1,6 @@
-# If this file is renamed, the incrementing run attempt number will be reset. If the workflow's
-# `name` changes, the `workflow_run` trigger in publish.yml must be updated.
+# Builds, tests and packages (on Windows and Linux) the project on merges or PRs to 'dev' or 'main'.
+# Saves artifacts (from Windows job) on merges to main, or when the workflow is manually triggered with 'Publish a GitHub release and packages'.
+# The Linux job publishes a docker image on every build.
 
 name: CI
 
@@ -11,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: 'Publish a GitHub release'
+        description: 'Publish a GitHub release and packages'
         type: boolean
         required: true
         default: true
@@ -26,9 +27,11 @@ jobs:
     name: Build (Windows)
     runs-on: windows-latest
 
+    # A manual run with the `publish` input unchecked does nothing.
+    if: github.event_name != 'workflow_dispatch' || inputs.publish
+
     permissions:
-      # Required for creating GitHub releases.
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v6
@@ -36,16 +39,15 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
-      - name: Build and Publish
+      - name: Build and Package
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: true
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
           ./build/Build.Windows.ps1
       - name: Upload packages
-        # Consumed by the publish-nuget job in publish.yml
-        if: github.event_name != 'pull_request'
+        # Consumed by the publish-nuget and publish-github jobs in publish.yml
+        if: env.CI_PUBLISH == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: packages
@@ -53,8 +55,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - name: Upload archives
-        # Consumed by the publish-npm job in publish.yml
-        if: github.event_name != 'pull_request'
+        # Consumed by the publish-npm and publish-github jobs in publish.yml
+        if: env.CI_PUBLISH == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: archives
@@ -63,13 +65,25 @@ jobs:
             artifacts/seqcli-*-*.tar.gz
           if-no-files-found: error
           retention-days: 1
+      - name: Upload docs
+        # Consumed by the publish-github job in publish.yml
+        if: env.CI_PUBLISH == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs
+          path: artifacts/seqcli-*.md
+          if-no-files-found: error
+          retention-days: 1
 
   build-linux:
     name: Build (Linux)
     runs-on: ubuntu-24.04
 
+    # A manual run with the `publish` input unchecked does nothing.
+    if: github.event_name != 'workflow_dispatch' || inputs.publish
+
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v6

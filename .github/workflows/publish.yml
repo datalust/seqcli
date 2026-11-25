@@ -1,4 +1,5 @@
-# Publishes the packages built by a successful CI run to NuGet.org and npm
+# Publishes the packages built by a successful CI run: creates a draft GitHub release, pushes the
+# packages to NuGet.org and npm, then publishes the release once both registries have succeeded.
 
 name: Publish
 
@@ -16,14 +17,54 @@ env:
   CI_TARGET_BRANCH: ${{ github.event.workflow_run.head_branch }}
 
 jobs:
-  publish-nuget:
-    name: Publish (NuGet)
+  draft-release:
+    name: Draft GitHub release
     runs-on: ubuntu-24.04
 
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'workflow_dispatch' ||
+       (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'))
+
+    permissions:
+      # Required to download artifacts from the triggering CI run.
+      actions: read
+      # Required to create the release.
+      contents: write
+
+    outputs:
+      tag: ${{ steps.draft.outputs.tag }}
+
+    steps:
+      # Build.Common.ps1 and baseversion, at the commit CI built, to reproduce its version.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Download release assets
+        # Every artifact of the CI run: `packages`, `archives` and `docs`.
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Create draft release
+        # Writes the release tag to the step's `tag` output.
+        id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: pwsh
+        run: |
+          ./build/Build.Release.ps1 -AssetDir ./release-assets -Target $env:HEAD_SHA
+
+  publish-nuget:
+    name: Publish (NuGet)
+    runs-on: ubuntu-24.04
+
+    needs: draft-release
 
     permissions:
       # Required to download artifacts from the triggering CI run.
@@ -57,7 +98,7 @@ jobs:
           $packages = @(Get-ChildItem ./packages/*.nupkg)
           if ($packages.Count -eq 0) { throw "No packages found in ./packages" }
           foreach ($nupkg in $packages) {
-            dotnet nuget push "$nupkg" --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+            dotnet nuget push "$nupkg" --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
             if ($LASTEXITCODE -ne 0) { throw "Publishing failed" }
           }
 
@@ -65,10 +106,7 @@ jobs:
     name: Publish (npm)
     runs-on: ubuntu-24.04
 
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+    needs: draft-release
 
     permissions:
       # Required to download artifacts from the triggering CI run.
@@ -78,8 +116,8 @@ jobs:
       id-token: write
 
     steps:
-      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The checks
-      # above guarantee this is a commit pushed to this repository, not pull request code.
+      # Build.Npm.ps1 and the package templates under ./npm, at the commit CI built. The checks on
+      # the draft-release job guarantee this is a commit pushed to this repository, not pull request code.
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -104,3 +142,22 @@ jobs:
         shell: pwsh
         run: |
           ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives
+
+  publish-github:
+    name: Publish GitHub release
+    runs-on: ubuntu-24.04
+
+    # Only publish the release once the packages are on NuGet.org and npm.
+    needs: [ draft-release, publish-nuget, publish-npm ]
+
+    permissions:
+      # Required to publish the release and create its tag.
+      contents: write
+
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.draft-release.outputs.tag }}
+        run: |
+          gh release edit "$TAG" --draft=false --repo "$GITHUB_REPOSITORY"
