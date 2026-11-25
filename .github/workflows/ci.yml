@@ -27,8 +27,7 @@ jobs:
     runs-on: windows-latest
 
     permissions:
-      # Required for creating GitHub releases.
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v6
