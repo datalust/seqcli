@@ -6,7 +6,8 @@ This directory holds the PowerShell scripts that build, test, package, and publi
 |---|---|---|
 | `Build.Common.ps1` | (dot-sourced by the others) | Version number helpers |
 | `Build.Windows.ps1` | Windows | Release archives for every platform, the `seqcli` .NET tool package, generated docs |
-| `Build.Linux.ps1` | Linux | `datalust/seqcli` Docker images for `linux/amd64` and `linux/arm64` |
+| `Build.Linux.ps1` | Linux | Nothing; runs the unit tests and the end-to-end tests against a Seq Docker container |
+| `Build.Docker.ps1` | Linux | `datalust/seqcli-ci` Docker images for `linux/amd64` and `linux/arm64` |
 | `Build.Npm.ps1` | Linux (any OS locally) | `@datalust/seqcli` and `@datalust/seqcli-<rid>` npm packages |
 | `Build.Release.ps1` | Linux (any OS locally) | Draft GitHub release `v<version>` with the CI artifacts attached |
 
@@ -35,7 +36,7 @@ npm enforces strict semver, which forbids leading zeros in numeric components, s
 The workflow runs on pushes and pull requests to `dev` and `main`, and can be triggered manually with `workflow_dispatch`. Two jobs run:
 
 1. **Build (Windows)** runs `Build.Windows.ps1`. When `CI_PUBLISH` is set (pushes to `main`, and manual runs with the `publish` input checked), it then uploads the tool package as a workflow artifact named `packages`, the release archives as one named `archives`, and the markdown command reference as one named `docs`, for the publish workflow to consume.
-2. **Build (Linux)** runs `Build.Linux.ps1`, after configuring `binfmt` so that ARM64 images can be built on the x64 runner. It runs in parallel with the Windows job.
+2. **Build (Linux)** runs `Build.Linux.ps1`, which runs the tests on Linux, including the end-to-end tests against the `datalust/seq` Docker image. It runs in parallel with the Windows job.
 
 Environment variables control what gets published:
 
@@ -44,44 +45,45 @@ Environment variables control what gets published:
 | `CI_BUILD_NUMBER_BASE` | `github.run_number` | Build number component of the version |
 | `CI_TARGET_BRANCH` | `github.head_ref` or `github.ref_name` | Branch component of the version |
 | `CI_PUBLISH` | `True` for pushes to `main`, or when the manual `publish` input is set | Whether CI uploads the artifacts the publish workflow publishes to NuGet, npm and a GitHub release |
-| `DOCKER_USER`, `DOCKER_TOKEN` | Docker Hub secrets | When `DOCKER_TOKEN` is non-empty, `Build.Linux.ps1` pushes images |
 | `SEQ_DOCKER_TAG` | e.g. `2026.1` | Seq image tag used for the Linux end-to-end tests |
 
 GitHub supplies no secrets or OIDC tokens to pull requests from forks, and PR builds run the full build and test steps but publish nothing.
 
 ## The publish workflow
 
-`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded in this repository, and was either a push to `main` or a manual dispatch on `dev` or `main`; it does nothing for pull requests or pushes to `dev`. Four jobs run:
+`publish.yml` runs via `workflow_run` when the CI workflow completes. It only publishes when that CI run succeeded in this repository, and was either a push to `main` or a manual dispatch on `dev` or `main`; it does nothing for pull requests or pushes to `dev`. Five jobs run:
 
 1. **Draft GitHub release** downloads all three artifacts and runs `Build.Release.ps1`, which creates a draft release `v<version>` targeting the commit CI built, with them attached; builds from branches other than `main` are marked as prereleases. Drafts are visible only to people with write access, and the tag isn't created until the release is published.
 2. **Publish (NuGet)** downloads the `packages` artifact from the CI run and pushes it to NuGet.org.
 3. **Publish (npm)** checks out the commit CI built, downloads the `archives` artifact, and runs `Build.Npm.ps1`.
-4. **Publish GitHub release** runs only after both registries succeed, and publishes the draft, which creates the tag.
+4. **Publish (Docker)** checks out the commit CI built, configures `binfmt` so that ARM64 images can be built on the x64 runner, and runs `Build.Docker.ps1`, which builds the images and, because `DOCKER_USER` and `DOCKER_TOKEN` are set from the Docker Hub secrets, pushes them.
+5. **Publish GitHub release** runs only after all three registries succeed, and publishes the draft, which creates the tag.
 
-The NuGet and npm jobs run in parallel, after the draft is created. If either fails, the draft is left in place; re-running the failed jobs publishes it once they succeed. Re-running the draft job updates the existing draft's assets rather than creating another.
+The NuGet, npm and Docker jobs run in parallel, after the draft is created. If any of them fails, the draft is left in place; re-running the failed jobs publishes it once they succeed. Re-running the draft job updates the existing draft's assets rather than creating another.
 
-Both registries use [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing).
+NuGet and npm use [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing); Docker Hub uses the `DOCKER_USER` and `DOCKER_TOKEN` secrets.
 
 ### What each branch publishes
 
 | Trigger | GitHub release | NuGet | Docker Hub | npm |
 |---|---|---|---|---|
 | Pull request | no | no | no | no |
-| Push to `dev` | no | no | `datalust/seqcli-ci:<version>` | no |
+| Push to `dev` | no | no | no | no |
 | Push to `main` | yes, `v<version>` | release version | `datalust/seqcli-ci:<version>` | release, dist-tag `latest` |
 | Manual run, `publish` checked | yes (prerelease unless on `main`) | prerelease version unless on `main` | `datalust/seqcli-ci:<version>` | prerelease (dist-tag `dev`) unless on `main` |
 | Manual run, `publish` unchecked | no (CI skips its jobs) | no | no | no |
 
-Note that `Build.Linux.ps1` always pushes to the `datalust/seqcli-ci` repository (the image name with a `-ci` suffix), never directly to `datalust/seqcli`. Promoting an image to the public `datalust/seqcli` repository, and tagging it `latest`, is a separate step outside this repository.
+Note that `Build.Docker.ps1` always pushes to the `datalust/seqcli-ci` repository (the image name with a `-ci` suffix), never directly to `datalust/seqcli`. Promoting an image to the public `datalust/seqcli` repository, and tagging it `latest`, is a separate step outside this repository.
 
-To publish a release from `dev` (for example a preview build), run the workflow manually from the Actions tab with the **Publish a GitHub release and packages** input checked; this also publishes to NuGet and npm. The release is marked as a prerelease because the branch is not `main`.
+To publish a release from `dev` (for example a preview build), run the workflow manually from the Actions tab with the **Publish a GitHub release and packages** input checked; this also publishes to NuGet, npm and Docker Hub. The release is marked as a prerelease because the branch is not `main`.
 
 ## Running the builds locally
 
 All scripts need PowerShell 7 (`pwsh`) and the .NET 10 SDK, and must be run from anywhere inside the repository (they `Push-Location` to the root themselves). Without the `CI_*` variables the version is `<baseversion>.local`, and nothing is published because the credential variables are unset.
 
 * `Build.Windows.ps1` requires Windows: it uses `7za.exe`, installs Seq with Chocolatey for the end-to-end tests, and builds `win-*` RIDs. Run it as `./build/Build.Windows.ps1`.
-* `Build.Linux.ps1` requires Docker with `buildx`. Building the `arm64` image on an x64 host needs `binfmt` configured, as the workflow does. Run it as `./build/Build.Linux.ps1 -SeqDockerTag 2026.1`.
+* `Build.Linux.ps1` requires Docker, to run Seq for the end-to-end tests. Run it as `./build/Build.Linux.ps1 -SeqDockerTag 2026.1`.
+* `Build.Docker.ps1` requires Docker with `buildx`. Building the `arm64` image on an x64 host needs `binfmt` configured, as the workflow does. Run it as `./build/Build.Docker.ps1`; it only pushes when `DOCKER_TOKEN` is set.
 * `Build.Npm.ps1` runs anywhere with `npm`, `tar`, and `gh`. To exercise it end to end without publishing, point it at a directory of archives (for example a local `artifacts/` from a Windows build, or assets downloaded from a release) and use `-DryRun`:
 
   ```shell
@@ -97,4 +99,4 @@ All scripts need PowerShell 7 (`pwsh`) and the .NET 10 SDK, and must be run from
 1. Update [`baseversion`](../baseversion).
 2. Update the SDK version in [`ci.global.json`](../ci.global.json) to match the Seq release.
 3. Update `SEQ_DOCKER_TAG` in [`ci.yml`](../.github/workflows/ci.yml) to the Seq image the end-to-end tests should run against.
-4. If the target framework changes, update `$framework` in `Build.Windows.ps1` and `Build.Linux.ps1`, and the `COPY` paths in the Dockerfiles.
+4. If the target framework changes, update `$framework` in `Build.Windows.ps1`, `Build.Linux.ps1` and `Build.Docker.ps1`, and the `COPY` paths in the Dockerfiles.
