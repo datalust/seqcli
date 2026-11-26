@@ -36,7 +36,7 @@ npm enforces strict semver, which forbids leading zeros in numeric components, s
 The workflow runs on pushes and pull requests to `dev` and `main`, and can be triggered manually with `workflow_dispatch`. Two jobs run:
 
 1. **Build (Windows)** runs `Build.Windows.ps1`. When `CI_PUBLISH` is set (pushes to `main`, and manual runs with the `publish` input checked), it then uploads the tool package as a workflow artifact named `packages`, the release archives as one named `archives`, and the markdown command reference as one named `docs`, for the publish workflow to consume.
-2. **Build (Linux)** runs `Build.Linux.ps1`, which runs the tests on Linux, including the end-to-end tests against the `datalust/seq` Docker image. It runs in parallel with the Windows job. It doesn't build Docker images; the publish workflow does that.
+2. **Build (Linux)** runs `Build.Linux.ps1`, which runs the tests on Linux, including the end-to-end tests against the `datalust/seq` Docker image. It runs in parallel with the Windows job.
 
 Environment variables control what gets published:
 
