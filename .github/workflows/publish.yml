@@ -1,5 +1,6 @@
 # Publishes the packages built by a successful CI run: creates a draft GitHub release, pushes the
-# packages to NuGet.org and npm, then publishes the release once both registries have succeeded.
+# packages to NuGet.org and npm and the Docker images to Docker Hub, then publishes the release once
+# all three registries have succeeded.
 
 name: Publish
 
@@ -143,12 +144,46 @@ jobs:
         run: |
           ./build/Build.Npm.ps1 -ArchiveDir ./npm-archives
 
+  publish-docker:
+    name: Publish (Docker)
+    runs-on: ubuntu-24.04
+
+    needs: draft-release
+
+    permissions:
+      contents: read
+
+    steps:
+      # Build.Docker.ps1, the Dockerfiles and the source, at the commit CI built and tested. The checks
+      # on the draft-release job guarantee this is a commit pushed to this repository, not pull request code.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Setup
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Configure Docker
+        # Enables building the arm64 image on the x64 runner.
+        run: |
+          docker run --privileged --rm linuxkit/binfmt:bebbae0c1100ebf7bf2ad4dfb9dfd719cf0ef132
+          sudo service docker restart
+      - name: Build and Publish
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: true
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        shell: pwsh
+        run: |
+          ./build/Build.Docker.ps1
+
   publish-github:
     name: Publish GitHub release
     runs-on: ubuntu-24.04
 
-    # Only publish the release once the packages are on NuGet.org and npm.
-    needs: [ draft-release, publish-nuget, publish-npm ]
+    # Only publish the release once the packages are on NuGet.org, npm and Docker Hub.
+    needs: [ draft-release, publish-nuget, publish-npm, publish-docker ]
 
     permissions:
       # Required to publish the release and create its tag.
