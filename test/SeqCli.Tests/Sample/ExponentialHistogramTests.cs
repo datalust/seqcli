@@ -26,11 +26,13 @@ public class ExponentialHistogramTests
     [Fact]
     public void MidpointsAreCloseToRecordedValues()
     {
-        var histogram = new ExponentialHistogram(initialScale: 3);
+        var scale = 3;
+        var gamma = Math.Pow(2, 1d / Math.Pow(2, scale));
+        var histogram = new ExponentialHistogram(initialScale: scale);
         histogram.Record(100);
 
         var midpoint = Assert.Single(histogram.Buckets).Key;
-        Assert.InRange(midpoint, 100 / Math.Pow(2, 1 / 8d), 100 * Math.Pow(2, 1 / 8d));
+        Assert.InRange(midpoint, 100 / gamma, 100 * gamma);
     }
 
     [Fact]
