@@ -41,7 +41,7 @@ public class ExponentialHistogram
 
         foreach (var (oldMidpoint, count) in _buckets)
         {
-            var newMidpoint = Midpoint(_scale, oldMidpoint);
+            var newMidpoint = Midpoint(newScale, oldMidpoint);
             newBuckets.TryAdd(newMidpoint, 0);
             newBuckets[newMidpoint] += count;
         }
@@ -52,10 +52,18 @@ public class ExponentialHistogram
 
     static double Midpoint(int scale, double rawValue)
     {
-        var gamma = Math.Pow(2d, Math.Pow(2d, -scale));
-        var index = Math.Abs(Math.Log(rawValue, gamma));
+        // Zero has no logarithm; it gets a bucket of its own rather than an infinite midpoint.
+        if (rawValue == 0)
+            return 0;
 
-        return (Math.Pow(gamma, index - 1) + Math.Pow(gamma, index)) / 2;
+        // Bucket `index` covers `(gamma^(index - 1), gamma^index]`, where `gamma = 2^(2^-scale)`.
+        var bucketsPerPowerOfTwo = Math.Pow(2d, scale);
+        var index = Math.Ceiling(Math.Log2(Math.Abs(rawValue)) * bucketsPerPowerOfTwo);
+
+        var lower = Math.Pow(2d, (index - 1) / bucketsPerPowerOfTwo);
+        var upper = Math.Pow(2d, index / bucketsPerPowerOfTwo);
+
+        return Math.Sign(rawValue) * (lower + upper) / 2;
     }
 
     public IReadOnlyDictionary<double, ulong> Buckets => _buckets;
