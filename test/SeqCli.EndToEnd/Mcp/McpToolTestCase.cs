@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using ModelContextProtocol.Client;
@@ -28,7 +29,14 @@ public abstract partial class McpToolTestCase : ICliTestCase
             Arguments = [TestConfiguration.TestedBinary, "mcp", "run", $"--server={connection.Client.ServerUrl}"]
         });
 
-        await using var client = await McpClient.CreateAsync(transport);
+        await using var client = await McpClient.CreateAsync(
+            transport, 
+            new McpClientOptions
+            {
+                // The MCP client needs to wait for the MCP server to start, 
+                // which takes ~5s on Github actions. 
+                DiscoverProbeTimeout = Timeout.InfiniteTimeSpan
+            });
 
         await ExecuteAsync(connection, logger, client);
     }
